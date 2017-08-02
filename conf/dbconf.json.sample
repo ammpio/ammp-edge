@@ -1,0 +1,16 @@
+{
+	"conn": {
+		"host": "hoverboard-fa6da75c.influxcloud.net",
+		"port": 8086,
+		"username": "logger_changombe",
+		"password": "insert-actual-password",
+		"dbname": "datalog_test"
+	},
+	"body": {
+		"measurement": "asset",
+        "tags": {
+            "asset_id": "9328669F-6581-48BA-BA0B-1E415B3D5F98",
+            "site_name": "Changombe"
+        }
+	}
+}
