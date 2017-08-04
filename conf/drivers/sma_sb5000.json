@@ -14,7 +14,10 @@
     "words": 2,
     "datatype": "uint32",
     "multiplier": 1.0,
-    "unit": "Wh"
+    "unit": "Wh",
+    "valuemap": {
+      "ffffffff": null
+    }
   },
   "V1": {
     "register": 30783,
