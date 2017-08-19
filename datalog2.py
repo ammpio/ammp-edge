@@ -327,7 +327,7 @@ if __name__ == '__main__':
     parser.add_argument('-I', '--interval', type=int, help='Interval for repeated readings (s)')
     parser.add_argument('-r', '--roundtime', action='store_true', default=False, help='Start on round time interval (only with --interval)')    
     parser.add_argument('-t', '--rtimeout', type=int, default=5, help='Modbus reading timeout (s)')
-    parser.add_argument('-b', '--dbtimeout', type=int, default=300, help='Influx request timeout (s)')
+    parser.add_argument('-b', '--dbtimeout', type=int, default=120, help='Influx request timeout (s)')
     parser.add_argument('-d', '--debug', dest='debug', action='store_true', default=False, help='Debug mode')
 
     args = parser.parse_args()
