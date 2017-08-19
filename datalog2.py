@@ -106,7 +106,7 @@ def reading_cycle(d, q, sc=None):
     readout = get_readings(d)
 
     # If the internal queue is already busy, push straight to the queue file
-    if q.qsize() < 5:
+    if q.qsize() < 10:
         q.put(readout)
     else:
         save_readout_to_file(d, readout)
@@ -263,6 +263,9 @@ def push_readout(d, client, readout):
     try:
         # Append measure and tag information to reading, to identify asset
         readout.update(d.dbconf['body'])
+
+        # Append offset between time that reading was taken and current time
+        readout['fields']['reading_offset'] = int((datetime.utcnow() - datetime.strptime(readout['time'], "%Y-%m-%dT%H:%M:%SZ")).total_seconds())
 
         # Push to Influx
         if client.write_points([readout]):

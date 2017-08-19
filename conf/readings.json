@@ -1,187 +1,100 @@
 {
   "batt_soc": {"device": "si", "var": "batt_soc"},
-  "batt_temp": {"device": "si", "var": "batt_soc"},
-  "batt_E_absorbed": {"device": "si", "var": "E_absorbed"},
-  "batt_E_released": {"device": "si", "var": "E_released"},
-  "binv_P_total": {"device": "si", "var": "P_total"},
-  "binv_P1": {"device": "si", "var": "P1"},
-  "binv_P2": {"device": "si", "var": "P2"},
-  "binv_P3": {"device": "si", "var": "P3"},
-  "binv_I1": {"device": "si", "var": "I1"},
-  "binv_I2": {"device": "si", "var": "I2"},
-  "binv_I3": {"device": "si", "var": "I3"},
-  "binv_V1": {"device": "si", "var": "V1"},
-  "binv_V2": {"device": "si", "var": "V2"},
-  "binv_V3": {"device": "si", "var": "V3"},
-  "binv_freq": {"device": "si", "var": "freq"},
-  "binv_Q1": {"device": "si", "var": "Q1"},
-  "binv_Q2": {"device": "si", "var": "Q2"},
-  "binv_Q3": {"device": "si", "var": "Q3"},
-  "binv_operating_mode": {"device": "si", "var": "operating_mode"},
-  "batt_I": {"device": "si", "var": "I_batt"},
-  "batt_soc": {"device": "si", "var": "batt_soc"},
-  "batt_capacity": {"device": "si", "var": "batt_capacity"},
+  "batt_soc_error": {"device": "si", "var": "batt_soc_error"},
+  "batt_soh": {"device": "si", "var": "batt_capacity"},
   "batt_temp": {"device": "si", "var": "batt_temp"},
-  "batt_V": {"device": "si", "var": "V_batt"},
-  "batt_V_max": {"device": "si", "var": "V_batt_max"},
-  "binv_charge_mode": {"device": "si", "var": "charge_mode"},
-  "binv_relay_status": {"device": "si", "var": "relay_status"},
-  "gen_status": {"device": "si", "var": "gen_status"},
-  "binv_I_max_charge": {"device": "si", "var": "I_max_charge"},
-  "binv_I_max_discharge": {"device": "si", "var": "I_max_discharge"},
-  "binv_charge_factor": {"device": "si", "var": "charge_factor"},
   "batt_temp_min": {"device": "si", "var": "batt_temp_min"},
   "batt_temp_max": {"device": "si", "var": "batt_temp_max"},
-  "binv_t_rem_fullchg": {"device": "si", "var": "t_rem_fullchg"},
-  "binv_t_rem_equalization": {"device": "si", "var": "t_rem_equalization"},
-  "binv_t_rem_absorption": {"device": "si", "var": "t_rem_absorption"},
-  "binv_status_L1": {"device": "si", "var": "status_L1"},
-  "binv_status_L2": {"device": "si", "var": "status_L2"},
-  "binv_status_L3": {"device": "si", "var": "status_L3"},
+  "batt_V": {"device": "si", "var": "V_batt"},
+  "batt_I": {"device": "si", "var": "I_batt"},
 
-  "scb_serial_L1": {
-    "enabled": false,
-    "device": "sb1",
-    "var": "serial"
-  },
-  "scb_serial_L2": {
-    "enabled": false,
-    "device": "sb2",
-    "var": "serial"
-  },
-  "scb_serial_L3": {
-    "enabled": false,
-    "device": "sb3",
-    "var": "serial"
-  },
-  "scb_V1": {
-    "device": "sb1",
-    "var": "V1"
-  },
-  "scb_V2": {
-    "device": "sb2",
-    "var": "V2"
-  },
-  "scb_V3": {
-    "device": "sb3",
-    "var": "V3"
-  },
-  "scb_P1": {
-    "device": "sb1",
-    "var": "P1"
-  },
-  "scb_P2": {
-    "device": "sb2",
-    "var": "P2"
-  },
-  "scb_P3": {
-    "device": "sb3",
-    "var": "P3"
-  },
-  "scb_freq_L1": {
-    "device": "sb1",
-    "var": "freq"
-  },
-  "scb_freq_L2": {
-    "device": "sb2",
-    "var": "freq"
-  },
-  "scb_freq_L3": {
-    "device": "sb3",
-    "var": "freq"
-  },
-  "scb_total_yield_L1": {
-    "device": "sb1",
-    "var": "total_yield"
-  },
-  "scb_total_yield_L2": {
-    "device": "sb2",
-    "var": "total_yield"
-  },
-  "scb_total_yield_L3": {
-    "device": "sb3",
-    "var": "total_yield"
-  },
-  "scb_I1": {
-    "device": "sb1",
-    "var": "I1"
-  },
-  "scb_I2": {
-    "device": "sb2",
-    "var": "I2"
-  },
-  "scb_I3": {
-    "device": "sb3",
-    "var": "I3"
-  },
-  "scb_dc_input_I1_L1": {
-    "device": "sb1",
-    "var": "dc_in_I1"
-  },
-  "scb_dc_input_I2_L1": {
-    "device": "sb1",
-    "var": "dc_in_I2"
-  },
-  "scb_dc_input_I1_L2": {
-    "device": "sb2",
-    "var": "dc_in_I1"
-  },
-  "scb_dc_input_I2_L2": {
-    "device": "sb2",
-    "var": "dc_in_I2"
-  },
-  "scb_dc_input_I1_L3": {
-    "device": "sb3",
-    "var": "dc_in_I1"
-  },
-  "scb_dc_input_I2_L3": {
-    "device": "sb3",
-    "var": "dc_in_I2"
-  },
-  "scb_condition_L1": {
-    "device": "sb1",
-    "var": "condition"
-  },
-  "scb_condition_L2": {
-    "device": "sb2",
-    "var": "condition"
-  },
-  "scb_condition_L3": {
-    "device": "sb3",
-    "var": "condition"
-  },
-  "scb_opmode_L1": {
-    "device": "sb1",
-    "var": "operating_mode"
-  },
-  "scb_opmode_L2": {
-    "device": "sb2",
-    "var": "operating_mode"
-  },
-  "scb_opmode_L3": {
-    "device": "sb3",
-    "var": "operating_mode"
-  },
-  "scb_temp_internal_L1": {
-    "device": "sb1",
-    "var": "temp_internal"
-  },
-  "scb_temp_internal_L2": {
-    "device": "sb2",
-    "var": "temp_internal"
-  },
-  "scb_temp_internal_L3": {
-    "device": "sb3",
-    "var": "temp_internal"
-  },
-  "scb_power_reactive_L2": {
-    "enabled": false,
-    "device": "sb2",
-    "var": "Q_L2"
-  },
-  "scb_power_apparent_L2": {
-    "enabled": false,
-    "device": "sb2",
-    "var": "S_L2"
-  }
+  "binv_state_L1": {"device": "si", "var": "status_L1"},
+  "binv_state_L2": {"device": "si", "var": "status_L2"},
+  "binv_state_L3": {"device": "si", "var": "status_L3"},
+  "binv_P_L1": {"device": "si", "var": "P1"},
+  "binv_P_L2": {"device": "si", "var": "P2"},
+  "binv_P_L3": {"device": "si", "var": "P3"},
+  "binv_P_total": {"device": "si", "var": "P_total"},
+  "binv_Q_L1": {"device": "si", "var": "Q1"},
+  "binv_Q_L2": {"device": "si", "var": "Q2"},
+  "binv_Q_L3": {"device": "si", "var": "Q3"},
+  "binv_E_absorbed": {"device": "si", "var": "E_absorbed"},
+  "binv_E_released": {"device": "si", "var": "E_released"},
+  "binv_freq": {"device": "si", "var": "freq"},
+  "binv_I_L1": {"device": "si", "var": "I1"},
+  "binv_I_L2": {"device": "si", "var": "I2"},
+  "binv_I_L3": {"device": "si", "var": "I3"},
+  "binv_V_L1": {"device": "si", "var": "V1"},
+  "binv_V_L2": {"device": "si", "var": "V2"},
+  "binv_V_L3": {"device": "si", "var": "V3"},
+  "binv_operating_mode": {"device": "si", "var": "operating_mode"},
+  "binv_charge_mode": {"device": "si", "var": "charge_mode"},
+  "binv_charge_factor": {"device": "si", "var": "charge_factor"},
+  "binv_relay_status": {"device": "si", "var": "relay_status"},
+  "binv_t_rem_absorption": {"device": "si", "var": "t_rem_absorption"},
+  "binv_t_rem_equalization": {"device": "si", "var": "t_rem_equalization"},
+  "binv_t_rem_fullchg": {"device": "si", "var": "t_rem_fullchg"},
+  "binv_I_max_charge": {"enabled": false, "device": "si", "var": "I_max_charge"},
+  "binv_I_max_discharge": {"enabled": false, "device": "si", "var": "I_max_discharge"},
+
+  "gen_state": {"device": "si", "var": "gen_status"},
+
+  "grid_in_freq": {"device": "si", "var": "grid_in_freq"},
+  "grid_in_P_total": {"device": "si", "var": "grid_in_P_total"},
+  "grid_in_P_L1": {"device": "si", "var": "grid_in_P_L1"},
+  "grid_in_P_L2": {"device": "si", "var": "grid_in_P_L2"},
+  "grid_in_P_L3": {"device": "si", "var": "grid_in_P_L3"},
+  "grid_in_Q_L1": {"device": "si", "var": "grid_in_Q_L1"},
+  "grid_in_Q_L2": {"device": "si", "var": "grid_in_Q_L2"},
+  "grid_in_Q_L3": {"device": "si", "var": "grid_in_Q_L3"},
+  "grid_in_E": {"device": "si", "var": "grid_feedin_E"},
+  "grid_in_V_L1": {"device": "si", "var": "grid_in_V_L1"},
+  "grid_in_V_L2": {"device": "si", "var": "grid_in_V_L2"},
+  "grid_in_V_L3": {"device": "si", "var": "grid_in_V_L3"},
+  "grid_in_I_L1": {"device": "si", "var": "grid_in_I_L1"},
+  "grid_in_I_L2": {"device": "si", "var": "grid_in_I_L2"},
+  "grid_in_I_L3": {"device": "si", "var": "grid_in_I_L3"},
+
+  "pv_P_L1": {"device": "sb1", "var": "P1"},
+  "pv_P_L2": {"device": "sb2", "var": "P2"},
+  "pv_P_L3": {"device": "sb3", "var": "P3"},
+  "pv_state_L1": {"device": "sb1", "var": "condition"},
+  "pv_state_L2": {"device": "sb2", "var": "condition"},
+  "pv_state_L3": {"device": "sb3", "var": "condition"},
+  "pv_E_L1": {"device": "sb1", "var": "total_yield"},
+  "pv_E_L2": {"device": "sb2", "var": "total_yield"},
+  "pv_E_L3": {"device": "sb3", "var": "total_yield"},
+  "pv_invtemp_L1": {"device": "sb1", "var": "temp_internal"},
+  "pv_invtemp_L2": {"device": "sb2", "var": "temp_internal"},
+  "pv_invtemp_L3": {"device": "sb3", "var": "temp_internal"},
+  "pv_Vac_L1": {"device": "sb1", "var": "V1"},
+  "pv_Vac_L2": {"device": "sb2", "var": "V2"},
+  "pv_Vac_L3": {"device": "sb3", "var": "V3"},
+  "pv_Iac_L1": {"device": "sb1", "var": "I1"},
+  "pv_Iac_L2": {"device": "sb2", "var": "I2"},
+  "pv_Iac_L3": {"device": "sb3", "var": "I3"},
+  "pv_freq_L1": {"device": "sb1", "var": "freq"},
+  "pv_freq_L2": {"device": "sb2", "var": "freq"},
+  "pv_freq_L3": {"device": "sb3", "var": "freq"},
+  "pv_Idc1_L1": {"device": "sb1", "var": "dc_in_I1"},
+  "pv_Idc2_L1": {"device": "sb1", "var": "dc_in_I2"},
+  "pv_Vdc1_L1": {"device": "sb1", "var": "dc_in_V1"},
+  "pv_Vdc2_L1": {"device": "sb1", "var": "dc_in_V2"},
+  "pv_Pdc1_L1": {"device": "sb1", "var": "dc_in_P1"},
+  "pv_Pdc2_L1": {"device": "sb1", "var": "dc_in_P2"},
+  "pv_Idc1_L2": {"device": "sb2", "var": "dc_in_I1"},
+  "pv_Idc2_L2": {"device": "sb2", "var": "dc_in_I2"},
+  "pv_Vdc1_L2": {"device": "sb2", "var": "dc_in_V1"},
+  "pv_Vdc2_L2": {"device": "sb2", "var": "dc_in_V2"},
+  "pv_Pdc1_L2": {"device": "sb2", "var": "dc_in_P1"},
+  "pv_Pdc2_L2": {"device": "sb2", "var": "dc_in_P2"},
+  "pv_Idc1_L3": {"device": "sb3", "var": "dc_in_I1"},
+  "pv_Idc2_L3": {"device": "sb3", "var": "dc_in_I2"},
+  "pv_Vdc1_L3": {"device": "sb3", "var": "dc_in_V1"},
+  "pv_Vdc2_L3": {"device": "sb3", "var": "dc_in_V2"},
+  "pv_Pdc1_L3": {"device": "sb3", "var": "dc_in_P1"},
+  "pv_Pdc2_L3": {"device": "sb3", "var": "dc_in_P2"},
+  "pv_serial_L1": {"enabled": false, "device": "sb1", "var": "serial"},
+  "pv_serial_L2": {"enabled": false, "device": "sb2", "var": "serial"},
+  "pv_serial_L3": {"enabled": false, "device": "sb3", "var": "serial"}
 }

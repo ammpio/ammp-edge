@@ -12,7 +12,7 @@
     }
   },
   "sb1": {
-    "enabled": false,
+    "enabled": true,
     "desc": "Sunny Boy L1",
     "driver": "sma_sb5000",
     "id": null,
