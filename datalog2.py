@@ -68,7 +68,7 @@ class InfluxPusher(threading.Thread):
             time.sleep(1)
 
             # If the internal queue is empty but the queue file isn't then pull from it
-            if self._queue.empty() and os.path.getsize(d.params['qfile']) > 0:
+            if self._queue.empty() and os.path.isfile(d.params['qfile']) and os.path.getsize(d.params['qfile']) > 1:
                 readout = get_readout_from_file(d)
                 # push_readout includes a function to write back to file if the push is not successful
                 push_readout(d, client, readout)
@@ -163,7 +163,7 @@ def get_readings(d):
         if d.params['debug']:
             print('Finished reading %s at %s' % (dev, str(datetime.utcnow())))
 
-    readout['reading_duration'] = datetime.utcnow() - datetime.strptime(readout['time'], "%Y-%m-%dT%H:%M:%SZ")).total_seconds()
+    readout['fields']['reading_duration'] = (datetime.utcnow() - datetime.strptime(readout['time'], "%Y-%m-%dT%H:%M:%SZ")).total_seconds()
 
     return readout
 
