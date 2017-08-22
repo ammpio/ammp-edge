@@ -163,6 +163,8 @@ def get_readings(d):
         if d.params['debug']:
             print('Finished reading %s at %s' % (dev, str(datetime.utcnow())))
 
+    readout['readout_duration'] = datetime.utcnow() - datetime.strptime(readout['time'], "%Y-%m-%dT%H:%M:%SZ")).total_seconds()
+
     return readout
 
 
@@ -265,7 +267,7 @@ def push_readout(d, client, readout):
         readout.update(d.dbconf['body'])
 
         # Append offset between time that reading was taken and current time
-        readout['fields']['reading_offset'] = int((datetime.utcnow() - datetime.strptime(readout['time'], "%Y-%m-%dT%H:%M:%SZ")).total_seconds())
+        readout['fields']['reading_offset'] = int((datetime.utcnow() - readout['fields']['readout_duration'] - datetime.strptime(readout['time'], "%Y-%m-%dT%H:%M:%SZ")).total_seconds())
 
         # Push to Influx
         if client.write_points([readout]):
