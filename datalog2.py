@@ -7,7 +7,7 @@ import json
 import struct
 import sched, time
 import threading, queue
-from pyModbusTCP_alt import ModbusClient
+from pyModbusTCP_alt import ModbusClient_alt
 from influxdb import InfluxDBClient
 
 
@@ -154,23 +154,41 @@ def get_readings(d):
         'fields': {}
     }
 
+    # Set up queue in which to save readouts from the multiple threads that are reading each device
+    readout_q = queue.Queue()
+    jobs = []
+
+    # Set up threads for reading each of the devices
     for dev in dev_rdg:
-        if d.params['debug']:
-            print('Start reading %s at %s' % (dev, str(datetime.utcnow())))
+        dev_thread = threading.Thread(
+                target=read_device,
+                name='Readout-' + dev,
+                args=(d, dev, dev_rdg[dev], readout_q)
+                )
+        
+        jobs.append(dev_thread)
 
-        readout['fields'].update(read_device(d, dev, dev_rdg[dev]))
+    # Start each of the device reading jobs
+    for j in jobs:
+        j.start()
 
-        if d.params['debug']:
-            print('Finished reading %s at %s' % (dev, str(datetime.utcnow())))
+    # Wait until all of the reading jobs have completed
+    for j in jobs:
+        j.join()
+
+    # Get the results for each device and append them to the readout structure
+    for j in jobs:
+        fields = readout_q.get()
+        readout['fields'].update(fields)
 
     readout['fields']['reading_duration'] = (datetime.utcnow() - datetime.strptime(readout['time'], "%Y-%m-%dT%H:%M:%SZ")).total_seconds()
 
     return readout
 
 
-def read_device(d, dev, readings):
+def read_device(d, dev, readings, readout_q):
 
-    c = ModbusClient(
+    c = ModbusClient_alt(
             host=d.devices[dev]['address']['host'],
             port=d.devices[dev]['address']['port'],
             unit_id=d.devices[dev]['address']['unit_id'],
@@ -182,12 +200,15 @@ def read_device(d, dev, readings):
 
     fields = {}
 
+    if d.params['debug']:
+        print('READ: Start reading %s at %s' % (dev, str(datetime.utcnow())))
+
     for rdg in readings:
 
         # Make sure we have an open connection to server
         if not c.is_open():
             if not c.open():
-                print('Unable to connect to %s' % (dev))
+                print('READ ERROR: Unable to connect to %s' % dev)
 
         # If open() is ok, read register
         if c.is_open():
@@ -207,15 +228,19 @@ def read_device(d, dev, readings):
                 fields[rdg['reading']] = value
 
                 if d.params['debug']:
-                    print('READ: %s = %s %s' % (rdg['reading'], value, rdg['unit'] or ''))
+                    print('READ: [%s] %s = %s %s' % (dev, rdg['reading'], value, rdg['unit'] or ''))
             except:
-                print('ERROR: Could not get reading %s' % (rdg['reading']))
+                print('READ ERROR: Could not get reading %s' % rdg['reading'])
                 continue
 
     # Be nice and close the Modbus socket
     c.close()
 
-    return fields
+    if d.params['debug']:
+        print('READ: Finished reading %s at %s' % (dev, str(datetime.utcnow())))
+
+    # Append result to readings (alongside those from other devices)
+    readout_q.put(fields)
 
 
 def process_response(rdg, val_b):
@@ -267,7 +292,7 @@ def push_readout(d, client, readout):
         readout.update(d.dbconf['body'])
 
         # Append offset between time that reading was taken and current time
-        readout['fields']['reading_offset'] = int((datetime.utcnow() - readout['fields']['reading_duration'] - datetime.strptime(readout['time'], "%Y-%m-%dT%H:%M:%SZ")).total_seconds())
+        readout['fields']['reading_offset'] = int((datetime.utcnow() - datetime.strptime(readout['time'], "%Y-%m-%dT%H:%M:%SZ")).total_seconds() - readout['fields']['reading_duration'])
 
         # Push to Influx
         if client.write_points([readout]):
@@ -275,7 +300,10 @@ def push_readout(d, client, readout):
             return True
         else:
             raise Exception('PUSH: Something didn''t go well for point at %s' % readout['time'])
-    except:
+    except Exception as ex:
+        template = "An exception of type {0} occurred. Arguments:\n{1!r}"
+        message = template.format(type(ex).__name__, ex.args)
+        print(message)
         # For some reason the point wasn't written to Influx, so we should put it back in the file
         print('PUSH: Did not work. Writing readout at %s to queue file instead' % readout['time'])
         save_readout_to_file(d, readout)

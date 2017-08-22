@@ -1,18 +1,19 @@
 import pyModbusTCP.client
+from pyModbusTCP.client import ModbusClient
 import struct
 
-def _recv_all(self, count):
-    buf = b''
-    while count:
-        newbuf = self._recv(count)
-        if not newbuf: return None
-        buf += newbuf
-        count -= len(newbuf)
-    return buf
+class ModbusClient_alt(ModbusClient):
 
-pyModbusTCP.client.ModbusClient._recv_all = _recv_all
+    def _recv_all(self, count):
+        buf = b''
+        while count:
+            newbuf = self._recv(count)
+            if not newbuf: return None
+            buf += newbuf
+            count -= len(newbuf)
+        return buf
 
-def _new_recv_mbus(self):
+    def _recv_mbus(self):
         """Receive a modbus frame
 
         :returns: modbus frame body or None if error
@@ -111,7 +112,3 @@ def _new_recv_mbus(self):
             # return
             return f_body
 
-pyModbusTCP.client.ModbusClient._recv_mbus = _new_recv_mbus
-
-
-from pyModbusTCP.client import ModbusClient

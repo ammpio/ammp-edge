@@ -1,0 +1,191 @@
+Loaded driver sma_sb5000.json
+Loaded driver sma_si80.json
+Waiting to start on round time interval...
+READ: Start reading si at 2017-08-22 20:50:00.004012
+READ: Start reading sb1 at 2017-08-22 20:50:00.004429
+READ: Start reading sb2 at 2017-08-22 20:50:00.005409
+READ: Start reading sb3 at 2017-08-22 20:50:00.006021
+READ: [sb1] pv_P_L1 = None W
+READ: [sb2] pv_P_L2 = None W
+READ: [si] batt_soc = 85.0 %
+READ: [sb3] pv_P_L3 = None W
+READ: [sb1] pv_state_L1 = 307 
+READ: [si] batt_soc_error = 5.4 %
+READ: [sb2] pv_state_L2 = 307 
+READ: [sb3] pv_state_L3 = 307 
+READ: [si] batt_soh = 98.0 %
+READ: [sb1] pv_E_L1 = 1263302.0 Wh
+READ: [sb3] pv_E_L3 = 1146704.0 Wh
+READ: [sb2] pv_E_L2 = 1205980.0 Wh
+READ: [si] batt_temp = 17.1 C
+READ: [sb1] pv_invtemp_L1 = None C
+READ: [sb2] pv_invtemp_L2 = None C
+READ: [sb3] pv_invtemp_L3 = None C
+READ: [si] batt_temp_min = 0.0 C
+READ: [sb2] pv_Vac_L2 = None V
+READ: [sb1] pv_Vac_L1 = None V
+READ: [sb3] pv_Vac_L3 = None V
+READ: [si] batt_temp_max = 28.1 C
+READ: [sb2] pv_Iac_L2 = None A
+READ: [sb1] pv_Iac_L1 = None A
+READ: [sb3] pv_Iac_L3 = None A
+READ: [si] batt_V = 49.800000000000004 V
+READ: [sb2] pv_freq_L2 = None Hz
+READ: [sb1] pv_freq_L1 = None Hz
+READ: [sb3] pv_freq_L3 = None Hz
+READ: [si] batt_I = 40.1 A
+READ: [sb2] pv_Idc1_L2 = None A
+READ: [sb1] pv_Idc1_L1 = None A
+READ: [sb3] pv_Idc1_L3 = None A
+READ: [si] binv_state_L1 = 307 
+READ: [sb1] pv_Idc2_L1 = None A
+READ: [sb3] pv_Idc2_L3 = None A
+READ: [sb2] pv_Idc2_L2 = None A
+READ: [si] binv_state_L2 = 307 
+READ: [sb1] pv_Vdc1_L1 = None V
+READ: [sb3] pv_Vdc1_L3 = None V
+READ: [sb2] pv_Vdc1_L2 = None V
+READ: [si] binv_state_L3 = 307 
+READ: [sb1] pv_Vdc2_L1 = None V
+READ: [sb3] pv_Vdc2_L3 = None V
+READ: [sb2] pv_Vdc2_L2 = None V
+READ: [si] binv_P_L1 = 600.0 W
+READ: [sb2] pv_Pdc1_L2 = None W
+READ: [sb1] pv_Pdc1_L1 = None W
+READ: [sb3] pv_Pdc1_L3 = None W
+READ: [si] binv_P_L2 = 900.0 W
+READ: [sb1] pv_Pdc2_L1 = None W
+READ: Finished reading sb1 at 2017-08-22 20:50:14.731731
+READ: [sb3] pv_Pdc2_L3 = None W
+READ: Finished reading sb3 at 2017-08-22 20:50:14.781169
+READ: [sb2] pv_Pdc2_L2 = None W
+READ: Finished reading sb2 at 2017-08-22 20:50:14.782180
+READ: [si] binv_P_L3 = 300.0 W
+READ: [si] binv_P_total = 1900.0 W
+READ: [si] binv_Q_L1 = -600.0 VAr
+READ: [si] binv_Q_L2 = -700.0 VAr
+READ: [si] binv_Q_L3 = -500.0 VAr
+READ: [si] binv_E_absorbed = 2567900.0 Wh
+READ: [si] binv_E_released = 1694000.0 Wh
+READ: [si] binv_freq = 48.9 Hz
+READ: [si] binv_I_L1 = 3.9 A
+READ: [si] binv_I_L2 = 5.1000000000000005 A
+READ: [si] binv_I_L3 = 2.9 A
+READ: [si] binv_V_L1 = 230.0 V
+READ: [si] binv_V_L2 = 230.0 V
+READ: [si] binv_V_L3 = 229.9 V
+READ: [si] binv_operating_mode = 303 
+READ: [si] binv_charge_mode = 1770 
+READ: [si] binv_charge_factor = 1.12 
+READ: [si] binv_relay_status = 303 
+READ: [si] binv_t_rem_absorption = 0.0 s
+READ: [si] binv_t_rem_equalization = 2764800.0 s
+READ: [si] binv_t_rem_fullchg = 950400.0 s
+READ: [si] gen_state = 303 
+READ: [si] grid_in_freq = 0.0 Hz
+READ: [si] grid_in_P_total = 0.0 W
+READ: [si] grid_in_P_L1 = 0.0 W
+READ: [si] grid_in_P_L2 = 0.0 W
+READ: [si] grid_in_P_L3 = 0.0 W
+READ: [si] grid_in_Q_L1 = 0.0 VAr
+READ: [si] grid_in_Q_L2 = 0.0 VAr
+READ: [si] grid_in_Q_L3 = 0.0 VAr
+READ: [si] grid_in_E = 0.0 Wh
+READ: [si] grid_in_V_L1 = 3.9 V
+READ: [si] grid_in_V_L2 = 3.3000000000000003 V
+READ: [si] grid_in_V_L3 = 2.4 V
+READ: [si] grid_in_I_L1 = 0.0 A
+READ: [si] grid_in_I_L2 = 0.0 A
+READ: [si] grid_in_I_L3 = 0.2 A
+READ: Finished reading si at 2017-08-22 20:50:55.431332
+PUSH: Successfully pushed point at 2017-08-22T20:50:00Z
+READ: Start reading si at 2017-08-22 20:51:00.003676
+READ: Start reading sb1 at 2017-08-22 20:51:00.004080
+READ: Start reading sb2 at 2017-08-22 20:51:00.004806
+READ: Start reading sb3 at 2017-08-22 20:51:00.005343
+READ: [si] batt_soc = 85.0 %
+READ: [sb1] pv_P_L1 = None W
+READ: [sb3] pv_P_L3 = None W
+READ: [sb2] pv_P_L2 = None W
+READ: [si] batt_soc_error = 5.4 %
+READ: [sb1] pv_state_L1 = 307 
+READ: [sb2] pv_state_L2 = 307 
+READ: [sb3] pv_state_L3 = 307 
+READ: [si] batt_soh = 98.0 %
+READ: [sb1] pv_E_L1 = 1263302.0 Wh
+READ: [sb3] pv_E_L3 = 1146704.0 Wh
+READ: [sb2] pv_E_L2 = 1205980.0 Wh
+READ: [si] batt_temp = 17.1 C
+READ: [sb1] pv_invtemp_L1 = None C
+READ: [sb3] pv_invtemp_L3 = None C
+READ: [sb2] pv_invtemp_L2 = None C
+READ: [si] batt_temp_min = 0.0 C
+READ: [sb1] pv_Vac_L1 = None V
+READ: [sb3] pv_Vac_L3 = None V
+READ: [sb2] pv_Vac_L2 = None V
+READ: [si] batt_temp_max = 28.1 C
+READ: [sb1] pv_Iac_L1 = None A
+READ: [sb3] pv_Iac_L3 = None A
+READ: [sb2] pv_Iac_L2 = None A
+READ: [si] batt_V = 49.800000000000004 V
+READ: [sb1] pv_freq_L1 = None Hz
+READ: [sb3] pv_freq_L3 = None Hz
+READ: [sb2] pv_freq_L2 = None Hz
+READ: [si] batt_I = 40.0 A
+READ: [sb1] pv_Idc1_L1 = None A
+READ: [sb3] pv_Idc1_L3 = None A
+READ: [sb2] pv_Idc1_L2 = None A
+READ: [si] binv_state_L1 = 307 
+READ: [sb1] pv_Idc2_L1 = None A
+READ: [sb3] pv_Idc2_L3 = None A
+READ: [sb2] pv_Idc2_L2 = None A
+READ: [si] binv_state_L2 = 307 
+READ: [sb1] pv_Vdc1_L1 = None V
+READ: [sb3] pv_Vdc1_L3 = None V
+READ: [sb2] pv_Vdc1_L2 = None V
+READ: [si] binv_state_L3 = 307 
+READ: [sb1] pv_Vdc2_L1 = None V
+READ: [sb3] pv_Vdc2_L3 = None V
+READ: [sb2] pv_Vdc2_L2 = None V
+READ: [si] binv_P_L1 = 600.0 W
+READ: [sb1] pv_Pdc1_L1 = None W
+READ: [sb3] pv_Pdc1_L3 = None W
+READ: [sb2] pv_Pdc1_L2 = None W
+READ: [si] binv_P_L2 = 900.0 W
+READ: [sb1] pv_Pdc2_L1 = None W
+READ: [sb3] pv_Pdc2_L3 = None W
+READ: Finished reading sb3 at 2017-08-22 20:51:14.282889
+READ: Finished reading sb1 at 2017-08-22 20:51:14.283242
+READ: [sb2] pv_Pdc2_L2 = None W
+READ: Finished reading sb2 at 2017-08-22 20:51:14.729520
+READ: [si] binv_P_L3 = 300.0 W
+READ: [si] binv_P_total = 1880.0 W
+READ: [si] binv_Q_L1 = -600.0 VAr
+READ: [si] binv_Q_L2 = -700.0 VAr
+READ: [si] binv_Q_L3 = -500.0 VAr
+READ: [si] binv_E_absorbed = 2567900.0 Wh
+READ: [si] binv_E_released = 1694000.0 Wh
+READ: [si] binv_freq = 48.9 Hz
+READ: [si] binv_I_L1 = 3.8000000000000003 A
+READ: [si] binv_I_L2 = 5.1000000000000005 A
+READ: [si] binv_I_L3 = 2.9 A
+READ: [si] binv_V_L1 = 229.9 V
+READ: [si] binv_V_L2 = 230.0 V
+READ: [si] binv_V_L3 = 229.9 V
+READ: [si] binv_operating_mode = 303 
+READ: [si] binv_charge_mode = 1770 
+READ: [si] binv_charge_factor = 1.12 
+READ: [si] binv_relay_status = 303 
+READ: [si] binv_t_rem_absorption = 0.0 s
+READ: [si] binv_t_rem_equalization = 2764800.0 s
+READ: [si] binv_t_rem_fullchg = 950400.0 s
+READ: [si] gen_state = 303 
+READ: [si] grid_in_freq = 0.0 Hz
+READ: [si] grid_in_P_total = 0.0 W
+READ: [si] grid_in_P_L1 = 0.0 W
+READ: [si] grid_in_P_L2 = 0.0 W
+READ: [si] grid_in_P_L3 = 0.0 W
+READ: [si] grid_in_Q_L1 = 0.0 VAr
+READ: [si] grid_in_Q_L2 = 0.0 VAr
+READ: [si] grid_in_Q_L3 = 0.0 VAr
+READ: [si] grid_in_E = 0.0 Wh
