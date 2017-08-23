@@ -18,13 +18,7 @@ class LoggerConfig(object):
     drivers = {}
 
     def __init__(self, pargs):
-        self.params = {'debug': pargs['debug'],
-                'interval': pargs['interval'],
-                'qfile': pargs['qfile'],
-                'rtimeout': pargs['rtimeout'],
-                'dbtimeout': pargs['dbtimeout'],
-                'roundtime': pargs['roundtime']
-            }
+        self.params = pargs
 
         with open(pargs['devices']) as devices_file:
             self.devices = json.load(devices_file)
