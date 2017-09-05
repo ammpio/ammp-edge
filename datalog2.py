@@ -281,7 +281,7 @@ def push_readout(d, readout):
         # Push to endpoint (own ingester or Influx, depending on type sent in dbconf)
         if d.dbconf['conn']['type'] == 'ingest':
 
-            result = requests.post('https://%s/' % d.dbconf['conn']['host'], json=readout)
+            result = requests.post('https://%s/' % d.dbconf['conn']['host'], json=readout, headers={'X-API-Key': d.dbconf['conn']['key']})
             result = r.status_code == 200
 
         elif d.dbconf['conn']['type'] == 'influx':
