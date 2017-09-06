@@ -25,7 +25,7 @@ DAEMON_USER=datalog
 # The process ID of the script when it runs is stored here:
 PIDFILE=/var/run/$DAEMON_NAME.pid
 
-#. /lib/lsb/init-functions
+. /lib/lsb/init-functions
 
 do_start () {
     log_daemon_msg "Starting system $DAEMON_NAME daemon"
