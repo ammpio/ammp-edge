@@ -21,7 +21,7 @@ def setup_logfile(d):
     # Set up logging (the type where you write to a log file)
     LOG_FILENAME = d.params['logfile']
 
-    # Set to DEBUG level if -d parameter has been set, otherwise leave to INFO
+    # Set to DEBUG level if --debug parameter has been set, otherwise leave to INFO
     if d.params['debug']:
         LOG_LEVEL = logging.DEBUG  # Could be e.g. "DEBUG" or "WARNING"
     else:
@@ -41,20 +41,14 @@ def setup_logfile(d):
     # Attach the handler to the logger
     logger.addHandler(handler)
 
+    # create console handler with a higher log level
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.ERROR)
+    ch.setFormatter(formatter)
+    logger.addHandler(ch)
+
     return logger
 
-
-# Make a class we can use to capture stdout and sterr in the log
-class StdLogger(object):
-        def __init__(self, logger, level):
-                """Needs a logger and a logger level."""
-                self.logger = logger
-                self.level = level
-
-        def write(self, message):
-                # Only log if there is a message (not just a new line)
-                if message.rstrip() != "":
-                        self.logger.log(self.level, message.rstrip())
 
 class DatalogConfig(object):
     params = {}
@@ -394,10 +388,10 @@ if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('-R', '--readings', default='/etc/datalog/readings.json', help='Readings definition file')
-    parser.add_argument('-D', '--devices', default='/etc/datalog/devices.json', help='Device list file')
-    parser.add_argument('-P', '--drvpath', default='/etc/datalog/drivers', help='Path containing drivers (device register maps)')
-    parser.add_argument('-B', '--dbconf', default='/etc/datalog/dbconf.json', help='Output endpoint configuration spec file')
+    parser.add_argument('-R', '--readings', default='conf/readings.json', help='Readings definition file')
+    parser.add_argument('-D', '--devices', default='conf/devices.json', help='Device list file')
+    parser.add_argument('-P', '--drvpath', default='conf/drivers', help='Path containing drivers (device register maps)')
+    parser.add_argument('-B', '--dbconf', default='conf/dbconf.json', help='Output endpoint configuration spec file')
     parser.add_argument('-q', '--qfile', default='/tmp/datalog_queue.json', help='Queue file (for non-volatile storage during comms outage)')
     parser.add_argument('-l', '--logfile', default='/tmp/datalog.log', help='Log file')
     parser.add_argument('-I', '--interval', type=int, help='Interval for repeated readings (s)')
@@ -412,7 +406,7 @@ if __name__ == '__main__':
     d = DatalogConfig(pargs)
 
     d.logfile = setup_logfile(d)
-    
+
     # Replace stdout with logging to file at INFO level
     sys.stdout = StdLogger(d.logfile, logging.INFO)
     # Replace stderr with logging to file at ERROR level
