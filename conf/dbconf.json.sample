@@ -9,7 +9,7 @@
 		"dbname": "datalog_test"
 		
 		// For pushing to AWS endpoint
-	    "type": "ingest",
+		"type": "ingest",
 		"host": "dl-ingest.ammp.io",
 		"key": "insert-actual-key"
 	},
