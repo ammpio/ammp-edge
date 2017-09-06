@@ -16,30 +16,36 @@ import requests
 import logging
 import logging.handlers
 
-# Set up logging (the type where you write to a log file)
-LOG_FILENAME = "/tmp/datalog.log"
-LOG_LEVEL = logging.DEBUG  # Could be e.g. "DEBUG" or "WARNING"
 
-# Configure logging to log to a file, making a new file at midnight and keeping the last 7 day's data
-# Give the logger a unique name (good practice)
-logger = logging.getLogger(__name__)
-# Set the log level to LOG_LEVEL
-logger.setLevel(LOG_LEVEL)
-# Make a handler that writes to a file, making a new file at midnight and keeping 7 backups
-handler = logging.handlers.TimedRotatingFileHandler(LOG_FILENAME, when="midnight", backupCount=7)
-# Format each log message like this
-formatter = logging.Formatter('%(asctime)s %(levelname)-8s %(message)s')
-# Attach the formatter to the handler
-handler.setFormatter(formatter)
-# Attach the handler to the logger
-logger.addHandler(handler)
+def setup_logfile(d):
+    # Set up logging (the type where you write to a log file)
+    LOG_FILENAME = d.params['logfile']
 
-logger.info('info')
-logger.warn('warn')
-logger.debug('debug')
+    # Set to DEBUG level if -d parameter has been set, otherwise leave to INFO
+    if d.params['debug']:
+        LOG_LEVEL = logging.DEBUG  # Could be e.g. "DEBUG" or "WARNING"
+    else:
+        LOG_LEVEL = logging.INFO
+
+    # Configure logging to log to a file, making a new file at midnight and keeping the last 7 day's data
+    # Give the logger a unique name (good practice)
+    logger = logging.getLogger(__name__)
+    # Set the log level to LOG_LEVEL
+    logger.setLevel(LOG_LEVEL)
+    # Make a handler that writes to a file, making a new file at midnight and keeping 7 backups
+    handler = logging.handlers.TimedRotatingFileHandler(LOG_FILENAME, when="midnight", backupCount=7)
+    # Format each log message like this
+    formatter = logging.Formatter('%(asctime)s %(levelname)-8s %(message)s')
+    # Attach the formatter to the handler
+    handler.setFormatter(formatter)
+    # Attach the handler to the logger
+    logger.addHandler(handler)
+
+    return logger
+
 
 # Make a class we can use to capture stdout and sterr in the log
-class MyLogger(object):
+class StdLogger(object):
         def __init__(self, logger, level):
                 """Needs a logger and a logger level."""
                 self.logger = logger
@@ -49,11 +55,6 @@ class MyLogger(object):
                 # Only log if there is a message (not just a new line)
                 if message.rstrip() != "":
                         self.logger.log(self.level, message.rstrip())
-
-# Replace stdout with logging to file at INFO level
-sys.stdout = MyLogger(logger, logging.INFO)
-# Replace stderr with logging to file at ERROR level
-sys.stderr = MyLogger(logger, logging.ERROR)
 
 class DatalogConfig(object):
     params = {}
@@ -228,14 +229,14 @@ def read_device(d, dev, readings, readout_q):
 
     fields = {}
 
-    logger.info('READ: Start reading %s at %s' % (dev, str(datetime.utcnow())))
+    d.logfile.info('READ: Start reading %s at %s' % (dev, str(datetime.utcnow())))
 
     for rdg in readings:
 
         # Make sure we have an open connection to server
         if not c.is_open():
             if not c.open():
-                logger.error('READ: Unable to connect to %s' % dev)
+                d.logfile.error('READ: Unable to connect to %s' % dev)
 
         # If open() is ok, read register
         if c.is_open():
@@ -254,15 +255,15 @@ def read_device(d, dev, readings, readout_q):
                 # Append to key-value store            
                 fields[rdg['reading']] = value
 
-                logger.debug('READ: [%s] %s = %s %s' % (dev, rdg['reading'], value, rdg['unit'] or ''))
+                d.logfile.debug('READ: [%s] %s = %s %s' % (dev, rdg['reading'], value, rdg['unit'] or ''))
             except:
-                logger.error('READ: Could not get reading %s' % rdg['reading'])
+                d.logfile.error('READ: Could not get reading %s' % rdg['reading'])
                 continue
 
     # Be nice and close the Modbus socket
     c.close()
 
-    logger.info('READ: Finished reading %s at %s' % (dev, str(datetime.utcnow())))
+    d.logfile.info('READ: Finished reading %s at %s' % (dev, str(datetime.utcnow())))
 
     # Append result to readings (alongside those from other devices)
     readout_q.put(fields)
@@ -340,16 +341,16 @@ def push_readout(d, readout):
             result = influx_client.write_points([readout])
 
         if result:
-            logger.info('PUSH: Successfully pushed point at %s' % (readout['time']))
+            d.logfile.info('PUSH: Successfully pushed point at %s' % (readout['time']))
             return True
         else:
             raise Exception('PUSH: Something didn''t go well for point at %s' % readout['time'])
     except Exception as ex:
         template = "An exception of type {0} occurred. Arguments:\n{1!r}"
         message = template.format(type(ex).__name__, ex.args)
-        logger.warn(message)
+        d.logfile.warn(message)
         # For some reason the point wasn't written to Influx, so we should put it back in the file
-        logger.warn('PUSH: Did not work. Writing readout at %s to queue file instead' % readout['time'])
+        d.logfile.warn('PUSH: Did not work. Writing readout at %s to queue file instead' % readout['time'])
         save_readout_to_file(d, readout)
  
         return False
@@ -393,11 +394,12 @@ if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('-R', '--readings', default='conf/readings.json', help='Readings definition file')
-    parser.add_argument('-D', '--devices', default='conf/devices.json', help='Device list file')
-    parser.add_argument('-P', '--drvpath', default='conf/drivers', help='Path containing drivers (device register maps)')
-    parser.add_argument('-B', '--dbconf', default='conf/dbconf.json', help='Output endpoint configuration spec file')
-    parser.add_argument('-q', '--qfile', default='data/queue.json', help='Queue file (for non-volatile storage during comms outage')
+    parser.add_argument('-R', '--readings', default='/etc/datalog/readings.json', help='Readings definition file')
+    parser.add_argument('-D', '--devices', default='/etc/datalog/devices.json', help='Device list file')
+    parser.add_argument('-P', '--drvpath', default='/etc/datalog/drivers', help='Path containing drivers (device register maps)')
+    parser.add_argument('-B', '--dbconf', default='/etc/datalog/dbconf.json', help='Output endpoint configuration spec file')
+    parser.add_argument('-q', '--qfile', default='/tmp/datalog_queue.json', help='Queue file (for non-volatile storage during comms outage)')
+    parser.add_argument('-l', '--logfile', default='/tmp/datalog.log', help='Log file')
     parser.add_argument('-I', '--interval', type=int, help='Interval for repeated readings (s)')
     parser.add_argument('-r', '--roundtime', action='store_true', default=False, help='Start on round time interval (only with --interval)')    
     parser.add_argument('-t', '--rtimeout', type=int, default=5, help='Modbus reading timeout (s)')
@@ -408,6 +410,13 @@ if __name__ == '__main__':
     pargs = vars(args)
 
     d = DatalogConfig(pargs)
+
+    d.logfile = setup_logfile(d)
+    
+    # Replace stdout with logging to file at INFO level
+    sys.stdout = StdLogger(d.logfile, logging.INFO)
+    # Replace stderr with logging to file at ERROR level
+    sys.stderr = StdLogger(d.logfile, logging.ERROR)
 
     q = queue.LifoQueue()
 
@@ -426,7 +435,7 @@ if __name__ == '__main__':
 
         if d.params['roundtime']:
             s.enterabs(roundtime(d), 1, reading_cycle, (d, q, s))
-            logger.info('Waiting to start on round time interval...')
+            d.logfile.info('Waiting to start on round time interval...')
         else:
             reading_cycle(d, q, s)
 
