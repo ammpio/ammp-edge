@@ -5,5 +5,5 @@ Modbus data logger
 The script can be run in a daemon-like manner (to be refined):
 ```
 cd /opt/datalog
-nohup python3 -u datalog2.py -d -I 60 -r > log/datalog2.log 2>&1 &
+nohup python3 -u datalog.py -d -I 60 -r > log/datalog.log 2>&1 &
 ```
