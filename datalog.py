@@ -403,12 +403,13 @@ if __name__ == '__main__':
     args = parser.parse_args()
     pargs = vars(args)
 
+    print('a')
     d = DatalogConfig(pargs)
-
+    print('b')
     d.logfile = setup_logfile(d)
-
+    print('c')
     q = queue.LifoQueue()
-
+    
     # Create an instance of the queue processor
     pusher = DataPusher(d, q)
     # Start calls the internal run() method to kick off the thread
