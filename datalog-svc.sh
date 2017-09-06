@@ -2,7 +2,7 @@
 
 ### BEGIN INIT INFO
 # Provides:          datalog-svc
-# Required-Start:    $remote_fs $syslog $ntp
+# Required-Start:    $remote_fs $syslog $time
 # Required-Stop:     $remote_fs $syslog
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
