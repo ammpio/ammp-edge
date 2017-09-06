@@ -17,39 +17,6 @@ import logging
 import logging.handlers
 
 
-def setup_logfile(d):
-    # Set up logging (the type where you write to a log file)
-    LOG_FILENAME = d.params['logfile']
-
-    # Set to DEBUG level if --debug parameter has been set, otherwise leave to INFO
-    if d.params['debug']:
-        LOG_LEVEL = logging.DEBUG  # Could be e.g. "DEBUG" or "WARNING"
-    else:
-        LOG_LEVEL = logging.INFO
-
-    # Configure logging to log to a file, making a new file at midnight and keeping the last 7 day's data
-    # Give the logger a unique name (good practice)
-    logger = logging.getLogger(__name__)
-    # Set the log level to LOG_LEVEL
-    logger.setLevel(LOG_LEVEL)
-    # Make a handler that writes to a file, making a new file at midnight and keeping 7 backups
-    handler = logging.handlers.TimedRotatingFileHandler(LOG_FILENAME, when="midnight", backupCount=7)
-    # Format each log message like this
-    formatter = logging.Formatter('%(asctime)s %(levelname)-8s %(message)s')
-    # Attach the formatter to the handler
-    handler.setFormatter(formatter)
-    # Attach the handler to the logger
-    logger.addHandler(handler)
-
-    # create console handler with a higher log level
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.ERROR)
-    ch.setFormatter(formatter)
-    logger.addHandler(ch)
-
-    return logger
-
-
 class DatalogConfig(object):
     params = {}
     devices = {}
@@ -108,6 +75,52 @@ class DataPusher(threading.Thread):
             else:
                 break
 
+
+def setup_logfile(d):
+    # Set up logging (the type where you write to a log file)
+    LOG_FILENAME = d.params['logfile']
+
+    # Set to DEBUG level if --debug parameter has been set, otherwise leave to INFO
+    if d.params['debug']:
+        LOG_LEVEL = logging.DEBUG  # Could be e.g. "DEBUG" or "WARNING"
+    else:
+        LOG_LEVEL = logging.INFO
+
+    # Configure logging to log to a file, making a new file at midnight and keeping the last 7 day's data
+    # Give the logger a unique name (good practice)
+    logger = logging.getLogger(__name__)
+    # Set the log level to LOG_LEVEL
+    logger.setLevel(LOG_LEVEL)
+    # Make a handler that writes to a file, making a new file at midnight and keeping 7 backups
+    handler = logging.handlers.TimedRotatingFileHandler(LOG_FILENAME, when="midnight", backupCount=7)
+    # Format each log message like this
+    formatter = logging.Formatter('%(asctime)s %(levelname)-8s %(message)s')
+    # Attach the formatter to the handler
+    handler.setFormatter(formatter)
+    # Attach the handler to the logger
+    logger.addHandler(handler)
+
+    return logger
+
+
+class LoggerWriter:
+    def __init__(self, level):
+        # self.level is really like using log.debug(message)
+        # at least in my case
+        self.level = level
+
+    def write(self, message):
+        # if statement reduces the amount of newlines that are
+        # printed to the logger
+        if message != '\n':
+            self.level(message)
+
+    def flush(self):
+        # create a flush method so things can be flushed when
+        # the system wants to. Not sure if simply 'printing'
+        # sys.stderr is the correct way to do it, but it seemed
+        # to work properly for me.
+        self.level(sys.stderr)
 
 
 def reading_cycle(d, q, sc=None):
@@ -403,13 +416,17 @@ if __name__ == '__main__':
     args = parser.parse_args()
     pargs = vars(args)
 
-    print('a')
+    # Set up configuration dict/structure
     d = DatalogConfig(pargs)
-    print('b')
+
+    # Set up logging and redirect stdout and stderr ro error file
     d.logfile = setup_logfile(d)
-    print('c')
+    sys.stdout = LoggerWriter(d.logfile.info)
+    sys.stderr = LoggerWriter(d.logfile.error)
+
+    # Set up reading queue
     q = queue.LifoQueue()
-    
+
     # Create an instance of the queue processor
     pusher = DataPusher(d, q)
     # Start calls the internal run() method to kick off the thread
