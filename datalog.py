@@ -76,23 +76,20 @@ class DataPusher(threading.Thread):
                 break
 
 
-def setup_logfile(d):
-    # Set up logging (the type where you write to a log file)
-    LOG_FILENAME = d.params['logfile']
+def setup_logfile(log_filename, debug):
 
-    # Set to DEBUG level if --debug parameter has been set, otherwise leave to INFO
-    if d.params['debug']:
-        LOG_LEVEL = logging.DEBUG  # Could be e.g. "DEBUG" or "WARNING"
+    if debug:
+        log_level = logger.debug
     else:
-        LOG_LEVEL = logging.INFO
+        log_level = logger.info
 
     # Configure logging to log to a file, making a new file at midnight and keeping the last 7 day's data
     # Give the logger a unique name (good practice)
     logger = logging.getLogger(__name__)
     # Set the log level to LOG_LEVEL
-    logger.setLevel(LOG_LEVEL)
+    logger.setLevel(log_level)
     # Make a handler that writes to a file, making a new file at midnight and keeping 7 backups
-    handler = logging.handlers.TimedRotatingFileHandler(LOG_FILENAME, when="midnight", backupCount=7)
+    handler = logging.handlers.TimedRotatingFileHandler(log_filename, when="midnight", backupCount=7)
     # Format each log message like this
     formatter = logging.Formatter('%(asctime)s %(levelname)-8s %(message)s')
     # Attach the formatter to the handler
@@ -416,13 +413,13 @@ if __name__ == '__main__':
     args = parser.parse_args()
     pargs = vars(args)
 
-    # Set up configuration dict/structure
-    d = DatalogConfig(pargs)
-
     # Set up logging and redirect stdout and stderr ro error file
-    d.logfile = setup_logfile(d)
+    d.logfile = setup_logfile(pargs['logfile'], pargs['debug'])
     sys.stdout = LoggerWriter(d.logfile.info)
     sys.stderr = LoggerWriter(d.logfile.error)
+
+    # Set up configuration dict/structure
+    d = DatalogConfig(pargs)
 
     # Set up reading queue
     q = queue.LifoQueue()
