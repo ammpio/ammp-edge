@@ -1,13 +1,13 @@
 #!/bin/sh
 
 ### BEGIN INIT INFO
-# Provides:          myservice
-# Required-Start:    $remote_fs $syslog
+# Provides:          datalog-svc
+# Required-Start:    $remote_fs $syslog $ntp
 # Required-Stop:     $remote_fs $syslog
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
-# Short-Description: Put a short description of the service here
-# Description:       Put a long description of the service here
+# Short-Description: Datalogging service
+# Description:       Datalogging service
 ### END INIT INFO
 
 # Change the next 3 lines to suit where you install your script and what you want to call it
