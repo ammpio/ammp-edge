@@ -23,8 +23,9 @@ class DatalogConfig(object):
     readings = {}
     drivers = {}
 
-    def __init__(self, pargs):
+    def __init__(self, pargs, logfile):
         self.params = pargs
+        self.logfile = logfile
 
         with open(pargs['devices']) as devices_file:
             self.devices = json.load(devices_file)
@@ -42,7 +43,7 @@ class DatalogConfig(object):
             with open(os.path.join(pargs['drvpath'], drv)) as driver_file:
                 self.drivers[os.path.splitext(drv)[0]] = json.load(driver_file)
                 if self.params['debug']:
-                    d.logfile.info('Loaded driver %s' % (drv))
+                    logfile.info('Loaded driver %s' % (drv))
 
 
 class DataPusher(threading.Thread): 
@@ -419,8 +420,7 @@ if __name__ == '__main__':
     sys.stderr = LoggerWriter(logfile.error)
 
     # Set up configuration dict/structure
-    d = DatalogConfig(pargs)
-    d.logfile = logfile
+    d = DatalogConfig(pargs, logfile)
 
     # Set up reading queue
     q = queue.LifoQueue()
