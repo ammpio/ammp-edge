@@ -407,11 +407,6 @@ if __name__ == '__main__':
 
     d.logfile = setup_logfile(d)
 
-    # Replace stdout with logging to file at INFO level
-    sys.stdout = StdLogger(d.logfile, logging.INFO)
-    # Replace stderr with logging to file at ERROR level
-    sys.stderr = StdLogger(d.logfile, logging.ERROR)
-
     q = queue.LifoQueue()
 
     # Create an instance of the queue processor
