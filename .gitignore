@@ -6,6 +6,7 @@
 # *~
 conf/dbconf.json
 data/
+log/
 **/.DS_Store
 **/__pycache__/
 nohup.out

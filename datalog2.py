@@ -9,7 +9,7 @@ import sched, time
 import threading, queue
 from pyModbusTCP_alt import ModbusClient_alt
 from influxdb import InfluxDBClient
-
+import requests
 
 class LoggerConfig(object):
     params = {}
@@ -39,23 +39,13 @@ class LoggerConfig(object):
                     print('Loaded driver %s' % (drv))
 
 
-class InfluxPusher(threading.Thread): 
+class DataPusher(threading.Thread): 
     def __init__(self, d, queue): 
         threading.Thread.__init__(self)
         self._d = d
         self._queue = queue
 
     def run(self):
-
-        client = InfluxDBClient(
-            host = self._d.dbconf['conn']['host'],
-            port = self._d.dbconf['conn']['port'],
-            username = self._d.dbconf['conn']['username'],
-            password = self._d.dbconf['conn']['password'],
-            database = self._d.dbconf['conn']['dbname'],
-            ssl = True,
-            verify_ssl = True,
-            timeout = self._d.params['dbtimeout'])
 
         while True: 
             # Don't go too fast (in case we're just recovering from a data outage and there's a lot in the queue)
@@ -65,7 +55,7 @@ class InfluxPusher(threading.Thread):
             if self._queue.empty() and os.path.isfile(d.params['qfile']) and os.path.getsize(d.params['qfile']) > 1:
                 readout = get_readout_from_file(d)
                 # push_readout includes a function to write back to file if the push is not successful
-                push_readout(d, client, readout)
+                push_readout(d, readout)
 
                 continue
 
@@ -75,7 +65,7 @@ class InfluxPusher(threading.Thread):
 
             # If there is a readout, push it to the database; if False or None, we break
             if readout:
-                push_readout(self._d, client, readout)
+                push_readout(self._d, readout)
             else:
                 break
 
@@ -276,10 +266,7 @@ def process_response(rdg, val_b):
     return value
 
 
-def push_readout(d, client, readout):
-    # Read last line of input file
-    # if d.params['debug']:
-    #     print(readout)
+def push_readout(d, readout):
 
     try:
         # Append measure and tag information to reading, to identify asset
@@ -291,8 +278,27 @@ def push_readout(d, client, readout):
         else:
             readout['fields']['reading_offset'] = int((datetime.utcnow() - datetime.strptime(readout['time'], "%Y-%m-%dT%H:%M:%SZ")).total_seconds())
 
-        # Push to Influx
-        if client.write_points([readout]):
+        # Push to endpoint (own ingester or Influx, depending on type sent in dbconf)
+        if d.dbconf['conn']['type'] == 'ingest':
+
+            r = requests.post('https://%s/' % d.dbconf['conn']['host'], json=readout, headers={'X-API-Key': d.dbconf['conn']['key']})
+            result = r.status_code == 200
+
+        elif d.dbconf['conn']['type'] == 'influx':
+
+            influx_client = InfluxDBClient(
+                host = self._d.dbconf['conn']['host'],
+                port = self._d.dbconf['conn']['port'],
+                username = self._d.dbconf['conn']['username'],
+                password = self._d.dbconf['conn']['password'],
+                database = self._d.dbconf['conn']['dbname'],
+                ssl = True,
+                verify_ssl = True,
+                timeout = self._d.params['dbtimeout'])
+
+            result = influx_client.write_points([readout])
+
+        if result:
             print('PUSH: Successfully pushed point at %s' % (readout['time']))
             return True
         else:
@@ -349,12 +355,12 @@ if __name__ == '__main__':
     parser.add_argument('-R', '--readings', default='conf/readings.json', help='Readings definition file')
     parser.add_argument('-D', '--devices', default='conf/devices.json', help='Device list file')
     parser.add_argument('-P', '--drvpath', default='conf/drivers', help='Path containing drivers (device register maps)')
-    parser.add_argument('-B', '--dbconf', default='conf/dbconf.json', help='InfluxDB configuration spec file')
+    parser.add_argument('-B', '--dbconf', default='conf/dbconf.json', help='Output endpoint configuration spec file')
     parser.add_argument('-q', '--qfile', default='data/queue.json', help='Queue file (for non-volatile storage during comms outage')
     parser.add_argument('-I', '--interval', type=int, help='Interval for repeated readings (s)')
     parser.add_argument('-r', '--roundtime', action='store_true', default=False, help='Start on round time interval (only with --interval)')    
     parser.add_argument('-t', '--rtimeout', type=int, default=5, help='Modbus reading timeout (s)')
-    parser.add_argument('-b', '--dbtimeout', type=int, default=120, help='Influx request timeout (s)')
+    parser.add_argument('-b', '--dbtimeout', type=int, default=120, help='Output endpoint timeout (s)')
     parser.add_argument('-d', '--debug', dest='debug', action='store_true', default=False, help='Debug mode')
 
     args = parser.parse_args()
@@ -365,7 +371,7 @@ if __name__ == '__main__':
     q = queue.LifoQueue()
 
     # Create an instance of the queue processor
-    pusher = InfluxPusher(d, q)
+    pusher = DataPusher(d, q)
     # Start calls the internal run() method to kick off the thread
     pusher.start() 
 
