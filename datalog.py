@@ -415,8 +415,8 @@ if __name__ == '__main__':
 
     # Set up logging and redirect stdout and stderr ro error file
     logfile = setup_logfile(pargs['logfile'], pargs['debug'])
-    sys.stdout = LoggerWriter(d.logfile.info)
-    sys.stderr = LoggerWriter(d.logfile.error)
+    sys.stdout = LoggerWriter(logfile.info)
+    sys.stderr = LoggerWriter(logfile.error)
 
     # Set up configuration dict/structure
     d = DatalogConfig(pargs)
