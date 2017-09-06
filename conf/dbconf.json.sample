@@ -1,10 +1,17 @@
 {
 	"conn": {
+	    // For InfluxDB connection
+	    "type": "influx",
 		"host": "hoverboard-fa6da75c.influxcloud.net",
 		"port": 8086,
 		"username": "logger_changombe",
 		"password": "insert-actual-password",
 		"dbname": "datalog_test"
+		
+		// For pushing to AWS endpoint
+	    "type": "ingest",
+		"host": "dl-ingest.ammp.io",
+		"key": "insert-actual-key"
 	},
 	"body": {
 		"measurement": "asset",
