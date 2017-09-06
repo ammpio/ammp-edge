@@ -7,11 +7,43 @@ import json
 import struct
 import sched, time
 import threading, queue
+
 from pyModbusTCP_alt import ModbusClient_alt
+
 from influxdb import InfluxDBClient
 import requests
 
-class LoggerConfig(object):
+import logging
+import logging.handlers
+
+# Set up logging (the type where you write to a log file)
+LOG_FILENAME = "/tmp/datalog.log"
+LOG_LEVEL = logging.DEBUG  # Could be e.g. "DEBUG" or "WARNING"
+
+# Configure logging to log to a file, making a new file at midnight and keeping the last 7 day's data
+# Give the logger a unique name (good practice)
+logger = logging.getLogger(__name__)
+# Set the log level to LOG_LEVEL
+logger.setLevel(LOG_LEVEL)
+# Make a handler that writes to a file, making a new file at midnight and keeping 7 backups
+handler = logging.handlers.TimedRotatingFileHandler(LOG_FILENAME, when="midnight", backupCount=7)
+# Format each log message like this
+formatter = logging.Formatter('%(asctime)s %(levelname)-8s %(message)s')
+# Attach the formatter to the handler
+handler.setFormatter(formatter)
+# Attach the handler to the logger
+logger.addHandler(handler)
+
+logger.info('info')
+logger.warn('warn')
+logger.debug('debug')
+
+# # Replace stdout with logging to file at INFO level
+# sys.stdout = MyLogger(logger, logging.INFO)
+# # Replace stderr with logging to file at ERROR level
+# sys.stderr = MyLogger(logger, logging.ERROR)
+
+class DatalogConfig(object):
     params = {}
     devices = {}
     readings = {}
@@ -36,7 +68,7 @@ class LoggerConfig(object):
             with open(os.path.join(pargs['drvpath'], drv)) as driver_file:
                 self.drivers[os.path.splitext(drv)[0]] = json.load(driver_file)
                 if self.params['debug']:
-                    print('Loaded driver %s' % (drv))
+                    logger.info('Loaded driver %s' % (drv))
 
 
 class DataPusher(threading.Thread): 
@@ -184,15 +216,14 @@ def read_device(d, dev, readings, readout_q):
 
     fields = {}
 
-    if d.params['debug']:
-        print('READ: Start reading %s at %s' % (dev, str(datetime.utcnow())))
+    logger.info('READ: Start reading %s at %s' % (dev, str(datetime.utcnow())))
 
     for rdg in readings:
 
         # Make sure we have an open connection to server
         if not c.is_open():
             if not c.open():
-                print('READ ERROR: Unable to connect to %s' % dev)
+                logger.error('READ: Unable to connect to %s' % dev)
 
         # If open() is ok, read register
         if c.is_open():
@@ -211,17 +242,15 @@ def read_device(d, dev, readings, readout_q):
                 # Append to key-value store            
                 fields[rdg['reading']] = value
 
-                if d.params['debug']:
-                    print('READ: [%s] %s = %s %s' % (dev, rdg['reading'], value, rdg['unit'] or ''))
+                logger.debug('READ: [%s] %s = %s %s' % (dev, rdg['reading'], value, rdg['unit'] or ''))
             except:
-                print('READ ERROR: Could not get reading %s' % rdg['reading'])
+                logger.error('READ: Could not get reading %s' % rdg['reading'])
                 continue
 
     # Be nice and close the Modbus socket
     c.close()
 
-    if d.params['debug']:
-        print('READ: Finished reading %s at %s' % (dev, str(datetime.utcnow())))
+    logger.info('READ: Finished reading %s at %s' % (dev, str(datetime.utcnow())))
 
     # Append result to readings (alongside those from other devices)
     readout_q.put(fields)
@@ -299,16 +328,16 @@ def push_readout(d, readout):
             result = influx_client.write_points([readout])
 
         if result:
-            print('PUSH: Successfully pushed point at %s' % (readout['time']))
+            logger.info('PUSH: Successfully pushed point at %s' % (readout['time']))
             return True
         else:
             raise Exception('PUSH: Something didn''t go well for point at %s' % readout['time'])
     except Exception as ex:
         template = "An exception of type {0} occurred. Arguments:\n{1!r}"
         message = template.format(type(ex).__name__, ex.args)
-        print(message)
+        logger.warn(message)
         # For some reason the point wasn't written to Influx, so we should put it back in the file
-        print('PUSH: Did not work. Writing readout at %s to queue file instead' % readout['time'])
+        logger.warn('PUSH: Did not work. Writing readout at %s to queue file instead' % readout['time'])
         save_readout_to_file(d, readout)
  
         return False
@@ -366,7 +395,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     pargs = vars(args)
 
-    d = LoggerConfig(pargs)
+    d = DatalogConfig(pargs)
 
     q = queue.LifoQueue()
 
@@ -385,8 +414,7 @@ if __name__ == '__main__':
 
         if d.params['roundtime']:
             s.enterabs(roundtime(d), 1, reading_cycle, (d, q, s))
-            if d.params['debug']:
-                print('Waiting to start on round time interval...')
+            logger.info('Waiting to start on round time interval...')
         else:
             reading_cycle(d, q, s)
 
