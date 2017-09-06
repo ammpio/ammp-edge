@@ -234,7 +234,7 @@ def read_device(d, dev, readings, readout_q):
 
     fields = {}
 
-    d.logfile.info('READ: Start reading %s at %s' % (dev, str(datetime.utcnow())))
+    d.logfile.info('READ: Start reading %s' % dev)
 
     for rdg in readings:
 
@@ -268,7 +268,7 @@ def read_device(d, dev, readings, readout_q):
     # Be nice and close the Modbus socket
     c.close()
 
-    d.logfile.info('READ: Finished reading %s at %s' % (dev, str(datetime.utcnow())))
+    d.logfile.info('READ: Finished reading %s' % dev)
 
     # Append result to readings (alongside those from other devices)
     readout_q.put(fields)
