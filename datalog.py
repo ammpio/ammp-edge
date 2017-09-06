@@ -16,32 +16,6 @@ import requests
 import logging
 import logging.handlers
 
-# Set up logging (the type where you write to a log file)
-LOG_FILENAME = "/tmp/datalog.log"
-LOG_LEVEL = logging.DEBUG  # Could be e.g. "DEBUG" or "WARNING"
-
-# Configure logging to log to a file, making a new file at midnight and keeping the last 7 day's data
-# Give the logger a unique name (good practice)
-logger = logging.getLogger(__name__)
-# Set the log level to LOG_LEVEL
-logger.setLevel(LOG_LEVEL)
-# Make a handler that writes to a file, making a new file at midnight and keeping 7 backups
-handler = logging.handlers.TimedRotatingFileHandler(LOG_FILENAME, when="midnight", backupCount=7)
-# Format each log message like this
-formatter = logging.Formatter('%(asctime)s %(levelname)-8s %(message)s')
-# Attach the formatter to the handler
-handler.setFormatter(formatter)
-# Attach the handler to the logger
-logger.addHandler(handler)
-
-logger.info('info')
-logger.warn('warn')
-logger.debug('debug')
-
-# # Replace stdout with logging to file at INFO level
-# sys.stdout = MyLogger(logger, logging.INFO)
-# # Replace stderr with logging to file at ERROR level
-# sys.stderr = MyLogger(logger, logging.ERROR)
 
 class DatalogConfig(object):
     params = {}
@@ -49,8 +23,9 @@ class DatalogConfig(object):
     readings = {}
     drivers = {}
 
-    def __init__(self, pargs):
+    def __init__(self, pargs, logfile):
         self.params = pargs
+        self.logfile = logfile
 
         with open(pargs['devices']) as devices_file:
             self.devices = json.load(devices_file)
@@ -68,7 +43,7 @@ class DatalogConfig(object):
             with open(os.path.join(pargs['drvpath'], drv)) as driver_file:
                 self.drivers[os.path.splitext(drv)[0]] = json.load(driver_file)
                 if self.params['debug']:
-                    logger.info('Loaded driver %s' % (drv))
+                    logfile.info('Loaded driver %s' % (drv))
 
 
 class DataPusher(threading.Thread): 
@@ -101,6 +76,49 @@ class DataPusher(threading.Thread):
             else:
                 break
 
+
+def setup_logfile(log_filename, debug_flag):
+
+    if debug_flag:
+        log_level = logging.DEBUG
+    else:
+        log_level = logging.INFO
+
+    # Configure logging to log to a file, making a new file at midnight and keeping the last 7 day's data
+    # Give the logger a unique name (good practice)
+    logger = logging.getLogger(__name__)
+    # Set the log level to LOG_LEVEL
+    logger.setLevel(log_level)
+    # Make a handler that writes to a file, making a new file at midnight and keeping 7 backups
+    handler = logging.handlers.TimedRotatingFileHandler(log_filename, when="midnight", backupCount=7)
+    # Format each log message like this
+    formatter = logging.Formatter('%(asctime)s %(levelname)-8s %(message)s')
+    # Attach the formatter to the handler
+    handler.setFormatter(formatter)
+    # Attach the handler to the logger
+    logger.addHandler(handler)
+
+    return logger
+
+
+class LoggerWriter:
+    def __init__(self, level):
+        # self.level is really like using log.debug(message)
+        # at least in my case
+        self.level = level
+
+    def write(self, message):
+        # if statement reduces the amount of newlines that are
+        # printed to the logger
+        if message != '\n':
+            self.level(message)
+
+    def flush(self):
+        # create a flush method so things can be flushed when
+        # the system wants to. Not sure if simply 'printing'
+        # sys.stderr is the correct way to do it, but it seemed
+        # to work properly for me.
+        self.level(sys.stderr)
 
 
 def reading_cycle(d, q, sc=None):
@@ -216,14 +234,14 @@ def read_device(d, dev, readings, readout_q):
 
     fields = {}
 
-    logger.info('READ: Start reading %s at %s' % (dev, str(datetime.utcnow())))
+    d.logfile.info('READ: Start reading %s at %s' % (dev, str(datetime.utcnow())))
 
     for rdg in readings:
 
         # Make sure we have an open connection to server
         if not c.is_open():
             if not c.open():
-                logger.error('READ: Unable to connect to %s' % dev)
+                d.logfile.error('READ: Unable to connect to %s' % dev)
 
         # If open() is ok, read register
         if c.is_open():
@@ -242,15 +260,15 @@ def read_device(d, dev, readings, readout_q):
                 # Append to key-value store            
                 fields[rdg['reading']] = value
 
-                logger.debug('READ: [%s] %s = %s %s' % (dev, rdg['reading'], value, rdg['unit'] or ''))
+                d.logfile.debug('READ: [%s] %s = %s %s' % (dev, rdg['reading'], value, rdg['unit'] or ''))
             except:
-                logger.error('READ: Could not get reading %s' % rdg['reading'])
+                d.logfile.error('READ: Could not get reading %s' % rdg['reading'])
                 continue
 
     # Be nice and close the Modbus socket
     c.close()
 
-    logger.info('READ: Finished reading %s at %s' % (dev, str(datetime.utcnow())))
+    d.logfile.info('READ: Finished reading %s at %s' % (dev, str(datetime.utcnow())))
 
     # Append result to readings (alongside those from other devices)
     readout_q.put(fields)
@@ -328,16 +346,16 @@ def push_readout(d, readout):
             result = influx_client.write_points([readout])
 
         if result:
-            logger.info('PUSH: Successfully pushed point at %s' % (readout['time']))
+            d.logfile.info('PUSH: Successfully pushed point at %s' % (readout['time']))
             return True
         else:
             raise Exception('PUSH: Something didn''t go well for point at %s' % readout['time'])
     except Exception as ex:
         template = "An exception of type {0} occurred. Arguments:\n{1!r}"
         message = template.format(type(ex).__name__, ex.args)
-        logger.warn(message)
+        d.logfile.warn(message)
         # For some reason the point wasn't written to Influx, so we should put it back in the file
-        logger.warn('PUSH: Did not work. Writing readout at %s to queue file instead' % readout['time'])
+        d.logfile.warn('PUSH: Did not work. Writing readout at %s to queue file instead' % readout['time'])
         save_readout_to_file(d, readout)
  
         return False
@@ -385,7 +403,8 @@ if __name__ == '__main__':
     parser.add_argument('-D', '--devices', default='conf/devices.json', help='Device list file')
     parser.add_argument('-P', '--drvpath', default='conf/drivers', help='Path containing drivers (device register maps)')
     parser.add_argument('-B', '--dbconf', default='conf/dbconf.json', help='Output endpoint configuration spec file')
-    parser.add_argument('-q', '--qfile', default='data/queue.json', help='Queue file (for non-volatile storage during comms outage')
+    parser.add_argument('-q', '--qfile', default='/tmp/datalog_queue.json', help='Queue file (for non-volatile storage during comms outage)')
+    parser.add_argument('-l', '--logfile', default='/tmp/datalog.log', help='Log file')
     parser.add_argument('-I', '--interval', type=int, help='Interval for repeated readings (s)')
     parser.add_argument('-r', '--roundtime', action='store_true', default=False, help='Start on round time interval (only with --interval)')    
     parser.add_argument('-t', '--rtimeout', type=int, default=5, help='Modbus reading timeout (s)')
@@ -395,8 +414,15 @@ if __name__ == '__main__':
     args = parser.parse_args()
     pargs = vars(args)
 
-    d = DatalogConfig(pargs)
+    # Set up logging and redirect stdout and stderr ro error file
+    logfile = setup_logfile(pargs['logfile'], pargs['debug'])
+    sys.stdout = LoggerWriter(logfile.info)
+    sys.stderr = LoggerWriter(logfile.error)
 
+    # Set up configuration dict/structure
+    d = DatalogConfig(pargs, logfile)
+
+    # Set up reading queue
     q = queue.LifoQueue()
 
     # Create an instance of the queue processor
@@ -414,7 +440,7 @@ if __name__ == '__main__':
 
         if d.params['roundtime']:
             s.enterabs(roundtime(d), 1, reading_cycle, (d, q, s))
-            logger.info('Waiting to start on round time interval...')
+            d.logfile.info('Waiting to start on round time interval...')
         else:
             reading_cycle(d, q, s)
 
