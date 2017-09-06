@@ -414,12 +414,13 @@ if __name__ == '__main__':
     pargs = vars(args)
 
     # Set up logging and redirect stdout and stderr ro error file
-    d.logfile = setup_logfile(pargs['logfile'], pargs['debug'])
+    logfile = setup_logfile(pargs['logfile'], pargs['debug'])
     sys.stdout = LoggerWriter(d.logfile.info)
     sys.stderr = LoggerWriter(d.logfile.error)
 
     # Set up configuration dict/structure
     d = DatalogConfig(pargs)
+    d.logfile = logfile
 
     # Set up reading queue
     q = queue.LifoQueue()
