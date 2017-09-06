@@ -79,9 +79,9 @@ class DataPusher(threading.Thread):
 def setup_logfile(log_filename, debug):
 
     if debug:
-        log_level = logger.debug
+        log_level = logging.debug
     else:
-        log_level = logger.info
+        log_level = logging.info
 
     # Configure logging to log to a file, making a new file at midnight and keeping the last 7 day's data
     # Give the logger a unique name (good practice)
