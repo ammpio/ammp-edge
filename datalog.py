@@ -76,12 +76,12 @@ class DataPusher(threading.Thread):
                 break
 
 
-def setup_logfile(log_filename, debug):
+def setup_logfile(log_filename, debug_flag):
 
-    if debug:
-        log_level = logging.debug
+    if debug_flag:
+        log_level = logging.DEBUG
     else:
-        log_level = logging.info
+        log_level = logging.INFO
 
     # Configure logging to log to a file, making a new file at midnight and keeping the last 7 day's data
     # Give the logger a unique name (good practice)
