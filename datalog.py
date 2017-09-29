@@ -42,8 +42,7 @@ class DatalogConfig(object):
         for drv in driver_files:
             with open(os.path.join(pargs['drvpath'], drv)) as driver_file:
                 self.drivers[os.path.splitext(drv)[0]] = json.load(driver_file)
-                if self.params['debug']:
-                    logfile.info('Loaded driver %s' % (drv))
+                logfile.info('Loaded driver %s' % (drv))
 
 
 class DataPusher(threading.Thread): 
