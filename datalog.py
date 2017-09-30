@@ -69,11 +69,14 @@ class DataPusher(threading.Thread):
             # an item is retrieved. 
             readout = self._queue.get() 
 
-            # If there is a readout, push it to the database; if False or None, we break
-            if readout:
+            # Try pushing the readout to the database
+            try:
                 push_readout(self._d, readout)
-            else:
-                break
+            except Exception as ex:
+                template = "An exception of type {0} occurred. Arguments:\n{1!r}"
+                message = template.format(type(ex).__name__, ex.args)
+                d.logfile.error('PUSH: %s' % message)
+
 
 
 def setup_logfile(log_filename, debug_flag):
