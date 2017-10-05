@@ -1,0 +1,8 @@
+{
+  "V_L1": {"register": 0, "words": 2, "unit": "V"},
+  "V_L2": {"register": 2, "words": 2, "unit": "V"},
+  "V_L3": {"register": 4, "words": 2, "unit": "V"},
+  "I_L1": {"register": 6, "words": 2, "unit": "A"},
+  "I_L2": {"register": 8, "words": 2, "unit": "A"},
+  "I_L3": {"register": 10, "words": 2, "unit": "A"}
+}
