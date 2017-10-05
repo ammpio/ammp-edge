@@ -2,7 +2,9 @@ Modbus data logger
 
 `datalog.py` carries out periodic Modbus polling according to contents of `readings.json`, `devices.json`, and `drivers.json` in `conf` directory. Readings are pushed to an Influx database or a custom endpoint (which must accept Influx-style JSON input). If immediate pushing is not available, JSON strings corresponding to the readings are saved in the selected queue file (default `/tmp/datalog_queue.json`)
 
-The script can be installed as a daemon. The following script can be used to set it up. Prerequisites:
+The script can be installed as a daemon. The following commands can be used to set it up. More details at https://watson.eon-ogs.com/display/DC/EOGS+Datalogger.
+
+Prerequisites:
 - The `/opt/datalog` directory needs to exist
 - The `datalog` user needs to exist
 - The `datalog` user needs to have read access to `/opt/datalog` and read/write access to `/tmp`
