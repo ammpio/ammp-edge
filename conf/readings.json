@@ -96,5 +96,12 @@
   "pv_Pdc2_L3": {"device": "sb3", "var": "dc_in_P2"},
   "pv_serial_L1": {"enabled": false, "device": "sb1", "var": "serial"},
   "pv_serial_L2": {"enabled": false, "device": "sb2", "var": "serial"},
-  "pv_serial_L3": {"enabled": false, "device": "sb3", "var": "serial"}
+  "pv_serial_L3": {"enabled": false, "device": "sb3", "var": "serial"},
+
+  "grid_out_V_L1": {"device": "export_meter", "var": "V_L1"},
+  "grid_out_V_L2": {"device": "export_meter", "var": "V_L2"},
+  "grid_out_V_L3": {"device": "export_meter", "var": "V_L3"},
+  "grid_out_I_L1": {"device": "export_meter", "var": "I_L1"},
+  "grid_out_I_L2": {"device": "export_meter", "var": "I_L2"},
+  "grid_out_I_L3": {"device": "export_meter", "var": "I_L3"}
 }

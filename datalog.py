@@ -9,6 +9,7 @@ import sched, time
 import threading, queue
 
 from pyModbusTCP_alt import ModbusClient_alt
+import minimalmodbus, serial
 
 from influxdb import InfluxDBClient
 import requests
@@ -69,6 +70,10 @@ class DataPusher(threading.Thread):
             # an item is retrieved. 
             readout = self._queue.get() 
 
+            # If we get the "stop" signal we exit
+            if readout is False:
+                return
+
             # Try pushing the readout to the database
             try:
                 push_readout(self._d, readout)
@@ -76,7 +81,6 @@ class DataPusher(threading.Thread):
                 template = "An exception of type {0} occurred. Arguments:\n{1!r}"
                 message = template.format(type(ex).__name__, ex.args)
                 d.logfile.error('PUSH: %s' % message)
-
 
 
 def setup_logfile(log_filename, debug_flag):
@@ -105,8 +109,6 @@ def setup_logfile(log_filename, debug_flag):
 
 class LoggerWriter:
     def __init__(self, level):
-        # self.level is really like using log.debug(message)
-        # at least in my case
         self.level = level
 
     def write(self, message):
@@ -120,7 +122,8 @@ class LoggerWriter:
         # the system wants to. Not sure if simply 'printing'
         # sys.stderr is the correct way to do it, but it seemed
         # to work properly for me.
-        self.level(sys.stderr)
+        return
+#        self.level(sys.stderr)
 
 
 def reading_cycle(d, q, sc=None):
@@ -156,7 +159,7 @@ def get_readings(d):
     for rdg in d.readings:
         # Ignore readings that are explicitly disabled
         # (if 'enabled' key is missing altogether, assume enabled by default)
-        if 'enabled' in d.readings[rdg] and not d.readings[rdg]['enabled']: continue
+        if not d.readings[rdg].get('enabled', True): continue
 
         # Get device and variable name for reading; if not available then move on
         try:
@@ -166,7 +169,7 @@ def get_readings(d):
 
         # Ignore devices that are explicitly disabled in the devices.json file
         # (if 'enabled' key is missing altogether, assume enabled by default)
-        if 'enabled' in d.devices[dev] and not d.devices[dev]['enabled']: continue
+        if not d.devices[dev].get('enabled', True): continue
 
         # Get the driver name
         drv = d.devices[dev]['driver']
@@ -179,8 +182,11 @@ def get_readings(d):
         if not dev in dev_rdg:
             dev_rdg[dev] = []
 
+        # Start by setting reading name
         rdict = {'reading': rdg}
-        rdict.update(d.drivers[drv][var])
+        # If applicable, add common reading parameters from driver file (e.g. function code)
+        rdict.update(d.drivers[drv].get('common'))
+        rdict.update(d.drivers[drv]['fields'][var])
 
         dev_rdg[dev].append(rdict)
 
@@ -224,51 +230,126 @@ def get_readings(d):
 
 def read_device(d, dev, readings, readout_q):
 
-    c = ModbusClient_alt(
-            host=d.devices[dev]['address']['host'],
-            port=d.devices[dev]['address']['port'],
-            unit_id=d.devices[dev]['address']['unit_id'],
-            timeout=d.params['rtimeout'],
-            debug=False, #d.params['debug'],
-            auto_open=False,
-            auto_close=False
-        )
-
     fields = {}
 
     d.logfile.info('READ: Start reading %s' % dev)
 
-    for rdg in readings:
+    # The reading type for each of the devices can be one of the following:
+    # 1 - ModbusTCP
+    # 2 - RS-485 / ModbusRTU
 
-        # Make sure we have an open connection to server
-        if not c.is_open():
-            if not c.open():
-                d.logfile.error('READ: Unable to connect to %s' % dev)
+    if d.devices[dev]['reading_type'] == 1:
+        # Set up and read from ModbusTCP client
 
-        # If open() is ok, read register
-        if c.is_open():
-            val_i = c.read_holding_registers(rdg['register'], rdg['words'])
-            ##### Need to insert error checking to make sure we get something sensible back.
-            ##### E.g. None is a possibility if there is an issue with the data returned by the server
-            ##### For the moment we use a clumsy try-except in order to not get thrown off by bad readings
+        c = ModbusClient_alt(
+                host=d.devices[dev]['address']['host'],
+                port=d.devices[dev]['address']['port'],
+                unit_id=d.devices[dev]['address']['unit_id'],
+                timeout=d.params['rtimeout'],
+                debug=False, #d.params['debug'],
+                auto_open=False,
+                auto_close=False
+            )
 
-            try:
-                # The pyModbusTCP library helpfully converts the binary result to a list of integers, so
-                # it's best to first convert it back to binary (assuming big-endian)
-                val_b = struct.pack('>%sH' % len(val_i), *val_i)
+        for rdg in readings:
 
-                value = process_response(rdg, val_b)
+            # Make sure we have an open connection to server
+            if not c.is_open():
+                c.open()
+                if c.is_open():
+                    d.logfile.debug('READ: Opened connection to %s' % dev)
+                else:
+                    d.logfile.error('READ: Unable to connect to %s' % dev)
 
-                # Append to key-value store            
-                fields[rdg['reading']] = value
 
-                d.logfile.debug('READ: [%s] %s = %s %s' % (dev, rdg['reading'], value, rdg['unit'] or ''))
-            except:
-                d.logfile.error('READ: Could not get reading %s' % rdg['reading'])
-                continue
+            # If open() is ok, read register
+            if c.is_open():
+                try:
+                    val_i = c.read_holding_registers(rdg['register'], rdg['words'])
+                except Exception as ex:
+                    d.logfile.error('READ: Could not take reading %s from device %s' % (rdg['reading'], dev))
+                    template = "An exception of type {0} occurred. Arguments:\n{1!r}"
+                    message = template.format(type(ex).__name__, ex.args)
+                    d.logfile.error(message)
 
-    # Be nice and close the Modbus socket
-    c.close()
+                try:
+                    # The pyModbusTCP library helpfully converts the binary result to a list of integers, so
+                    # it's best to first convert it back to binary (assuming big-endian)
+                    val_b = struct.pack('>%sH' % len(val_i), *val_i)
+
+                    value = process_response(rdg, val_b)
+
+                    # Append to key-value store            
+                    fields[rdg['reading']] = value
+
+                    d.logfile.debug('READ: [%s] %s = %s %s' % (dev, rdg['reading'], value, rdg['unit'] or ''))
+                except:
+                    d.logfile.error('READ: Could not get reading %s' % rdg['reading'])
+                    continue
+
+        # Be nice and close the Modbus socket
+        c.close()
+
+
+    elif d.devices[dev]['reading_type'] == 2:
+
+        # Set up RS-485 client
+        c = minimalmodbus.Instrument(
+            port=d.devices[dev]['address']['device'],
+            slaveaddress=d.devices[dev]['address']['slaveaddr']
+        )
+
+        c.serial.debug = d.params['debug']
+        c.serial.timeout = d.params['rtimeout']
+
+        # Set up serial connection parameters according to device driver
+        if 'serial' in d.drivers[d.devices[dev]['driver']]:
+            srlconf = d.drivers[d.devices[dev]['driver']]['serial']
+            
+            c.serial.baudrate = srlconf.get('baudrate', 9600)
+            c.serial.bytesize = srlconf.get('bytesize', 8)
+            paritysel = {'none': serial.PARITY_NONE, 'odd': serial.PARITY_ODD, 'even': serial.PARITY_EVEN}
+            c.serial.parity = paritysel[srlconf.get('parity', 'none')]
+            c.serial.stopbits = srlconf.get('stopbits', 1)
+
+        for rdg in readings:
+
+            # Make sure we have an open connection to device
+            if not c.serial.is_open:
+                c.serial.open()
+                if c.serial.is_open:
+                    d.logfile.debug('READ: Opened connection to %s' % dev)
+                else:
+                    d.logfile.error('READ: Unable to connect to %s' % dev)
+
+            # If connection is ok, read register
+            if c.serial.is_open:
+                try:
+                    val_i = c.read_registers(rdg['register'], rdg['words'], rdg['fncode'])
+                except Exception as ex:
+                    d.logfile.error('READ: Could not take reading %s from device %s' % (rdg['reading'], dev))
+                    template = "An exception of type {0} occurred. Arguments:\n{1!r}"
+                    message = template.format(type(ex).__name__, ex.args)
+                    d.logfile.error(message)
+
+                try:
+                    # The minimalmodbus library helpfully converts the binary result to a list of integers, so
+                    # it's best to first convert it back to binary (assuming big-endian)
+                    val_b = struct.pack('>%sH' % len(val_i), *val_i)
+
+                    value = process_response(rdg, val_b)
+
+                    # Append to key-value store            
+                    fields[rdg['reading']] = value
+
+                    d.logfile.debug('READ: [%s] %s = %s %s' % (dev, rdg['reading'], value, rdg['unit'] or ''))
+                except:
+                    d.logfile.error('READ: Could not get reading %s' % rdg['reading'])
+                    continue
+
+        # Be nice and close the serial port between readings
+        c.serial.close()
+
 
     d.logfile.info('READ: Finished reading %s' % dev)
 
@@ -279,9 +360,12 @@ def read_device(d, dev, readings, readout_q):
 def process_response(rdg, val_b):
     # Format identifiers used to unpack the binary result into desired format based on datatype
     fmt = {
-        'int16': 'i',
-        'int32': 'i',
-        'uint32': 'I'
+        'int16':  'i',
+        'int32':  'i',
+        'uint32': 'I',
+        'float':  'f',
+        'single': 'f',
+        'double': 'd'
     }
     # If datatype is not available, fall back on format characters based on data length (in bytes)
     fmt_fallback = [None, 'B', 'H', None, 'I', None, None, None, 'd']
@@ -322,10 +406,7 @@ def push_readout(d, readout):
         readout.update(d.dbconf['body'])
 
         # Append offset between time that reading was taken and current time
-        if 'reading_duration' in readout['fields']:
-            readout['fields']['reading_offset'] = int((datetime.utcnow() - datetime.strptime(readout['time'], "%Y-%m-%dT%H:%M:%SZ")).total_seconds() - readout['fields']['reading_duration'])
-        else:
-            readout['fields']['reading_offset'] = int((datetime.utcnow() - datetime.strptime(readout['time'], "%Y-%m-%dT%H:%M:%SZ")).total_seconds())
+        readout['fields']['reading_offset'] = int((datetime.utcnow() - datetime.strptime(readout['time'], "%Y-%m-%dT%H:%M:%SZ")).total_seconds() - readout['fields'].get('reading_duration', 0))
 
         # Push to endpoint (own ingester or Influx, depending on type sent in dbconf)
         if d.dbconf['conn']['type'] == 'ingest':
@@ -418,7 +499,7 @@ if __name__ == '__main__':
 
     # Set up logging and redirect stdout and stderr ro error file
     logfile = setup_logfile(pargs['logfile'], pargs['debug'])
-    sys.stdout = LoggerWriter(logfile.info)
+#    sys.stdout = LoggerWriter(logfile.info)
     sys.stderr = LoggerWriter(logfile.error)
 
     # Set up configuration dict/structure

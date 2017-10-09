@@ -1,0 +1,21 @@
+{
+  "serial": {
+    "baudrate": 9600,
+    "bytesize": 8,
+    "parity": "none",
+    "stopbits": 1
+  },
+  "common": {
+  	"fncode": 4,
+  	"words": 2,
+  	"datatype": "float"
+  },
+  "fields": {
+    "V_L1": {"register":  0, "unit": "V"},
+    "V_L2": {"register":  2, "unit": "V"},
+    "V_L3": {"register":  4, "unit": "V"},
+    "I_L1": {"register":  6, "unit": "A"},
+    "I_L2": {"register":  8, "unit": "A"},
+    "I_L3": {"register": 10, "unit": "A"}
+  }
+}
