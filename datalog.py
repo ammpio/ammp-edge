@@ -71,7 +71,7 @@ class DataPusher(threading.Thread):
             readout = self._queue.get() 
 
             # If we get the "stop" signal we exit
-            if readout is False:
+            if readout == {}:
                 return
 
             # Try pushing the readout to the database
@@ -532,5 +532,5 @@ if __name__ == '__main__':
     else:
         # Carry out a one-off reading, with no scheduler
         reading_cycle(d, q)
-        q.put(False)
+        q.put({})
 
