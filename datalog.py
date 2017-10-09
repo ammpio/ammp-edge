@@ -189,7 +189,7 @@ def get_readings(d):
         # Start by setting reading name
         rdict = {'reading': rdg}
         # If applicable, add common reading parameters from driver file (e.g. function code)
-        rdict.update(d.drivers[drv].get('common'))
+        rdict.update(d.drivers[drv].get('common', {}))
         rdict.update(d.drivers[drv]['fields'][var])
 
         dev_rdg[dev].append(rdict)
