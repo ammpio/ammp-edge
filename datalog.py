@@ -60,6 +60,7 @@ class DataPusher(threading.Thread):
 
             # If the internal queue is empty but the queue file isn't then pull from it
             if self._queue.empty() and os.path.isfile(d.params['qfile']) and os.path.getsize(d.params['qfile']) > 1:
+                d.logfile.debug('PUSH: Got readout at %s from queue file; attempting to push' % (readout['time']))
                 readout = get_readout_from_file(d)
                 # push_readout includes a function to write back to file if the push is not successful
                 push_readout(d, readout)
@@ -68,14 +69,17 @@ class DataPusher(threading.Thread):
 
             # queue.get() blocks the current thread until 
             # an item is retrieved. 
+            d.logfile.debug('PUSH: Waiting to get readings from queue')
             readout = self._queue.get() 
 
             # If we get the "stop" signal we exit
-            if readout is False:
+            if readout == {}:
+                d.logfile.debug('PUSH: Got {} from queue --> stopping pusher')
                 return
 
             # Try pushing the readout to the database
             try:
+                d.logfile.debug('PUSH: Got readout at %s from internal queue; attempting to push' % (readout['time']))
                 push_readout(self._d, readout)
             except Exception as ex:
                 template = "An exception of type {0} occurred. Arguments:\n{1!r}"
@@ -122,8 +126,8 @@ class LoggerWriter:
         # the system wants to. Not sure if simply 'printing'
         # sys.stderr is the correct way to do it, but it seemed
         # to work properly for me.
-        return
-#        self.level(sys.stderr)
+        
+        self.level(sys.stderr)
 
 
 def reading_cycle(d, q, sc=None):
@@ -185,7 +189,7 @@ def get_readings(d):
         # Start by setting reading name
         rdict = {'reading': rdg}
         # If applicable, add common reading parameters from driver file (e.g. function code)
-        rdict.update(d.drivers[drv].get('common'))
+        rdict.update(d.drivers[drv].get('common', {}))
         rdict.update(d.drivers[drv]['fields'][var])
 
         dev_rdg[dev].append(rdict)
@@ -499,7 +503,7 @@ if __name__ == '__main__':
 
     # Set up logging and redirect stdout and stderr ro error file
     logfile = setup_logfile(pargs['logfile'], pargs['debug'])
-#    sys.stdout = LoggerWriter(logfile.info)
+    sys.stdout = LoggerWriter(logfile.info)
     sys.stderr = LoggerWriter(logfile.error)
 
     # Set up configuration dict/structure
@@ -532,5 +536,5 @@ if __name__ == '__main__':
     else:
         # Carry out a one-off reading, with no scheduler
         reading_cycle(d, q)
-        q.put(False)
+        q.put({})
 
