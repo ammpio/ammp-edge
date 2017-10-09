@@ -126,8 +126,8 @@ class LoggerWriter:
         # the system wants to. Not sure if simply 'printing'
         # sys.stderr is the correct way to do it, but it seemed
         # to work properly for me.
-        return
-#        self.level(sys.stderr)
+        
+        self.level(sys.stderr)
 
 
 def reading_cycle(d, q, sc=None):
@@ -503,7 +503,7 @@ if __name__ == '__main__':
 
     # Set up logging and redirect stdout and stderr ro error file
     logfile = setup_logfile(pargs['logfile'], pargs['debug'])
-#    sys.stdout = LoggerWriter(logfile.info)
+    sys.stdout = LoggerWriter(logfile.info)
     sys.stderr = LoggerWriter(logfile.error)
 
     # Set up configuration dict/structure
