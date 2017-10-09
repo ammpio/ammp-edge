@@ -159,7 +159,7 @@ def get_readings(d):
     for rdg in d.readings:
         # Ignore readings that are explicitly disabled
         # (if 'enabled' key is missing altogether, assume enabled by default)
-        if 'enabled' in d.readings[rdg] and not d.readings[rdg]['enabled']: continue
+        if not d.readings[rdg].get('enabled', True): continue
 
         # Get device and variable name for reading; if not available then move on
         try:
@@ -169,7 +169,7 @@ def get_readings(d):
 
         # Ignore devices that are explicitly disabled in the devices.json file
         # (if 'enabled' key is missing altogether, assume enabled by default)
-        if 'enabled' in d.devices[dev] and not d.devices[dev]['enabled']: continue
+        if not d.devices[dev].get('enabled', True): continue
 
         # Get the driver name
         drv = d.devices[dev]['driver']
@@ -182,7 +182,10 @@ def get_readings(d):
         if not dev in dev_rdg:
             dev_rdg[dev] = []
 
+        # Start by setting reading name
         rdict = {'reading': rdg}
+        # If applicable, add common reading parameters from driver file (e.g. function code)
+        rdict.update(d.drivers[drv].get('common'))
         rdict.update(d.drivers[drv]['fields'][var])
 
         dev_rdg[dev].append(rdict)
@@ -303,19 +306,11 @@ def read_device(d, dev, readings, readout_q):
         if 'serial' in d.drivers[d.devices[dev]['driver']]:
             srlconf = d.drivers[d.devices[dev]['driver']]['serial']
             
-            if 'baudrate' in srlconf:
-                c.serial.baudrate = srlconf['baudrate']
-            if 'bytesize' in srlconf:
-                c.serial.bytesize = srlconf['bytesize']
-            if 'parity' in srlconf:
-                paritysel = {
-                    'none': serial.PARITY_NONE,
-                    'odd': serial.PARITY_ODD,
-                    'even': serial.PARITY_EVEN
-                }
-                c.serial.parity = paritysel[srlconf['parity']]
-            if 'stopbits' in srlconf:
-                c.serial.stopbits = srlconf['stopbits']
+            c.serial.baudrate = srlconf.get('baudrate', 9600)
+            c.serial.bytesize = srlconf.get('bytesize', 8)
+            paritysel = {'none': serial.PARITY_NONE, 'odd': serial.PARITY_ODD, 'even': serial.PARITY_EVEN}
+            c.serial.parity = paritysel[srlconf.get('parity', 'none')]
+            c.serial.stopbits = srlconf.get('stopbits', 1)
 
         for rdg in readings:
 
@@ -411,10 +406,7 @@ def push_readout(d, readout):
         readout.update(d.dbconf['body'])
 
         # Append offset between time that reading was taken and current time
-        if 'reading_duration' in readout['fields']:
-            readout['fields']['reading_offset'] = int((datetime.utcnow() - datetime.strptime(readout['time'], "%Y-%m-%dT%H:%M:%SZ")).total_seconds() - readout['fields']['reading_duration'])
-        else:
-            readout['fields']['reading_offset'] = int((datetime.utcnow() - datetime.strptime(readout['time'], "%Y-%m-%dT%H:%M:%SZ")).total_seconds())
+        readout['fields']['reading_offset'] = int((datetime.utcnow() - datetime.strptime(readout['time'], "%Y-%m-%dT%H:%M:%SZ")).total_seconds() - readout['fields'].get('reading_duration', 0))
 
         # Push to endpoint (own ingester or Influx, depending on type sent in dbconf)
         if d.dbconf['conn']['type'] == 'ingest':
