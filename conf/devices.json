@@ -1,6 +1,6 @@
 {
   "export_meter": {
-    "enabled": false,
+    "enabled": true,
     "desc": "Eastron SDM530 export meter",
     "driver": "eastron_sdm530",
     "id": null,
@@ -11,7 +11,7 @@
     }
   },
   "si": {
-    "enabled": true,
+    "enabled": false,
     "desc": "Sunny Island",
     "driver": "sma_si80",
     "id": null,
@@ -23,7 +23,7 @@
     }
   },
   "sb1": {
-    "enabled": true,
+    "enabled": false,
     "desc": "Sunny Boy L1",
     "driver": "sma_sb5000",
     "id": null,
@@ -35,7 +35,7 @@
     }
   },
   "sb2": {
-    "enabled": true,
+    "enabled": false,
     "desc": "Sunny Boy L2",
     "driver": "sma_sb5000",
     "id": null,
@@ -47,7 +47,7 @@
     }
   },
   "sb3": {
-    "enabled": true,
+    "enabled": false,
     "desc": "Sunny Boy L3",
     "driver": "sma_sb5000",
     "id": null,
