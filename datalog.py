@@ -60,8 +60,8 @@ class DataPusher(threading.Thread):
 
             # If the internal queue is empty but the queue file isn't then pull from it
             if self._queue.empty() and os.path.isfile(d.params['qfile']) and os.path.getsize(d.params['qfile']) > 1:
-                d.logfile.debug('PUSH: Got readout at %s from queue file; attempting to push' % (readout['time']))
                 readout = get_readout_from_file(d)
+                d.logfile.debug('PUSH: Got readout at %s from queue file; attempting to push' % (readout['time']))
                 # push_readout includes a function to write back to file if the push is not successful
                 push_readout(d, readout)
 
