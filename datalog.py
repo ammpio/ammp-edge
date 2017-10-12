@@ -288,7 +288,7 @@ def read_device(d, dev, readings, readout_q):
 
                     d.logfile.debug('READ: [%s] %s = %s %s' % (dev, rdg['reading'], value, rdg.get('unit', '')))
                 except Exception as ex:
-                    d.logfile.error('READ: [%s] Could not process reading %s' % (dev, rdg['reading'])
+                    d.logfile.error('READ: [%s] Could not process reading %s' % (dev, rdg['reading']))
                     template = "An exception of type {0} occurred. Arguments:\n{1!r}"
                     message = template.format(type(ex).__name__, ex.args)
                     d.logfile.error(message)
@@ -352,7 +352,7 @@ def read_device(d, dev, readings, readout_q):
 
                     d.logfile.debug('READ: [%s] %s = %s %s' % (dev, rdg['reading'], value, rdg.get('unit', '')))
                 except Exception as ex:
-                    d.logfile.error('READ: [%s] Could not process reading %s' % (dev, rdg['reading'])
+                    d.logfile.error('READ: [%s] Could not process reading %s' % (dev, rdg['reading']))
                     template = "An exception of type {0} occurred. Arguments:\n{1!r}"
                     message = template.format(type(ex).__name__, ex.args)
                     d.logfile.error(message)
