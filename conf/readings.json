@@ -103,5 +103,8 @@
   "grid_out_V_L3": {"device": "export_meter", "var": "V_L3"},
   "grid_out_I_L1": {"device": "export_meter", "var": "I_L1"},
   "grid_out_I_L2": {"device": "export_meter", "var": "I_L2"},
-  "grid_out_I_L3": {"device": "export_meter", "var": "I_L3"}
+  "grid_out_I_L3": {"device": "export_meter", "var": "I_L3"},
+  "grid_out_pf_L1": {"device": "export_meter", "var": "pf_L1"},
+  "grid_out_pf_L2": {"device": "export_meter", "var": "pf_L2"},
+  "grid_out_pf_L3": {"device": "export_meter", "var": "pf_L3"}  
 }

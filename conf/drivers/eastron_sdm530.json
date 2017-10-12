@@ -16,6 +16,9 @@
     "V_L3": {"register":  4, "unit": "V"},
     "I_L1": {"register":  6, "unit": "A"},
     "I_L2": {"register":  8, "unit": "A"},
-    "I_L3": {"register": 10, "unit": "A"}
+    "I_L3": {"register": 10, "unit": "A"},
+    "pf_L1": {"register": 30},
+    "pf_L2": {"register": 32},
+    "pf_L3": {"register": 34}
   }
 }
