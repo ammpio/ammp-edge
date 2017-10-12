@@ -286,7 +286,7 @@ def read_device(d, dev, readings, readout_q):
                     # Append to key-value store            
                     fields[rdg['reading']] = value
 
-                    d.logfile.debug('READ: [%s] %s = %s %s' % (dev, rdg['reading'], value, rdg.get('unit', ''))
+                    d.logfile.debug('READ: [%s] %s = %s %s' % (dev, rdg['reading'], value, rdg.get('unit', '')))
                 except Exception as ex:
                     d.logfile.error('READ: [%s] Could not process reading %s' % (dev, rdg['reading'])
                     template = "An exception of type {0} occurred. Arguments:\n{1!r}"
@@ -350,7 +350,7 @@ def read_device(d, dev, readings, readout_q):
                     # Append to key-value store            
                     fields[rdg['reading']] = value
 
-                    d.logfile.debug('READ: [%s] %s = %s %s' % (dev, rdg['reading'], value, rdg.get('unit', ''))
+                    d.logfile.debug('READ: [%s] %s = %s %s' % (dev, rdg['reading'], value, rdg.get('unit', '')))
                 except Exception as ex:
                     d.logfile.error('READ: [%s] Could not process reading %s' % (dev, rdg['reading'])
                     template = "An exception of type {0} occurred. Arguments:\n{1!r}"
