@@ -60,8 +60,8 @@ class DataPusher(threading.Thread):
 
             # If the internal queue is empty but the queue file isn't then pull from it
             if self._queue.empty() and os.path.isfile(d.params['qfile']) and os.path.getsize(d.params['qfile']) > 1:
-                d.logfile.debug('PUSH: Got readout at %s from queue file; attempting to push' % (readout['time']))
                 readout = get_readout_from_file(d)
+                d.logfile.debug('PUSH: Got readout at %s from queue file; attempting to push' % (readout['time']))
                 # push_readout includes a function to write back to file if the push is not successful
                 push_readout(d, readout)
 
@@ -415,20 +415,23 @@ def push_readout(d, readout):
         # Push to endpoint (own ingester or Influx, depending on type sent in dbconf)
         if d.dbconf['conn']['type'] == 'ingest':
 
-            r = requests.post('https://%s/' % d.dbconf['conn']['host'], json=readout, headers={'X-API-Key': d.dbconf['conn']['key']})
+            r = requests.post('https://%s/' % d.dbconf['conn']['host'],
+                json=readout,
+                headers={'X-API-Key': d.dbconf['conn']['key']},
+                timeout=d.params['dbtimeout'])
             result = r.status_code == 200
 
         elif d.dbconf['conn']['type'] == 'influx':
 
             influx_client = InfluxDBClient(
-                host = self._d.dbconf['conn']['host'],
-                port = self._d.dbconf['conn']['port'],
-                username = self._d.dbconf['conn']['username'],
-                password = self._d.dbconf['conn']['password'],
-                database = self._d.dbconf['conn']['dbname'],
+                host = d.dbconf['conn']['host'],
+                port = d.dbconf['conn']['port'],
+                username = d.dbconf['conn']['username'],
+                password = d.dbconf['conn']['password'],
+                database = d.dbconf['conn']['dbname'],
                 ssl = True,
                 verify_ssl = True,
-                timeout = self._d.params['dbtimeout'])
+                timeout = d.params['dbtimeout'])
 
             result = influx_client.write_points([readout])
 
