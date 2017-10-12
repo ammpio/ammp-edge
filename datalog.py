@@ -271,7 +271,7 @@ def read_device(d, dev, readings, readout_q):
                 try:
                     val_i = c.read_holding_registers(rdg['register'], rdg['words'])
                 except Exception as ex:
-                    d.logfile.error('READ: Could not take reading %s from device %s' % (rdg['reading'], dev))
+                    d.logfile.error('READ: [%s] Could not obtain reading %s' % (dev, rdg['reading']))
                     template = "An exception of type {0} occurred. Arguments:\n{1!r}"
                     message = template.format(type(ex).__name__, ex.args)
                     d.logfile.error(message)
@@ -286,10 +286,14 @@ def read_device(d, dev, readings, readout_q):
                     # Append to key-value store            
                     fields[rdg['reading']] = value
 
-                    d.logfile.debug('READ: [%s] %s = %s %s' % (dev, rdg['reading'], value, rdg['unit'] or ''))
-                except:
-                    d.logfile.error('READ: Could not get reading %s' % rdg['reading'])
+                    d.logfile.debug('READ: [%s] %s = %s %s' % (dev, rdg['reading'], value, rdg.get('unit', ''))
+                except Exception as ex:
+                    d.logfile.error('READ: [%s] Could not process reading %s' % (dev, rdg['reading'])
+                    template = "An exception of type {0} occurred. Arguments:\n{1!r}"
+                    message = template.format(type(ex).__name__, ex.args)
+                    d.logfile.error(message)
                     continue
+
 
         # Be nice and close the Modbus socket
         c.close()
@@ -331,7 +335,7 @@ def read_device(d, dev, readings, readout_q):
                 try:
                     val_i = c.read_registers(rdg['register'], rdg['words'], rdg['fncode'])
                 except Exception as ex:
-                    d.logfile.error('READ: Could not take reading %s from device %s' % (rdg['reading'], dev))
+                    d.logfile.error('READ: [%s] Could not obtain reading %s' % (dev, rdg['reading']))
                     template = "An exception of type {0} occurred. Arguments:\n{1!r}"
                     message = template.format(type(ex).__name__, ex.args)
                     d.logfile.error(message)
@@ -346,9 +350,12 @@ def read_device(d, dev, readings, readout_q):
                     # Append to key-value store            
                     fields[rdg['reading']] = value
 
-                    d.logfile.debug('READ: [%s] %s = %s %s' % (dev, rdg['reading'], value, rdg['unit'] or ''))
-                except:
-                    d.logfile.error('READ: Could not get reading %s' % rdg['reading'])
+                    d.logfile.debug('READ: [%s] %s = %s %s' % (dev, rdg['reading'], value, rdg.get('unit', ''))
+                except Exception as ex:
+                    d.logfile.error('READ: [%s] Could not process reading %s' % (dev, rdg['reading'])
+                    template = "An exception of type {0} occurred. Arguments:\n{1!r}"
+                    message = template.format(type(ex).__name__, ex.args)
+                    d.logfile.error(message)
                     continue
 
         # Be nice and close the serial port between readings
