@@ -104,7 +104,15 @@
   "grid_out_I_L1": {"device": "export_meter", "var": "I_L1"},
   "grid_out_I_L2": {"device": "export_meter", "var": "I_L2"},
   "grid_out_I_L3": {"device": "export_meter", "var": "I_L3"},
+  "grid_out_I_total": {"device": "export_meter", "var": "I_total"},
   "grid_out_pf_L1": {"device": "export_meter", "var": "pf_L1"},
   "grid_out_pf_L2": {"device": "export_meter", "var": "pf_L2"},
-  "grid_out_pf_L3": {"device": "export_meter", "var": "pf_L3"}  
+  "grid_out_pf_L3": {"device": "export_meter", "var": "pf_L3"},
+  "grid_out_P_L1": {"device": "export_meter", "var": "P_L1"},
+  "grid_out_P_L2": {"device": "export_meter", "var": "P_L2"},
+  "grid_out_P_L3": {"device": "export_meter", "var": "P_L3"},
+  "grid_out_P_total": {"device": "export_meter", "var": "P_total"},
+  "grid_out_freq": {"device": "export_meter", "var": "freq"},
+  "grid_out_E_imported": {"device": "export_meter", "var": "E_imported"},
+  "grid_out_E_exported": {"device": "export_meter", "var": "E_exported"},
 }
