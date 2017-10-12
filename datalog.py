@@ -111,23 +111,21 @@ def setup_logfile(log_filename, debug_flag):
     return logger
 
 
-class LoggerWriter:
-    def __init__(self, level):
-        self.level = level
+class StreamToLogger(object):
+    """
+    Fake file-like stream object that redirects writes to a logger instance.
+    """
+    def __init__(self, logger, log_level=logging.INFO):
+        self.logger = logger
+        self.log_level = log_level
+        self.linebuf = ''
 
-    def write(self, message):
-        # if statement reduces the amount of newlines that are
-        # printed to the logger
-        if message != '\n':
-            self.level(message)
+    def write(self, buf):
+        for line in buf.rstrip().splitlines():
+            self.logger.log(self.log_level, line.rstrip())
 
     def flush(self):
-        # create a flush method so things can be flushed when
-        # the system wants to. Not sure if simply 'printing'
-        # sys.stderr is the correct way to do it, but it seemed
-        # to work properly for me.
-
-        self.level(sys.stderr)
+        pass
 
 
 def reading_cycle(d, q, sc=None):
@@ -513,8 +511,8 @@ if __name__ == '__main__':
 
     # Set up logging and redirect stdout and stderr ro error file
     logfile = setup_logfile(pargs['logfile'], pargs['debug'])
-    sys.stdout = LoggerWriter(logfile.info)
-    sys.stderr = LoggerWriter(logfile.error)
+    sys.stdout = StreamToLogger(logfile, logging.INFO)
+    sys.stderr = StreamToLogger(logfile, logging.ERROR)
 
     # Set up configuration dict/structure
     d = DatalogConfig(pargs, logfile)
