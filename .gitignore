@@ -5,6 +5,7 @@
 # *.[oa]
 # *~
 conf/dbconf.json
+conf/devices.json
 data/
 log/
 **/.DS_Store
