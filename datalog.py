@@ -112,7 +112,7 @@ class NonVolatileQProc(threading.Thread):
                 self._queue.put(readout)
 
                 # Make sure we're not going way too fast
-                sleep(1)
+                time.sleep(1)
 
             elif qsize > 5:
                 # If the internal queue is starting to grow large, then move items to the queue file
