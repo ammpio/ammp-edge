@@ -70,7 +70,7 @@ class DataPusher(threading.Thread):
 
             # Try pushing the readout to the remote endpoint
             try:
-                self._d.logfile.debug('PUSH: Got readout at %s from  queue; attempting to push' % (readout['time']))
+                self._d.logfile.debug('PUSH: Got readout at %s from queue; attempting to push' % (readout['time']))
                 if push_readout(self._d, readout):
                     self._d.logfile.info('PUSH: Successfully pushed point at %s' % (readout['time']))
                 else:
