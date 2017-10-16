@@ -58,8 +58,6 @@ class DataPusher(threading.Thread):
     def run(self):
 
         while True: 
-            # Slow this down to avoid generating a high rate of errors if no connection is available
-            time.sleep(10)
 
             # queue.get() blocks the current thread until an item is retrieved
             self._d.logfile.debug('PUSH: Waiting to get readings from queue')
@@ -72,13 +70,16 @@ class DataPusher(threading.Thread):
 
             # Try pushing the readout to the remote endpoint
             try:
-                self._d.logfile.debug('PUSH: Got readout at %s from internal queue; attempting to push' % (readout['time']))
+                self._d.logfile.debug('PUSH: Got readout at %s from  queue; attempting to push' % (readout['time']))
                 if push_readout(self._d, readout):
                     self._d.logfile.info('PUSH: Successfully pushed point at %s' % (readout['time']))
                 else:
                     # For some reason the point wasn't written to Influx, so we should put it back in the file
-                    d.logfile.warn('PUSH: Did not work. Putting readout at %s back in internal queue' % readout['time'])
+                    d.logfile.warn('PUSH: Did not work. Putting readout at %s back to queue' % readout['time'])
                     self._queue.put(readout)
+
+                    # Slow this down to avoid generating a high rate of errors if no connection is available
+                    time.sleep(10)
 
             except Exception as ex:
                 template = "An exception of type {0} occurred. Arguments:\n{1!r}"
@@ -137,7 +138,7 @@ class NonVolatileQ(object):
 
     def get(self):
         # Operate queue in LIFO fashion (obtain last inserted item)
-        self._qdbc.execute("SELECT * FROM readings ORDER BY id DESC LIMIT 1;")
+        self._qdbc.execute("SELECT * FROM queue ORDER BY id DESC LIMIT 1;")
 
         lastrow = self._qdbc.fetchone()
         if lastrow:
@@ -145,7 +146,7 @@ class NonVolatileQ(object):
                 (lastid, item_str) = lastrow
                 item = json.loads(item_str)
 
-                self._qdbc.execute("DELETE FROM readings WHERE id = (?);", (lastid,))
+                self._qdbc.execute("DELETE FROM queue WHERE id = (?);", (lastid,))
                 self._qdb.commit()
 
                 return item
@@ -489,18 +490,20 @@ def process_response(rdg, val_b):
 
 def push_readout(d, readout):
 
+    dbreadout = readout
+
     try:
         # Append measure and tag information to reading, to identify asset
-        readout.update(d.dbconf['body'])
+        dbreadout.update(d.dbconf['body'])
 
         # Append offset between time that reading was taken and current time
-        readout['fields']['reading_offset'] = int((datetime.utcnow() - datetime.strptime(readout['time'], "%Y-%m-%dT%H:%M:%SZ")).total_seconds() - readout['fields'].get('reading_duration', 0))
+        dbreadout['fields']['reading_offset'] = int((datetime.utcnow() - datetime.strptime(readout['time'], "%Y-%m-%dT%H:%M:%SZ")).total_seconds() - readout['fields'].get('reading_duration', 0))
 
         # Push to endpoint (own ingester or Influx, depending on type sent in dbconf)
         if d.dbconf['conn']['type'] == 'ingest':
 
             r = requests.post('https://%s/' % d.dbconf['conn']['host'],
-                json=readout,
+                json=dbreadout,
                 headers={'X-API-Key': d.dbconf['conn']['key']},
                 timeout=d.params['dbtimeout'])
             result = r.status_code == 200
@@ -517,7 +520,7 @@ def push_readout(d, readout):
                 verify_ssl = True,
                 timeout = d.params['dbtimeout'])
 
-            result = influx_client.write_points([readout])
+            result = influx_client.write_points([dbreadout])
 
         if result:
             return True
