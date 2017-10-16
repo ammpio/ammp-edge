@@ -93,25 +93,29 @@ class NonVolatileQProc(threading.Thread):
     def run(self):
 
         while True: 
-            # Run this at a decent pace that ensures that the internal queue doesn't get a chance to either grow
-            # too big with new readings, or stay empty after a data outage
-            time.sleep(10)
-
             # Potential improvement: carry out this action on blocks of readings at once (e.g. 5 or 10), rather than one by one
 
             qsize = self._queue.qsize()
             self._d.logfile.debug('NVQP: Queue size is %d' % qsize)
 
-            # If the internal queue is empty but the queue file isn't then pull from it
-            if qsize < 5 and os.path.isfile(d.params['qfile']) and os.path.getsize(d.params['qfile']) > 1:
+            if qsize < 3 and os.path.isfile(d.params['qfile']) and os.path.getsize(d.params['qfile']) > 1:
+                # If the internal queue is almost empty but the queue file isn't then pull from it
                 readout = get_readout_from_file(self._d)
                 self._d.logfile.debug('NVQP: Got readout at %s from queue file; moving to internal queue' % (readout['time']))
                 self._queue.put(readout)
 
+                # Make sure we're not going way too fast
+                sleep(1)
+
             elif qsize > 5:
+                # If the internal queue is starting to grow large, then move items to the queue file
                 readout = self._queue.get() 
                 self._d.logfile.debug('NVQP: Got readout at %s from internal queue; moving to file' % (readout['time']))
                 save_readout_to_file(self._d, readout)
+
+            else:
+                # If the queue is "just right" then take is easy for a little while
+                time.sleep(30)
 
 
 def setup_logfile(log_filename, debug_flag):

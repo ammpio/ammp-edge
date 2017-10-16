@@ -35,9 +35,9 @@
     "S_L2": {"register": 20, "unit": "VA"},
     "S_L3": {"register": 22, "unit": "VA"},
 
-    "Q_L1": {"register": 24, "unit": "VA"},
-    "Q_L2": {"register": 26, "unit": "VA"},
-    "Q_L3": {"register": 28, "unit": "VA"},
+    "Q_L1": {"register": 24, "unit": "VAr"},
+    "Q_L2": {"register": 26, "unit": "VAr"},
+    "Q_L3": {"register": 28, "unit": "VAr"},
 
     "pf_L1": {"register": 30},
     "pf_L2": {"register": 32},
