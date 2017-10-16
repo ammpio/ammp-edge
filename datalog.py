@@ -105,7 +105,7 @@ class NonVolatileQProc(threading.Thread):
             nvqsize = self._nvq.qsize()
             self._d.logfile.debug('NVQP: Queue size: internal: %d, non-volatile: %d' % (qsize, nvqsize))
 
-            if qsize < 3 and nvqsize > 0:
+            if qsize < 5 and nvqsize > 0:
                 # If the internal queue is almost empty but the queue file isn't then pull from it
                 readout = self._nvq.get()
                 self._d.logfile.debug('NVQP: Got readout at %s from queue file; moving to internal queue' % (readout['time']))
@@ -122,7 +122,7 @@ class NonVolatileQProc(threading.Thread):
 
             else:
                 # If the queue is "just right" then take is easy for a little while
-                time.sleep(self._d.params.get('interval', 60))
+                time.sleep(10)
 
 
 class NonVolatileQ(object):
