@@ -50,6 +50,8 @@ class DatalogConfig(object):
 class DataPusher(threading.Thread): 
     def __init__(self, d, queue): 
         threading.Thread.__init__(self)
+        self.name = 'Data pusher'
+
         self._d = d
         self._queue = queue
 
@@ -87,12 +89,14 @@ class DataPusher(threading.Thread):
 class NonVolatileQProc(threading.Thread): 
     def __init__(self, d, queue): 
         threading.Thread.__init__(self)
+        self.name = 'NVQ processor'
+
         self._d = d
         self._queue = queue
 
-        self._nvq = NonVolatileQ(self._d.params['qfile'])
-
     def run(self):
+
+        self._nvq = NonVolatileQ(self._d.params['qfile'])
 
         while True: 
 
@@ -160,7 +164,7 @@ class NonVolatileQ(object):
 
     def qsize(self):
         self._qdbc.execute("SELECT Count(*) FROM queue")
-        qsize = self._qdbc.fetchone()
+        qsize = self._qdbc.fetchone()[0]
 
         return qsize
 
