@@ -259,9 +259,9 @@ def read_device(d, dev, readings, readout_q):
             if not c.is_open():
                 c.open()
                 if c.is_open():
-                    d.logfile.debug('READ: Opened connection to %s' % dev)
+                    d.logfile.debug('READ: [%s] Opened connection' % dev)
                 else:
-                    d.logfile.error('READ: Unable to connect to %s' % dev)
+                    d.logfile.error('READ: [%s] Unable to open connection' % dev)
 
 
             # If open() is ok, read register
