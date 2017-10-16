@@ -4,6 +4,7 @@
 import sys, os
 from datetime import datetime
 import json
+import sqlite3
 import struct
 import sched, time
 import threading, queue
@@ -55,36 +56,62 @@ class DataPusher(threading.Thread):
     def run(self):
 
         while True: 
-            # Don't go too fast (in case we're just recovering from a data outage and there's a lot in the queue)
-            time.sleep(1)
+            # Slow this down to avoid generating a high rate of errors if no connection is available
+            time.sleep(10)
 
-            # If the internal queue is empty but the queue file isn't then pull from it
-            if self._queue.empty() and os.path.isfile(d.params['qfile']) and os.path.getsize(d.params['qfile']) > 1:
-                readout = get_readout_from_file(d)
-                d.logfile.debug('PUSH: Got readout at %s from queue file; attempting to push' % (readout['time']))
-                # push_readout includes a function to write back to file if the push is not successful
-                push_readout(d, readout)
-
-                continue
-
-            # queue.get() blocks the current thread until 
-            # an item is retrieved. 
-            d.logfile.debug('PUSH: Waiting to get readings from queue')
+            # queue.get() blocks the current thread until an item is retrieved
+            self._d.logfile.debug('PUSH: Waiting to get readings from queue')
             readout = self._queue.get() 
 
             # If we get the "stop" signal we exit
             if readout == {}:
-                d.logfile.debug('PUSH: Got {} from queue --> stopping pusher')
+                self._d.logfile.debug('PUSH: Got {} from queue --> stopping pusher')
                 return
 
-            # Try pushing the readout to the database
+            # Try pushing the readout to the remote endpoint
             try:
-                d.logfile.debug('PUSH: Got readout at %s from internal queue; attempting to push' % (readout['time']))
-                push_readout(self._d, readout)
+                self._d.logfile.debug('PUSH: Got readout at %s from internal queue; attempting to push' % (readout['time']))
+                if push_readout(self._d, readout):
+                    self._d.logfile.info('PUSH: Successfully pushed point at %s' % (readout['time']))
+                else:
+                    # For some reason the point wasn't written to Influx, so we should put it back in the file
+                    d.logfile.warn('PUSH: Did not work. Putting readout at %s back in internal queue' % readout['time'])
+                    self._queue.put(readout)
+
             except Exception as ex:
                 template = "An exception of type {0} occurred. Arguments:\n{1!r}"
                 message = template.format(type(ex).__name__, ex.args)
-                d.logfile.error('PUSH: %s' % message)
+                self._d.logfile.error('PUSH: %s' % message)
+
+
+class NonVolatileQProc(threading.Thread): 
+    def __init__(self, d, queue): 
+        threading.Thread.__init__(self)
+        self._d = d
+        self._queue = queue
+
+    def run(self):
+
+        while True: 
+            # Run this at a decent pace that ensures that the internal queue doesn't get a chance to either grow
+            # too big with new readings, or stay empty after a data outage
+            time.sleep(10)
+
+            # Potential improvement: carry out this action on blocks of readings at once (e.g. 5 or 10), rather than one by one
+
+            qsize = self._queue.qsize()
+            self._d.logfile.debug('NVQP: Queue size is %d' % qsize)
+
+            # If the internal queue is empty but the queue file isn't then pull from it
+            if qsize < 5 and os.path.isfile(d.params['qfile']) and os.path.getsize(d.params['qfile']) > 1:
+                readout = get_readout_from_file(self._d)
+                self._d.logfile.debug('NVQP: Got readout at %s from queue file; moving to internal queue' % (readout['time']))
+                self._queue.put(readout)
+
+            elif qsize > 5:
+                readout = self._queue.get() 
+                self._d.logfile.debug('NVQP: Got readout at %s from internal queue; moving to file' % (readout['time']))
+                save_readout_to_file(self._d, readout)
 
 
 def setup_logfile(log_filename, debug_flag):
@@ -146,11 +173,8 @@ def reading_cycle(d, q, sc=None):
 
     readout = get_readings(d)
 
-    # If the internal queue is already busy, push straight to the queue file
-    if q.qsize() < 10:
-        q.put(readout)
-    else:
-        save_readout_to_file(d, readout)
+    # Put the readout in the internal queue
+    q.put(readout)
 
 
 def get_readings(d):
@@ -441,7 +465,6 @@ def push_readout(d, readout):
             result = influx_client.write_points([readout])
 
         if result:
-            d.logfile.info('PUSH: Successfully pushed point at %s' % (readout['time']))
             return True
         else:
             raise Exception('PUSH: Something didn''t go well for point at %s' % readout['time'])
@@ -449,9 +472,6 @@ def push_readout(d, readout):
         template = "An exception of type {0} occurred. Arguments:\n{1!r}"
         message = template.format(type(ex).__name__, ex.args)
         d.logfile.warn(message)
-        # For some reason the point wasn't written to Influx, so we should put it back in the file
-        d.logfile.warn('PUSH: Did not work. Writing readout at %s to queue file instead' % readout['time'])
-        save_readout_to_file(d, readout)
  
         return False
 
@@ -498,7 +518,7 @@ if __name__ == '__main__':
     parser.add_argument('-D', '--devices', default='conf/devices.json', help='Device list file')
     parser.add_argument('-P', '--drvpath', default='conf/drivers', help='Path containing drivers (device register maps)')
     parser.add_argument('-B', '--dbconf', default='conf/dbconf.json', help='Output endpoint configuration spec file')
-    parser.add_argument('-q', '--qfile', default='/tmp/datalog_queue.json', help='Queue file (for non-volatile storage during comms outage)')
+    parser.add_argument('-q', '--qfile', default='/tmp/datalog_queue.db', help='Queue file (for non-volatile storage during comms outage)')
     parser.add_argument('-l', '--logfile', default='/tmp/datalog.log', help='Log file')
     parser.add_argument('-I', '--interval', type=int, help='Interval for repeated readings (s)')
     parser.add_argument('-r', '--roundtime', action='store_true', default=False, help='Start on round time interval (only with --interval)')    
@@ -520,15 +540,18 @@ if __name__ == '__main__':
     # Set up reading queue
     q = queue.LifoQueue()
 
-    # Create an instance of the queue processor
+    # Create an instance of the queue processor, and start the thread's internal run() method
     pusher = DataPusher(d, q)
-    # Start calls the internal run() method to kick off the thread
     pusher.start() 
 
 
     if d.params['interval']:
         # We will be carrying out periodic readings (daemon mode)
    
+        # Create an instance of the volatile<->non-volatile queue processor, and start it
+        nvqproc = NonVolatileQProc(d, q)
+        nvqproc.start()
+
         # Set up scheduler and run reading cycle with schedule (reading_cycle function then schedules
         # its own further iterations)
         s = sched.scheduler(time.time, time.sleep)
