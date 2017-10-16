@@ -518,7 +518,7 @@ if __name__ == '__main__':
     parser.add_argument('-D', '--devices', default='conf/devices.json', help='Device list file')
     parser.add_argument('-P', '--drvpath', default='conf/drivers', help='Path containing drivers (device register maps)')
     parser.add_argument('-B', '--dbconf', default='conf/dbconf.json', help='Output endpoint configuration spec file')
-    parser.add_argument('-q', '--qfile', default='/tmp/datalog_queue.db', help='Queue file (for non-volatile storage during comms outage)')
+    parser.add_argument('-q', '--qfile', default='/tmp/datalog_queue.json', help='Queue file (for non-volatile storage during comms outage)')
     parser.add_argument('-l', '--logfile', default='/tmp/datalog.log', help='Log file')
     parser.add_argument('-I', '--interval', type=int, help='Interval for repeated readings (s)')
     parser.add_argument('-r', '--roundtime', action='store_true', default=False, help='Start on round time interval (only with --interval)')    
