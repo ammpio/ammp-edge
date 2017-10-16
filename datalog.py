@@ -115,7 +115,7 @@ class NonVolatileQProc(threading.Thread):
 
             else:
                 # If the queue is "just right" then take is easy for a little while
-                time.sleep(self._d.get('interval', 60))
+                time.sleep(self._d.params.get('interval', 60))
 
 
 def setup_logfile(log_filename, debug_flag):
