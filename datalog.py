@@ -90,17 +90,19 @@ class NonVolatileQProc(threading.Thread):
         self._d = d
         self._queue = queue
 
+        self._nvq = NonVolatileQ(self._d.params['qfile'])
+
     def run(self):
 
         while True: 
-            # Potential improvement: carry out this action on blocks of readings at once (e.g. 5 or 10), rather than one by one
 
             qsize = self._queue.qsize()
-            self._d.logfile.debug('NVQP: Queue size is %d' % qsize)
+            nvqsize = self._nvq.qsize()
+            self._d.logfile.debug('NVQP: Queue size: internal: %d, non-volatile: %d' % (qsize, nvqsize))
 
-            if qsize < 3 and os.path.isfile(d.params['qfile']) and os.path.getsize(d.params['qfile']) > 1:
+            if qsize < 3 and nvqsize > 0:
                 # If the internal queue is almost empty but the queue file isn't then pull from it
-                readout = get_readout_from_file(self._d)
+                readout = self._nvq.get()
                 self._d.logfile.debug('NVQP: Got readout at %s from queue file; moving to internal queue' % (readout['time']))
                 self._queue.put(readout)
 
@@ -111,11 +113,56 @@ class NonVolatileQProc(threading.Thread):
                 # If the internal queue is starting to grow large, then move items to the queue file
                 readout = self._queue.get() 
                 self._d.logfile.debug('NVQP: Got readout at %s from internal queue; moving to file' % (readout['time']))
-                save_readout_to_file(self._d, readout)
+                self._nvq.put(readout)
 
             else:
                 # If the queue is "just right" then take is easy for a little while
                 time.sleep(self._d.params.get('interval', 60))
+
+
+class NonVolatileQ(object):
+    def __init__(self, qfile):
+        # Set up SQLite database connection for non-volatile queue storage
+        # (file will be created if it doesn't already exist)
+        self._qdb = sqlite3.connect(qfile)
+        self._qdbc = self._qdb.cursor()
+
+        # Pretty self-explanatory, but if the queue table doesn't exist it'll be created
+        self._qdbc.execute("CREATE TABLE IF NOT EXISTS queue(id INTEGER PRIMARY KEY, item TEXT);")
+        self._qdb.commit()
+
+    def get(self):
+        # Operate queue in LIFO fashion (obtain last inserted item)
+        self._qdbc.execute("SELECT * FROM readings ORDER BY id DESC LIMIT 1;")
+
+        lastrow = self._qdbc.fetchone()
+        if lastrow:
+            try:
+                (lastid, item_str) = lastrow
+                item = json.loads(item_str)
+
+                self._qdbc.execute("DELETE FROM readings WHERE id = (?);", (lastid,))
+                self._qdb.commit()
+
+                return item
+            except Exception as ex:
+                template = "An exception of type {0} occurred. Arguments:\n{1!r}"
+                message = template.format(type(ex).__name__, ex.args)
+                self._d.logfile.error(message)
+        else:
+            return None
+
+    def put(self, item):
+        # We expect the item being returned to be a dict
+        item_str = json.dumps(item)
+        self._qdbc.execute("INSERT INTO queue(item) VALUES(?)", (item_str,))
+        self._qdb.commit()
+
+    def qsize(self):
+        self._qdbc.execute("SELECT Count(*) FROM queue")
+        qsize = self._qdbc.fetchone()
+
+        return qsize
 
 
 def setup_logfile(log_filename, debug_flag):
@@ -480,34 +527,6 @@ def push_readout(d, readout):
         return False
 
 
-def save_readout_to_file(d, readout):
-    with open(d.params['qfile'], 'a+') as qfile:
-        json.dump(readout, qfile)
-        qfile.write('\n')
-
-
-def get_readout_from_file(d):
-    with open(d.params['qfile'], 'r+b') as f:
-        f.seek(-2, os.SEEK_END)     # Jump to the second last byte.
-        while f.read(1) != b'\n':   # Until EOL is found or we're at the start of the file
-            if f.tell() < 2:
-                f.seek(0, os.SEEK_SET) # We're basically at the start of the file - just jump back one byte to the actual start
-                break
-            else:
-                f.seek(-2, os.SEEK_CUR) # Jump back the read byte plus one more
-        
-        # Remember where the start of the last line is, and read it
-        lastline_start = f.tell()
-        lastline = str(f.readline(), 'utf-8')
-        # Truncate the file at the start of the last line
-        f.truncate(lastline_start)
-
-    readout = json.loads(lastline)
-
-    return readout
-
-
-
 def roundtime(d):
     tnow = time.time()
     next_roundtime = tnow + d.params['interval'] - (tnow % d.params['interval'])
@@ -522,7 +541,7 @@ if __name__ == '__main__':
     parser.add_argument('-D', '--devices', default='conf/devices.json', help='Device list file')
     parser.add_argument('-P', '--drvpath', default='conf/drivers', help='Path containing drivers (device register maps)')
     parser.add_argument('-B', '--dbconf', default='conf/dbconf.json', help='Output endpoint configuration spec file')
-    parser.add_argument('-q', '--qfile', default='/tmp/datalog_queue.json', help='Queue file (for non-volatile storage during comms outage)')
+    parser.add_argument('-q', '--qfile', default='/tmp/datalog_queue.db', help='Queue file (for non-volatile storage during comms outage)')
     parser.add_argument('-l', '--logfile', default='/tmp/datalog.log', help='Log file')
     parser.add_argument('-I', '--interval', type=int, help='Interval for repeated readings (s)')
     parser.add_argument('-r', '--roundtime', action='store_true', default=False, help='Start on round time interval (only with --interval)')    
