@@ -122,7 +122,7 @@ class NonVolatileQProc(threading.Thread):
 
             else:
                 # If the queue is "just right" then take is easy for a little while
-                time.sleep(10)
+                time.sleep(self._d.params.get('interval', 60)/2)
 
 
 class NonVolatileQ(object):
