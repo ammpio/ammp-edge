@@ -251,7 +251,7 @@ def get_readings(d):
 
         # Ignore devices that are explicitly disabled in the devices.json file
         # (if 'enabled' key is missing altogether, assume enabled by default)
-        if not d.devices[dev].get('enabled', True): continue
+        if not dev in d.devices or not d.devices[dev].get('enabled', True): continue
 
         # Get the driver name
         drv = d.devices[dev]['driver']
