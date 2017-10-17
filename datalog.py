@@ -490,20 +490,18 @@ def process_response(rdg, val_b):
 
 def push_readout(d, readout):
 
-    dbreadout = readout
-
     try:
         # Append measure and tag information to reading, to identify asset
-        dbreadout.update(d.dbconf['body'])
+        readout.update(d.dbconf['body'])
 
         # Append offset between time that reading was taken and current time
-        dbreadout['fields']['reading_offset'] = int((datetime.utcnow() - datetime.strptime(readout['time'], "%Y-%m-%dT%H:%M:%SZ")).total_seconds() - readout['fields'].get('reading_duration', 0))
+        readout['fields']['reading_offset'] = int((datetime.utcnow() - datetime.strptime(readout['time'], "%Y-%m-%dT%H:%M:%SZ")).total_seconds() - readout['fields'].get('reading_duration', 0))
 
         # Push to endpoint (own ingester or Influx, depending on type sent in dbconf)
         if d.dbconf['conn']['type'] == 'ingest':
 
             r = requests.post('https://%s/' % d.dbconf['conn']['host'],
-                json=dbreadout,
+                json=readout,
                 headers={'X-API-Key': d.dbconf['conn']['key']},
                 timeout=d.params['dbtimeout'])
             result = r.status_code == 200
@@ -520,7 +518,7 @@ def push_readout(d, readout):
                 verify_ssl = True,
                 timeout = d.params['dbtimeout'])
 
-            result = influx_client.write_points([dbreadout])
+            result = influx_client.write_points([readout])
 
         if result:
             return True
