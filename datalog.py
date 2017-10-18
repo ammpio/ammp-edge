@@ -180,9 +180,15 @@ class NonVolatileQ(object):
             return None
 
     def put(self, item):
+        # Use timestamp as row ID
+        try:
+            id_ts = int(dt.strptime(item['time'], '%Y-%m-%dT%H:%M:%S.%fZ').timestamp())
+        except:
+            id_ts = None
+
         # We expect the item being returned to be a dict
         item_str = json.dumps(item)
-        self._qdbc.execute("INSERT INTO queue(item) VALUES(?)", (item_str,))
+        self._qdbc.execute("INSERT INTO queue VALUES (?,?)", (id_ts, item_str))
         self._qdb.commit()
 
     def qsize(self):
