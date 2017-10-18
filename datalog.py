@@ -572,6 +572,7 @@ def roundtime(d):
 
 
 def sigterm_handler(_signo, _stack_frame):
+    d.logfile.info('Received SIGTERM; shutting down')
     # Raises SystemExit(0):
     sys.exit(0)
 
