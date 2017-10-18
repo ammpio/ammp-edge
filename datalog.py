@@ -18,6 +18,7 @@ import requests
 import logging
 import logging.handlers
 
+do_shutdown = threading.Event()
 
 class DatalogConfig(object):
     params = {}
@@ -50,14 +51,16 @@ class DatalogConfig(object):
 class DataPusher(threading.Thread): 
     def __init__(self, d, queue): 
         threading.Thread.__init__(self)
-        self.name = 'Data pusher'
+        self.name = 'data_pusher'
+        # Make sure this thread exits directly when the program exits; no clean-up should be required
+        self.daemon = True
 
         self._d = d
         self._queue = queue
 
     def run(self):
 
-        while True: 
+        while not do_shutdown.is_set():
 
             # queue.get() blocks the current thread until an item is retrieved
             self._d.logfile.debug('PUSH: Waiting to get readings from queue')
@@ -65,7 +68,7 @@ class DataPusher(threading.Thread):
 
             # If we get the "stop" signal we exit
             if readout == {}:
-                self._d.logfile.debug('PUSH: Got {} from queue --> stopping pusher')
+                self._d.logfile.debug('PUSH: Shutting down (got {} from queue)')
                 return
 
             # Try pushing the readout to the remote endpoint
@@ -86,11 +89,15 @@ class DataPusher(threading.Thread):
                 message = template.format(type(ex).__name__, ex.args)
                 self._d.logfile.error('PUSH: %s' % message)
 
+        self._d.logfile.info('PUSH: Shutting down')
+
 
 class NonVolatileQProc(threading.Thread): 
     def __init__(self, d, queue): 
         threading.Thread.__init__(self)
-        self.name = 'NVQ processor'
+        self.name = 'nvq_proc'
+        # We want to get the chance to do clean-up on this thread if the program exits
+        self.daemon = False
 
         self._d = d
         self._queue = queue
@@ -99,7 +106,7 @@ class NonVolatileQProc(threading.Thread):
 
         self._nvq = NonVolatileQ(self._d.params['qfile'])
 
-        while True: 
+        while not do_shutdown.is_set():
 
             qsize = self._queue.qsize()
             nvqsize = self._nvq.qsize()
@@ -124,6 +131,17 @@ class NonVolatileQProc(threading.Thread):
                 # If the queue is "just right" then take is easy for a little while
                 time.sleep(self._d.params.get('interval', 60)/2)
 
+        self._d.logfile.info('NVQP: Stashing internal queue')
+        # If we're exiting, then put all of the internal queue into the non-volatile queue
+        while not self._queue.empty():
+            readout = self._queue.get() 
+            if not readout == {}:
+                self._d.logfile.debug('NVQP: Got readout at %s from internal queue; moving to file' % (readout['time']))
+                self._nvq.put(readout)
+
+        self._d.logfile.info('NVQP: Shutting down')
+        self._nvq.close()
+
 
 class NonVolatileQ(object):
     def __init__(self, qfile):
@@ -131,6 +149,9 @@ class NonVolatileQ(object):
         # (file will be created if it doesn't already exist)
         self._qdb = sqlite3.connect(qfile)
         self._qdbc = self._qdb.cursor()
+
+        # Start with a vacuum clean
+        self._qdb.execute("VACUUM")
 
         # Pretty self-explanatory, but if the queue table doesn't exist it'll be created
         self._qdbc.execute("CREATE TABLE IF NOT EXISTS queue(id INTEGER PRIMARY KEY, item TEXT);")
@@ -168,6 +189,9 @@ class NonVolatileQ(object):
         qsize = self._qdbc.fetchone()[0]
 
         return qsize
+
+    def close(self):
+        self._qdb.close()
 
 
 def setup_logfile(log_filename, debug_flag):
@@ -287,7 +311,8 @@ def get_readings(d):
         dev_thread = threading.Thread(
                 target=read_device,
                 name='Readout-' + dev,
-                args=(d, dev, dev_rdg[dev], readout_q)
+                args=(d, dev, dev_rdg[dev], readout_q),
+                daemon=True
                 )
         
         jobs.append(dev_thread)
@@ -354,6 +379,10 @@ def read_device(d, dev, readings, readout_q):
                     message = template.format(type(ex).__name__, ex.args)
                     d.logfile.error(message)
 
+                if val_i is None:
+                    d.logfile.warn('READ: [%s] Device returned None for reading %s' % (dev, rdg['reading']))
+                    continue
+
                 try:
                     # The pyModbusTCP library helpfully converts the binary result to a list of integers, so
                     # it's best to first convert it back to binary (assuming big-endian)
@@ -417,6 +446,10 @@ def read_device(d, dev, readings, readout_q):
                     template = "An exception of type {0} occurred. Arguments:\n{1!r}"
                     message = template.format(type(ex).__name__, ex.args)
                     d.logfile.error(message)
+
+                if val_i is None:
+                    d.logfile.warn('READ: [%s] Device returned None for reading %s' % (dev, rdg['reading']))
+                    continue
 
                 try:
                     # The minimalmodbus library helpfully converts the binary result to a list of integers, so
@@ -580,20 +613,28 @@ if __name__ == '__main__':
         nvqproc = NonVolatileQProc(d, q)
         nvqproc.start()
 
-        # Set up scheduler and run reading cycle with schedule (reading_cycle function then schedules
-        # its own further iterations)
-        s = sched.scheduler(time.time, time.sleep)
+        try:
 
-        if d.params['roundtime']:
-            s.enterabs(roundtime(d), 1, reading_cycle, (d, q, s))
-            d.logfile.info('Waiting to start on round time interval...')
-        else:
-            reading_cycle(d, q, s)
+            # Set up scheduler and run reading cycle with schedule (reading_cycle function then schedules
+            # its own further iterations)
+            s = sched.scheduler(time.time, time.sleep)
 
-        s.run()
+            if d.params['roundtime']:
+                s.enterabs(roundtime(d), 1, reading_cycle, (d, q, s))
+                d.logfile.info('Waiting to start on round time interval...')
+            else:
+                reading_cycle(d, q, s)
+
+            s.run()
+
+        except (KeyboardInterrupt, SystemExit):
+            do_shutdown.set()
+            q.put({})            
 
     else:
         # Carry out a one-off reading, with no scheduler
         reading_cycle(d, q)
         q.put({})
 
+    # Wait for queue to empty out (most likely by saving to non-volatile storage by NVQP thread)
+#    q.join()
