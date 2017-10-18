@@ -571,6 +571,10 @@ def roundtime(d):
     return next_roundtime
 
 
+def sigterm_handler(_signo, _stack_frame):
+    # Raises SystemExit(0):
+    sys.exit(0)
+
 if __name__ == '__main__':
     import argparse
 
@@ -594,6 +598,9 @@ if __name__ == '__main__':
     logfile = setup_logfile(pargs['logfile'], pargs['debug'])
     sys.stdout = StreamToLogger(logfile, logging.INFO)
     sys.stderr = StreamToLogger(logfile, logging.ERROR)
+
+    # Handle SIGTERM from daemon control
+    signal.signal(signal.SIGTERM, sigterm_handler)
 
     # Set up configuration dict/structure
     d = DatalogConfig(pargs, logfile)
@@ -636,5 +643,3 @@ if __name__ == '__main__':
         reading_cycle(d, q)
         q.put({})
 
-    # Wait for queue to empty out (most likely by saving to non-volatile storage by NVQP thread)
-#    q.join()
