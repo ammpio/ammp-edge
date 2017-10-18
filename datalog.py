@@ -130,7 +130,7 @@ class NonVolatileQProc(threading.Thread):
 
             else:
                 # If the queue is "just right" then take is easy for a little while
-                time.sleep(self._d.params.get('interval', 60)/2)
+                time.sleep(10)
 
         self._d.logfile.info('NVQP: Stashing internal queue')
         # If we're exiting, then put all of the internal queue into the non-volatile queue
