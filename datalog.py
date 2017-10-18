@@ -8,6 +8,7 @@ import sqlite3
 import struct
 import sched, time
 import threading, queue
+import signal
 
 from pyModbusTCP_alt import ModbusClient_alt
 import minimalmodbus, serial
