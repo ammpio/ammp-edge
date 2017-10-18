@@ -155,20 +155,20 @@ class NonVolatileQ(object):
         self._qdb.execute("VACUUM")
 
         # Pretty self-explanatory, but if the queue table doesn't exist it'll be created
-        self._qdbc.execute("CREATE TABLE IF NOT EXISTS queue(id INTEGER PRIMARY KEY, item TEXT);")
+        self._qdbc.execute("CREATE TABLE IF NOT EXISTS queue(ts INTEGER PRIMARY KEY, item TEXT);")
         self._qdb.commit()
 
     def get(self):
         # Operate queue in LIFO fashion (obtain last inserted item)
-        self._qdbc.execute("SELECT * FROM queue ORDER BY id DESC LIMIT 1;")
+        self._qdbc.execute("SELECT * FROM queue ORDER BY ts DESC LIMIT 1;")
 
         lastrow = self._qdbc.fetchone()
         if lastrow:
             try:
-                (lastid, item_str) = lastrow
+                (ts, item_str) = lastrow
                 item = json.loads(item_str)
 
-                self._qdbc.execute("DELETE FROM queue WHERE id = (?);", (lastid,))
+                self._qdbc.execute("DELETE FROM queue WHERE ts = (?);", (ts,))
                 self._qdb.commit()
 
                 return item
@@ -182,13 +182,16 @@ class NonVolatileQ(object):
     def put(self, item):
         # Use timestamp as row ID
         try:
-            id_ts = int(dt.strptime(item['time'], '%Y-%m-%dT%H:%M:%S.%fZ').timestamp())
-        except:
-            id_ts = None
+            ts = int(datetime.strptime(item['time'], '%Y-%m-%dT%H:%M:%SZ').timestamp())
+        except Exception as ex:
+            template = "An exception of type {0} occurred. Arguments:\n{1!r}"
+            message = template.format(type(ex).__name__, ex.args)
+            self._d.logfile.error(message)
+            ts = None
 
         # We expect the item being returned to be a dict
         item_str = json.dumps(item)
-        self._qdbc.execute("INSERT INTO queue VALUES (?,?)", (id_ts, item_str))
+        self._qdbc.execute("INSERT INTO queue VALUES (?,?)", (ts, item_str))
         self._qdb.commit()
 
     def qsize(self):
