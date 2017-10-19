@@ -20,6 +20,7 @@ import logging
 import logging.handlers
 
 do_shutdown = threading.Event()
+push_in_progress = threading.Event()
 
 class DatalogConfig(object):
     params = {}
@@ -74,6 +75,8 @@ class DataPusher(threading.Thread):
 
             # Try pushing the readout to the remote endpoint
             try:
+                push_in_progress.set()
+
                 self._d.logfile.debug('PUSH: Got readout at %s from queue; attempting to push' % (readout['time']))
                 if push_readout(self._d, readout):
                     self._d.logfile.info('PUSH: Successfully pushed point at %s' % (readout['time']))
@@ -82,6 +85,8 @@ class DataPusher(threading.Thread):
                     d.logfile.warn('PUSH: Did not work. Putting readout at %s back to queue' % readout['time'])
                     self._queue.put(readout)
 
+                    push_in_progress.clear()
+
                     # Slow this down to avoid generating a high rate of errors if no connection is available
                     time.sleep(10)
 
@@ -89,6 +94,8 @@ class DataPusher(threading.Thread):
                 template = "An exception of type {0} occurred. Arguments:\n{1!r}"
                 message = template.format(type(ex).__name__, ex.args)
                 self._d.logfile.error('PUSH: %s' % message)
+
+                push_in_progress.clear()
 
         self._d.logfile.info('PUSH: Shutting down')
 
@@ -113,7 +120,7 @@ class NonVolatileQProc(threading.Thread):
             nvqsize = self._nvq.qsize()
             self._d.logfile.debug('NVQP: Queue size: internal: %d, non-volatile: %d' % (qsize, nvqsize))
 
-            if qsize < 5 and nvqsize > 0:
+            if nvqsize > 0 and (qsize + push_in_progress.is_set()) < 5:
                 # If the internal queue is almost empty but the queue file isn't then pull from it
                 readout = self._nvq.get()
                 self._d.logfile.debug('NVQP: Got readout at %s from queue file; moving to internal queue' % (readout['time']))
