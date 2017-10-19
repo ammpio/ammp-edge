@@ -388,6 +388,7 @@ def read_device(d, dev, readings, readout_q):
                     template = "An exception of type {0} occurred. Arguments:\n{1!r}"
                     message = template.format(type(ex).__name__, ex.args)
                     d.logfile.error(message)
+                    continue
 
                 if val_i is None:
                     d.logfile.warn('READ: [%s] Device returned None for reading %s' % (dev, rdg['reading']))
