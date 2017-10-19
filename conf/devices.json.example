@@ -4,18 +4,30 @@
     "desc": "Eastron SDM530 export meter",
     "driver": "eastron_sdm530",
     "id": null,
-    "reading_type": 2,
+    "reading_type": "serial",
     "address": {
       "device": "/dev/ttys0",
       "slaveaddr": 1
     }
   },
-  "si": {
+  "router": {
     "enabled": true,
+    "desc": "Libratum UR5i router",
+    "driver": "libratum_ur5i",
+    "id": null,
+    "reading_type": "snmp",
+    "address": {
+      "host": "10.127.4.129",
+      "port": 161,
+      "community": "public"
+    }
+  },
+  "si": {
+    "enabled": false,
     "desc": "Sunny Island",
     "driver": "sma_si80",
     "id": null,
-    "reading_type": 1,
+    "reading_type": "modbustcp",
     "address": {
       "host": "10.127.2.21",
       "port": 502,
@@ -27,7 +39,7 @@
     "desc": "Sunny Boy L1",
     "driver": "sma_sb5000",
     "id": null,
-    "reading_type": 1,
+    "reading_type": "modbustcp",
     "address": {
       "host": "10.127.2.31",
       "port": 502,
@@ -39,7 +51,7 @@
     "desc": "Sunny Boy L2",
     "driver": "sma_sb5000",
     "id": null,
-    "reading_type": 1,
+    "reading_type": "modbustcp",
     "address": {
       "host": "10.127.2.32",
       "port": 502,
@@ -51,7 +63,7 @@
     "desc": "Sunny Boy L3",
     "driver": "sma_sb5000",
     "id": null,
-    "reading_type": 1,
+    "reading_type": "modbustcp",
     "address": {
       "host": "10.127.2.33",
       "port": 502,
