@@ -354,8 +354,9 @@ def read_device(d, dev, readings, readout_q):
     # The reading type for each of the devices can be one of the following:
     # 1 - ModbusTCP
     # 2 - RS-485 / ModbusRTU
+    # 3 - SNMP
 
-    if d.devices[dev]['reading_type'] == 1:
+    if d.devices[dev]['reading_type'] == 'modbustcp':
         # Set up and read from ModbusTCP client
 
         c = ModbusClient_alt(
@@ -417,7 +418,7 @@ def read_device(d, dev, readings, readout_q):
         c.close()
 
 
-    elif d.devices[dev]['reading_type'] == 2:
+    elif d.devices[dev]['reading_type'] == 'serial':
 
         # Set up RS-485 client
         c = minimalmodbus.Instrument(
@@ -484,6 +485,37 @@ def read_device(d, dev, readings, readout_q):
         # Be nice and close the serial port between readings
         c.serial.close()
 
+    elif d.devices[dev]['reading_type'] == 'snmp':
+
+        import reader_snmp
+
+        with reader_snmp.Reader(d, host=d.devices[dev]['address']['host'], port=d.devices[dev]['address']['port'], community=d.devices[dev]['address']['community']) as reader:
+
+            for rdg in readings:
+                try:
+                    val = reader.read(rdg['oid'])
+
+                except Exception as ex:
+                    d.logfile.error('READ: [%s] Could not obtain reading %s' % (dev, rdg['reading']))
+                    template = "An exception of type {0} occurred. Arguments:\n{1!r}"
+                    message = template.format(type(ex).__name__, ex.args)
+                    d.logfile.error(message)
+                    continue
+
+                try:
+                    value = reader.process(rdg, val)
+
+                    # Append to key-value store            
+                    fields[rdg['reading']] = value
+
+                    d.logfile.debug('READ: [%s] %s = %s %s' % (dev, rdg['reading'], value, rdg.get('unit', '')))
+
+                except Exception as ex:
+                    d.logfile.error('READ: [%s] Could not process reading %s' % (dev, rdg['reading']))
+                    template = "An exception of type {0} occurred. Arguments:\n{1!r}"
+                    message = template.format(type(ex).__name__, ex.args)
+                    d.logfile.error(message)
+                    continue
 
     d.logfile.info('READ: Finished reading %s' % dev)
 
@@ -609,8 +641,8 @@ if __name__ == '__main__':
 
     # Set up logging and redirect stdout and stderr ro error file
     logfile = setup_logfile(pargs['logfile'], pargs['debug'])
-    sys.stdout = StreamToLogger(logfile, logging.INFO)
-    sys.stderr = StreamToLogger(logfile, logging.ERROR)
+#    sys.stdout = StreamToLogger(logfile, logging.INFO)
+#    sys.stderr = StreamToLogger(logfile, logging.ERROR)
 
     # Handle SIGTERM from daemon control
     signal.signal(signal.SIGTERM, sigterm_handler)

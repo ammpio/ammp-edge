@@ -114,5 +114,19 @@
   "grid_out_P_total": {"device": "export_meter", "var": "P_total"},
   "grid_out_freq": {"device": "export_meter", "var": "freq"},
   "grid_out_E_imported": {"device": "export_meter", "var": "E_imported"},
-  "grid_out_E_exported": {"device": "export_meter", "var": "E_exported"}
+  "grid_out_E_exported": {"device": "export_meter", "var": "E_exported"},
+
+  "comms_rtr_uptime": {"device": "router", "var": "uptime"},
+  "comms_rtr_temp": {"device": "router", "var": "temp"},
+  "comms_rtr_input_V": {"device": "router", "var": "input_V"},
+  "comms_RSSI": {"device": "router", "var": "RSSI"},
+  "comms_Rx_S1": {"device": "router", "var": "Rx_SIM1_period"},
+  "comms_Rx_S2": {"device": "router", "var": "Rx_SIM2_period"},
+  "comms_Tx_S1": {"device": "router", "var": "Tx_SIM1_period"},
+  "comms_Tx_S2": {"device": "router", "var": "Tx_SIM2_period"},
+  "comms_connum_S1": {"device": "router", "var": "conns_SIM1_period"},
+  "comms_connum_S2": {"device": "router", "var": "conns_SIM2_period"},
+  "comms_t_S1": {"device": "router", "var": "t_SIM1_period"},
+  "comms_t_S2": {"device": "router", "var": "t_SIM2_period"},
+  "comms_t_noconn": {"device": "router", "var": "t_noconn_period"}
 }
