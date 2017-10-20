@@ -648,8 +648,8 @@ if __name__ == '__main__':
 
     # Set up logging and redirect stdout and stderr ro error file
     logfile = setup_logfile(pargs['logfile'], pargs['debug'])
-#    sys.stdout = StreamToLogger(logfile, logging.INFO)
-#    sys.stderr = StreamToLogger(logfile, logging.ERROR)
+    sys.stdout = StreamToLogger(logfile, logging.INFO)
+    sys.stderr = StreamToLogger(logfile, logging.ERROR)
 
     # Handle SIGTERM from daemon control
     signal.signal(signal.SIGTERM, sigterm_handler)
