@@ -113,9 +113,9 @@
   "grid_out_P_L3": {"device": "export_meter", "var": "P_L3"},
   "grid_out_P_total": {"device": "export_meter", "var": "P_total"},
   "grid_out_freq": {"device": "export_meter", "var": "freq"},
-  "grid_out_E_imported": {"device": "export_meter", "var": "E_imported"},
-  "grid_out_E_exported": {"device": "export_meter", "var": "E_exported"},
-
+  "grid_out_E": {"device": "export_meter", "var": "E_exported"},
+  "grid_out_E_in": {"device": "export_meter", "var": "E_imported"},
+  
   "comms_rtr_uptime": {"device": "router", "var": "uptime"},
   "comms_rtr_temp": {"device": "router", "var": "temp"},
   "comms_rtr_input_V": {"device": "router", "var": "input_V"},
