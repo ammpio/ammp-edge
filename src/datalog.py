@@ -80,6 +80,8 @@ class DataPusher(threading.Thread):
                 self._d.logfile.debug('PUSH: Got readout at %s from queue; attempting to push' % (readout['time']))
                 if push_readout(self._d, readout):
                     self._d.logfile.info('PUSH: Successfully pushed point at %s' % (readout['time']))
+                    push_in_progress.clear()
+
                 else:
                     # For some reason the point wasn't written to Influx, so we should put it back in the file
                     d.logfile.warn('PUSH: Did not work. Putting readout at %s back to queue' % readout['time'])
