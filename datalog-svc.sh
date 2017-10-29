@@ -11,8 +11,8 @@
 ### END INIT INFO
 
 # Change the next 3 lines to suit where you install your script and what you want to call it
-DIR=/opt/datalog/src
-DAEMON=$DIR/datalog.py
+DIR=/opt/datalog
+DAEMON=$DIR/src/datalog.py
 DAEMON_NAME=datalog-svc
 
 # Add any command line options for your daemon here

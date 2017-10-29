@@ -4,11 +4,11 @@
 # exclude patterns (uncomment them if you want to use them):
 # *.[oa]
 # *~
+.*
+!.gitignore
 conf/dbconf.json
 conf/devices.json
-data/
-log/
+local/
 **/.DS_Store
 **/__pycache__/
-nohup.out
 
