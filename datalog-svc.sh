@@ -16,7 +16,9 @@ DAEMON=$DIR/src/datalog.py
 DAEMON_NAME=datalog-svc
 
 # Add any command line options for your daemon here
-DAEMON_OPTS="-I 60 -r -t 1 -d"
+LOGFILE=/var/log/datalog/datalog.log
+NVQFILE=/var/tmp/datalog_queue.db
+DAEMON_OPTS="-I 60 -r -t 1 -l $LOGFILE -q $NVQFILE -d"
 
 # This next line determines what user the script runs as.
 # Root generally not recommended but necessary if you are using the Raspberry Pi GPIO from Python.
