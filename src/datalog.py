@@ -359,9 +359,9 @@ def read_device(d, dev, readings, readout_q):
     d.logfile.info('READ: Start reading %s' % dev)
 
     # The reading type for each of the devices can be one of the following:
-    # 1 - ModbusTCP
-    # 2 - RS-485 / ModbusRTU
-    # 3 - SNMP
+    # modbustcp - ModbusTCP
+    # serial - RS-485 / ModbusRTU
+    # snmp - SNMP
 
     if d.devices[dev]['reading_type'] == 'modbustcp':
         # Set up and read from ModbusTCP client
