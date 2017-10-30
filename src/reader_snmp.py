@@ -12,7 +12,7 @@ class Reader(object):
 
     def __enter__(self):
         # Create an SNMP session to be used for all our requests
-        self._session = Session(hostname=self._host, remote_port=solf._port, timeout=self._d.params['rtimeout']
+        self._session = Session(hostname=self._host, remote_port=solf._port, timeout=self._d.params['rtimeout'],
             community=self._community, version=self._version)
 
         return self
