@@ -1,40 +1,30 @@
-from pysnmp.hlapi import *
+from easysnmp import Session
 import builtins
 
 class Reader(object):
-    def __init__(self, d, host, port=161, community='public', mpmodel=0):
+    def __init__(self, d, host, port=161, community='public', version=2):
 
         self._d = d
         self._host = host
         self._port = port
         self._community = community
-        self._mpmodel = mpmodel
+        self._version = version
 
     def __enter__(self):
+        # Create an SNMP session to be used for all our requests
+        self._session = Session(hostname=self._host, remote_port=solf._port, timeout=self._d.params['rtimeout']
+            community=self._community, version=self._version)
+
         return self
 
     def __exit__(self, type, value, traceback):
         pass
 
     def read(self, oid):
-        errorIndication, errorStatus, errorIndex, varBind = next(
-            getCmd(SnmpEngine(),
-                   CommunityData(self._community, mpModel=self._mpmodel),
-                   UdpTransportTarget((self._host, self._port), timeout=self._d.params['rtimeout']),
-                   ContextData(),
-                   ObjectType(ObjectIdentity(oid)))
-            )
+        snmpval = self._session.get(oid)
+        val = snmpval.value
 
-        if errorIndication:
-            raise Exception(errorIndication)
-        elif errorStatus:
-            raise Exception('%s at %s' % (errorStatus.prettyPrint(), errorIndex and varBinds[int(errorIndex) - 1][0] or '?'))
-        elif len(varBind) == 0:
-            raise Exception('No data returned from SNMP query')
-
-#        self._d.logfile.debug('READ: SNMP: ' + ' = '.join([x.prettyPrint() for x in varBind[0]]))
-
-        return varBind[0][1]
+        return val
 
     def process(self, rdg, val):
 
