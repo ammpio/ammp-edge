@@ -8,7 +8,7 @@ Type=simple
 User=datalog
 WorkingDirectory=/opt/datalog
 ExecStart=/opt/datalog/src/datalog.py -I 60 -r -t 1 -l /var/log/datalog/datalog.log -q /var/tmp/datalog_queue.db -d
-Restart=on-abort
+Restart=on-failure
 
 [Install]
 WantedBy=multi-user.target
