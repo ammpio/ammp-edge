@@ -270,7 +270,12 @@ def reading_cycle(d, q, sc=None):
         else:
             sc.enter(d.params['interval'], 1, reading_cycle, (d, q, sc))
 
-    readout = get_readings(d)
+    try:
+        readout = get_readings(d)
+    except Exception as ex:
+        template = "An exception of type {0} occurred. Arguments:\n{1!r}"
+        message = template.format(type(ex).__name__, ex.args)
+        d.logfile.warn(message)        
 
     # Put the readout in the internal queue
     q.put(readout)
