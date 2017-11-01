@@ -225,8 +225,12 @@ def setup_logfile(log_filename, debug_flag):
     logger = logging.getLogger(__name__)
     # Set the log level to LOG_LEVEL
     logger.setLevel(log_level)
-    # Make a handler that writes to a file, making a new file at midnight and keeping 7 backups
-    handler = logging.handlers.TimedRotatingFileHandler(log_filename, when="midnight", backupCount=7)
+    if log_filename:
+        # Make a handler that writes to a file, making a new file at midnight and keeping 7 backups
+        handler = logging.handlers.TimedRotatingFileHandler(log_filename, when="midnight", backupCount=7)
+    else:
+        # If no filename is provided, just log to stdout
+        handler = logging.StreamHandler(stream=sys.stdout)
     # Format each log message like this
     formatter = logging.Formatter('%(asctime)s %(levelname)-8s %(message)s')
     # Attach the formatter to the handler
@@ -643,7 +647,7 @@ if __name__ == '__main__':
     parser.add_argument('-P', '--drvpath', default='conf/drivers', help='Path containing drivers (device register maps)')
     parser.add_argument('-B', '--dbconf', default='conf/dbconf.json', help='Output endpoint configuration spec file')
     parser.add_argument('-q', '--qfile', default='/var/tmp/datalog_queue.db', help='Queue file (for non-volatile storage during comms outage)')
-    parser.add_argument('-l', '--logfile', default='/var/log/datalog/datalog.log', help='Log file')
+    parser.add_argument('-l', '--logfile', type=str, help='Log file')
     parser.add_argument('-I', '--interval', type=int, help='Interval for repeated readings (s)')
     parser.add_argument('-r', '--roundtime', action='store_true', default=False, help='Start on round time interval (only with --interval)')    
     parser.add_argument('-t', '--rtimeout', type=int, default=5, help='Modbus reading timeout (s)')
