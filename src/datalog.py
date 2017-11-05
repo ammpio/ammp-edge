@@ -32,6 +32,11 @@ class DatalogConfig(object):
         self.params = pargs
         self.logfile = logfile
 
+        # Get hardware MAC address that is used to identify logger when pushing data
+        from uuid import getnode
+        self.node_id = "{0:0{1}x}".format(getnode(), 12)
+        logfile.info('Node ID: %s', self.node_id)
+
         with open(pargs['devices']) as devices_file:
             self.devices = json.load(devices_file)
 
@@ -48,6 +53,7 @@ class DatalogConfig(object):
             with open(os.path.join(pargs['drvpath'], drv)) as driver_file:
                 self.drivers[os.path.splitext(drv)[0]] = json.load(driver_file)
                 logfile.info('Loaded driver %s' % (drv))
+
 
 
 class DataPusher(threading.Thread): 
@@ -586,8 +592,7 @@ def process_response(rdg, val_b):
 def push_readout(d, readout):
 
     try:
-        # Append measure and tag information to reading, to identify asset
-        readout.update(d.dbconf['body'])
+        readout['node_id'] = d.node_id
 
         # Append offset between time that reading was taken and current time
         readout['fields']['reading_offset'] = int((datetime.utcnow() - datetime.strptime(readout['time'], "%Y-%m-%dT%H:%M:%SZ")).total_seconds() - readout['fields'].get('reading_duration', 0))
