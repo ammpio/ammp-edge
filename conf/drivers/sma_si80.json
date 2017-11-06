@@ -22,7 +22,7 @@
     "Q2": {"register": 30809, "words": 2, "datatype": "int32", "multiplier": 1.0, "unit": "VAr", "description": "Reactive power L2"},
     "Q3": {"register": 30811, "words": 2, "datatype": "int32", "multiplier": 1.0, "unit": "VAr", "description": "Reactive power L3"},
     "operating_mode": {"register": 30825, "words": 2, "datatype": "uint32", "multiplier": null, "unit": null, "description": "Operating mode of stat.V stab., stat.V stab. config."},
-    "I_batt": {"register": 30843, "words": 2, "datatype": "int32", "multiplier": -0.001, "unit": "A", "description": "Battery current (positive = charge; negative = discharge"},
+    "I_batt": {"register": 30843, "words": 2, "datatype": "int32", "multiplier": 0.001, "unit": "A", "description": "Battery current (positive = discharge; negative = charge"},
     "batt_soc": {"register": 30845, "words": 2, "datatype": "uint32", "multiplier": 1.0, "unit": "%", "description": "Current battery state of charge"},
     "batt_soc_error": {"register": 30987, "words": 2, "datatype": "uint32", "multiplier": 0.1, "unit": "%", "description": "Uncertainty in battery SoC reading"},
     "batt_capacity": {"register": 30847, "words": 2, "datatype": "uint32", "multiplier": 1.0, "unit": "%", "description": "Current battery capacity"},
