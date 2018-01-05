@@ -46,7 +46,8 @@ setup(
     install_requires=[
         'pyModbusTCP',
         'minimalmodbus',
-        'influxdb'
+        'influxdb',
+        'netifaces'
     ],
     license='License :: OSI Approved :: MIT License',
 )
