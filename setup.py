@@ -39,9 +39,9 @@ setup(
             'streamm = streamm:main'
         ]
     },
-    install_requires=[
-        'pyModbusTCP',
-        'minimalmodbus'
-    ],
+#    install_requires=[
+#        'pyModbusTCP',
+#        'minimalmodbus'
+#    ],
     license='License :: OSI Approved :: MIT License',
 )
