@@ -28,20 +28,24 @@ def get_long_description():
 setup(
     name=package_name,
     version=get_version(),
-    author='sbajlekov',
+    author='Svet Bajlekov',
     author_email='s.bajlekov@gmail.com',
     description='data streaming device for AMMP',
     url='https://www.ammp.io',
     long_description=get_long_description(),
-    py_modules=[package_name],
+    py_modules=[
+        package_name,
+        'pyModbusTCP_alt',
+        'reader_snmp'
+        ],
     entry_points={
         'console_scripts': [
             'streamm = streamm:main'
         ]
     },
-#    install_requires=[
-#        'pyModbusTCP',
-#        'minimalmodbus'
-#    ],
+    install_requires=[
+        'pyModbusTCP',
+        'minimalmodbus'
+    ],
     license='License :: OSI Approved :: MIT License',
 )
