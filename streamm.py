@@ -19,6 +19,8 @@ import requests
 import logging
 import logging.handlers
 
+__version__ = '0.1.0'
+
 do_shutdown = threading.Event()
 push_in_progress = threading.Event()
 
@@ -643,7 +645,8 @@ def sigterm_handler(_signo, _stack_frame):
     # Raises SystemExit(0):
     sys.exit(0)
 
-if __name__ == '__main__':
+
+def main():
     import argparse
 
     parser = argparse.ArgumentParser()
@@ -711,3 +714,5 @@ if __name__ == '__main__':
         reading_cycle(d, q)
         q.put({})
 
+if __name__ == '__main__':
+    main()
