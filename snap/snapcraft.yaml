@@ -12,6 +12,9 @@ apps:
     command: bin/stromm
     plugs:
       - network
+      content:
+      content: drivers
+      target: $SNAP/drivers
 
 parts:
   stromm:
