@@ -1,0 +1,25 @@
+name: stromm
+version: '0.1.1'
+summary: Secure Telemetry, Remote Operation and Monitoring for Mini-Grids
+description: |
+    Manages data collection and forwarding for AMMP.
+
+grade: candidate
+confinement: strict
+
+apps:
+  stromm:
+    command: bin/stromm
+    plugs:
+      - network
+
+parts:
+  stromm:
+    plugin: python
+    python-version: python3
+    source: git@gitlab.com:ammp-services/stromm.git
+    source-tag: master
+    stage-packages:
+        - libsnmp-dev
+        - snmp-mibs-downloader
+        - python3-netifaces
