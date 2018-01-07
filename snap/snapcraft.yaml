@@ -26,6 +26,7 @@ parts:
 
 plugs:
   drivers:
+    interface: content
     content: drivers
     target: $SNAP/drivers
     default-provider: stromm-drivers:drivers
