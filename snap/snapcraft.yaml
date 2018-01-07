@@ -25,12 +25,8 @@ parts:
   drivers:
     plugin: dump
     source: .
-#    stage:
-#      - src/drivers
-#    prime:
-#      - src/drivers
-    organize:
-      drivers: .
+    stage:
+      - drivers
 
 
 plugs:
