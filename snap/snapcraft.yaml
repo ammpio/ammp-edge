@@ -12,9 +12,6 @@ apps:
     command: bin/stromm
     plugs:
       - network
-      content:
-      content: drivers
-      target: $SNAP/drivers
 
 parts:
   stromm:
@@ -26,3 +23,9 @@ parts:
         - libsnmp-dev
         - snmp-mibs-downloader
         - python3-netifaces
+
+plugs:
+  drivers:
+    content: drivers
+    target: $SNAP/drivers
+    default-provider: stromm-drivers:drivers
