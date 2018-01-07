@@ -18,7 +18,6 @@ parts:
     plugin: python
     python-version: python3
     source: git@gitlab.com:ammp-services/stromm.git
-    source-tag: master
     stage-packages:
         - libsnmp-dev
         - snmp-mibs-downloader
