@@ -24,13 +24,11 @@ parts:
         - python3-netifaces
 # The following builds a blank "drivers" directory that's mapped to the drivers snap
   drivers:
-    plugin: dump
-    source: .
-    build: |
-      mkdir drivers
+    plugin: nil
+    install: |
+      mkdir $SNAPCRAFT_PART_INSTALL/drivers
     stage:
       - drivers
-
 
 plugs:
   drivers:
