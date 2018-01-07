@@ -39,6 +39,14 @@ class DatalogConfig(object):
         self.node_id = "{0:0{1}x}".format(getnode(), 12)
         logfile.info('Node ID: %s', self.node_id)
 
+        self.drivers = {}
+
+        driver_files = [pos_json for pos_json in os.listdir(pargs['drvpath']) if pos_json.endswith('.json')]
+        for drv in driver_files:
+            with open(os.path.join(pargs['drvpath'], drv)) as driver_file:
+                self.drivers[os.path.splitext(drv)[0]] = json.load(driver_file)
+                logfile.info('Loaded driver %s' % (drv))
+
         with open(pargs['devices']) as devices_file:
             self.devices = json.load(devices_file)
 
@@ -47,14 +55,6 @@ class DatalogConfig(object):
 
         with open(pargs['dbconf']) as dbconf_file:
             self.dbconf = json.load(dbconf_file)
-
-        self.drivers = {}
-
-        driver_files = [pos_json for pos_json in os.listdir(pargs['drvpath']) if pos_json.endswith('.json')]
-        for drv in driver_files:
-            with open(os.path.join(pargs['drvpath'], drv)) as driver_file:
-                self.drivers[os.path.splitext(drv)[0]] = json.load(driver_file)
-                logfile.info('Loaded driver %s' % (drv))
 
 
 
@@ -652,7 +652,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-R', '--readings', default='conf/readings.json', help='Readings definition file')
     parser.add_argument('-D', '--devices', default='conf/devices.json', help='Device list file')
-    parser.add_argument('-P', '--drvpath', default='conf/drivers', help='Path containing drivers (device register maps)')
+    parser.add_argument('-P', '--drvpath', default='drivers', help='Path containing drivers (device register maps)')
     parser.add_argument('-B', '--dbconf', default='conf/dbconf.json', help='Output endpoint configuration spec file')
     parser.add_argument('-q', '--qfile', default='/var/tmp/datalog_queue.db', help='Queue file (for non-volatile storage during comms outage)')
     parser.add_argument('-l', '--logfile', type=str, help='Log file')
