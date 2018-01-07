@@ -22,13 +22,13 @@ parts:
         - libsnmp-dev
         - snmp-mibs-downloader
         - python3-netifaces
-  drivers:
-    plugin: dump
-    source: .
-    stage:
+#  drivers:
+#    plugin: dump
+#    source: .
+    prime:
       - src/drivers
-    organize:
-      drivers: src/drivers
+#    organize:
+#      drivers: src/drivers
 
 
 plugs:
