@@ -20,11 +20,14 @@ parts:
     source: git@gitlab.com:ammp-services/stromm.git
     stage-packages:
         - libsnmp-dev
-        - snmp-mibs-downloader
+#        - snmp-mibs-downloader
         - python3-netifaces
+# The following builds a blank "drivers" directory that's mapped to the drivers snap
   drivers:
     plugin: dump
     source: .
+    build: |
+      mkdir drivers
     stage:
       - drivers
 
