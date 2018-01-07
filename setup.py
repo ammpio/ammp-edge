@@ -4,7 +4,7 @@
 from setuptools import setup
 
 
-package_name = 'streamm'
+package_name = 'stromm'
 filename = package_name + '.py'
 
 
@@ -30,7 +30,7 @@ setup(
     version=get_version(),
     author='Svet Bajlekov',
     author_email='s.bajlekov@gmail.com',
-    description='data streaming device for AMMP',
+    description='Secure Telemetry, Remote Operation and Monitoring for Mini-Grids',
     url='https://www.ammp.io',
     long_description=get_long_description(),
     py_modules=[
@@ -40,7 +40,7 @@ setup(
         ],
     entry_points={
         'console_scripts': [
-            'streamm = streamm:main'
+            'stromm = stromm:main'
         ]
     },
     install_requires=[
