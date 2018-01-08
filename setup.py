@@ -8,13 +8,13 @@ package_name = 'stromm'
 filename = package_name + '.py'
 
 
-def get_version():
-    import ast
+# def get_version():
+#     import ast
 
-    with open(filename) as input_file:
-        for line in input_file:
-            if line.startswith('__version__'):
-                return ast.parse(line).body[0].value.s
+#     with open(filename) as input_file:
+#         for line in input_file:
+#             if line.startswith('__version__'):
+#                 return ast.parse(line).body[0].value.s
 
 
 def get_long_description():
@@ -27,12 +27,12 @@ def get_long_description():
 
 setup(
     name=package_name,
-    version=get_version(),
+#    version=get_version(),
     author='Svet Bajlekov',
     author_email='s.bajlekov@gmail.com',
     description='Secure Telemetry, Remote Operation and Monitoring for Mini-Grids',
     url='https://www.ammp.io',
-    long_description=get_long_description(),
+#    long_description=get_long_description(),
     py_modules=[
         package_name,
         'pyModbusTCP_alt',
@@ -46,6 +46,7 @@ setup(
     install_requires=[
         'pyModbusTCP',
         'minimalmodbus',
-        'influxdb'
+        'influxdb',
+        'systemd'
     ]
 )
