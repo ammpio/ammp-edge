@@ -268,8 +268,8 @@ def setup_logfile(log_filename, debug_flag):
 
     # First try systemd
     try:
-        from systemd import journal
-        handler = journal.JournalHandler()
+        from systemd.journal import JournalHandler
+        handler = JournalHandler()
 
     except Exception as ex:
         template = "An exception of type {0} occurred. Arguments:\n{1!r}"
