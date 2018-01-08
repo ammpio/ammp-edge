@@ -46,7 +46,6 @@ setup(
     install_requires=[
         'pyModbusTCP',
         'minimalmodbus',
-        'influxdb',
-        'systemd'
+        'influxdb'
     ]
 )
