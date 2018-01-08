@@ -278,9 +278,11 @@ def setup_logfile(log_filename, debug_flag):
 
         # Else check if we want to output to a file
         if log_filename:
+            print('Logging to file')
             # Make a handler that writes to a file, making a new file at midnight and keeping 7 backups
             handler = logging.handlers.TimedRotatingFileHandler(log_filename, when="midnight", backupCount=7)
         else:
+            print('Logging to STDOUT')
             # If no filename is provided, just log to stdout
             handler = logging.StreamHandler(stream=sys.stdout)
     # Format each log message like this
