@@ -254,23 +254,35 @@ def generate_node_id():
     return node_id
 
 def setup_logfile(log_filename, debug_flag):
+    # Configure logger: either through systemd, a logfile, or stdout
 
     if debug_flag:
         log_level = logging.DEBUG
     else:
         log_level = logging.INFO
 
-    # Configure logging to log to a file, making a new file at midnight and keeping the last 7 day's data
     # Give the logger a unique name (good practice)
     logger = logging.getLogger(__name__)
     # Set the log level to LOG_LEVEL
     logger.setLevel(log_level)
-    if log_filename:
-        # Make a handler that writes to a file, making a new file at midnight and keeping 7 backups
-        handler = logging.handlers.TimedRotatingFileHandler(log_filename, when="midnight", backupCount=7)
-    else:
-        # If no filename is provided, just log to stdout
-        handler = logging.StreamHandler(stream=sys.stdout)
+
+    # First try systemd
+    try:
+        from systemd import journal
+        handler = journal.JournalHandler()
+
+    except Exception as ex:
+        template = "An exception of type {0} occurred. Arguments:\n{1!r}"
+        message = template.format(type(ex).__name__, ex.args)
+        print(message)
+
+        # Else check if we want to output to a file
+        if log_filename:
+            # Make a handler that writes to a file, making a new file at midnight and keeping 7 backups
+            handler = logging.handlers.TimedRotatingFileHandler(log_filename, when="midnight", backupCount=7)
+        else:
+            # If no filename is provided, just log to stdout
+            handler = logging.StreamHandler(stream=sys.stdout)
     # Format each log message like this
     formatter = logging.Formatter('%(asctime)s %(levelname)-8s %(message)s')
     # Attach the formatter to the handler
