@@ -19,7 +19,7 @@ import requests
 import logging
 import logging.handlers
 
-__version__ = '0.1.0'
+__version__ = '0.1.2'
 
 do_shutdown = threading.Event()
 push_in_progress = threading.Event()
@@ -34,14 +34,15 @@ class DatalogConfig(object):
         self.params = pargs
         self.logfile = logfile
 
-        self.node_id = get_node_id()
+        self.node_id = generate_node_id()
         logfile.info('Node ID: %s', self.node_id)
 
+        drvpath = os.path.join(os.getenv('SNAP', 'conf/'), pargs['drvpath'])
         self.drivers = {}
 
-        driver_files = [pos_json for pos_json in os.listdir(pargs['drvpath']) if pos_json.endswith('.json')]
+        driver_files = [pos_json for pos_json in os.listdir(drvpath) if pos_json.endswith('.json')]
         for drv in driver_files:
-            with open(os.path.join(pargs['drvpath'], drv)) as driver_file:
+            with open(os.path.join(drvpath, drv)) as driver_file:
                 self.drivers[os.path.splitext(drv)[0]] = json.load(driver_file)
                 logfile.info('Loaded driver %s' % (drv))
 
@@ -53,6 +54,8 @@ class DatalogConfig(object):
 
         with open(pargs['dbconf']) as dbconf_file:
             self.dbconf = json.load(dbconf_file)
+
+        self.params['qfile'] = os.path.join(os.getenv('SNAP_COMMON', '/var/tmp/'), pargs['qfile'])
 
 
 
@@ -683,7 +686,7 @@ def main():
     parser.add_argument('-D', '--devices', default='conf/devices.json', help='Device list file')
     parser.add_argument('-P', '--drvpath', default='drivers', help='Path containing drivers (device register maps)')
     parser.add_argument('-B', '--dbconf', default='conf/dbconf.json', help='Output endpoint configuration spec file')
-    parser.add_argument('-q', '--qfile', default='/var/tmp/datalog_queue.db', help='Queue file (for non-volatile storage during comms outage)')
+    parser.add_argument('-q', '--qfile', default='stromm_queue.db', help='Queue file (for non-volatile storage during comms outage)')
     parser.add_argument('-l', '--logfile', type=str, help='Log file')
     parser.add_argument('-I', '--interval', type=int, help='Interval for repeated readings (s)')
     parser.add_argument('-r', '--roundtime', action='store_true', default=False, help='Start on round time interval (only with --interval)')    
