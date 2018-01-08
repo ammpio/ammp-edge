@@ -34,9 +34,7 @@ class DatalogConfig(object):
         self.params = pargs
         self.logfile = logfile
 
-        # Get hardware MAC address that is used to identify logger when pushing data
-        from uuid import getnode
-        self.node_id = "{0:0{1}x}".format(getnode(), 12)
+        self.node_id = get_node_id()
         logfile.info('Node ID: %s', self.node_id)
 
         self.drivers = {}
@@ -220,6 +218,37 @@ class NonVolatileQ(object):
     def close(self):
         self._qdb.close()
 
+
+def generate_node_id():
+    # Get ID (ideally hardware MAC address) that is used to identify logger when pushing data
+
+    # First try to get the address of the primary Ethernet adapter
+    try:
+        import netifaces as nif
+
+        ifn_wanted = ['eth0', 'en0', 'eth1', 'en1', 'wlan0']
+        ifn_available = nif.interfaces()
+
+        ifn = [i for i in ifn_wanted if i in ifn_available][0]
+
+        if_mac = nif.ifaddresses(ifn)[nif.AF_LINK][0]['addr']
+        node_id = if_mac.replace(':','')
+
+    except:
+
+        # If that doesn't work, try doing it via the UUID method
+        try:
+            from uuid import getnode
+            
+            uuid_node = getnode()
+            node_id = "{0:0{1}x}".format(uuid_node, 12)
+
+        except:
+            # If that also doesn't work, generate a random 12-character hex string
+            import random
+            node_id = '%012x' % random.randrange(16**12)
+
+    return node_id
 
 def setup_logfile(log_filename, debug_flag):
 
