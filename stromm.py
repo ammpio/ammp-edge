@@ -19,7 +19,7 @@ import requests
 import logging
 import logging.handlers
 
-__version__ = '0.1.2'
+__version__ = '0.1.3'
 
 do_shutdown = threading.Event()
 push_in_progress = threading.Event()
