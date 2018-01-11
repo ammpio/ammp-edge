@@ -9,8 +9,8 @@ confinement: strict
 
 apps:
   stromm:
-    command: bin/stromm -I 60 -r -t 1 -d
-    daemon: simple
+    command: bin/stromm
+#    daemon: simple
     plugs:
       - network
 
@@ -21,10 +21,9 @@ parts:
     source: git@gitlab.com:ammp-services/stromm.git
     stage-packages:
         - libsnmp-dev
-#        - snmp-mibs-downloader
-#        - libsystemd-dev
-        - python3-systemd
+        - snmp-mibs-downloader
         - python3-netifaces
+        - python3-systemd
 # The following builds a blank "drivers" directory that's mapped to the drivers snap
   drivers:
     plugin: nil
