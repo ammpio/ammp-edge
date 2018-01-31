@@ -9,6 +9,7 @@
 conf/dbconf.json
 conf/devices.json
 local/
+drivers
 **/.DS_Store
 **/__pycache__/
-
+*.db
