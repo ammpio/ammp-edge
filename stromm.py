@@ -3,7 +3,7 @@
 
 # Set up logging
 import logging
-logging.basicConfig(format="%(asctime)s %(name)s %(levelname)-8s %(message)s", level="DEBUG")
+logging.basicConfig(format="%(asctime)s %(name)s %(levelname)-8s %(message)s", level="INFO")
 logger = logging.getLogger(__name__)
 
 # Try systemd, or fall back to stdout

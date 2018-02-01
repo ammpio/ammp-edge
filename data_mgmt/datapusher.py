@@ -53,7 +53,7 @@ class DataPusher(threading.Thread):
                     push_in_progress.clear()
 
                     # Slow this down to avoid generating a high rate of errors if no connection is available
-                    time.sleep(10)
+                    time.sleep(config.get('push_throttle_delay', 10))
 
             except Exception as ex:
                 logger.exception('PUSH: Exception')
