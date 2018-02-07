@@ -2,11 +2,8 @@ import logging
 logger = logging.getLogger(__name__)
 
 import time
-from datetime import datetime
 import threading
-from .events import push_in_progress, do_shutdown
 
-from config_mgmt import config
 from db_model import NVQueue
 
 class NonVolatileQ(object):
@@ -54,25 +51,26 @@ class NonVolatileQ(object):
 
 
 class NonVolatileQProc(threading.Thread): 
-    def __init__(self, queue): 
+    def __init__(self, node, queue): 
         threading.Thread.__init__(self)
         self.name = 'nvq_proc'
         # We want to get the chance to do clean-up on this thread if the program exits
         self.daemon = False
 
+        self._node = node
         self._queue = queue
 
     def run(self):
 
         self._nvq = NonVolatileQ()
 
-        while not do_shutdown.is_set():
+        while not self._node.events.do_shutdown.is_set():
 
             qsize = self._queue.qsize()
             nvqsize = self._nvq.qsize()
-            logger.info('NVQP: Queue size: internal: %d, non-volatile: %d, pending: %d' % (qsize, nvqsize, push_in_progress.is_set()))
+            logger.info('NVQP: Queue size: internal: %d, non-volatile: %d, pending: %d' % (qsize, nvqsize, self._node.events.push_in_progress.is_set()))
 
-            if nvqsize > 0 and (qsize + push_in_progress.is_set()) < 5:
+            if nvqsize > 0 and (qsize + self._node.events.push_in_progress.is_set()) < 5:
                 # If the internal queue is almost empty but the queue file isn't then pull from it
                 readout = self._nvq.get()
                 logger.debug('NVQP: Got readout at %s from queue file; moving to internal queue' % (readout['time']))
@@ -81,7 +79,7 @@ class NonVolatileQProc(threading.Thread):
                 # Make sure we're not going way too fast
                 time.sleep(1)
 
-            elif qsize > config.get('volatile_q_size', 5):
+            elif qsize > self._node.config.get('volatile_q_size', 5):
                 # If the internal queue is starting to grow large, then move items to the queue file
                 readout = self._queue.get() 
                 logger.debug('NVQP: Got readout at %s from internal queue; moving to file' % (readout['time']))

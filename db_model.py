@@ -5,7 +5,6 @@ logger = logging.getLogger(__name__)
 from peewee import *
 from playhouse.sqlite_ext import *
 import os
-import time
 
 # Create separate database files for configuration storage and for non-volatile queue storage
 # Naively, it seems that doing it this way will reduce the fact that the config file
@@ -21,7 +20,7 @@ qdb.connect()
 class NodeConfig(Model):
     node_id = TextField(primary_key=True)
     config = JSONField(null=True)
-    access_key = TextField(null=True)
+    access_key = DateTimeField(null=True)
     class Meta:
         database = cdb
 

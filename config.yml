@@ -1,6 +1,0 @@
-remote:
-  host: stromm-dev.ammp.io
-  type: api
-  apiver: v0
-  timeout: 120
-config_reset: true
