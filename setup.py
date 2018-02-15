@@ -51,6 +51,7 @@ setup(
         'pyModbusTCP',
         'minimalmodbus',
         'serial',
+        'easysnmp',
         'arrow',
         'influxdb',
         'peewee',
