@@ -35,8 +35,10 @@ setup(
     long_description=get_long_description(),
     py_modules=[
         package_name,
-        'pyModbusTCP_alt',
-        'reader_snmp'
+        'node_mgmt',
+        'data_mgmt',
+        'db_model',
+        'reader'
         ],
     entry_points={
         'console_scripts': [
@@ -46,7 +48,10 @@ setup(
     install_requires=[
         'pyModbusTCP',
         'minimalmodbus',
+        'serial',
+        'arrow',
         'influxdb',
-        'peewee'
+        'peewee',
+        'systemd'
     ]
 )
