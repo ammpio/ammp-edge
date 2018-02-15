@@ -33,12 +33,14 @@ setup(
     description='Secure Telemetry, Remote Operation and Monitoring for Mini-Grids',
     url='https://www.ammp.io',
     long_description=get_long_description(),
-    py_modules=[
-        package_name,
+    packages=[
         'node_mgmt',
         'data_mgmt',
-        'db_model',
         'reader'
+        ],
+    py_modules=[
+        package_name,
+        'db_model'
         ],
     entry_points={
         'console_scripts': [
