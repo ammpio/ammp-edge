@@ -50,7 +50,7 @@ setup(
     install_requires=[
         'pyModbusTCP',
         'minimalmodbus',
-        'serial',
+        'pyserial',
         'easysnmp',
         'arrow',
         'influxdb',
