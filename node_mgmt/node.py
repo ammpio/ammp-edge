@@ -104,10 +104,11 @@ class Node(object):
         if not access_key:
             logger.error('Unable to obtain access key')
             return None
+            #### TODO: This needs to be set to keep retrying if it fails! Otherwise we just throw an exception
 
         # Save node_id and access_key in database
-        self._nodeconfig = NodeConfig.create(node_id=node_id, access_key=access_key)
-        self._nodeconfig.save()
+        self._dbconfig = NodeConfig.create(node_id=node_id, access_key=access_key)
+        self._dbconfig.save()
 
 
     def __generate_node_id(self):
