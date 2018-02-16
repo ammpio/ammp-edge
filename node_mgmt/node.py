@@ -100,7 +100,7 @@ class Node(object):
         node_id = self.__generate_node_id()
         logger.info('Generated node ID %s' % node_id)
 
-        access_key = self.__do_node_activation()
+        access_key = self.__do_node_activation(node_id)
         if not access_key:
             logger.error('Unable to obtain access key')
             return None
@@ -144,13 +144,13 @@ class Node(object):
 
         return node_id
 
-    def __do_node_activation(self):
+    def __do_node_activation(self, node_id):
 
         # Initiate activation
         logger.info('Requesting activation for node %s' % node_id)
         
         try:
-            r1 = requests.get('https://%s/api/%s/nodes/%s/activate' % (self.remote['host'], self.remote['apiver'], self.node_id))
+            r1 = requests.get('https://%s/api/%s/nodes/%s/activate' % (self.remote['host'], self.remote['apiver'], node_id))
             rtn = json.loads(r1.text)
 
             if r1.status_code == 200:
@@ -171,7 +171,7 @@ class Node(object):
         logger.info('Confirming activation for node %s' % node_id)
 
         try:
-            r2 = requests.post('https://%s/api/%s/nodes/%s/activate' % (self.remote['host'], self.remote['apiver'], self.node_id),
+            r2 = requests.post('https://%s/api/%s/nodes/%s/activate' % (self.remote['host'], self.remote['apiver'], node_id),
                 headers={'Authorization': access_key})
             rtn = json.loads(r2.text)
 
