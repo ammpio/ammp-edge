@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017
+# Copyright (c) 2018
 
 # Set up logging
 import logging
@@ -29,7 +29,7 @@ import minimalmodbus, serial
 
 import requests
 
-__version__ = '0.2.2'
+__version__ = '0.2.5'
 
 import node_mgmt
 from data_mgmt import *
