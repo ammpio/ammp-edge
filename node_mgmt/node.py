@@ -17,7 +17,7 @@ class Node(object):
 
         try:
             # Load base config from YAML file
-            with open(os.path.join(os.getenv('SNAP', './'), 'remote.yml', 'r') as remote_yml:
+            with open(os.path.join(os.getenv('SNAP', './'), 'remote.yml'), 'r') as remote_yml:
                 self.remote = yaml.load(remote_yml)
         except:
             logger.exception('Base configuration file remote.yml cannot be loaded. Quitting')
