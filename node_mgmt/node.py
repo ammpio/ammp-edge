@@ -100,7 +100,7 @@ class Node(object):
         node_id = self.__generate_node_id()
         logger.info('Generated node ID %s' % node_id)
 
-        access_key = self.__do_node_activation(node_id)
+        access_key = self.__do_node_activation()
         if not access_key:
             logger.error('Unable to obtain access key')
             return None
