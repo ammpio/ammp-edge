@@ -18,7 +18,8 @@ parts:
   stromm:
     plugin: python
     python-version: python3
-    source: git@gitlab.com:ammp-services/stromm.git
+    source: https://github.com/ammpio/stromm.git
+    source-branch: snap-edge
     stage-packages:
         - libsnmp-dev
         - snmp-mibs-downloader
