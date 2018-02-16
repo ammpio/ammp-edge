@@ -22,7 +22,7 @@ parts:
     source-branch: snap-edge
     stage-packages:
         - libsnmp-dev
-        - snmp-mibs-downloader
+#        - snmp-mibs-downloader
         - libsystemd-dev
         - python3-systemd
         - python3-netifaces
