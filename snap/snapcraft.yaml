@@ -1,5 +1,5 @@
 name: stromm
-version: '0.2.3'
+version: '0.2.5'
 summary: Secure Telemetry, Remote Operation and Monitoring for Mini-Grids
 description: |
     Manages data collection and forwarding for AMMP.
@@ -10,7 +10,7 @@ confinement: strict
 apps:
   stromm:
     command: bin/stromm -d
-#    daemon: simple
+    daemon: simple
     plugs:
       - network
 
