@@ -367,7 +367,6 @@ def sigterm_handler(_signo, _stack_frame):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-q', '--qfile', default='nvq.db', help='Queue file (for non-volatile storage during comms outage)')
     parser.add_argument('-l', '--logfile', type=str, help='Log file to use as fallback if systemd logging is not available')
     parser.add_argument('-d', '--debug', dest='debug', action='store_true', default=False, help='Debug mode')
 

@@ -1,5 +1,5 @@
 name: stromm
-version: '0.1.3'
+version: '0.2.3'
 summary: Secure Telemetry, Remote Operation and Monitoring for Mini-Grids
 description: |
     Manages data collection and forwarding for AMMP.
@@ -9,7 +9,7 @@ confinement: strict
 
 apps:
   stromm:
-    command: bin/stromm
+    command: bin/stromm -d
 #    daemon: simple
     plugs:
       - network
@@ -22,8 +22,15 @@ parts:
     stage-packages:
         - libsnmp-dev
         - snmp-mibs-downloader
-        - python3-netifaces
+        - libsystemd-dev
         - python3-systemd
+        - python3-netifaces
+# Just to get the remote cfg YAML file
+  stromm-remote-cfg:
+    plugin: dump
+    source: git@gitlab.com:ammp-services/stromm.git
+    prime:
+      - remote.yml
 # The following builds a blank "drivers" directory that's mapped to the drivers snap
   drivers:
     plugin: nil
