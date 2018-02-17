@@ -196,7 +196,7 @@ class Node(object):
 
         drivers = {}
 
-        drvpath = os.path.join(os.getenv('SNAP_COMMON', './'), 'drivers')
+        drvpath = os.path.join(os.getenv('SNAP', './'), 'drivers')
 
         driver_files = [pos_json for pos_json in os.listdir(drvpath) if pos_json.endswith('.json')]
         for drv in driver_files:
