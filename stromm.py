@@ -7,12 +7,12 @@ logging.basicConfig(format="%(asctime)s %(name)s [%(levelname)s] %(message)s", l
 logger = logging.getLogger(__name__)
 
 # Try systemd, or fall back to stdout
-try:
-    from systemd.journal import JournalHandler
-    logger.addHandler(JournalHandler())
-    print('Logging to systemd journal')
-except Exception as ex:
-    logger.info('Systemd journal handler not available; logging to STDOUT')
+# try:
+#     from systemd.journal import JournalHandler
+#     logger.addHandler(JournalHandler())
+#     print('Logging to systemd journal')
+# except Exception as ex:
+#     logger.info('Systemd journal handler not available; logging to STDOUT')
 
 
 import sys, os
