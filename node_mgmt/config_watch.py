@@ -95,6 +95,10 @@ class ConfigWatch(threading.Thread):
                     logger.error('No configuration info returned from API')
                     return None
 
+                if self._node.config is None:
+                    logger.debug('Local configuration is not available, but remote config is.')
+                    return True
+
                 if rtn['config'].get('candidate'):
                     if self._node.config.get('config_id') != rtn['config']['candidate']:
                         logger.debug('New candidate configuration ID %s is available' % rtn['config']['candidate'])
