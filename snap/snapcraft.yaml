@@ -4,7 +4,7 @@ summary: Secure Telemetry, Remote Operation and Monitoring for Mini-Grids
 description: |
     Manages data collection and forwarding for AMMP.
 
-grade: devel
+grade: stable
 confinement: strict
 
 apps:
@@ -21,7 +21,7 @@ parts:
     plugin: python
     python-version: python3
     source: https://github.com/ammpio/stromm.git
-    source-branch: snap-edge
+    source-branch: master
     stage-packages:
         - libsnmp-dev
 #        - snmp-mibs-downloader
@@ -32,7 +32,7 @@ parts:
   stromm-remote-cfg:
     plugin: dump
     source: https://github.com/ammpio/stromm.git
-    source-branch: snap-edge
+    source-branch: master
     prime:
       - remote.yml
 # The following builds a blank "drivers" directory that's mapped to the drivers snap
