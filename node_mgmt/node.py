@@ -51,13 +51,10 @@ class Node(object):
 
             self.config = None
 
-            # Request a new configuration from the other thread, and wait for it to be obtained
+            # Request a new configuration from the config watcher thread, and wait for it to be obtained
             self.events.check_new_config.set()
             with self.events.getting_config:
                 self.events.getting_config.wait_for(lambda: self.config is not None)
-
-            self._dbconfig.config = self.config
-            self._dbconfig.save()
 
         self.drivers = self.__get_drivers()
 
@@ -196,14 +193,28 @@ class Node(object):
 
         drivers = {}
 
-        drvpath = os.path.join(os.getenv('SNAP_COMMON', './'), 'drivers')
+        drvpath = os.path.join(os.getenv('SNAP', './'), 'drivers')
 
         driver_files = [pos_json for pos_json in os.listdir(drvpath) if pos_json.endswith('.json')]
         for drv in driver_files:
-            with open(os.path.join(drvpath, drv)) as driver_file:
-                drivers[os.path.splitext(drv)[0]] = json.load(driver_file)
-                logger.info('Loaded driver %s' % drv)
+            try:
+                with open(os.path.join(drvpath, drv)) as driver_file:
+                    drivers[os.path.splitext(drv)[0]] = json.load(driver_file)
+                    logger.info('Loaded driver %s' % drv)
+            except:
+                logger.error('Could not load driver %s' % drv, exc_info=True)
 
         return drivers
 
+    def save_config(self):
+        """
+        This method saves the current config to the database. It is not only an internal method, as it needs to be called
+        also by the config_watch thread, when a new config has been obtained from the API.
+        """
 
+        try:
+            self._dbconfig.config = self.config
+            self._dbconfig.save()
+            logger.debug('Saved active config to internal database')
+        except:
+            logger.exception('Exception raised when attempting to commit configuration to database')

@@ -50,7 +50,7 @@ class DataPusher(threading.Thread):
                     self._node.events.push_in_progress.clear()
 
                     # Slow this down to avoid generating a high rate of errors if no connection is available
-                    time.sleep(config.get('push_throttle_delay', 10))
+                    time.sleep(self._node.config.get('push_throttle_delay', 10))
 
             except Exception as ex:
                 logger.exception('PUSH: Exception')
@@ -63,22 +63,26 @@ class DataPusher(threading.Thread):
     def __push_readout(self, readout):
 
         try:
-    #        readout['node_id'] = node_id
             readout['meta'].update({'config_id': self._node.config['config_id']})
 
             # Append offset between time that reading was taken and current time
             readout['fields']['reading_offset'] = int((arrow.utcnow() - arrow.get(readout['time'])).total_seconds() - readout['fields'].get('reading_duration', 0))
 
-            if self._node.remote['type'] == 'api':
+            if self._node.remote.get('type') == 'api' or self._node.remote.get('type') is None:
                 # Push to API endpoint
                 r = requests.post('https://%s/api/%s/nodes/%s/data' % (self._node.remote['host'], self._node.remote['apiver'], self._node.node_id),
                     json=readout,
                     headers={'Authorization': self._node.access_key},
-                    timeout=self._node.config['push_timeout'])
+                    timeout=self._node.config.get('push_timeout', 120))
                 result = r.status_code == 200
-                rtn = json.loads(r.text)
 
-            elif self._node.remote['type'] == 'influx':
+                try:
+                    rtn = json.loads(r.text)
+                except:
+                    logger.warning('PUSH: API response "%s" could not be parsed as JSON' % r.text, exc_info=True)
+                    rtn = {}
+
+            elif self._node.remote.get('type') == 'influx':
                 # Push to Influx database directly
                 influx_client = InfluxDBClient(
                     host = self._node.remote['influx']['host'],
@@ -100,7 +104,7 @@ class DataPusher(threading.Thread):
                 return True
             else:
                 raise Exception('PUSH: Could not push point at %s. Error code %d' % (readout['time'], r.status_code))
-        except Exception as ex:
+        except Exception:
             logger.exception('PUSH: Exception')
      
             return False

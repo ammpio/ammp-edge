@@ -43,6 +43,7 @@ class ConfigWatch(threading.Thread):
                             time.sleep(API_RETRY_DELAY)
 
                     self._node.config = config
+                    self._node.save_config()
 
                     self._node.events.getting_config.notify_all()
 
@@ -94,6 +95,10 @@ class ConfigWatch(threading.Thread):
                 if not 'config' in rtn:
                     logger.error('No configuration info returned from API')
                     return None
+
+                if self._node.config is None:
+                    logger.debug('Local configuration is not available, but remote config is.')
+                    return True
 
                 if rtn['config'].get('candidate'):
                     if self._node.config.get('config_id') != rtn['config']['candidate']:

@@ -11,6 +11,8 @@ apps:
   stromm:
     command: bin/stromm -d
     daemon: simple
+    restart-condition: always
+#    restart-delay: 60
     plugs:
       - network
 
@@ -18,17 +20,19 @@ parts:
   stromm:
     plugin: python
     python-version: python3
-    source: git@gitlab.com:ammp-services/stromm.git
+    source: https://github.com/ammpio/stromm.git
+    source-branch: snap-edge
     stage-packages:
         - libsnmp-dev
-        - snmp-mibs-downloader
+#        - snmp-mibs-downloader
         - libsystemd-dev
         - python3-systemd
         - python3-netifaces
 # Just to get the remote cfg YAML file
   stromm-remote-cfg:
     plugin: dump
-    source: git@gitlab.com:ammp-services/stromm.git
+    source: https://github.com/ammpio/stromm.git
+    source-branch: snap-edge
     prime:
       - remote.yml
 # The following builds a blank "drivers" directory that's mapped to the drivers snap
