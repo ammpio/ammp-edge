@@ -50,7 +50,7 @@ class DataPusher(threading.Thread):
                     self._node.events.push_in_progress.clear()
 
                     # Slow this down to avoid generating a high rate of errors if no connection is available
-                    time.sleep(config.get('push_throttle_delay', 10))
+                    time.sleep(self._node.config.get('push_throttle_delay', 10))
 
             except Exception as ex:
                 logger.exception('PUSH: Exception')
@@ -63,7 +63,6 @@ class DataPusher(threading.Thread):
     def __push_readout(self, readout):
 
         try:
-    #        readout['node_id'] = node_id
             readout['meta'].update({'config_id': self._node.config['config_id']})
 
             # Append offset between time that reading was taken and current time
@@ -74,7 +73,7 @@ class DataPusher(threading.Thread):
                 r = requests.post('https://%s/api/%s/nodes/%s/data' % (self._node.remote['host'], self._node.remote['apiver'], self._node.node_id),
                     json=readout,
                     headers={'Authorization': self._node.access_key},
-                    timeout=self._node.config['push_timeout'])
+                    timeout=self._node.config.get('push_timeout', 120))
                 result = r.status_code == 200
                 rtn = json.loads(r.text)
 
