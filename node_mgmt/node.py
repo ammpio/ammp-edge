@@ -200,9 +200,12 @@ class Node(object):
 
         driver_files = [pos_json for pos_json in os.listdir(drvpath) if pos_json.endswith('.json')]
         for drv in driver_files:
-            with open(os.path.join(drvpath, drv)) as driver_file:
-                drivers[os.path.splitext(drv)[0]] = json.load(driver_file)
-                logger.info('Loaded driver %s' % drv)
+            try:
+                with open(os.path.join(drvpath, drv)) as driver_file:
+                    drivers[os.path.splitext(drv)[0]] = json.load(driver_file)
+                    logger.info('Loaded driver %s' % drv)
+            except:
+                logger.error('Could not load driver %s' % drv, exc_info=True)
 
         return drivers
 
