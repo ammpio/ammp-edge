@@ -43,6 +43,7 @@ class ConfigWatch(threading.Thread):
                             time.sleep(API_RETRY_DELAY)
 
                     self._node.config = config
+                    self._node.save_config()
 
                     self._node.events.getting_config.notify_all()
 
