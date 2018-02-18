@@ -11,6 +11,7 @@ apps:
   stromm:
     command: bin/stromm -d
     daemon: simple
+    restart-delay: 60
     plugs:
       - network
 
