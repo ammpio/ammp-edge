@@ -1,5 +1,5 @@
 name: stromm
-version: '0.2.5'
+version: '0.3'
 summary: Secure Telemetry, Remote Operation and Monitoring for Mini-Grids
 description: |
     Manages data collection and forwarding for AMMP.
@@ -24,9 +24,6 @@ parts:
     source-branch: master
     stage-packages:
         - libsnmp-dev
-#        - snmp-mibs-downloader
-        - libsystemd-dev
-        - python3-systemd
         - python3-netifaces
 # Just to get the remote cfg YAML file
   stromm-remote-cfg:
@@ -35,17 +32,10 @@ parts:
     source-branch: master
     prime:
       - remote.yml
-# The following builds a blank "drivers" directory that's mapped to the drivers snap
+# Get the drivers directory also from git
   drivers:
-    plugin: nil
-    install: |
-      mkdir $SNAPCRAFT_PART_INSTALL/drivers
-    stage:
+    plugin: dump
+    source: https://github.com/ammpio/stromm.git
+    source-branch: master
+    prime:
       - drivers
-
-plugs:
-  drivers:
-    interface: content
-    content: drivers
-    target: $SNAP/drivers
-    default-provider: stromm-drivers:drivers

@@ -6,7 +6,6 @@
 # *~
 .*
 !.gitignore
-drivers
 **/.DS_Store
 **/__pycache__/
 *.db

@@ -1,0 +1,40 @@
+{
+  "common": {
+  	"fncode": 4,
+  	"words": 2,
+  	"datatype": "float"
+  },
+  "fields": {
+    "V_L1": {"register":  0, "unit": "V"},
+    "V_L2": {"register":  2, "unit": "V"},
+    "V_L3": {"register":  4, "unit": "V"},
+
+    "I_L1": {"register":  6, "unit": "A"},
+    "I_L2": {"register":  8, "unit": "A"},
+    "I_L3": {"register": 10, "unit": "A"},
+    "I_total": {"register": 48, "unit": "A"},
+
+    "P_L1": {"register": 12, "unit": "W"},
+    "P_L2": {"register": 14, "unit": "W"},
+    "P_L3": {"register": 16, "unit": "W"},
+    "P_total": {"register": 52, "unit": "W"},
+
+    "freq": {"register": 70, "unit": "Hz"},
+
+    "E_imported": {"register": 72, "multiplier": 1000, "unit": "Wh"},
+    "E_exported": {"register": 74, "multiplier": 1000, "unit": "Wh"},
+    "E_total":  {"register": 342, "multiplier": 1000, "unit": "Wh"},
+
+    "S_L1": {"register": 18, "unit": "VA"},
+    "S_L2": {"register": 20, "unit": "VA"},
+    "S_L3": {"register": 22, "unit": "VA"},
+
+    "Q_L1": {"register": 24, "unit": "VAr"},
+    "Q_L2": {"register": 26, "unit": "VAr"},
+    "Q_L3": {"register": 28, "unit": "VAr"},
+
+    "pf_L1": {"register": 30},
+    "pf_L2": {"register": 32},
+    "pf_L3": {"register": 34}
+  }
+}

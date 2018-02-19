@@ -1,0 +1,25 @@
+{
+  "common": {
+  	"words": 2,
+  	"datatype": "int"
+  },
+  "fields": {
+    "uptime": {"oid": "1.3.6.1.2.1.1.3.0", "multiplier": 0.01, "unit": "s"},
+    "temp": {"oid": "1.3.6.1.4.1.30140.3.3.0", "unit": "C"},
+    "input_V": {"oid": "1.3.6.1.4.1.30140.3.4.0", "multiplier": 0.001, "unit": "V"},
+    "RSSI": {"oid": "1.3.6.1.4.1.30140.4.5.0", "unit": "dBm"},
+    "Rx_SIM1_today": {"oid": "1.3.6.1.4.1.30140.5.1.1.0", "unit": "KB"},
+    "Rx_SIM2_today": {"oid": "1.3.6.1.4.1.30140.5.1.2.0", "unit": "KB"},
+    "Tx_SIM1_today": {"oid": "1.3.6.1.4.1.30140.5.1.3.0", "unit": "KB"},
+    "Tx_SIM2_today": {"oid": "1.3.6.1.4.1.30140.5.1.4.0", "unit": "KB"},
+    "Rx_SIM1_period": {"oid": "1.3.6.1.4.1.30140.5.5.1.0", "unit": "KB"},
+    "Rx_SIM2_period": {"oid": "1.3.6.1.4.1.30140.5.5.2.0", "unit": "KB"},
+    "Tx_SIM1_period": {"oid": "1.3.6.1.4.1.30140.5.5.3.0", "unit": "KB"},
+    "Tx_SIM2_period": {"oid": "1.3.6.1.4.1.30140.5.5.4.0", "unit": "KB"},
+    "conns_SIM1_period": {"oid": "1.3.6.1.4.1.30140.5.5.5.0"},
+    "conns_SIM2_period": {"oid": "1.3.6.1.4.1.30140.5.5.6.0"},
+    "t_SIM1_period": {"oid": "1.3.6.1.4.1.30140.5.5.7.0", "multiplier": 0.01, "unit": "s"},
+    "t_SIM2_period": {"oid": "1.3.6.1.4.1.30140.5.5.8.0", "multiplier": 0.01, "unit": "s"},
+    "t_noconn_period": {"oid": "1.3.6.1.4.1.30140.5.5.9.0", "multiplier": 0.01, "unit": "s"}
+  }
+}
