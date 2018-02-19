@@ -55,7 +55,6 @@ setup(
         'easysnmp',
         'arrow',
         'influxdb',
-        'peewee',
-        'systemd'
+        'peewee'
     ]
 )
