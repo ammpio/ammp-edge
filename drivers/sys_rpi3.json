@@ -1,0 +1,10 @@
+{
+  "type": "sys",
+  "common": {
+  	"module": "psutil",
+    "args": {}
+  },
+  "fields": {
+    "cpu_temp": {"method": "sensors_temperatures", "keypath": ["bcm2835_thermal", 0, 1], "unit": "C"}
+  }
+}
