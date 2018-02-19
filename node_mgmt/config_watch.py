@@ -9,7 +9,7 @@ import requests
 # If API endpoint can't be reached wait API_RETRY_DELAY before retrying
 API_RETRY_DELAY = 10
 # Even if this is not explicitly requested, carry out a configuration check every CONFIG_REFRESH_DELAY seconds
-CONFIG_REFRESH_DELAY = 3600
+CONFIG_REFRESH_DELAY = 900
 
 class ConfigWatch(threading.Thread): 
     """Request new configuration for node if flag is set"""
