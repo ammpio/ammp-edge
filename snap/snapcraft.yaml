@@ -15,6 +15,8 @@ apps:
 #    restart-delay: 60
     plugs:
       - network
+      - system-observe
+      - network-observe
 
 parts:
   stromm:
