@@ -80,7 +80,7 @@ def get_readings(node):
         if dev_id in node.config['devices']:
             dev = node.config['devices'][dev_id]
         else:
-            logger.warning('Reading from device %s requested, but device not defined. Skipping' % dev_id)
+            logger.error('Reading from device %s requested, but device not defined. Skipping' % dev_id)
             continue
 
         if not dev.get('enabled', True): continue
@@ -88,7 +88,7 @@ def get_readings(node):
         # Get the driver name
         drv_id = dev['driver']
         if not drv_id in node.drivers:
-            logger.warning('Reading using driver %s requested, but driver not found. Skipping device' % drv_id)
+            logger.error('Reading using driver %s requested, but driver not found. Skipping device' % drv_id)
             continue
 
         # Save all necessary reading parameters in dev_rdg
