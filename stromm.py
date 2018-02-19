@@ -102,8 +102,13 @@ def get_readings(node):
         # Start by setting reading name
         rdict = {'reading': rdg}
         # If applicable, add common reading parameters from driver file (e.g. function code)
-        rdict.update(node.drivers[drv_id].get('common', {}))
-        rdict.update(node.drivers[drv_id]['fields'][var])
+        rdict.update(
+            node.drivers[drv_id].get('common', {})
+            )
+ 
+        rdict.update(
+            node.drivers[drv_id]['fields'].get(var, {})
+            )
 
         dev_rdg[dev_id].append(rdict)
 
