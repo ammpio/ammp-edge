@@ -55,6 +55,7 @@ setup(
         'easysnmp',
         'arrow',
         'influxdb',
-        'peewee'
+        'peewee',
+        'psutil'
     ]
 )

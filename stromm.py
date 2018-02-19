@@ -279,6 +279,29 @@ def read_device(dev, readings, readout_q):
         # Be nice and close the serial port between readings
         c.serial.close()
 
+    elif dev['reading_type'] == 'sys':
+
+        from reader import SysReader
+
+        with SysReader() as reader:
+
+            for rdg in readings:
+                try:
+                    val = reader.read(**rdg)
+
+                except Exception as ex:
+                    logger.exception('READ: [%s] Could not obtain reading %s. Exception' % (dev['id'], rdg['reading']))
+                    continue
+
+                # Assume no processing is necessary
+                value = val
+
+                # Append to key-value store            
+                fields[rdg['reading']] = value
+
+                logger.debug('READ: [%s] %s = %s %s' % (dev['id'], rdg['reading'], value, rdg.get('unit', '')))
+
+
     elif dev['reading_type'] == 'snmp':
 
         from reader import SNMPReader
@@ -287,7 +310,7 @@ def read_device(dev, readings, readout_q):
 
             for rdg in readings:
                 try:
-                    val = reader.read(rdg['oid'])
+                    val = reader.read(**rdg)
 
                 except Exception as ex:
                     logger.exception('READ: [%s] Could not obtain reading %s. Exception' % (dev['id'], rdg['reading']))

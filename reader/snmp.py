@@ -20,7 +20,7 @@ class Reader(object):
     def __exit__(self, type, value, traceback):
         pass
 
-    def read(self, oid):
+    def read(self, oid, **kwargs):
         snmpval = self._session.get(oid)
         val = snmpval.value
 
