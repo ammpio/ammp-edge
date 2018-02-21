@@ -228,34 +228,45 @@ def read_device(dev, readings, readout_q):
 
     elif dev['reading_type'] == 'serial':
 
-        # Set up RS-485 client
-        c = minimalmodbus.Instrument(
-            port=dev['address']['device'],
-            slaveaddress=dev['address']['slaveaddr']
-        )
+        try:
+            # Set up RS-485 client
+            c = minimalmodbus.Instrument(
+                port=dev['address']['device'],
+                slaveaddress=dev['address']['slaveaddr']
+            )
+        except:
+            logger.exception('READ: Attempting to create Serial client raised exception')
+            return fields
 
-#        c.serial.debug = pargs['debug']
-        c.serial.timeout = dev.get('timeout')
+        try:
+#            c.serial.debug = pargs['debug']
+            c.serial.timeout = dev.get('timeout')
 
-        # Set up serial connection parameters according to device driver
-        if 'serial' in dev:
-            srlconf = dev['serial']
-            
-            c.serial.baudrate = dev['serial'].get('baudrate', 9600)
-            c.serial.bytesize = dev['serial'].get('bytesize', 8)
-            paritysel = {'none': serial.PARITY_NONE, 'odd': serial.PARITY_ODD, 'even': serial.PARITY_EVEN}
-            c.serial.parity = paritysel[dev['serial'].get('parity', 'none')]
-            c.serial.stopbits = dev['serial'].get('stopbits', 1)
+            # Set up serial connection parameters according to device driver
+            if 'serial' in dev:
+                srlconf = dev['serial']
+                
+                c.serial.baudrate = dev['serial'].get('baudrate', 9600)
+                c.serial.bytesize = dev['serial'].get('bytesize', 8)
+                paritysel = {'none': serial.PARITY_NONE, 'odd': serial.PARITY_ODD, 'even': serial.PARITY_EVEN}
+                c.serial.parity = paritysel[dev['serial'].get('parity', 'none')]
+                c.serial.stopbits = dev['serial'].get('stopbits', 1)
+        except:
+            logger.exception('READ: Attempting to configure Serial client raised exception')
+            return fields
 
         for rdg in readings:
 
-            # Make sure we have an open connection to device
-            if not c.serial.is_open:
-                c.serial.open()
-                if c.serial.is_open:
-                    logger.debug('READ: Opened connection to %s' % dev['id'])
-                else:
-                    logger.error('READ: Unable to connect to %s' % dev['id'])
+            try:
+                # Make sure we have an open connection to device
+                if not c.serial.is_open:
+                    c.serial.open()
+                    if c.serial.is_open:
+                        logger.debug('READ: Opened connection to %s' % dev['id'])
+                    else:
+                        logger.error('READ: Unable to connect to %s' % dev['id'])
+            except:
+                logger.exception('Attempting to open serial connection raised exception')
 
             # If connection is ok, read register
             if c.serial.is_open:
