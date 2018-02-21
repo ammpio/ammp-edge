@@ -1,3 +1,6 @@
+import logging
+logger = logging.getLogger(__name__)
+
 from easysnmp import Session
 import builtins
 
@@ -24,9 +27,11 @@ class Reader(object):
         snmpval = self._session.get(oid)
         val = snmpval.value
 
-        return val
+        value = self.__process(val, **kwargs)
 
-    def process(self, rdg, val):
+        return value
+
+    def __process(self, val, **rdg):
 
         # Functions to call based on defined datatype
         funcs = {

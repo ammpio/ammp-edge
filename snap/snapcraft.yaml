@@ -1,5 +1,5 @@
 name: stromm
-version: git
+version: 0.4
 summary: Secure Telemetry, Remote Operation and Monitoring for Mini-Grids
 description: |
     Manages data collection and forwarding for AMMP.

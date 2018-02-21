@@ -25,14 +25,15 @@ import threading, queue
 import signal
 
 from reader import ModbusClient_alt
-import minimalmodbus, serial
 
 import requests
 
-__version__ = '0.2.5'
+__version__ = '0.4'
 
 import node_mgmt
 from data_mgmt import *
+
+DEVICE_READ_MAXTIMEOUT=600
 
 def reading_cycle(node, q, sc=None):
     # Check if scheduler has been applied, and if so schedule this function to be run again
@@ -143,12 +144,15 @@ def get_readings(node):
 
     # Wait until all of the reading jobs have completed
     for j in jobs:
-        j.join()
+        j.join(timeout=DEVICE_READ_MAXTIMEOUT)
 
     # Get the results for each device and append them to the readout structure
     for j in jobs:
-        fields = readout_q.get()
-        readout['fields'].update(fields)
+        try:
+            fields = readout_q.get(block=False)
+            readout['fields'].update(fields)
+        except queue.Empty:
+            logger.warning('Not all devices returned readings')
 
     readout['fields']['reading_duration'] = (arrow.utcnow() - arrow.get(readout['time'])).total_seconds()
 
@@ -180,7 +184,7 @@ def read_device(dev, readings, readout_q):
             )
         except:
             logger.exception('READ: Attempting to create ModbusTCP client raised exception')
-            return fields
+            return
 
         for rdg in readings:
 
@@ -228,75 +232,28 @@ def read_device(dev, readings, readout_q):
 
     elif dev['reading_type'] == 'serial':
 
-        try:
-            # Set up RS-485 client
-            c = minimalmodbus.Instrument(
-                port=dev['address']['device'],
-                slaveaddress=dev['address']['slaveaddr']
-            )
-        except:
-            logger.exception('READ: Attempting to create Serial client raised exception')
-            return fields
+        from reader import SerialReader
+
+        serialconf = dev['address']
+        serialconf.update(dev.get('serial', {}))
 
         try:
-#            c.serial.debug = pargs['debug']
-            c.serial.timeout = dev.get('timeout')
+            with SerialReader(**serialconf) as reader:
+                for rdg in readings:
+                    try:
+                        value = reader.read(**rdg)
 
-            # Set up serial connection parameters according to device driver
-            if 'serial' in dev:
-                srlconf = dev['serial']
-                
-                c.serial.baudrate = dev['serial'].get('baudrate', 9600)
-                c.serial.bytesize = dev['serial'].get('bytesize', 8)
-                paritysel = {'none': serial.PARITY_NONE, 'odd': serial.PARITY_ODD, 'even': serial.PARITY_EVEN}
-                c.serial.parity = paritysel[dev['serial'].get('parity', 'none')]
-                c.serial.stopbits = dev['serial'].get('stopbits', 1)
-        except:
-            logger.exception('READ: Attempting to configure Serial client raised exception')
-            return fields
-
-        for rdg in readings:
-
-            try:
-                # Make sure we have an open connection to device
-                if not c.serial.is_open:
-                    c.serial.open()
-                    if c.serial.is_open:
-                        logger.debug('READ: Opened connection to %s' % dev['id'])
-                    else:
-                        logger.error('READ: Unable to connect to %s' % dev['id'])
-            except:
-                logger.exception('Attempting to open serial connection raised exception')
-
-            # If connection is ok, read register
-            if c.serial.is_open:
-                try:
-                    val_i = c.read_registers(rdg['register'], rdg['words'], rdg['fncode'])
-                except Exception as ex:
-                    logger.exception('READ: [%s] Could not process reading %s. Exception' % (dev['id'], rdg['reading']))
-                    continue
-
-                if val_i is None:
-                    logger.warn('READ: [%s] Device returned None for reading %s' % (dev['id'], rdg['reading']))
-                    continue
-
-                try:
-                    # The minimalmodbus library helpfully converts the binary result to a list of integers, so
-                    # it's best to first convert it back to binary (assuming big-endian)
-                    val_b = struct.pack('>%sH' % len(val_i), *val_i)
-
-                    value = process_response(rdg, val_b)
+                    except Exception as ex:
+                        logger.exception('READ: [%s] Could not obtain reading %s. Exception' % (dev['id'], rdg['reading']))
+                        continue
 
                     # Append to key-value store            
                     fields[rdg['reading']] = value
 
                     logger.debug('READ: [%s] %s = %s %s' % (dev['id'], rdg['reading'], value, rdg.get('unit', '')))
-                except Exception as ex:
-                    logger.exception('READ: [%s] Could not process reading %s. Exception' % (dev['id'], rdg['reading']))
-                    continue
+        except:
+            logger.exception('Exception while reading device %s' % dev['id'])
 
-        # Be nice and close the serial port between readings
-        c.serial.close()
 
     elif dev['reading_type'] == 'sys':
 
@@ -329,23 +286,16 @@ def read_device(dev, readings, readout_q):
 
             for rdg in readings:
                 try:
-                    val = reader.read(**rdg)
+                    value = reader.read(**rdg)
 
                 except Exception as ex:
                     logger.exception('READ: [%s] Could not obtain reading %s. Exception' % (dev['id'], rdg['reading']))
                     continue
 
-                try:
-                    value = reader.process(rdg, val)
+                # Append to key-value store            
+                fields[rdg['reading']] = value
 
-                    # Append to key-value store            
-                    fields[rdg['reading']] = value
-
-                    logger.debug('READ: [%s] %s = %s %s' % (dev['id'], rdg['reading'], value, rdg.get('unit', '')))
-
-                except Exception as ex:
-                    logger.exception('READ: [%s] Could not process reading %s. Exception' % (dev['id'], rdg['reading']))
-                    continue
+                logger.debug('READ: [%s] %s = %s %s' % (dev['id'], rdg['reading'], value, rdg.get('unit', '')))
 
     logger.info('READ: Finished reading %s' % dev['id'])
 
