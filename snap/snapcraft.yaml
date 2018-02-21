@@ -18,7 +18,7 @@ apps:
       - system-observe
       - hardware-observe
       - network-observe
-      - serial
+      - serial-port
 
 parts:
   stromm:
