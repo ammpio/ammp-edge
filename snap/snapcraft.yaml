@@ -10,8 +10,8 @@ grade: stable
 confinement: strict
 
 apps:
-  stromm:
-    command: bin/ammp-edge -d
+  ammp-edge:
+    command: bin/ammp_edge -d
     daemon: simple
     restart-condition: always
 #    restart-delay: 60
