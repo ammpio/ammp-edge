@@ -1,4 +1,4 @@
-## STROMM: Secure Telemetry, Remote Operation and Monitoring for Mini-grids
+## AMMP Edge app
 
 [![Snap Status](https://build.snapcraft.io/badge/ammpio/stromm.svg)](https://build.snapcraft.io/user/ammpio/stromm)
 
