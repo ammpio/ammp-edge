@@ -4,7 +4,7 @@
 from setuptools import setup
 
 
-package_name = 'ammp-edge'
+package_name = 'ammp_edge'
 filename = package_name + '.py'
 
 
@@ -29,9 +29,9 @@ setup(
     name=package_name,
     version=get_version(),
     author='Svet Bajlekov',
-    author_email='s.bajlekov@gmail.com',
+    author_email='svet.bajlekov@ammp.io',
     description='Secure Telemetry, Remote Operation and Monitoring for Mini-Grids',
-    url='https://www.ammp.io',
+    url='https://www.ammp.io/',
     long_description=get_long_description(),
     packages=[
         'node_mgmt',
@@ -44,7 +44,7 @@ setup(
         ],
     entry_points={
         'console_scripts': [
-            'ammp-edge = ammp-edge:main'
+            'ammp_edge = ammp_edge:main'
         ]
     },
     install_requires=[
