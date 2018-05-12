@@ -1,18 +1,17 @@
 ## AMMP Edge app
 
-[![Snap Status](https://build.snapcraft.io/badge/ammpio/stromm.svg)](https://build.snapcraft.io/user/ammpio/stromm)
+[![Snap Status](https://build.snapcraft.io/badge/ammpio/ammp-edge.svg)](https://build.snapcraft.io/user/ammpio/ammp-edge)
 
 **TODO: This is placeholder documentation. To be updated**
 
-Stromm is a part of AMMP, the Advanced Mini-grid Management Platform: [www.ammp.io](https://www.ammp.io). Stromm can run on a device connected to a remote energy-generation asset, and gathers performance data over a range of protocols. Stromm is hardware-agnostic.
+ammp-edge is a part of AMMP, the Asset Monitoring and Management Platform: [www.ammp.io](https://www.ammp.io). ammp-edge can run on a device connected to a remote energy-generation asset, and gathers performance data over a range of protocols. ammp-edge is largely hardware-agnostic.
 
 ### Installing and running
-Stromm is designed to be installed and run as [a snap](https://snapcraft.io). Commits to the `master` branch are automatically built and released to the snap store under the `edge` channel, and promoted to the `beta`/`candidate`/`stable` channels after testing. The build status is shown above.
+ammp-edge is designed to be installed and run as [a snap](https://snapcraft.io). Commits to the `master` branch are automatically built and released to the snap store under the `edge` channel, and promoted to the `beta`/`candidate`/`stable` channels after testing. The build status is shown above.
 
-To install and run Stromm on a system with the `snapd` package manager installed (e.g. Ubuntu Core or Ubuntu 16.04 or newer), simply run
+To install and run ammp-edge on a system with the `snapd` package manager installed (e.g. Ubuntu Core or Ubuntu 16.04 or newer), simply run
 ```
-snap install stromm
-snap install stromm-drivers
+snap install ammp-edge
 ```
 If `snapd` is not installed, you can install it on [most common flavors of Linux](https://docs.snapcraft.io/core/install) with
 ```
@@ -20,18 +19,18 @@ sudo apt update
 sudo apt install snapd
 ```
 
-After installation, Stromm should run automatically as a daemon. You can check its status and follow its logs with
+After installation, ammp-edge should run automatically as a daemon. You can check its status and follow its logs with
 ```
-snap services stromm
+snap services ammp-edge
 ```
 and
 ```
-snap logs stromm
+snap logs ammp-edge
 ```
 
-It is also possible to clone the repository and run `stromm.py` directly, for testing purposes. The software will recognize that it is not run in a snap environment and behave accordingly.
+It is also possible to clone the repository and run `ammp-edge.py` directly, for testing purposes. The software will recognize that it is not run in a snap environment and behave accordingly.
 
-Currently, Stromm pulls its configuration from the AMMP API. Further documentation on this, and on alternative means of configuration, will be provided (TODO).
+Currently, ammp-edge pulls its configuration from the AMMP API. Further documentation on this, and on alternative means of configuration, will be provided (TODO).
 
 ### Data collection protocols
 The following protocols are currently supported:
