@@ -1,15 +1,17 @@
-name: stromm
+name: ammp-edge
 version: 0.4
-summary: Secure Telemetry, Remote Operation and Monitoring for Mini-Grids
+summary: Edge application for AMMP
 description: |
-    Manages data collection and forwarding for AMMP.
+    Manages data collection and forwarding for AMMP, and Asset Monioting and Management Platform.
+    https://www.ammp.io/
+    https://github.com/ammpio/ammp-edge
 
-grade: devel
-confinement: devmode
+grade: stable
+confinement: strict
 
 apps:
   stromm:
-    command: bin/stromm -d
+    command: bin/ammp-edge -d
     daemon: simple
     restart-condition: always
 #    restart-delay: 60
@@ -21,25 +23,25 @@ apps:
       - serial-port
 
 parts:
-  stromm:
+  ammp-edge:
     plugin: python
     python-version: python3
-    source: https://github.com/ammpio/stromm.git
+    source: https://github.com/ammpio/ammp-edge.git
     source-branch: master
     stage-packages:
         - libsnmp-dev
         - python3-netifaces
 # Just to get the remote cfg YAML file
-  stromm-remote-cfg:
+  ammp-edge-remote-cfg:
     plugin: dump
-    source: https://github.com/ammpio/stromm.git
+    source: https://github.com/ammpio/ammp-edge.git
     source-branch: master
     prime:
       - remote.yml
 # Get the drivers directory also from git
   drivers:
     plugin: dump
-    source: https://github.com/ammpio/stromm.git
+    source: https://github.com/ammpio/ammp-edge.git
     source-branch: master
     prime:
       - drivers

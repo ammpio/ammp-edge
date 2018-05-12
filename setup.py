@@ -4,7 +4,7 @@
 from setuptools import setup
 
 
-package_name = 'stromm'
+package_name = 'ammp-edge'
 filename = package_name + '.py'
 
 
@@ -44,7 +44,7 @@ setup(
         ],
     entry_points={
         'console_scripts': [
-            'stromm = stromm:main'
+            'ammp-edge = ammp-edge:main'
         ]
     },
     install_requires=[
