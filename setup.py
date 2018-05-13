@@ -28,8 +28,8 @@ def get_long_description():
 setup(
     name=package_name,
     version=get_version(),
-    author='Svet Bajlekov',
-    author_email='svet.bajlekov@ammp.io',
+    author='AMMP Technologies',
+    author_email='contact@ammp.io',
     description='Secure Telemetry, Remote Operation and Monitoring for Mini-Grids',
     url='https://www.ammp.io/',
     long_description=get_long_description(),
