@@ -1,5 +1,5 @@
 name: ammp-edge
-version: 0.4
+version: 0.5
 summary: Edge application for AMMP
 description: |
     Manages data collection and forwarding for AMMP, and Asset Monioting and Management Platform.
