@@ -6,7 +6,7 @@ import json
 import threading
 import requests
 
-# If API endpoint can't be reached wait API_RETRY_DELAY before retrying
+# If API endpoint can't be reached wait API_RETRY_DELAY seconds before retrying
 API_RETRY_DELAY = 10
 # Even if this is not explicitly requested, carry out a configuration check every CONFIG_REFRESH_DELAY seconds
 CONFIG_REFRESH_DELAY = 900

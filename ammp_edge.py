@@ -28,7 +28,7 @@ from reader import ModbusClient_alt
 
 import requests
 
-__version__ = '0.4'
+__version__ = '0.5'
 
 import node_mgmt
 from data_mgmt import *
@@ -207,7 +207,7 @@ def read_device(dev, readings, readout_q):
                     continue
 
                 if val_i is None:
-                    logger.warn('READ: [%s] Device returned None for reading %s' % (dev, rdg['reading']))
+                    logger.warning('READ: [%s] Device returned None for reading %s' % (dev, rdg['reading']))
                     continue
 
                 try:

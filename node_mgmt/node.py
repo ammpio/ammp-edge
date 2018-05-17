@@ -10,6 +10,9 @@ from db_model import NodeConfig
 from .events import NodeEvents
 from .config_watch import ConfigWatch
 
+# If activation is not successful, wait ACTIVATE_RETRY_DELAY seconds before retrying
+ACTIVATE_RETRY_DELAY = 60
+
 
 class Node(object):
 
@@ -25,12 +28,19 @@ class Node(object):
 
         try:
             self._dbconfig = NodeConfig.get()
+
+            if self._dbconfig.node_id == 'd43639139e08':
+                raise ValueError('Node ID indicates Moxa with hardcoded non-unique MAC. Needs re-initialization')
         except NodeConfig.DoesNotExist:
             logger.info('No node configuration found in internal database. Attempting node initialization')
+            self.__initialize()
+        except ValueError:
+            logger.warning('ValueError in config.', exc_info=True)
             self.__initialize()
 
         self.node_id = self._dbconfig.node_id
         self.access_key = self._dbconfig.access_key
+
 
         logger.info('Node ID: %s', self.node_id)
 
@@ -97,15 +107,26 @@ class Node(object):
         node_id = self.__generate_node_id()
         logger.info('Generated node ID %s' % node_id)
 
-        access_key = self.__do_node_activation(node_id)
-        if not access_key:
-            logger.error('Unable to obtain access key')
-            return None
-            #### TODO: This needs to be set to keep retrying if it fails! Otherwise we just throw an exception
+        access_key = None
+        while not access_key:
+            access_key = self.__do_node_activation(node_id)
+            if not access_key:
+                logger.error('Unable to obtain access key. Retrying in %d seconds...' % ACTIVATE_RETRY_DELAY)
+                time.sleep(ACTIVATE_RETRY_DELAY)
+
+        # If there are existing saved configs (potentially for a different node_id, wipe them)
+        try:
+            q = NodeConfig.delete()
+            n_deleted = q.execute()
+            if n_deleted:
+                logger.info('Deleted %d existing config(s)' % n_deleted)
+        except:
+            logger.warning('Could not clean existing config database')
 
         # Save node_id and access_key in database
         self._dbconfig = NodeConfig.create(node_id=node_id, access_key=access_key)
         self._dbconfig.save()
+        logger.debug('Saved new config for node ID %s' % node_id)
 
 
     def __generate_node_id(self):
@@ -139,6 +160,12 @@ class Node(object):
                 # If that also doesn't work, generate a random 12-character hex string
                 import random
                 node_id = '%012x' % random.randrange(16**12)
+
+        if node_id == 'd43639139e08':
+            # This is a Moxa with a hardcoded MAC address. Need to generate something semi-random...
+            logger.warning('Generating semi-random ID for Moxa with hardcoded MAC')
+            import random
+            node_id = 'd43639' + ('%06x' % random.randrange(16**6))
 
         return node_id
 
