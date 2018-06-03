@@ -120,6 +120,11 @@ def get_readings(node):
         'meta': {}
     }
 
+    try:
+        readout['fields']['snap_rev'] = int(os.environ['SNAP_REVISION'])
+    except:
+        logger.warn("Could not get snap revision number', exc_info=True)
+
     # Set up queue in which to save readouts from the multiple threads that are reading each device
     readout_q = queue.Queue()
     jobs = []

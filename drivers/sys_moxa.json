@@ -1,0 +1,10 @@
+{
+  "type": "sys",
+  "common": {
+  	"module": "psutil",
+    "args": {}
+  },
+  "fields": {
+    "disk_usage": {"method": "disk_usage", "args": {"path": "/"}, "keypath": [3], "unit": "%"}
+  }
+}
