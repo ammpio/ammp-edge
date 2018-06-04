@@ -11,3 +11,5 @@ class NodeEvents(object):
 
         self.check_new_config = threading.Event()
         self.getting_config = threading.Condition()
+
+        self.get_command = threading.Event()

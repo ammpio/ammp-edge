@@ -100,6 +100,10 @@ class DataPusher(threading.Thread):
                 logger.info('API response indicates new configuration is available. Requesting pull')
                 self._node.events.check_new_config.set()
 
+            if rtn.get('newcommand'):
+                logger.info('API response indicates command is available. Triggering check')
+                self._node.events.get_command.set()
+
             if result:
                 return True
             else:

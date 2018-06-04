@@ -9,6 +9,7 @@ import time
 from db_model import NodeConfig
 from .events import NodeEvents
 from .config_watch import ConfigWatch
+from .command_watch import CommandWatch
 
 # If activation is not successful, wait ACTIVATE_RETRY_DELAY seconds before retrying
 ACTIVATE_RETRY_DELAY = 60
@@ -47,6 +48,9 @@ class Node(object):
         self.events = NodeEvents()
         config_watch = ConfigWatch(self)
         config_watch.start()
+
+        command_watch = CommandWatch(self)
+        command_watch.start()
 
         if self._dbconfig.config:
             # Configuration is available in DB; use this
@@ -144,7 +148,7 @@ class Node(object):
             if_mac = nif.ifaddresses(ifn)[nif.AF_LINK][0]['addr']
             node_id = if_mac.replace(':','')
 
-        except Exception as ex:
+        except:
             logger.exception('Cannot find primary network interface MAC; trying UUID MAC')
 
             # If that doesn't work, try doing it via the UUID method
@@ -154,7 +158,7 @@ class Node(object):
                 uuid_node = getnode()
                 node_id = "{0:0{1}x}".format(uuid_node, 12)
 
-            except Exception as ex:
+            except:
                 logger.exception('Cannot get MAC via UUID method; generating random node ID')
 
                 # If that also doesn't work, generate a random 12-character hex string
@@ -188,7 +192,7 @@ class Node(object):
                 if rtn:
                     logger.debug('API response: %s' % rtn)
                 return None
-        except Exception as ex:
+        except:
             logger.exception('Exception raised while requesting activation from API')
             return None
 
@@ -209,7 +213,7 @@ class Node(object):
                 if rtn:
                     logger.debug('API response: %s' % rtn)
                 return None
-        except Exception as ex:
+        except:
             logger.exception('Exception raised while confirming activation with API')
             return None
 

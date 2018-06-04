@@ -75,7 +75,7 @@ class ConfigWatch(threading.Thread):
                 if rtn:
                     logger.debug('API response: %s' % rtn)
                 return None
-        except Exception as ex:
+        except:
             logger.exception('Exception raised while requesting configuration from API')
             return None
 
@@ -116,6 +116,6 @@ class ConfigWatch(threading.Thread):
                     logger.debug('API response: %s' % rtn)
                 return None
 
-        except Exception as ex:
+        except:
             logger.exception('Exception raised while requesting node info from API')
             return None

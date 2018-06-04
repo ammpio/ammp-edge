@@ -1,6 +1,8 @@
 import logging
 logger = logging.getLogger(__name__)
 
+from importlib import import_module
+
 class Reader(object):
     def __init__(self):
         pass
@@ -19,7 +21,7 @@ class Reader(object):
         keypath is a list of keys or indices (e.g. [0, 1]) that are used to traverse the returned result in order to retrieve the desired value
         """
 
-        mod = __import__(module)
+        mod = import_module(module)
 
         val = getattr(mod, method)(**args)
 
