@@ -89,7 +89,7 @@ def get_readings(node):
         # Get the driver name
         drv_id = dev['driver']
         if not drv_id in node.drivers:
-            logger.error('Reading using driver %s requested, but driver not found. Skipping device' % drv_id)
+            logger.error('Reading using driver %s requested, but driver not found. Skipping device %s' % (drv_id, dev_id)
             continue
 
         # Save all necessary reading parameters in dev_rdg
@@ -123,7 +123,7 @@ def get_readings(node):
     try:
         readout['fields']['comms_lggr_snap_rev'] = int(os.environ['SNAP_REVISION'])
     except:
-        logger.warn('Could not get snap revision number', exc_info=True)
+        logger.warn('Could not get snap revision number, or could not parse as integer', exc_info=True)
 
     # Set up queue in which to save readouts from the multiple threads that are reading each device
     readout_q = queue.Queue()
