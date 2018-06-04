@@ -5,6 +5,6 @@
     "args": {}
   },
   "fields": {
-    "disk_usage": {"method": "disk_usage", "args": {"path": "/"}, "keypath": [3], "unit": "%"}
+    "disk_usage": {"method": "disk_usage", "args": {"path": "/var/lib/snapd/hostfs"}, "keypath": [3], "unit": "%"}
   }
 }
