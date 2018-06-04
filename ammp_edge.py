@@ -89,7 +89,7 @@ def get_readings(node):
         # Get the driver name
         drv_id = dev['driver']
         if not drv_id in node.drivers:
-            logger.error('Reading using driver %s requested, but driver not found. Skipping device %s' % (drv_id, dev_id)
+            logger.error('Reading using driver %s requested, but driver not found. Skipping device %s' % (drv_id, dev_id)))
             continue
 
         # Save all necessary reading parameters in dev_rdg
