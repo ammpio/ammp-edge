@@ -7,6 +7,8 @@ import sys, os
 import zipfile
 import datetime
 
+import socket
+
 def send_log(node):
     """ Upload system logs to S3 """
 
@@ -133,3 +135,22 @@ def _get_upload_url(node):
     except:
         logger.exception('Exception raised while requesting upload URL from API')
         return None
+
+
+def snap_refresh(node):
+    # Send request over socket API
+
+    sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    server_address = '/run/snapd.socket'
+    sock.connect(server_address)
+    req = b"""POST /v2/snaps/ammp-edge HTTP/1.1
+    Host: localhost:8080
+    User-Agent: curl/7.54.0
+    Accept: */*
+    Content-Type: application/json
+    Content-Length: 20
+
+    {"action":"refresh"}
+    """
+
+    sock.sendall(req)
