@@ -102,7 +102,7 @@ def _zip_directory(dir_path, output_path):
         logger.exception('OS Error')
         return None
     except zipfile.BadZipfile:
-        logger.exception('Bad ZIP file error')
+        logger.exception('"Bad ZIP file" error')
         return None
     finally:
         zip_file.close()
