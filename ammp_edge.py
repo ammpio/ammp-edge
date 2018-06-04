@@ -56,7 +56,7 @@ def reading_cycle(node, q, sc=None):
         # Put the readout in the internal queue
         q.put(readout)
     
-    except Exception as ex:
+    except:
         logger.exception('READ: Exception getting readings')
 
 
@@ -206,7 +206,7 @@ def read_device(dev, readings, readout_q):
             if c.is_open():
                 try:
                     val_i = c.read_holding_registers(rdg['register'], rdg['words'])
-                except Exception as ex:
+                except:
                     logger.exception('READ: [%s] Could not obtain reading %s' % (dev['id'], rdg['reading']))
 
                     continue
@@ -226,7 +226,7 @@ def read_device(dev, readings, readout_q):
                     fields[rdg['reading']] = value
 
                     logger.debug('READ: [%s] %s = %s %s' % (dev, rdg['reading'], value, rdg.get('unit', '')))
-                except Exception as ex:
+                except:
                     logger.exception('READ: [%s] Could not process reading %s. Exception' % (dev, rdg['reading']))
                     continue
 
@@ -248,7 +248,7 @@ def read_device(dev, readings, readout_q):
                     try:
                         value = reader.read(**rdg)
 
-                    except Exception as ex:
+                    except:
                         logger.exception('READ: [%s] Could not obtain reading %s. Exception' % (dev['id'], rdg['reading']))
                         continue
 
@@ -270,7 +270,7 @@ def read_device(dev, readings, readout_q):
                 try:
                     val = reader.read(**rdg)
 
-                except Exception as ex:
+                except:
                     logger.exception('READ: [%s] Could not obtain reading %s. Exception' % (dev['id'], rdg['reading']))
                     continue
 
@@ -293,7 +293,7 @@ def read_device(dev, readings, readout_q):
                 try:
                     value = reader.read(**rdg)
 
-                except Exception as ex:
+                except:
                     logger.exception('READ: [%s] Could not obtain reading %s. Exception' % (dev['id'], rdg['reading']))
                     continue
 
@@ -338,7 +338,7 @@ def process_response(rdg, val_b):
     if rdg.get('datatype') in fmt:
         fmt_char = fmt[rdg['datatype']]
     else:
-        fmt_char = fmt_fallback(len(val_b))
+        fmt_char = fmt_fallback[len(val_b)]
 
     # Convert
     value = struct.unpack('>%s' % fmt_char, val_b)[0]
