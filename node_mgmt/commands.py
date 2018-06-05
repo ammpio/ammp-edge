@@ -148,14 +148,30 @@ def snap_refresh(node):
     server_address = '/run/snapd.socket'
     sock.connect(server_address)
     req = b"""POST /v2/snaps/ammp-edge HTTP/1.1
-    Host: localhost
-    User-Agent: curl/7.54.0
-    Accept: */*
-    Content-Type: application/json
-    Content-Length: 20
+Host: localhost
+User-Agent: curl/7.54.0
+Accept: */*
+Content-Type: application/json
+Content-Length: 20
 
-    {"action":"refresh"}"""
+{"action":"refresh"}"""
 
     sock.sendall(req)
+
+    # Listen for response
+    try:
+        resp = ''
+        chunk = ''
+        # Set max size of 1KB
+        for i in range(1024):
+            chunk += sock.recv()
+            if not chunk:
+                break
+            else:
+                resp += chunk
+    except:
+        logger.exception('Exception while reading from socket')
+
+    logger.info('Response from snapd socket: %s' % resp)
 
     sock.close()
