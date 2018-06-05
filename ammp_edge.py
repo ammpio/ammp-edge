@@ -121,7 +121,7 @@ def get_readings(node):
     }
 
     try:
-        readout['fields']['comms_lggr_snap_rev'] = int(os.environ['SNAP_REVISION'])
+        readout['fields']['comms_lggr_snap_rev'] = int(os.getenv('SNAP_REVISION',0))
     except:
         logger.warn('Could not get snap revision number, or could not parse as integer', exc_info=True)
 
