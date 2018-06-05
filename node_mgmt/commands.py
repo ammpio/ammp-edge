@@ -13,13 +13,13 @@ def send_log(node):
     """ Upload system logs to S3 """
 
     # Package logs in zipped archive
-    zipped_logs = _create_log_archive(node)
+    zipped_logs = __create_log_archive(node)
     if not zipped_logs:
         logger.warn('No log archive available. Exiting log upload.')
         return
 
     # Obtain S3 location for file upload
-    upload_url = _get_upload_url(node)
+    upload_url = __get_upload_url(node)
     if not upload_url:
         logger.warn('No upload URL available. Exiting log upload.')
         return
@@ -52,11 +52,11 @@ def send_log(node):
         logger.warn('Cannot delete local log archive', exc_info=True)
 
 
-def _create_log_archive(node):
+def __create_log_archive(node):
     """ Find the systemd logs and create a zipped archive of them """
 
     # List of directories where to look for logs. The function will stop and try to get logs from the first one that exists
-    LOG_DIRS_TO_CHECK = ['/run/log/journal/', '/tmp/test']
+    LOG_DIRS_TO_CHECK = ['/run/log/journal/']
     output_path = None
 
     for log_dir in LOG_DIRS_TO_CHECK:
@@ -65,14 +65,14 @@ def _create_log_archive(node):
             output_path = os.path.join(os.environ['SNAP_DATA'], filename)
 
             logger.info('Zipping logs in %s into %s' % (log_dir, output_path))
-            _zip_directory(log_dir, output_path)
+            __zip_directory(log_dir, output_path)
 
             break
 
     return output_path
 
 
-def _zip_directory(dir_path, output_path):
+def __zip_directory(dir_path, output_path):
     """Zip the contents of an entire folder (with that folder included
     in the archive). Empty subfolders will be included in the archive
     as well.
@@ -108,7 +108,7 @@ def _zip_directory(dir_path, output_path):
         zip_file.close()
         return True
 
-def _get_upload_url(node):
+def __get_upload_url(node):
 
     logger.debug('Obtaining upload URL from API')
 
@@ -144,13 +144,12 @@ def snap_refresh(node):
     server_address = '/run/snapd.socket'
     sock.connect(server_address)
     req = b"""POST /v2/snaps/ammp-edge HTTP/1.1
-    Host: localhost:8080
+    Host: localhost
     User-Agent: curl/7.54.0
     Accept: */*
     Content-Type: application/json
     Content-Length: 20
 
-    {"action":"refresh"}
-    """
+    {"action":"refresh"}"""
 
     sock.sendall(req)
