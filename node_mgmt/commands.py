@@ -163,8 +163,8 @@ Content-Length: 20
         resp = ''
         chunk = ''
         # Set max size of 1KB
-        for i in range(1024):
-            chunk += sock.recv()
+        for _ in range(1024):
+            chunk += sock.recv(16)
             if not chunk:
                 break
             else:
