@@ -157,3 +157,5 @@ def snap_refresh(node):
     {"action":"refresh"}"""
 
     sock.sendall(req)
+
+    sock.close()
