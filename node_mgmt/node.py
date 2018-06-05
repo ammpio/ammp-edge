@@ -70,9 +70,9 @@ class Node(object):
             with self.events.getting_config:
                 self.events.getting_config.wait_for(lambda: self.config is not None)
 
+        # Load drivers from files, and also add any from the config
         self.drivers = self.__get_drivers()
-
-
+        self.update_drv_from_config()
 
     @property
     def node_id(self):
@@ -249,3 +249,11 @@ class Node(object):
             logger.debug('Saved active config to internal database')
         except:
             logger.exception('Exception raised when attempting to commit configuration to database')
+
+    def update_drv_from_config(self):
+        """
+        Check whether there are custom drivers in the config definition, and if so add them to the driver definition.
+        """
+
+        if 'drivers' in self.config:
+            self.drivers.update(self.config['drivers'])
