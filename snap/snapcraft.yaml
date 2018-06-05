@@ -2,7 +2,7 @@ name: ammp-edge
 version: git
 summary: Edge application for AMMP
 description: |
-    Manages data collection and forwarding for AMMP, the Asset Monioting and Management Platform.
+    Manages data collection and forwarding for AMMP, the Asset Monitoring and Management Platform.
     https://www.ammp.io/
     https://github.com/ammpio/ammp-edge
 
