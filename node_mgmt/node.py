@@ -256,4 +256,7 @@ class Node(object):
         """
 
         if 'drivers' in self.config:
-            self.drivers.update(self.config['drivers'])
+            try:
+                self.drivers.update(self.config['drivers'])
+            except AttributeError:
+                self.drivers = self.config['drivers']

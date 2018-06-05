@@ -94,7 +94,7 @@ class ConfigWatch(threading.Thread):
                 if 'message' in rtn:
                     logger.debug('API message: %s' % rtn['message'])
 
-                if not 'config' in rtn:
+                if not 'active_config' in rtn and not 'candidate_config' in rtn:
                     logger.error('No configuration info returned from API')
                     return None
 
