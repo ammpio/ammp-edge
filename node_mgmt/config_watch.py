@@ -102,16 +102,16 @@ class ConfigWatch(threading.Thread):
                     logger.debug('Local configuration is not available, but remote config is.')
                     return True
 
-                if rtn['config'].get('candidate'):
-                    if self._node.config.get('config_id') != rtn['config']['candidate']:
-                        logger.debug('New candidate configuration ID %s is available' % rtn['config']['candidate'])
+                if rtn.get('candidate_config'):
+                    if self._node.config.get('config_id') != rtn['candidate_config']:
+                        logger.debug('New candidate configuration ID %s is available' % rtn['candidate_config'])
                         return True
                 else:
-                    if self._node.config.get('config_id') == rtn['config'].get('active'):
+                    if self._node.config.get('config_id') == rtn['active_config']:
                         logger.debug('Latest remote configuration is in use locally')
                         return False
                     else:
-                        logger.warning('Local configuration %s does not match remote active configuration %s, but no candidate is set. Please set remote candidate to force refresh.' % (self._node.config.get('config_id'), rtn['config'].get('active')))
+                        logger.warning('Local configuration %s does not match remote active configuration %s, but no candidate is set. Please set remote candidate to force refresh.' % (self._node.config.get('config_id'), rtn.get('active_config')))
             else:
                 logger.error('Error %d requesting node info from API' % r.status_code)
                 if rtn:

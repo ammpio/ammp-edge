@@ -1,4 +1,4 @@
-host: stromm-dev.ammp.io
+host: edge.ammp.io
 type: api
 apiver: v0
 timeout: 120
