@@ -32,7 +32,11 @@ def send_log(node):
         return
 
     try:
-        r = requests.put(upload_url, data=fh.read(), headers={'Content-Disposition': os.path.basename(zipped_logs)})
+        r = requests.put(
+            upload_url,
+            data=fh.read(),
+            headers={'Content-Disposition': os.path.basename(zipped_logs)}
+                )
 
         if r.status_code == 200:
             logger.info('Upload successful')

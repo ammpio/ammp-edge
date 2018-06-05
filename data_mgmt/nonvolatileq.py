@@ -22,7 +22,7 @@ class NonVolatileQ(object):
                 # json.loads(lastrow.item) ???
                 return item
 
-            except Exception as ex:
+            except:
                 logger.exception('NVQP: Exception')
 
         except NVQueue.DoesNotExist:
@@ -30,15 +30,6 @@ class NonVolatileQ(object):
             return None
 
     def put(self, item):
-        # # Use timestamp as row ID
-        # try:
-        #     ts = 
-        # except Exception as ex:
-        #     logger.exception('NVQP: Exception')
-        #     ts = None
-
-        # We expect the item being returned to be a dict
-#        item_str = json.dumps(item)
         NVQueue.create(item=item)
 
     def qsize(self):

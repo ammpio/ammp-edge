@@ -1,4 +1,4 @@
-from data_mgmt.datapusher import *
-from data_mgmt.nonvolatileq import *
+from data_mgmt.datapusher import DataPusher
+from data_mgmt.nonvolatileq import NonVolatileQProc
 
-__all__ = ['DataPusher', 'NonVolatileQ', 'NonVolatileQProc']
+__all__ = ['DataPusher', 'NonVolatileQProc']

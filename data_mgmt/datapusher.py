@@ -52,7 +52,7 @@ class DataPusher(threading.Thread):
                     # Slow this down to avoid generating a high rate of errors if no connection is available
                     time.sleep(self._node.config.get('push_throttle_delay', 10))
 
-            except Exception as ex:
+            except:
                 logger.exception('PUSH: Exception')
 
                 self._node.events.push_in_progress.clear()
