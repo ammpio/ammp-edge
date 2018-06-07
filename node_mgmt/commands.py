@@ -148,13 +148,13 @@ def snap_refresh(node):
     server_address = '/run/snapd.socket'
     sock.connect(server_address)
     req = b"""POST /v2/snaps/ammp-edge HTTP/1.1
-    Host: localhost:8080
-    User-Agent: curl/7.54.0
-    Accept: */*
-    Content-Type: application/json
-    Content-Length: 20
+Host: localhost
+User-Agent: curl/7.54.0
+Accept: */*
+Content-Type: application/json
+Content-Length: 20
 
-    {"action":"refresh"}"""
+{"action":"refresh"}"""
 
     sock.sendall(req)
 
