@@ -24,7 +24,8 @@ import sched, time
 import threading, queue
 import signal
 
-from reader import ModbusClient_alt
+#from reader import ModbusClient_alt
+from reader import ModbusClient
 
 import requests
 
@@ -179,13 +180,14 @@ def read_device(dev, readings, readout_q):
         # Set up and read from ModbusTCP client
 
         try:
-            c = ModbusClient_alt(
+#            c = ModbusClient_alt(
+            c = ModbusClient(
                 host=dev['address']['host'],
                 port=dev['address'].get('port', 502),
                 unit_id=dev['address']['unit_id'],
                 timeout=dev.get('timeout'),
-                auto_open=False,
-                auto_close=False
+                auto_open=True,
+                auto_close=True
             )
         except:
             logger.exception('READ: Attempting to create ModbusTCP client raised exception')
@@ -193,46 +195,48 @@ def read_device(dev, readings, readout_q):
 
         for rdg in readings:
 
-            # Make sure we have an open connection to server
-            if not c.is_open():
-                c.open()
-                if c.is_open():
-                    logger.debug('READ: [%s] Opened connection' % dev['id'])
-                else:
-                    logger.error('READ: [%s] Unable to open connection' % dev['id'])
+            # Using auto-open
+            # # Make sure we have an open connection to server
+            # if not c.is_open():
+            #     c.open()
+            #     if c.is_open():
+            #         logger.debug('READ: [%s] Opened connection' % dev['id'])
+            #     else:
+            #         logger.error('READ: [%s] Unable to open connection' % dev['id'])
 
 
-            # If open() is ok, read register
-            if c.is_open():
-                try:
-                    val_i = c.read_holding_registers(rdg['register'], rdg['words'])
-                except:
-                    logger.exception('READ: [%s] Could not obtain reading %s' % (dev['id'], rdg['reading']))
+            # Using auto-open
+            # # If open() is ok, read register
+            # if c.is_open():
+            try:
+                val_i = c.read_holding_registers(rdg['register'], rdg['words'])
+            except:
+                logger.exception('READ: [%s] Could not obtain reading %s' % (dev['id'], rdg['reading']))
 
-                    continue
+                continue
 
-                if val_i is None:
-                    logger.warning('READ: [%s] Device returned None for reading %s' % (dev, rdg['reading']))
-                    continue
+            if val_i is None:
+                logger.warning('READ: [%s] Device returned None for reading %s' % (dev, rdg['reading']))
+                continue
 
-                try:
-                    # The pyModbusTCP library helpfully converts the binary result to a list of integers, so
-                    # it's best to first convert it back to binary (assuming big-endian)
-                    val_b = struct.pack('>%sH' % len(val_i), *val_i)
+            try:
+                # The pyModbusTCP library helpfully converts the binary result to a list of integers, so
+                # it's best to first convert it back to binary (assuming big-endian)
+                val_b = struct.pack('>%sH' % len(val_i), *val_i)
 
-                    value = process_response(rdg, val_b)
+                value = process_response(rdg, val_b)
 
-                    # Append to key-value store            
-                    fields[rdg['reading']] = value
+                # Append to key-value store            
+                fields[rdg['reading']] = value
 
-                    logger.debug('READ: [%s] %s = %s %s' % (dev, rdg['reading'], value, rdg.get('unit', '')))
-                except:
-                    logger.exception('READ: [%s] Could not process reading %s. Exception' % (dev, rdg['reading']))
-                    continue
+                logger.debug('READ: [%s] %s = %s %s' % (dev, rdg['reading'], value, rdg.get('unit', '')))
+            except:
+                logger.exception('READ: [%s] Could not process reading %s. Exception' % (dev, rdg['reading']))
+                continue
 
-
-        # Be nice and close the Modbus socket
-        c.close()
+        # Using auto-open
+        # # Be nice and close the Modbus socket
+        # c.close()
 
 
     elif dev['reading_type'] == 'serial':
@@ -370,11 +374,12 @@ def main():
     args = parser.parse_args()
     pargs = vars(args)
 
-    # Set up logging parameters 
-    if pargs['debug']:
-        logger.setLevel(logging.DEBUG)
-    else:
-        logger.setLevel(logging.INFO)    
+    # Let's just stick with DEBUG level for now
+    # # Set up logging parameters 
+    # if pargs['debug']:
+    #     logger.setLevel(logging.DEBUG)
+    # else:
+    #     logger.setLevel(logging.INFO)    
 
     if pargs['logfile']:
         fh = logging.FileHandler(pargs['logfile'])
