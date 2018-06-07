@@ -171,6 +171,8 @@ def read_device(dev, readings, readout_q):
 
     logger.info('READ: Start reading %s' % dev['id'])
 
+    logger.debug('Reading device %s' % dev)
+
     # The reading type for each of the devices can be one of the following:
     # modbustcp - ModbusTCP
     # serial - RS-485 / ModbusRTU
@@ -187,7 +189,8 @@ def read_device(dev, readings, readout_q):
                 unit_id=dev['address']['unit_id'],
                 timeout=dev.get('timeout'),
                 auto_open=True,
-                auto_close=True
+                auto_close=True,
+                debug=True
             )
         except:
             logger.exception('READ: Attempting to create ModbusTCP client raised exception')
@@ -204,6 +207,7 @@ def read_device(dev, readings, readout_q):
             #     else:
             #         logger.error('READ: [%s] Unable to open connection' % dev['id'])
 
+            logger.debug('Carrying out reading %s' % rdg)
 
             # Using auto-open
             # # If open() is ok, read register
@@ -216,7 +220,7 @@ def read_device(dev, readings, readout_q):
                 continue
 
             if val_i is None:
-                logger.warning('READ: [%s] Device returned None for reading %s' % (dev, rdg['reading']))
+                logger.warning('READ: [%s] Device returned None for reading %s' % (dev['id'], rdg['reading']))
                 continue
 
             try:
@@ -229,9 +233,9 @@ def read_device(dev, readings, readout_q):
                 # Append to key-value store            
                 fields[rdg['reading']] = value
 
-                logger.debug('READ: [%s] %s = %s %s' % (dev, rdg['reading'], value, rdg.get('unit', '')))
+                logger.debug('READ: [%s] %s = %s %s' % (dev['id'], rdg['reading'], value, rdg.get('unit', '')))
             except:
-                logger.exception('READ: [%s] Could not process reading %s. Exception' % (dev, rdg['reading']))
+                logger.exception('READ: [%s] Could not process reading %s. Exception' % (dev['id'], rdg['reading']))
                 continue
 
         # Using auto-open
