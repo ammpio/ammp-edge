@@ -188,8 +188,8 @@ def read_device(dev, readings, readout_q):
                 port=dev['address'].get('port', 502),
                 unit_id=dev['address']['unit_id'],
                 timeout=dev.get('timeout'),
-                auto_open=True,
-                auto_close=True,
+                auto_open=False,
+                auto_close=False,
                 debug=True
             )
         except:
@@ -198,20 +198,19 @@ def read_device(dev, readings, readout_q):
 
         for rdg in readings:
 
-            # Using auto-open
-            # # Make sure we have an open connection to server
-            # if not c.is_open():
-            #     c.open()
-            #     if c.is_open():
-            #         logger.debug('READ: [%s] Opened connection' % dev['id'])
-            #     else:
-            #         logger.error('READ: [%s] Unable to open connection' % dev['id'])
+            # Make sure we have an open connection to server
+            if not c.is_open():
+                r = c.open()
+                logger.debug('Modbus open response: %s' % r)
+                if c.is_open():
+                    logger.debug('READ: [%s] Opened connection' % dev['id'])
+                else:
+                    logger.error('READ: [%s] Unable to open connection' % dev['id'])
 
             logger.debug('Carrying out reading %s' % rdg)
 
-            # Using auto-open
-            # # If open() is ok, read register
-            # if c.is_open():
+            # If open() is ok, read register
+            if c.is_open():
             try:
                 val_i = c.read_holding_registers(rdg['register'], rdg['words'])
             except:
@@ -238,9 +237,8 @@ def read_device(dev, readings, readout_q):
                 logger.exception('READ: [%s] Could not process reading %s. Exception' % (dev['id'], rdg['reading']))
                 continue
 
-        # Using auto-open
-        # # Be nice and close the Modbus socket
-        # c.close()
+        # Be nice and close the Modbus socket
+        c.close()
 
 
     elif dev['reading_type'] == 'serial':
@@ -391,7 +389,7 @@ def main():
 
     node = node_mgmt.Node()
 
-    # # Redirect stdout and stderr ro error file
+    # # Redirect stdout and stderr to error file
     # sys.stdout = set_logger.StreamToLogger(logger, logging.INFO)
     # sys.stderr = set_logger.StreamToLogger(logger, logging.ERROR)
 
