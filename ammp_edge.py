@@ -211,34 +211,34 @@ def read_device(dev, readings, readout_q):
 
             # If open() is ok, read register
             if c.is_open():
-            try:
-                val_i = c.read_holding_registers(rdg['register'], rdg['words'])
-            except:
-                logger.exception('READ: [%s] Could not obtain reading %s' % (dev['id'], rdg['reading']))
+                try:
+                    val_i = c.read_holding_registers(rdg['register'], rdg['words'])
+                except:
+                    logger.exception('READ: [%s] Could not obtain reading %s' % (dev['id'], rdg['reading']))
 
-                continue
+                    continue
 
-            if val_i is None:
-                logger.warning('READ: [%s] Device returned None for reading %s' % (dev['id'], rdg['reading']))
-                continue
+                if val_i is None:
+                    logger.warning('READ: [%s] Device returned None for reading %s' % (dev['id'], rdg['reading']))
+                    continue
 
-            try:
-                # The pyModbusTCP library helpfully converts the binary result to a list of integers, so
-                # it's best to first convert it back to binary (assuming big-endian)
-                val_b = struct.pack('>%sH' % len(val_i), *val_i)
+                try:
+                    # The pyModbusTCP library helpfully converts the binary result to a list of integers, so
+                    # it's best to first convert it back to binary (assuming big-endian)
+                    val_b = struct.pack('>%sH' % len(val_i), *val_i)
 
-                value = process_response(rdg, val_b)
+                    value = process_response(rdg, val_b)
 
-                # Append to key-value store            
-                fields[rdg['reading']] = value
+                    # Append to key-value store            
+                    fields[rdg['reading']] = value
 
-                logger.debug('READ: [%s] %s = %s %s' % (dev['id'], rdg['reading'], value, rdg.get('unit', '')))
-            except:
-                logger.exception('READ: [%s] Could not process reading %s. Exception' % (dev['id'], rdg['reading']))
-                continue
+                    logger.debug('READ: [%s] %s = %s %s' % (dev['id'], rdg['reading'], value, rdg.get('unit', '')))
+                except:
+                    logger.exception('READ: [%s] Could not process reading %s. Exception' % (dev['id'], rdg['reading']))
+                    continue
 
-        # Be nice and close the Modbus socket
-        c.close()
+                # Be nice and close the Modbus socket
+                c.close()
 
 
     elif dev['reading_type'] == 'serial':
@@ -368,6 +368,19 @@ def sigterm_handler(_signo, _stack_frame):
     sys.exit(0)
 
 
+class StreamToLogger(object):
+    """
+    Fake file-like stream object that redirects writes to a logger instance.
+    """
+    def __init__(self, logger, log_level=logging.INFO):
+        self.logger = logger
+        self.log_level = log_level
+        self.linebuf = ''
+
+    def write(self, buf):
+        for line in buf.rstrip().splitlines():
+            self.logger.log(self.log_level, line.rstrip())
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-l', '--logfile', type=str, help='Log file to use as fallback if systemd logging is not available')
@@ -389,9 +402,9 @@ def main():
 
     node = node_mgmt.Node()
 
-    # # Redirect stdout and stderr to error file
-    # sys.stdout = set_logger.StreamToLogger(logger, logging.INFO)
-    # sys.stderr = set_logger.StreamToLogger(logger, logging.ERROR)
+    # Redirect stdout and stderr to error file
+    sys.stdout = StreamToLogger(logger, logging.INFO)
+    sys.stderr = StreamToLogger(logger, logging.ERROR)
 
     # Handle SIGTERM from daemon control
     signal.signal(signal.SIGTERM, sigterm_handler)
