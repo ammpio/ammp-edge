@@ -346,8 +346,8 @@ def read_device(dev, readings, readout_q):
 def process_response(rdg, val_b):
     # Format identifiers used to unpack the binary result into desired format based on datatype
     fmt = {
-        'int16':  'i',
-        'uint16': 'I',
+        'int16':  'h',
+        'uint16': 'H',
         'int32':  'i',
         'uint32': 'I',
         'float':  'f',
