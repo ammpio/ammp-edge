@@ -200,6 +200,25 @@ def read_device(dev, readings, readout_q):
 
             # Make sure we have an open connection to server
             if not c.is_open():
+                if dev.get('conn_check'):
+                    # Do a quick ping check
+                    r = os.system('ping -c 1 %s' % dev['address']['host'])
+                    if r == 0:
+                        logger.debug('Host %s appears to be up' % dev['address']['host'])
+                    else:
+                        logger.error('Unable to ping host %s' % dev['address']['host'])
+
+                    # Do a quick TCP socket open check
+                    import socket
+                    sock = socket.socket()
+                    try:
+                        sock.connect((dev['address']['host'], dev['address']['port']))
+                        logger.debug('Successfully opened test connection to %s:%s' % (dev['address']['host'], dev['address']['port']))
+                    except:
+                        logger.exception('Cannot open ModbusTCP socket on %s:%s' % (dev['address']['host'], dev['address']['port']))
+                    finally:
+                        sock.close()
+
                 r = c.open()
                 logger.debug('Modbus open response: %s' % r)
                 if c.is_open():
@@ -212,6 +231,11 @@ def read_device(dev, readings, readout_q):
             # If open() is ok, read register
             if c.is_open():
                 try:
+                    # If register is a string, assume that it's hex and convert to integer
+                    # (having a "0x" prefix is acceptable but optional)
+                    if type(rdg['register']) is str:
+                        rdg['register'] = int(rdg['register'], 16)
+                    
                     val_i = c.read_holding_registers(rdg['register'], rdg['words'])
                 except:
                     logger.exception('READ: [%s] Could not obtain reading %s' % (dev['id'], rdg['reading']))
@@ -224,7 +248,12 @@ def read_device(dev, readings, readout_q):
 
                 try:
                     # The pyModbusTCP library helpfully converts the binary result to a list of integers, so
-                    # it's best to first convert it back to binary (assuming big-endian)
+                    # it's best to first convert it back to binary. We assume big-endian order - unless 'order'
+                    # parameter is set to 'lsr' = least significant register, in which case we reverse the order
+                    # of the registers.
+                    if rdg.get('order') == 'lsr':
+                        val_i.reverse()
+
                     val_b = struct.pack('>%sH' % len(val_i), *val_i)
 
                     value = process_response(rdg, val_b)
@@ -237,8 +266,8 @@ def read_device(dev, readings, readout_q):
                     logger.exception('READ: [%s] Could not process reading %s. Exception' % (dev['id'], rdg['reading']))
                     continue
 
-                # Be nice and close the Modbus socket
-                c.close()
+        # Be nice and close the Modbus socket
+        c.close()
 
 
     elif dev['reading_type'] == 'serial':
@@ -318,6 +347,7 @@ def process_response(rdg, val_b):
     # Format identifiers used to unpack the binary result into desired format based on datatype
     fmt = {
         'int16':  'i',
+        'uint16': 'I',
         'int32':  'i',
         'uint32': 'I',
         'float':  'f',
@@ -380,6 +410,9 @@ class StreamToLogger(object):
     def write(self, buf):
         for line in buf.rstrip().splitlines():
             self.logger.log(self.log_level, line.rstrip())
+
+    def flush(self):
+        pass
 
 def main():
     parser = argparse.ArgumentParser()
