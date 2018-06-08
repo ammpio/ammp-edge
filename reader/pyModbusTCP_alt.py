@@ -1,6 +1,11 @@
 import pyModbusTCP.client
 from pyModbusTCP.client import ModbusClient
 import struct
+import socket
+import time
+
+import logging
+logger = logging.getLogger(__name__)
 
 class ModbusClient_alt(ModbusClient):
 
@@ -112,3 +117,61 @@ class ModbusClient_alt(ModbusClient):
             # return
             return f_body
 
+    def open(self, try_conn=1, conn_retry_delay=1):
+        """Connect to modbus server (open TCP connection)
+        :param try_conn: number of times to try connecting if unsuccessful (1=just once)
+        :type try_conn: int
+        :param conn_retry_delay: delay between connection retries if unsuccessful (seconds)
+        :type conn_retry_delay: int
+
+        :returns: connect status (True if open)
+        :rtype: bool
+        """
+        # restart TCP if already open
+        if self.is_open():
+            logger.debug('Connection was already opened. Closing and reopening.')
+            self.close()
+        # init socket and connect
+        # list available sockets on the target host/port
+        # AF_xxx : AF_INET -> IPv4, AF_INET6 -> IPv6,
+        #          AF_UNSPEC -> IPv6 (priority on some system) or 4
+        # list available socket on target host
+        for res in socket.getaddrinfo(self._ModbusClient__hostname, self._ModbusClient__port,
+                                      socket.AF_UNSPEC, socket.SOCK_STREAM):
+            af, sock_type, proto, canon_name, sa = res
+            try:
+                self._ModbusClient__sock = socket.socket(af, sock_type, proto)
+                self._ModbusClient__sock.settimeout(self._ModbusClient__timeout)
+            except socket.error:
+                logger.exception('Could not set up socket for connection to %s:%s' % sa)
+                self._ModbusClient__sock = None
+                continue
+
+            connected = False
+            while connected is False and try_conn > 0:
+                try:
+                    logger.debug('Trying to open connection to %s:%s' % sa)
+                    self._ModbusClient__sock.connect(sa)
+                    logger.debug('Succeeded')
+                    connected = True
+                except socket.error:
+                    try_conn = try_conn - 1
+                    logger.exception('Connection to %s:%s failed. %i retries remaining' % (sa[0], sa[1], try_conn))
+                    if try_conn > 0:
+                        time.sleep(conn_retry_delay)
+                    pass
+
+            if not connected:
+                logger.error('Did not manage to connect. Giving up.')
+                self._ModbusClient__sock.close()
+                self._ModbusClient__sock = None
+                continue
+            break
+
+        # check connect status
+        if self._ModbusClient__sock is not None:
+            return True
+        else:
+            self._ModbusClient__last_error = const.MB_CONNECT_ERR
+            logger.error('connect error')
+            return False

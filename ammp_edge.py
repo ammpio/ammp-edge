@@ -24,12 +24,12 @@ import sched, time
 import threading, queue
 import signal
 
-#from reader import ModbusClient_alt
-from reader import ModbusClient
+from reader import ModbusClient_alt
+#from reader import ModbusClient
 
 import requests
 
-__version__ = '0.5'
+__version__ = '0.7'
 
 import node_mgmt
 from data_mgmt import *
@@ -182,8 +182,8 @@ def read_device(dev, readings, readout_q):
         # Set up and read from ModbusTCP client
 
         try:
-#            c = ModbusClient_alt(
-            c = ModbusClient(
+#            c = ModbusClient(
+            c = ModbusClient_alt(
                 host=dev['address']['host'],
                 port=dev['address'].get('port', 502),
                 unit_id=dev['address']['unit_id'],
@@ -219,8 +219,7 @@ def read_device(dev, readings, readout_q):
                     finally:
                         sock.close()
 
-                r = c.open()
-                logger.debug('Modbus open response: %s' % r)
+                c.open(try_conn=dev.get('conn_retry', 10))
                 if c.is_open():
                     logger.debug('READ: [%s] Opened connection' % dev['id'])
                 else:
