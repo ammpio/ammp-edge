@@ -31,6 +31,15 @@ parts:
     stage-packages:
         - libsnmp-dev
         - python3-netifaces
+    override-prime: |
+        snapcraftctl prime
+        # This is the last step, let's now compile all our pyc files.
+        # 0 --workers: Use all available CPU threads
+        "${SNAPCRAFT_PRIME}"/usr/bin/python3 \
+        -m compileall \
+        -q \
+        --workers 0 \
+        "${SNAPCRAFT_PRIME}"
 # Just to get the remote cfg YAML file
   ammp-edge-remote-cfg:
     plugin: dump
