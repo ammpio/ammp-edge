@@ -34,6 +34,7 @@ __version__ = '0.7'
 import node_mgmt
 from data_mgmt import *
 
+DEVICE_DEFAULT_TIMEOUT=30
 DEVICE_READ_MAXTIMEOUT=600
 
 def reading_cycle(node, q, sc=None):
@@ -187,7 +188,7 @@ def read_device(dev, readings, readout_q):
                 host=dev['address']['host'],
                 port=dev['address'].get('port', 502),
                 unit_id=dev['address']['unit_id'],
-                timeout=dev.get('timeout'),
+                timeout=dev.get('timeout', DEVICE_DEFAULT_TIMEOUT),
                 auto_open=False,
                 auto_close=False,
                 debug=True
@@ -321,7 +322,7 @@ def read_device(dev, readings, readout_q):
 
         from reader import SNMPReader
 
-        with SNMPReader(host=dev['address']['host'], port=dev['address'].get('port'), community=dev['address'].get('community'), timeout=dev.get('timeout')) as reader:
+        with SNMPReader(host=dev['address']['host'], port=dev['address'].get('port'), community=dev['address'].get('community'), timeout=dev.get('timeout', DEVICE_DEFAULT_TIMEOUT)) as reader:
 
             for rdg in readings:
                 try:
