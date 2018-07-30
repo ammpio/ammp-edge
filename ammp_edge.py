@@ -422,12 +422,11 @@ def main():
     args = parser.parse_args()
     pargs = vars(args)
 
-    # Let's just stick with DEBUG level for now
-    # # Set up logging parameters 
-    # if pargs['debug']:
-    #     logger.setLevel(logging.DEBUG)
-    # else:
-    #     logger.setLevel(logging.INFO)    
+    # Set up logging parameters 
+    if pargs['debug']:
+        logger.setLevel(logging.DEBUG)
+    else:
+        logger.setLevel(logging.INFO)    
 
     if pargs['logfile']:
         fh = logging.FileHandler(pargs['logfile'])
