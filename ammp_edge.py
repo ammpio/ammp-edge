@@ -183,7 +183,6 @@ def read_device(dev, readings, readout_q):
         # Set up and read from ModbusTCP client
 
         try:
-#            c = ModbusClient(
             c = ModbusClient_alt(
                 host=dev['address']['host'],
                 port=dev['address'].get('port', 502),
@@ -191,7 +190,7 @@ def read_device(dev, readings, readout_q):
                 timeout=dev.get('timeout', DEVICE_DEFAULT_TIMEOUT),
                 auto_open=False,
                 auto_close=False,
-                debug=True
+                debug=False
             )
         except:
             logger.exception('READ: Attempting to create ModbusTCP client raised exception')
