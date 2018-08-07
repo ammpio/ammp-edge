@@ -11,7 +11,7 @@ confinement: strict
 
 apps:
   ammp-edge:
-    command: bin/ammp_edge -d
+    command: bin/ammp_edge
     daemon: simple
     restart-condition: always
 #    restart-delay: 60
