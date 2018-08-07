@@ -3,7 +3,7 @@
 
 # Set up logging
 import logging
-logging.basicConfig(format="%(asctime)s %(name)s [%(levelname)s] %(message)s", level="DEBUG")
+logging.basicConfig(format='%(asctime)s %(name)s [%(levelname)s] %(message)s', level='INFO')
 logger = logging.getLogger(__name__)
 
 # Try systemd, or fall back to stdout
@@ -29,7 +29,7 @@ from reader import ModbusClient_alt
 
 import requests
 
-__version__ = '0.7'
+__version__ = '0.8'
 
 import node_mgmt
 from data_mgmt import *
