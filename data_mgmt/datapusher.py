@@ -7,9 +7,6 @@ import json
 import threading
 import requests
 
-from influxdb import InfluxDBClient
-
-
 class DataPusher(threading.Thread): 
     def __init__(self, node, queue): 
         threading.Thread.__init__(self)

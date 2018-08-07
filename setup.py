@@ -54,7 +54,6 @@ setup(
         'pyserial',
         'easysnmp',
         'arrow',
-        'influxdb',
         'peewee',
         'psutil'
     ]
