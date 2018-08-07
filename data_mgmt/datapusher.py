@@ -53,7 +53,7 @@ class DataPusher(threading.Thread):
                     time.sleep(self._node.config.get('push_throttle_delay', 10))
 
             except:
-                logger.exception('PUSH: Exception')
+                logger.exception('Unexpected exception while trying to push data')
 
                 self._node.events.push_in_progress.clear()
 
@@ -63,52 +63,46 @@ class DataPusher(threading.Thread):
     def __push_readout(self, readout):
 
         try:
+            # Tag data with current config ID (TODO: consider whether this should be done when data is generated)
             readout['meta'].update({'config_id': self._node.config['config_id']})
 
             # Append offset between time that reading was taken and current time
             readout['fields']['reading_offset'] = int((arrow.utcnow() - arrow.get(readout['time'])).total_seconds() - readout['fields'].get('reading_duration', 0))
+        except:
+            logger.exception('Could not construct final data payload to push')
 
-            if self._node.remote.get('type') == 'api' or self._node.remote.get('type') is None:
-                # Push to API endpoint
-                r = requests.post('https://%s/api/%s/nodes/%s/data' % (self._node.remote['host'], self._node.remote['apiver'], self._node.node_id),
-                    json=readout,
-                    headers={'Authorization': self._node.access_key},
-                    timeout=self._node.config.get('push_timeout', 120))
-                result = r.status_code == 200
-
-                try:
-                    rtn = json.loads(r.text)
-                except:
-                    logger.warning('PUSH: API response "%s" could not be parsed as JSON' % r.text, exc_info=True)
-                    rtn = {}
-
-            elif self._node.remote.get('type') == 'influx':
-                # Push to Influx database directly
-                influx_client = InfluxDBClient(
-                    host = self._node.remote['influx']['host'],
-                    port = self._node.remote['influx']['port'],
-                    username = self._node.remote['influx']['username'],
-                    password = self._node.remote['influx']['password'],
-                    database = self._node.remote['influx']['dbname'],
-                    ssl = True,
-                    verify_ssl = True,
-                    timeout = self._node.config['push_timeout'])
-
-                result = influx_client.write_points([readout])
-
-            if rtn.get('newconfig'):
-                logger.info('API response indicates new configuration is available. Requesting pull')
-                self._node.events.check_new_config.set()
-
-            if rtn.get('newcommand'):
-                logger.info('API response indicates command is available. Triggering check')
-                self._node.events.get_command.set()
-
-            if result:
-                return True
-            else:
-                raise Exception('PUSH: Could not push point at %s. Error code %d' % (readout['time'], r.status_code))
-        except Exception:
-            logger.exception('PUSH: Exception')
-     
+        # Push to API endpoint
+        try:
+            r = requests.post('https://%s/api/%s/nodes/%s/data' % (self._node.remote['host'], self._node.remote['apiver'], self._node.node_id),
+                json=readout,
+                headers={'Authorization': self._node.access_key},
+                timeout=self._node.config.get('push_timeout', 120))
+        except requests.exceptions.ConnectionError:
+            logger.warning('Connection error while trying to push data at %s to API.' % readout['time'])
             return False
+        except requests.exceptions.ConnectionError:
+            logger.warning('Timeout error while trying to push data at %s to API.' % readout['time'])
+            return False
+        except:
+            logger.warning('Error while trying to push data at %s to API.' % readout['time']), exc_info=True)
+            return False
+
+        if r.status_code != 200
+            logger.warning('Error code %d while trying to push data point at %s.' % (r.status_code, readout['time']))
+            return False
+
+        try:
+            rtn = json.loads(r.text)
+        except:
+            logger.warning('API response "%s" could not be parsed as JSON' % r.text, exc_info=True)
+            rtn = {}
+
+        if rtn.get('newconfig'):
+            logger.info('API response indicates new configuration is available. Requesting pull')
+            self._node.events.check_new_config.set()
+
+        if rtn.get('newcommand'):
+            logger.info('API response indicates command is available. Triggering check')
+            self._node.events.get_command.set()
+
+        return True
