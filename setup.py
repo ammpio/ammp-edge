@@ -55,6 +55,7 @@ setup(
         'easysnmp',
         'arrow',
         'peewee',
-        'psutil'
+        'psutil',
+        'netifaces'
     ]
 )
