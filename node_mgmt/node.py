@@ -5,6 +5,8 @@ import yaml, json
 import requests
 import sys, os
 import time
+import netifaces as nif
+
 
 from db_model import NodeConfig
 from .events import NodeEvents
@@ -136,9 +138,8 @@ class Node(object):
     def __generate_node_id(self):
         # Get ID (ideally hardware MAC address) that is used to identify logger when pushing data
 
-        # First try to get the address of the primary Ethernet adapter
         try:
-            import netifaces as nif
+            # First try to get the address of the primary Ethernet adapter
 
             ifn_wanted = ['eth0', 'en0', 'eth1', 'en1', 'em0', 'em1', 'wlan0', 'wlan1']
             ifn_available = nif.interfaces()
