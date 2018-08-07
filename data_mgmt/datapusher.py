@@ -87,7 +87,7 @@ class DataPusher(threading.Thread):
             logger.warning('Error while trying to push data at %s to API.' % readout['time'], exc_info=True)
             return False
 
-        if r.status_code != 200
+        if r.status_code != 200:
             logger.warning('Error code %d while trying to push data point at %s.' % (r.status_code, readout['time']))
             return False
 
