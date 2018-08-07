@@ -84,7 +84,7 @@ class DataPusher(threading.Thread):
             logger.warning('Timeout error while trying to push data at %s to API.' % readout['time'])
             return False
         except:
-            logger.warning('Error while trying to push data at %s to API.' % readout['time']), exc_info=True)
+            logger.warning('Error while trying to push data at %s to API.' % readout['time'], exc_info=True)
             return False
 
         if r.status_code != 200
