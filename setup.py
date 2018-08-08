@@ -56,6 +56,7 @@ setup(
         'arrow',
         'peewee',
         'psutil',
-        'netifaces'
+        'netifaces',
+        'requests'
     ]
 )
