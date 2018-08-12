@@ -21,6 +21,7 @@ apps:
       - hardware-observe
       - network-observe
       - serial-port
+      - log-observe
 
 parts:
   ammp-edge:
