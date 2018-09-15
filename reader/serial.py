@@ -115,7 +115,7 @@ class Reader(object):
         if rdg.get('datatype') in fmt:
             fmt_char = fmt[rdg['datatype']]
         else:
-            fmt_char = fmt_fallback(len(val_b))
+            fmt_char = fmt_fallback[len(val_b)]
 
         # Convert
         value = struct.unpack('>%s' % fmt_char, val_b)[0]
