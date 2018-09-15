@@ -80,7 +80,6 @@ class Reader(object):
         except:
             logger.error('Exception while processing value from register %d' % register)
             raise
-            return None
 
         return value
 
