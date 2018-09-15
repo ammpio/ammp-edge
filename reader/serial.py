@@ -26,7 +26,6 @@ class Reader(object):
         except:
             logger.error('Exception while attempting to create serial connection:')
             raise
-            return None
 
         try:
             self._conn.serial.debug = self._debug
@@ -40,7 +39,6 @@ class Reader(object):
         except:
             logger.error('Exception while attempting to configure serial connection:')
             raise
-            return None
 
         try:
             # Make sure we have an open connection to device
@@ -54,7 +52,6 @@ class Reader(object):
         except:
             logger.error('Exception while attempting to open serial connection:')
             raise
-            return None
 
         return self
 
@@ -74,7 +71,6 @@ class Reader(object):
         except Exception:
             logger.error('Exception while reading register %d' % register)
             raise
-            return None
 
         try:
             # The minimalmodbus library helpfully converts the binary result to a list of integers, so
