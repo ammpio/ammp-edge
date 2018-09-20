@@ -48,7 +48,11 @@ class Reader(object):
         else:
             value = val
 
-        if 'multiplier' in rdg and rdg['multiplier']:
+        if rdg.get('multiplier'):
             value = value * rdg['multiplier']
+
+        # Apply an offset if desired
+        if rdg.get('offset'):
+            value = value + rdg['offset']
 
         return value
