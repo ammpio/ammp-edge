@@ -156,12 +156,11 @@ def get_readings(node):
         dev = node.config['devices'][dev_id]
         dev.update({'id': dev_id})
 
-        if 'address' in dev:
-            try:
-                d = dev['address'].get('device') or dev['address'].get('host')
-                dev_lock = locks[d]
-            except KeyError:
-                dev_lock = None
+        try:
+            d = dev['address'].get('device') or dev['address'].get('host')
+            dev_lock = locks[d]
+        except KeyError:
+            dev_lock = None
 
         dev_thread = threading.Thread(
                 target=read_device,
