@@ -138,8 +138,8 @@ def get_readings(node):
     # and ensure that the reading thread respects this lock and waits for any others
     # that are reading from the device to finish before proceeding.
 
-    # First we need to establish the actual set of physical devices, and create a lock
-    # object for each.
+    # First we need to establish the actual set of physical devices, and create a
+    # lock object for each.
     locks = {}
 
     for dev_id, dev in node.config['devices'].items():
