@@ -131,15 +131,42 @@ def get_readings(node):
     readout_q = queue.Queue()
     jobs = []
 
+    # Sometimes multiple "devices" will actually share the same serial port, or host IP.
+    # It is best to make sure that multiple threads do not try to open concurrent
+    # connections to a single port or host; in the case of a serial port at least, this
+    # is bound to fail. Therefore we can create a lock for each physical port or host,
+    # and ensure that the reading thread respects this lock and waits for any others
+    # that are reading from the device to finish before proceeding.
+
+    # First we need to establish the actual set of physical devices, and create a lock
+    # object for each.
+    locks = {}
+
+    for dev_id, dev in node.config['devices'].items():
+        if 'address' in dev:
+            # Get the device or host name if available
+            d = dev['address'].get('device') or dev['address'].get('host')
+
+            # Create a lock for this device or host name if it doesn't already exist
+            if d and not d in locks:
+                locks[d] = threading.Lock()
+
     # Set up threads for reading each of the devices
     for dev_id in dev_rdg:
         dev = node.config['devices'][dev_id]
         dev.update({'id': dev_id})
 
+        if 'address' in dev:
+            try:
+                d = dev['address'].get('device') or dev['address'].get('host')
+                dev_lock = locks[d]
+            except KeyError:
+                dev_lock = None
+
         dev_thread = threading.Thread(
                 target=read_device,
                 name='Readout-' + dev_id,
-                args=(dev, dev_rdg[dev_id], readout_q),
+                args=(dev, dev_rdg[dev_id], readout_q, dev_lock),
                 daemon=True
                 )
         
@@ -166,7 +193,11 @@ def get_readings(node):
     return readout
 
 
-def read_device(dev, readings, readout_q):
+def read_device(dev, readings, readout_q, dev_lock=None):
+
+    # If the device has a concurrency lock associated with it, make sure it's available
+    if dev_lock:
+        dev_lock.acquire()
 
     fields = {}
 
@@ -340,6 +371,11 @@ def read_device(dev, readings, readout_q):
 
     # Append result to readings (alongside those from other devices)
     readout_q.put(fields)
+
+    # If the device has a concurrency lock associated with it, release it
+    # so that other threads can proceed with reading
+    if dev_lock:
+        dev_lock.release()
 
 
 def process_response(rdg, val_b):
