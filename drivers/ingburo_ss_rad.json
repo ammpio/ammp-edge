@@ -6,7 +6,7 @@
     },
     "fields": {
         "irradience": {"register": 0, "unit": "W/m2", "multiplier": 0.1, "description": "Irradiation on sensor surface"},
-        "temp_ext": {"register": 1, "unit": "C", "multiplier": 0.1, "description": "Ambient temperature"},
-        "temp_pv": {"register": 2, "unit": "C", "multiplier": 0.1, "description": "PV module temperature"}
+        "temp_ext": {"register": 1, "unit": "C", "multiplier": 0.1, "offset": -25, "description": "Ambient temperature"},
+        "temp_pv": {"register": 2, "unit": "C", "multiplier": 0.1, "offset": -25, "description": "PV module temperature"}
     }
 }
