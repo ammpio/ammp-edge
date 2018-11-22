@@ -127,6 +127,9 @@ class ModbusClient_alt(ModbusClient):
         :returns: connect status (True if open)
         :rtype: bool
         """
+
+        const = pyModbusTCP.client.const
+
         # restart TCP if already open
         if self.is_open():
             logger.debug('Connection was already opened. Closing and reopening.')
