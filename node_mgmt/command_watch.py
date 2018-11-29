@@ -65,6 +65,9 @@ class CommandWatch(threading.Thread):
                 else:
                     logger.error('API call successful but response did not include a command payload')
                     return None
+            elif r.status_code == 204:
+                logger.info('No command set')
+                return None
             else:
                 logger.error('Error %d requesting command from API' % r.status_code)
                 if rtn:
