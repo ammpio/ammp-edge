@@ -52,9 +52,14 @@ class CommandWatch(threading.Thread):
         try:
             r = requests.get('https://%s/api/%s/nodes/%s/command' % (self._node.remote['host'], self._node.remote['apiver'], self._node.node_id),
                 headers={'Authorization': self._node.access_key})
-            rtn = json.loads(r.text)
 
             if r.status_code == 200:
+                try:
+                    rtn = json.loads(r.text)
+                except:
+                    logger.exception('Response from command API cannot be parsed as JSON even though status was 200')
+                    return None
+
                 if 'message' in rtn:
                     logger.debug('API message: %s' % rtn['message'])
 
@@ -66,12 +71,10 @@ class CommandWatch(threading.Thread):
                     logger.error('API call successful but response did not include a command payload')
                     return None
             elif r.status_code == 204:
-                logger.info('No command set')
+                logger.info('No command set (command API returned 204)')
                 return None
             else:
                 logger.error('Error %d requesting command from API' % r.status_code)
-                if rtn:
-                    logger.debug('API response: %s' % rtn)
                 return None
         except:
             logger.exception('Exception raised while requesting command from API')
