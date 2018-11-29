@@ -416,7 +416,7 @@ def process_response(rdg, val_b):
 
     # Apply a float multiplier if desired
     if rdg.get('multiplier'):
-        value = value * rdg['multiplier']
+        value = float(value * rdg['multiplier'])
 
     # Apply an offset if desired
     if rdg.get('offset'):
