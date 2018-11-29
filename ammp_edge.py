@@ -383,6 +383,7 @@ def process_response(rdg, val_b):
         'int16':  'h',
         'uint16': 'H',
         'int32':  'i',
+        'sint32': 'i',
         'uint32': 'I',
         'float':  'f',
         'single': 'f',
