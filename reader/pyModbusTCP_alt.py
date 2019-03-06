@@ -1,5 +1,5 @@
 import pyModbusTCP.client
-from pyModbusTCP.client import ModbusClient
+from pyModbusTCP.client import ModbusClient, const
 import struct
 import socket
 import time
@@ -24,8 +24,6 @@ class ModbusClient_alt(ModbusClient):
         :returns: modbus frame body or None if error
         :rtype: str (Python2) or class bytes (Python3) or None
         """
-
-        const = pyModbusTCP.client.const
 
         # receive
         # modbus TCP receive
@@ -127,8 +125,6 @@ class ModbusClient_alt(ModbusClient):
         :returns: connect status (True if open)
         :rtype: bool
         """
-
-        const = pyModbusTCP.client.const
 
         # restart TCP if already open
         if self.is_open():
