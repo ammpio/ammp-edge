@@ -265,7 +265,10 @@ def read_device(dev, readings, readout_q, dev_lock=None):
                     if type(rdg['register']) is str:
                         rdg['register'] = int(rdg['register'], 16)
                     
-                    val_i = c.read_holding_registers(rdg['register'], rdg['words'])
+                    if rdg.get('fncode') == 4:
+                        val_i = c.read_input_registers(rdg['register'], rdg['words'])
+                    else: # Default is fncode 3
+                        val_i = c.read_holding_registers(rdg['register'], rdg['words'])
                 except:
                     logger.exception('READ: [%s] Could not obtain reading %s' % (dev['id'], rdg['reading']))
 
