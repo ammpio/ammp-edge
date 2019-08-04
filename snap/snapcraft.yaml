@@ -9,6 +9,12 @@ description: |
 grade: stable
 confinement: strict
 
+base: core18
+
+architectures:
+  - build-on: amd64
+  - build-on: armhf
+
 apps:
   ammp-edge:
     command: bin/ammp_edge
@@ -42,14 +48,12 @@ parts:
 # Just to get the remote cfg YAML file
   ammp-edge-remote-cfg:
     plugin: dump
-    source: https://github.com/ammpio/ammp-edge.git
-    source-branch: master
+    source: .
     prime:
       - remote.yml
 # Get the drivers directory also from git
   drivers:
     plugin: dump
-    source: https://github.com/ammpio/ammp-edge.git
-    source-branch: master
+    source: .
     prime:
       - drivers
