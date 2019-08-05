@@ -50,7 +50,7 @@ parts:
     plugin: dump
     source: .
     prime:
-      - remote.yml
+      - remote.yaml
 # Get the drivers directory also from git
   drivers:
     plugin: dump
