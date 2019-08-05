@@ -29,7 +29,7 @@ from reader import ModbusClient_alt
 
 import requests
 
-__version__ = '0.8'
+__version__ = '0.9'
 
 import node_mgmt
 from data_mgmt import *
