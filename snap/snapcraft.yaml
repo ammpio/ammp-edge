@@ -57,3 +57,9 @@ parts:
     source: .
     prime:
       - drivers
+
+plugs:
+  provisioning-edge:
+    interface: content
+    content: ammp-edge-provisioning
+    target: $SNAP/provisioning
