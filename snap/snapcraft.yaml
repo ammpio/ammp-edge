@@ -33,8 +33,7 @@ parts:
   ammp-edge:
     plugin: python
     python-version: python3
-    source: https://github.com/ammpio/ammp-edge.git
-    source-branch: master
+    source: .
     stage-packages:
         - libsnmp-dev
         - python3-netifaces
@@ -45,13 +44,11 @@ parts:
         -q \
         --workers 0 \
         "${SNAPCRAFT_PRIME}"
-# Just to get the remote cfg YAML file
   ammp-edge-remote-cfg:
     plugin: dump
     source: .
     prime:
       - remote.yaml
-# Get the drivers directory also from git
   drivers:
     plugin: dump
     source: .
