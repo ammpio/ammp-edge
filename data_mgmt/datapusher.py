@@ -7,6 +7,8 @@ import json
 import threading
 import requests
 from influxdb import InfluxDBClient
+from influxdb.exceptions import InfluxDBClientError
+from influxdb.exceptions import InfluxDBServerError
 
 class DataPusher(threading.Thread): 
     def __init__(self, node, queue, dep): 
@@ -136,7 +138,18 @@ class DataPusher(threading.Thread):
                 logger.exception('Could not construct final data payload to push')
                 return False
 
-            return self._session.write_points([readout])
+            try:
+                r = self._session.write_points([readout])
+            except InfluxDBClientError as e:
+                logger.error(f"InfluxDB client error: {e}")
+            except InfluxDBServerError as e:
+                logger.error(f"InfluxDB server error: {e}")
+            except ConnectionRefusedError as e:
+                logger.error(f"InfluxDB server at {dep['client_config']} not available: {e}")
+            except:
+                logger.exception(f"Could not write to InfluxDB at {dep['client_config']}")
+
+            return r
 
         else:
             logger.warning(f"Data endpoint type '{self._dep.get('type')}' not recognized")
