@@ -28,6 +28,7 @@ from reader import ModbusClient_alt
 #from reader import ModbusClient
 
 import requests
+from copy import deepcopy
 
 __version__ = '0.9'
 
@@ -56,8 +57,11 @@ def reading_cycle(node, qs, sc=None):
 
     try:
         readout = get_readings(node)
-        # Put the readout in each of the data queues
-        for q in qs: q.put(readout)
+        # Put the readout in each of the data queues. We create individual copies 
+        # so that separate queues don't overwrite each other's copies if modifying
+        for q in qs:
+            rdout = deepcopy(readout)
+            q.put(rdout)
     
     except:
         logger.exception('READ: Exception getting readings')
