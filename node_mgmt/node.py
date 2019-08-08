@@ -37,6 +37,7 @@ class Node(object):
                 remote = yaml.safe_load(p_remote_yaml)
                 if isinstance(remote.get('data-endpoints'), list):
                     self.data_endpoints.extend(remote['data-endpoints'])
+                    logger.info(f"Added {len(remote['data-endpoints'])} data endpoints from provisioning remote.yaml")
                 else:
                     logger.info("No valid data-endpoints definition found in provisioning remote.yaml")
         except FileNotFoundError:

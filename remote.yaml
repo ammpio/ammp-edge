@@ -2,7 +2,8 @@ api:
   host: edge.ammp.io
   apiver: v0
 data-endpoints:
-  - type: api
+  - name: default
+    type: api
     config:
       host: edge.ammp.io
       apiver: v0

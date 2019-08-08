@@ -11,8 +11,7 @@ from influxdb import InfluxDBClient
 class DataPusher(threading.Thread): 
     def __init__(self, node, queue, dep): 
         threading.Thread.__init__(self)
-        self.name = 'data_pusher'
-        if 'name' in dep: self.name = self.name + '-' + dep['name']
+        self.name = 'data_pusher-' + dep.get('name', '')
         # Make sure this thread exits directly when the program exits; no clean-up should be required
         self.daemon = True
 
