@@ -138,6 +138,7 @@ class DataPusher(threading.Thread):
                 logger.exception('Could not construct final data payload to push')
                 return False
 
+            r = None
             try:
                 r = self._session.write_points([readout])
             except InfluxDBClientError as e:
