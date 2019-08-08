@@ -6,6 +6,7 @@ import arrow
 import json
 import threading
 import requests
+from copy import deepcopy
 from influxdb import InfluxDBClient
 from influxdb.exceptions import InfluxDBClientError
 from influxdb.exceptions import InfluxDBServerError
@@ -76,7 +77,11 @@ class DataPusher(threading.Thread):
         logger.info(f"PUSH: [{self.dep_name}] Shutting down")
 
 
-    def __push_readout(self, readout):
+    def __push_readout(self, readout_to_push):
+
+        # This ensures that any modifications are only local to this function, and do not affect the original (in case
+        # it needs to be pushed back into the queue)
+        readout = deepcopy(readout_to_push)
 
         if self._dep.get('type') == 'api':
             # Push to API endpoint
