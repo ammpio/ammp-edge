@@ -26,15 +26,15 @@ class Node(object):
             with open(os.path.join(os.getenv('SNAP', './'), 'remote.yaml'), 'r') as remote_yaml:
                 remote = yaml.safe_load(remote_yaml)
                 self.remote_api = remote['api']
-                self.data_endpoints = remote.get('data-endpoints')
+                self.data_endpoints = remote.get('data-endpoints', [])
         except:
             logger.exception('Base configuration file remote.yaml cannot be loaded. Quitting')
             sys.exit('Base configuration file remote.yaml cannot be loaded. Quitting')
 
         # If additional provisioning remote.yaml is available, load it also
         try:
-            with open(os.path.join(os.getenv('SNAP', './'), 'provisioning', 'remote.yaml'), 'r') as prov_remote_yaml:
-                remote = yaml.safe_load(remote_yaml)
+            with open(os.path.join(os.getenv('SNAP', './'), 'provisioning', 'remote.yaml'), 'r') as p_remote_yaml:
+                remote = yaml.safe_load(p_remote_yaml)
                 if isinstance(remote.get('data-endpoints'), list):
                     self.data_endpoints.extend(remote['data-endpoints'])
                 else:
@@ -69,23 +69,33 @@ class Node(object):
         command_watch = CommandWatch(self)
         command_watch.start()
 
+        self.config = None
+
         if self._dbconfig.config:
             # Configuration is available in DB; use this
             logger.info('Using stored configuration from database')
             self.config = self._dbconfig.config
-
-            # Check for a new configuration anyway
-            self.events.check_new_config.set()
         else:
-            # Need to request configuration from API
-            logger.info('No stored configuration in database, or configuration reset requested')
+            # Check for a provisioning configuration
+            try:
+                with open(os.path.join(os.getenv('SNAP', './'), 'provisioning', 'config.json'), 'r') as config_json:
+                    config = json.load(config_json)
+                    logger.info("Using configuration from provisioning file")
+                    self.config = config
+            except FileNotFoundError:
+                logger.info("No provisioning config.json file found")
+            except:
+                logger.exception("Exception while trying to process provisioning config.json")
 
-            self.config = None
+        # Even if we loaded a stored config, check for a new one
+        self.events.check_new_config.set()
 
-            # Request a new configuration from the config watcher thread, and wait for it to be obtained
-            self.events.check_new_config.set()
+        # If we still have not got a config, wait for one to be provided
+        if self.config == None:
+            logger.info('No stored configuration available')
             with self.events.getting_config:
                 self.events.getting_config.wait_for(lambda: self.config is not None)
+
 
         # Load drivers from files, and also add any from the config
         self.drivers = self.__get_drivers()
