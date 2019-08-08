@@ -11,7 +11,8 @@ from influxdb import InfluxDBClient
 class DataPusher(threading.Thread): 
     def __init__(self, node, queue, dep): 
         threading.Thread.__init__(self)
-        self.name = 'data_pusher-' + dep.get('name', '')
+        self.name = 'data_pusher'
+        self.dep_name = dep.get('name') or 'unnamed'
         # Make sure this thread exits directly when the program exits; no clean-up should be required
         self.daemon = True
 
@@ -19,6 +20,7 @@ class DataPusher(threading.Thread):
         self._queue = queue
         self._dep = dep
         self._is_default_endpoint = dep.get('isdefault', False)
+
 
         if dep.get('type') == 'api':
             self._session = requests.Session()
@@ -33,12 +35,12 @@ class DataPusher(threading.Thread):
         while not self._node.events.do_shutdown.is_set():
 
             # queue.get() blocks the current thread until an item is retrieved
-            logger.debug('PUSH: Waiting to get readings from queue')
+            logger.debug(f"PUSH: [{self.dep_name}] Waiting to get readings from queue")
             readout = self._queue.get() 
 
             # If we get the "stop" signal (i.e. empty dict) we exit
             if readout == {}:
-                logger.debug('PUSH: Shutting down (got {} from queue)')
+                logger.debug(f"PUSH: [{self.dep_name}] Shutting down (got empty dict from queue)")
                 return
 
             # Try pushing the readout to the remote endpoint
@@ -46,15 +48,15 @@ class DataPusher(threading.Thread):
                 if self._is_default_endpoint:
                     self._node.events.push_in_progress.set()
 
-                logger.debug('PUSH: Got readout at %s from queue; attempting to push' % (readout['time']))
+                logger.debug(f"PUSH: [{self.dep_name}] Got readout at {readout['time']} from queue; attempting to push")
                 if self.__push_readout(readout):
-                    logger.info('PUSH: Successfully pushed point at %s' % (readout['time']))
+                    logger.info(f"PUSH: [{self.dep_name}] Successfully pushed point at {readout['time']}")
                     if self._is_default_endpoint:
                         self._node.events.push_in_progress.clear()
 
                 else:
                     # For some reason the point wasn't pushed successfully, so we should put it back in the queue
-                    logger.warn('PUSH: Did not work. Putting readout at %s back to queue' % readout['time'])
+                    logger.warn(f"PUSH: [{self.dep_name}] Did not work. Putting readout at {readout['time']} back to queue")
                     self._queue.put(readout)
 
                     if self._is_default_endpoint:
@@ -64,12 +66,12 @@ class DataPusher(threading.Thread):
                     time.sleep(self._node.config.get('push_throttle_delay', 10))
 
             except:
-                logger.exception('Unexpected exception while trying to push data')
+                logger.exception(f"PUSH: [{self.dep_name}] Unexpected exception while trying to push data")
 
                 if self._is_default_endpoint:
                     self._node.events.push_in_progress.clear()
 
-        logger.info('PUSH: Shutting down')
+        logger.info(f"PUSH: [{self.dep_name}] Shutting down")
 
 
     def __push_readout(self, readout):
@@ -130,7 +132,7 @@ class DataPusher(threading.Thread):
                 logger.exception('Could not construct final data payload to push')
                 return False
 
-            return self._session.write_points([readout]) 
+            return self._session.write_points([readout])
 
         else:
             logger.warning(f"Data endpoint type '{self._dep.get('type')}' not recognized")
