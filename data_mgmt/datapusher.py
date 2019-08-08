@@ -89,7 +89,7 @@ class DataPusher(threading.Thread):
 
             try:
                 r = self._session.post(f"https://{self._dep['config']['host']}/api/{self._dep['config']['apiver']}/nodes/{self._node.node_id}/data",
-                    json=readout, timeout=self._node.config.get('push_timeout') or self._dep['config']get('timeout') or 120)
+                    json=readout, timeout=self._node.config.get('push_timeout') or self._dep['config'].get('timeout') or 120)
             except requests.exceptions.ConnectionError:
                 logger.warning('Connection error while trying to push data at %s to API.' % readout['time'])
                 return False
