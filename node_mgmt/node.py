@@ -7,6 +7,7 @@ import sys, os
 import time
 import netifaces as nif
 
+from peewee import DoesNotExist
 
 from db_model import NodeConfig
 from .events import NodeEvents
@@ -49,7 +50,7 @@ class Node(object):
 
             if self._dbconfig.node_id == 'd43639139e08':
                 raise ValueError('Node ID indicates Moxa with hardcoded non-unique MAC. Needs re-initialization')
-        except NodeConfig.DoesNotExist:
+        except DoesNotExist:
             logger.info('No node configuration found in internal database. Attempting node initialization')
             self.__initialize()
         except ValueError:
