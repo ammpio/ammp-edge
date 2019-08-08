@@ -50,7 +50,7 @@ class CommandWatch(threading.Thread):
         logger.info('Obtaining command for node %s from API' % self._node.node_id)
 
         try:
-            r = requests.get('https://%s/api/%s/nodes/%s/command' % (self._node.remote['host'], self._node.remote['apiver'], self._node.node_id),
+            r = requests.get('https://%s/api/%s/nodes/%s/command' % (self._node.remote_api['host'], self._node.remote_api['apiver'], self._node.node_id),
                 headers={'Authorization': self._node.access_key})
 
             if r.status_code == 200:

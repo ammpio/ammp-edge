@@ -36,8 +36,9 @@ from data_mgmt import *
 
 DEVICE_DEFAULT_TIMEOUT=30
 DEVICE_READ_MAXTIMEOUT=600
+VOLATILE_QUEUE_MAXSIZE=10000
 
-def reading_cycle(node, q, sc=None):
+def reading_cycle(node, qs, sc=None):
     # Check if scheduler has been applied, and if so schedule this function to be run again
     # at the appropriate interval before taking the readings
     if sc:
@@ -49,14 +50,14 @@ def reading_cycle(node, q, sc=None):
         # non-round timestamps, but if possible ones following that should "catch up". That said,
         # drift can still accumulate and if it becomes greater than 'interval', a reading will be skipped.
         if node.config.get('read_roundtime'):
-            sc.enterabs(roundtime(node.config['read_interval']), 1, reading_cycle, (node, q, sc))
+            sc.enterabs(roundtime(node.config['read_interval']), 1, reading_cycle, (node, qs, sc))
         else:
-            sc.enter(node.config['read_interval'], 1, reading_cycle, (node, q, sc))
+            sc.enter(node.config['read_interval'], 1, reading_cycle, (node, qs, sc))
 
     try:
         readout = get_readings(node)
-        # Put the readout in the internal queue
-        q.put(readout)
+        # Put the readout in each of the data queues
+        for q in qs: q.put(readout)
     
     except:
         logger.exception('READ: Exception getting readings')
@@ -483,38 +484,43 @@ def main():
     # Handle SIGTERM from daemon control
     signal.signal(signal.SIGTERM, sigterm_handler)
 
-    # Set up reading queue
-    q = queue.LifoQueue()
+    qs = []
+    # For each data endpoint:
+    for dep in node.data_endpoints:
+        # Set up reading queues for each data endpoint
+        q = queue.LifoQueue(VOLATILE_QUEUE_MAXSIZE)
+        qs.append(q)
 
-    # Create an instance of the queue processor, and start the thread's internal run() method
-    pusher = DataPusher(node, q)
-    pusher.start() 
+        # Create queue processor instances and start the threads' internal run() method
+        pusher = DataPusher(node, q, dep)
+        pusher.start()
+
+        # If set, create an instance of the volatile<->non-volatile queue processor, and start it
+        # NOTE: At present, there should only ever be one queue which has a non-volatile backup
+        # (for the default API endpoint)
+        if dep.get('isdefault', False):
+            nvqproc = NonVolatileQProc(node, q)
+            nvqproc.start()
 
 
     if node.config.get('read_interval'):
         # We will be carrying out periodic readings (daemon mode)
-   
-        # Create an instance of the volatile<->non-volatile queue processor, and start it
-        nvqproc = NonVolatileQProc(node, q)
-        nvqproc.start()
-
         try:
-
             # Set up scheduler and run reading cycle with schedule (reading_cycle function then schedules
             # its own further iterations)
             s = sched.scheduler(time.time, time.sleep)
 
             if node.config.get('read_roundtime'):
-                s.enterabs(roundtime(node.config['read_interval']), 1, reading_cycle, (node, q, s))
+                s.enterabs(roundtime(node.config['read_interval']), 1, reading_cycle, (node, qs, s))
                 logger.info('Waiting to start on round time interval...')
             else:
-                reading_cycle(node, q, s)
+                reading_cycle(node, qs, s)
 
             s.run()
 
         except (KeyboardInterrupt, SystemExit):
             node.events.do_shutdown.set()
-            q.put({})            
+            for q in qs: q.put({})            
 
     else:
         # Carry out a one-off reading, with no scheduler

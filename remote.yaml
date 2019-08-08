@@ -1,4 +1,10 @@
-host: edge.ammp.io
-type: api
-apiver: v0
-timeout: 120
+api:
+  host: edge.ammp.io
+  apiver: v0
+data-endpoints:
+  - type: api
+    config:
+      host: edge.ammp.io
+      apiver: v0
+      timeout: 120
+    isdefault: true

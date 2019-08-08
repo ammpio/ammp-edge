@@ -23,11 +23,26 @@ class Node(object):
 
         try:
             # Load base config from YAML file
-            with open(os.path.join(os.getenv('SNAP', './'), 'remote.yaml'), 'r') as remote_yml:
-                self.remote = yaml.safe_load(remote_yml)
+            with open(os.path.join(os.getenv('SNAP', './'), 'remote.yaml'), 'r') as remote_yaml:
+                remote = yaml.safe_load(remote_yaml)
+                self.remote_api = remote['api']
+                self.data_endpoints = remote.get('data-endpoints')
         except:
             logger.exception('Base configuration file remote.yaml cannot be loaded. Quitting')
             sys.exit('Base configuration file remote.yaml cannot be loaded. Quitting')
+
+        # If additional provisioning remote.yaml is available, load it also
+        try:
+            with open(os.path.join(os.getenv('SNAP', './'), 'provisioning', 'remote.yaml'), 'r') as prov_remote_yaml:
+                remote = yaml.safe_load(remote_yaml)
+                if isinstance(remote.get('data-endpoints'), list):
+                    self.data_endpoints.extend(remote['data-endpoints'])
+                else:
+                    logger.info("No valid data-endpoints definition found in provisioning remote.yaml")
+        except FileNotFoundError:
+            logger.info("No provisioning remote.yaml found")
+        except:
+            logger.exception('Exception while trying to process provisioning remote.yaml')
 
         try:
             self._dbconfig = NodeConfig.get()
@@ -180,7 +195,7 @@ class Node(object):
         logger.info('Requesting activation for node %s' % node_id)
         
         try:
-            r1 = requests.get('https://%s/api/%s/nodes/%s/activate' % (self.remote['host'], self.remote['apiver'], node_id))
+            r1 = requests.get('https://%s/api/%s/nodes/%s/activate' % (self.remote_api['host'], self.remote_api['apiver'], node_id))
             rtn = json.loads(r1.text)
 
             if r1.status_code == 200:
@@ -201,7 +216,7 @@ class Node(object):
         logger.info('Confirming activation for node %s' % node_id)
 
         try:
-            r2 = requests.post('https://%s/api/%s/nodes/%s/activate' % (self.remote['host'], self.remote['apiver'], node_id),
+            r2 = requests.post('https://%s/api/%s/nodes/%s/activate' % (self.remote_api['host'], self.remote_api['apiver'], node_id),
                 headers={'Authorization': access_key})
             rtn = json.loads(r2.text)
 

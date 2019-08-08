@@ -117,7 +117,7 @@ def __get_upload_url(node):
     logger.debug('Obtaining upload URL from API')
 
     try:
-        r = requests.get('https://%s/api/%s/nodes/%s/upload_url' % (node.remote['host'], node.remote['apiver'], node.node_id),
+        r = requests.get('https://%s/api/%s/nodes/%s/upload_url' % (node.remote_api['host'], node.remote_api['apiver'], node.node_id),
             headers={'Authorization': node.access_key})
         rtn = json.loads(r.text)
 
