@@ -83,7 +83,9 @@ class DataPusher(threading.Thread):
                 readout['meta'].update({'config_id': self._node.config.get('config_id', '')})
 
                 # Append offset between time that reading was taken and current time
-                readout['fields']['reading_offset'] = int((arrow.utcnow() - arrow.get(readout['time'])).total_seconds() - readout['fields'].get('reading_duration', 0))
+                readout['fields']['reading_offset'] = int((arrow.utcnow() - readout['_arrow_time']).total_seconds() - readout['fields'].get('reading_duration', 0))
+
+                readout.pop('_arrow_time')
             except:
                 logger.exception('Could not construct final data payload to push')
                 return False
@@ -124,10 +126,12 @@ class DataPusher(threading.Thread):
         elif self._dep.get('type') == 'influxdb':
             try:
                 # Append offset between time that reading was taken and current time
-                readout['fields']['reading_offset'] = int((arrow.utcnow() - arrow.get(readout['time'])).total_seconds() - readout['fields'].get('reading_duration', 0))
+                readout['fields']['reading_offset'] = int((arrow.utcnow() - readout['_arrow_time']).total_seconds() - readout['fields'].get('reading_duration', 0))
 
                 # Set measurement where data should be written
-                readout['measurement'] = self._dep['meta'].get('measurement', 'asset')
+                readout['measurement'] = self._dep['meta']['measurement']
+
+                readout.pop('_arrow_time')
             except:
                 logger.exception('Could not construct final data payload to push')
                 return False
