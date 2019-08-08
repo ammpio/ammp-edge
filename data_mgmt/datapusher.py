@@ -144,9 +144,9 @@ class DataPusher(threading.Thread):
             except InfluxDBClientError as e:
                 logger.error(f"InfluxDB client error: {e}")
             except InfluxDBServerError as e:
-                logger.error(f"InfluxDB server error for {self._dep('client_config')} : {e}")
+                logger.error(f"InfluxDB server error for {self._dep.get('client_config')}: {e}")
             except ConnectionRefusedError as e:
-                logger.error(f"InfluxDB server at {self._dep('client_config')} not available: {e}")
+                logger.error(f"InfluxDB server at {self._dep.get('client_config')} not available: {e}")
             except:
                 logger.exception(f"Could not write to InfluxDB at {self._dep.get('client_config')}")
 
