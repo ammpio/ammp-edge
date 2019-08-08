@@ -25,7 +25,7 @@ class DataPusher(threading.Thread):
             self._session = requests.Session()
             self._session.headers.update({'Authorization': self._node.access_key})
         elif dep.get('type') == 'influxdb':
-            self._session = InfluxDBClient(dep['client_config'])
+            self._session = InfluxDBClient(**dep['client_config'])
         else:
             logger.warning(f"Data endpoint type '{dep.get('type')}' not recognized")
 
