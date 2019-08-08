@@ -65,9 +65,10 @@ class ConfigWatch(threading.Thread):
         try:
             r = requests.get('https://%s/api/%s/nodes/%s/config' % (self._node.remote_api['host'], self._node.remote_api['apiver'], self._node.node_id),
                 headers={'Authorization': self._node.access_key})
-            rtn = json.loads(r.text)
-
+            
             if r.status_code == 200:
+                rtn = json.loads(r.text)
+
                 if 'message' in rtn:
                     logger.debug('API message: %s' % rtn['message'])
 
@@ -80,8 +81,8 @@ class ConfigWatch(threading.Thread):
                     return None
             else:
                 logger.error('Error %d requesting configuration from API' % r.status_code)
-                if rtn:
-                    logger.debug('API response: %s' % rtn)
+                if r.text:
+                    logger.info('API response: %s' % r.text)
                 return None
         except:
             logger.exception('Exception raised while requesting configuration from API')
@@ -94,9 +95,10 @@ class ConfigWatch(threading.Thread):
         try:
             r = requests.get('https://%s/api/%s/nodes/%s' % (self._node.remote_api['host'], self._node.remote_api['apiver'], self._node.node_id),
                 headers={'Authorization': self._node.access_key})
-            rtn = json.loads(r.text)
 
             if r.status_code == 200:
+                rtn = json.loads(r.text)
+
                 if 'message' in rtn:
                     logger.debug('API message: %s' % rtn['message'])
 
@@ -120,8 +122,8 @@ class ConfigWatch(threading.Thread):
                         logger.warning('Local configuration %s does not match remote active configuration %s, but no candidate is set. Please set remote candidate to force refresh.' % (self._node.config.get('config_id'), rtn.get('active_config')))
             else:
                 logger.error('Error %d requesting node info from API' % r.status_code)
-                if rtn:
-                    logger.debug('API response: %s' % rtn)
+                if r.text:
+                    logger.info('API response: %s' % r.text)
                 return None
 
         except:
