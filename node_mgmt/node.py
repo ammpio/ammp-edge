@@ -5,7 +5,6 @@ import yaml, json
 import requests
 import sys, os
 import time
-import netifaces as nif
 
 
 from db_model import NodeConfig
@@ -163,22 +162,29 @@ class Node(object):
 
     def __generate_node_id(self):
         # Get ID (ideally hardware MAC address) that is used to identify logger when pushing data
+        def get_hw_addr(ifname):
+            import socket
+            from fcntl import ioctl
+            import struct
 
-        try:
-            # First try to get the address of the primary Ethernet adapter
+            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+                info = ioctl(s.fileno(), 0x8927, struct.pack('256s', bytes(ifname, 'utf-8')[:15]))
 
-            ifn_wanted = ['eth0', 'en0', 'eth1', 'en1', 'em0', 'em1', 'wlan0', 'wlan1']
-            ifn_available = nif.interfaces()
+            return info[18:24].hex()
 
-            ifn = [i for i in ifn_wanted if i in ifn_available][0]
+        node_id = None
+        
+        # First try to get the address of the primary Ethernet adapter
+        ifn_wanted = ['eth0', 'en0', 'eth1', 'en1', 'em0', 'em1', 'wlan0', 'wlan1']
+        for ifn in ifn_wanted:
+            try:
+                node_id = get_hw_addr(ifn)
+            except Exception as e:
+                logger.warn(f"Could not get MAC address of interface {ifn}. Exception {e}")
 
-            if_mac = nif.ifaddresses(ifn)[nif.AF_LINK][0]['addr']
-            node_id = if_mac.replace(':','')
+        if not node_id:
+            logger.warn('Cannot find primary network interface MAC; trying UUID MAC')
 
-        except:
-            logger.exception('Cannot find primary network interface MAC; trying UUID MAC')
-
-            # If that doesn't work, try doing it via the UUID method
             try:
                 from uuid import getnode
                 
@@ -186,11 +192,11 @@ class Node(object):
                 node_id = "{0:0{1}x}".format(uuid_node, 12)
 
             except:
-                logger.exception('Cannot get MAC via UUID method; generating random node ID')
+                logger.exception('Cannot get MAC via UUID method; generating random node ID starting with ff')
 
                 # If that also doesn't work, generate a random 12-character hex string
                 import random
-                node_id = '%012x' % random.randrange(16**12)
+                node_id = 'ff' + '%010x' % random.randrange(16**10)
 
         if node_id == 'd43639139e08':
             # This is a Moxa with a hardcoded MAC address. Need to generate something semi-random...
