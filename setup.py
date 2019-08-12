@@ -56,7 +56,6 @@ setup(
         'arrow',
         'peewee',
         'psutil',
-        'netifaces',
         'requests',
         'influxdb'
     ]
