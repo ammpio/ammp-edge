@@ -181,6 +181,9 @@ class Node(object):
                 node_id = get_hw_addr(ifn)
             except Exception as e:
                 logger.warn(f"Could not get MAC address of interface {ifn}. Exception {e}")
+            
+            if node_id:
+                break
 
         if not node_id:
             logger.warn('Cannot find primary network interface MAC; trying UUID MAC')
