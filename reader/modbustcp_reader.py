@@ -81,7 +81,7 @@ class Reader(object):
             return self._conn.is_open()        
 
 
-    def read(self, register, words, fncode, **kwargs):
+    def read(self, register, words, fncode=3, **kwargs):
 
         # Make sure connection is open
         if not self.__open_connection():
@@ -94,10 +94,12 @@ class Reader(object):
             if type(register) is str:
                 register = int(register, 16)
             
-            if fncode == 4:
-                val_i = self._conn.read_input_registers(register, words)
-            else: # Default is fncode 3
+            if fncode == 3: # Default is fncode 3
                 val_i = self._conn.read_holding_registers(register, words)
+            elif fncode == 4:
+                val_i = self._conn.read_input_registers(register, words)
+            else:
+                logger.warn(f"Unrecognized Modbus function code '{fncode}'")
         except:
             logger.error(f"Exception while processing register {register}")
             raise
