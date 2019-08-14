@@ -184,11 +184,15 @@ def read_device(dev, readings, readout_q, dev_lock=None):
 
     try:
         with Reader(**reader_config) as reader:
+            if not reader:
+                logger.error(f"No reader object could be created for device {dev['id']}.")
+
             for rdg in readings:
                 try:
                     value = reader.read(**rdg)
                     if value == None:
                         logger.warning('READ: [%s] Returned None for reading %s' % (dev['id'], rdg['reading']))
+                        continue
 
                 except:
                     logger.exception('READ: [%s] Could not obtain reading %s. Exception' % (dev['id'], rdg['reading']))
