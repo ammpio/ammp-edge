@@ -1,14 +1,14 @@
 import logging
 logger = logging.getLogger(__name__)
 
-import minimalmodbus, serial
+import serial
 import struct
+import time
 
 class Reader(object):
-    def __init__(self, device, slaveaddr, baudrate=9600, bytesize=8, parity='none', stopbits=1, timeout=5, debug=False, **kwargs):
+    def __init__(self, device, baudrate=9600, bytesize=8, parity='none', stopbits=1, timeout=5, debug=False, **kwargs):
 
         self._device = device
-        self._slaveaddr = slaveaddr
         self._baudrate = baudrate
         self._bytesize = bytesize
         self._stopbits = stopbits
@@ -18,39 +18,33 @@ class Reader(object):
         paritysel = {'none': serial.PARITY_NONE, 'odd': serial.PARITY_ODD, 'even': serial.PARITY_EVEN}
         self._parity = paritysel[parity]
 
+        self._stored_responses = {}
 
     def __enter__(self):
         # Create a Serial connection to be used for all our requests
         try:
-            self._conn = minimalmodbus.Instrument(port=self._device, slaveaddress=self._slaveaddr)
+            self._conn = serial.Serial(port=self._device,
+                                    baudrate=self._baudrate,
+                                    bytesize=self._bytesize,
+                                    parity=self._parity,
+                                    stopbits=self._stopbits,
+                                    timeout=self._timeout,
+                                    debug=self._debug)
         except:
             logger.error('Exception while attempting to create serial connection:')
             raise
 
         try:
-            self._conn.serial.debug = self._debug
-            self._conn.serial.timeout = self._timeout
-
-            # Set up serial connection parameters according to device driver
-            self._conn.serial.baudrate = self._baudrate
-            self._conn.serial.bytesize = self._bytesize
-            self._conn.serial.parity = self._parity
-            self._conn.serial.stopbits = self._stopbits
-        except:
-            logger.error('Exception while attempting to configure serial connection:')
-            raise
-
-        try:
             # Make sure we have an open connection to device
-            if not self._conn.serial.is_open:
-                self._conn.serial.open()
-                if self._conn.serial.is_open:
-                    logger.debug('Opened serial connection to %s:%s' % (self._device, self._slaveaddr))
+            if not self._conn.is_open:
+                self._conn.open()
+                if self._conn.is_open:
+                    logger.debug(f"Opened serial connection to {self._device}")
                 else:
-                    logger.error('Unable to open serial connection to %s:%s' % (self._device, self._slaveaddr))
+                    logger.error(f"Unable to open serial connection to {self._device}")
                     return None
         except:
-            logger.error('Exception while attempting to open serial connection:')
+            logger.error("Exception while attempting to open serial connection:")
             raise
 
         return self
@@ -59,31 +53,64 @@ class Reader(object):
         if not hasattr(self, '_conn'): return
 
         try:
-            self._conn.serial.close()
+            self._conn.close()
         except:
-            logger.warning('Could not close serial connection', exc_info=True)
+            logger.warning("Could not close serial connection", exc_info=True)
 
 
-    def read(self, register, words, fncode, **kwargs):
+    def read(self, query, pos, len, resp_termination=None, **kwargs):
+
+        if query in self._stored_responses:
+            resp = self._stored_responses[query]
+        else:
+            try:
+                self._conn.write(self.get_bytes(query))
+
+                # If response termination is explicitly provided, use that. Otherwise attempt to read all.
+                if resp_termination:
+                    resp = self._conn.read_until(self.get_bytes(resp_termination))
+                else:
+                    # Allow time for response to be sent
+                    time.sleep(1)
+                    resp = self._conn.read_all()
+
+                if resp == '':
+                    return
+            
+            except:
+                logger.error(f"Exception while reading response to query {repr(query)}")
+                raise
+
+        # Save response in case other readings rely on the same query
+        self._stored_responses[query] = resp
 
         try:
-            val_i = self._conn.read_registers(register, words, fncode)
-        except Exception:
-            logger.error('Exception while reading register %d' % register)
-            raise
-
-        try:
-            # The minimalmodbus library helpfully converts the binary result to a list of integers, so
-            # it's best to first convert it back to binary (assuming big-endian)
-            val_b = struct.pack('>%sH' % len(val_i), *val_i)
-            value = self.__process(val_b, **kwargs)
+            # Extract the actual values requested
+            val_b = resp[pos:pos+len]
+            value = self.process(val_b, **kwargs)
         except:
-            logger.error('Exception while processing value from register %d' % register)
+            logger.error(f"Exception while processing value from response {repr(resp)}, position {pos}, length {len}")
             raise
 
         return value
 
-    def __process(self, val_b, **rdg):
+    @classmethod
+    def process(cls, val_b, **rdg):
+        if rdg.get('parse_as') == 'str':
+            try:
+                string = val_b.decode('utf-8')
+                value = float(string)
+            except ValueError:
+                logger.error(f"Could not parse {repr(val_b)} as the string representation of a float value")
+                return
+        else:
+            value = cls.value_from_binary(val_b, **rdg)
+
+        return cls.process_value(value, **rdg)
+
+
+    @staticmethod
+    def value_from_binary(val_b, **rdg):
 
         # Format identifiers used to unpack the binary result into desired format based on datatype
         fmt = {
@@ -100,11 +127,8 @@ class Reader(object):
         # Check for defined value mappings in the driver
         # NOTE: The keys for these mappings must be HEX strings
         if 'valuemap' in rdg:
-            # Get hex string representing byte reading (first method works in Pythin 3.5+)
-            try:
-                val_h = val_b.hex()
-            except AttributeError:
-                val_h = ''.join(format(b, '02x') for b in val_b)
+            # Get hex string representing byte reading
+            val_h = val_b.hex()
 
             # If the value exists in the map, return 
             if val_h in rdg['valuemap']:
@@ -119,6 +143,12 @@ class Reader(object):
         # Convert
         value = struct.unpack('>%s' % fmt_char, val_b)[0]
 
+        return value
+
+
+    @staticmethod
+    def process_value(value, **rdg):
+
         # Apply a float multiplier if desired
         if rdg.get('multiplier'):
             value = value * rdg['multiplier']
@@ -128,3 +158,13 @@ class Reader(object):
             value = value + rdg['offset']
 
         return value
+
+    @staticmethod
+    def get_bytes(string):
+        if string.startswith('0x'):
+            try:
+                return bytes.fromhex(string[2:])
+            except ValueError:
+                logger.warn(f"String {string} starts with 0x but is not hexadecimal. Interpreting literally")
+
+        return string.encode('utf-8')
