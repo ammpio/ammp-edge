@@ -1,8 +1,8 @@
 import logging
 logger = logging.getLogger(__name__)
 
-from reader.pyModbusTCP_alt import ModbusClient_alt
-#from pyModbusTCP.client import ModbusClient
+#from reader.pyModbusTCP_alt import ModbusClient_alt
+from pyModbusTCP.client import ModbusClient
 
 import os, socket
 import struct
@@ -21,7 +21,7 @@ class Reader(object):
     def __enter__(self):
         # Create a ModbusTCP connection to be used for all our requests
         try:
-            self._conn = ModbusClient_alt(
+            self._conn = ModbusClient(
                 host=self._host,
                 port=self._port,
                 unit_id=self._unit_id,
