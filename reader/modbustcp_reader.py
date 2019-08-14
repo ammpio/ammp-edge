@@ -77,7 +77,7 @@ class Reader(object):
                 finally:
                     sock.close()
 
-            self._conn.open(try_conn=self._conn_retry)
+            self._conn.open()
             return self._conn.is_open()        
 
 
