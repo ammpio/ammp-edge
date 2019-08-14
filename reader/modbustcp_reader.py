@@ -78,7 +78,8 @@ class Reader(object):
                     sock.close()
 
             self._conn.open()
-            return self._conn.is_open()        
+
+        return self._conn.is_open()        
 
 
     def read(self, register, words, fncode=3, **kwargs):
