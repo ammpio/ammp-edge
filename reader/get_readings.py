@@ -185,7 +185,7 @@ def read_device(dev, readings, readout_q, dev_lock=None):
     try:
         with Reader(**reader_config) as reader:
             if not reader:
-                logger.error(f"No reader object could be created for device {dev['id']}.")
+                raise Exception(f"No reader object could be created for device {dev['id']}. Skipping")
 
             for rdg in readings:
                 try:
