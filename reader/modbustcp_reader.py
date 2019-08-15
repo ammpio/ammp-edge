@@ -36,7 +36,7 @@ class Reader(object):
     
         try:
             # Make sure we have an open connection to device
-            if self.__open_connection():
+            if self.__open_connection(self._conn_retry):
                 logger.debug(f"Opened ModbusTCP connection to {self._host}:{self._port}/{self._unit_id}")
             else:
                 logger.error(f"Unable to open ModbusTCP connection to {self._host}:{self._port}/{self._unit_id}")
@@ -56,7 +56,7 @@ class Reader(object):
             logger.warning(f"Exception while trying to close ModbusTCP connection", exc_info=True)
 
 
-    def __open_connection(self):
+    def __open_connection(self, retries_left=0):
         # Make sure we have an open connection to server
         if not self._conn.is_open():
             if self._conn_check:
@@ -79,7 +79,13 @@ class Reader(object):
 
             self._conn.open()
 
-        return self._conn.is_open()        
+        if self._conn.is_open():
+            return True
+        elif retries_left > 0:
+            logger.warn(f"Connection attempt to {self._host}:{self._port}/{self._unit_id} failed. Retrying")
+            return self.__open_connection(retries_left - 1)
+        else:
+            return False       
 
 
     def read(self, register, words, fncode=3, **kwargs):
