@@ -87,8 +87,10 @@ class Reader(object):
 
         # Format identifiers used to unpack the binary result into desired format based on datatype
         fmt = {
-            'int16':  'i',
+            'int16':  'h',
+            'uint16': 'H',
             'int32':  'i',
+            'sint32': 'i',
             'uint32': 'I',
             'float':  'f',
             'single': 'f',
