@@ -6,14 +6,13 @@ import struct
 import time
 
 class Reader(object):
-    def __init__(self, device, baudrate=9600, bytesize=8, parity='none', stopbits=1, timeout=5, debug=False, **kwargs):
+    def __init__(self, device, baudrate=9600, bytesize=8, parity='none', stopbits=1, timeout=5, **kwargs):
 
         self._device = device
         self._baudrate = baudrate
         self._bytesize = bytesize
         self._stopbits = stopbits
         self._timeout = timeout
-        self._debug = debug
 
         paritysel = {'none': serial.PARITY_NONE, 'odd': serial.PARITY_ODD, 'even': serial.PARITY_EVEN}
         self._parity = paritysel[parity]
@@ -28,8 +27,7 @@ class Reader(object):
                                     bytesize=self._bytesize,
                                     parity=self._parity,
                                     stopbits=self._stopbits,
-                                    timeout=self._timeout,
-                                    debug=self._debug)
+                                    timeout=self._timeout)
         except:
             logger.error('Exception while attempting to create serial connection:')
             raise
@@ -58,7 +56,7 @@ class Reader(object):
             logger.warning("Could not close serial connection", exc_info=True)
 
 
-    def read(self, query, pos, len, resp_termination=None, **kwargs):
+    def read(self, query, pos, length, resp_termination=None, **kwargs):
 
         if query in self._stored_responses:
             resp = self._stored_responses[query]
@@ -74,7 +72,7 @@ class Reader(object):
                     time.sleep(1)
                     resp = self._conn.read_all()
 
-                if resp == '':
+                if resp == b'':
                     return
             
             except:
@@ -86,7 +84,7 @@ class Reader(object):
 
         try:
             # Extract the actual values requested
-            val_b = resp[pos:pos+len]
+            val_b = resp[pos:pos+length]
             value = self.process(val_b, **kwargs)
         except:
             logger.error(f"Exception while processing value from response {repr(resp)}, position {pos}, length {len}")
@@ -101,8 +99,16 @@ class Reader(object):
                 string = val_b.decode('utf-8')
                 value = float(string)
             except ValueError:
-                logger.error(f"Could not parse {repr(val_b)} as the string representation of a float value")
+                logger.error(f"Could not parse {repr(val_b)} as the string representation of a numerical value")
                 return
+        elif rdg.get('parse_as') == 'hex':
+            try:
+                hex_string = val_b.decode('utf-8')
+                val_b = bytes.fromhex(hex_string)
+            except ValueError:
+                logger.error(f"Could not parse {repr(val_b)} as a hex value")
+                return
+            value = cls.value_from_binary(val_b, **rdg)
         else:
             value = cls.value_from_binary(val_b, **rdg)
 
