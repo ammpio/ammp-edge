@@ -167,13 +167,11 @@ def read_device(dev, readings, readout_q, dev_lock=None):
 
     elif dev['reading_type'] == 'modbusrtu' or dev['reading_type'] == 'serial':
         reader_config = deepcopy(dev['address'])
-        reader_config.update(dev.get('serial', {}))
 
         from reader.modbusrtu_reader import Reader
 
     elif dev['reading_type'] == 'rawserial':
         reader_config = deepcopy(dev['address'])
-        reader_config.update(dev.get('serial', {}))
 
         from reader.rawserial_reader import Reader
 
