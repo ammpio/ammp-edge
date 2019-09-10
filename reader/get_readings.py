@@ -171,6 +171,12 @@ def read_device(dev, readings, readout_q, dev_lock=None):
 
         from reader.modbusrtu_reader import Reader
 
+    elif dev['reading_type'] == 'rawserial':
+        reader_config = deepcopy(dev['address'])
+        reader_config.update(dev.get('serial', {}))
+
+        from reader.rawserial_reader import Reader
+
     elif dev['reading_type'] == 'snmp':
         reader_config = deepcopy(dev['address'])
         reader_config['timeout'] = dev.get('timeout', DEVICE_DEFAULT_TIMEOUT)
