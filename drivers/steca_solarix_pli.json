@@ -1,0 +1,31 @@
+{
+  "common": {
+    "query": "0x5150494753B7A90D",
+    "parse_as": "str",
+    "datatype": "float"
+  },
+  "fields": {
+    "grid_out_V": {"pos": 1, "length": 5, "description": "Grid voltage", "unit": "V"},
+    "grid_out_freq": {"pos": 7, "length": 4, "description": "Grid frequency", "unit": "Hz"},
+    "binv_V": {"pos": 12, "length": 5, "description": "AC output voltage", "unit": "V"},
+    "binv_freq": {"pos": 18, "length": 4, "description": "AC output frequency", "unit": "Hz"},
+    "binv_S": {"pos": 23, "length": 4, "description": "AC output apparent power", "unit": "VA"},
+    "binv_P": {"pos": 28, "length": 4, "description": "AC output active power", "unit": "W"},
+    "batt_V": {"pos": 41, "length": 5, "description": "Battery voltage as measured by inverter", "unit": "V"},
+    "batt_I_chg": {"pos": 47, "length": 3, "description": "Battery charging current", "unit": "A"},
+    "batt_I_dischg": {"pos": 77, "length": 5, "description": "Battery discharge current ", "unit": "A"},
+    "batt_soc": {"pos": 51, "length": 3, "description": "Battery capacity (approximated)", "unit": "%"},
+    "binv_temp": {"pos": 55, "length": 4, "description": "Heat-sink temperature", "unit": "C"},
+    "pv_I": {"pos": 60, "length": 4, "description": "PV input current (battery side)", "unit": "A"},
+    "pv_V": {"pos": 65, "length": 5, "description": "PV voltage", "unit": "V"},
+    "pv_Pdc": {"pos": 98, "length": 5, "description": "PV charging power", "unit": "W"},
+    "state_sbu_priority": {"pos": 83, "length": 1, "description": "SBU priority status: 1=yes, 0=no", "datatype": "int"},
+    "state_load": {"pos": 86, "length": 1, "description": "Load status: 0=load off, 1=load on", "datatype": "int"},
+    "state_charging": {"pos": 88, "length": 1, "description": "Charging status: 1=on, 0=off", "datatype": "int"},
+    "state_charging_pv": {"pos": 89, "length": 1, "description": "Solar charging status: 1=on, 0=off", "datatype": "int"},
+    "state_charging_grid": {"pos": 89, "length": 1, "description": "AC charging status: 1=on, 0=off", "datatype": "int"},
+    "state_charging_float": {"pos": 104, "length": 1, "description": "Flag for charging to floating mode", "datatype": "int"},
+    "state_on": {"pos": 105, "length": 1, "description": "Switched on", "datatype": "int"},
+    "mode": {"query": "0x514D4F4449C10D", "pos": 1, "length": 1, "description": "Mode", "datatype": "str"}
+  }
+}
