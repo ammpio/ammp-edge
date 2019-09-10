@@ -1,0 +1,34 @@
+{
+  "common": {
+    "query": "~20024642E00202FD33\r",
+    "parse_as": "hex",
+    "datatype": "uint16"
+  },
+  "fields": {
+    "V1": {"pos": 19, "length": 4, "description": "Cell 1 voltage", "multiplier": 0.001, "unit": "V"},
+    "V2": {"pos": 23, "length": 4, "description": "Cell 2 voltage", "multiplier": 0.001, "unit": "V"},
+    "V3": {"pos": 27, "length": 4, "description": "Cell 3 voltage", "multiplier": 0.001, "unit": "V"},
+    "V4": {"pos": 31, "length": 4, "description": "Cell 4 voltage", "multiplier": 0.001, "unit": "V"},
+    "V5": {"pos": 35, "length": 4, "description": "Cell 5 voltage", "multiplier": 0.001, "unit": "V"},
+    "V6": {"pos": 39, "length": 4, "description": "Cell 6 voltage", "multiplier": 0.001, "unit": "V"},
+    "V7": {"pos": 43, "length": 4, "description": "Cell 7 voltage", "multiplier": 0.001, "unit": "V"},
+    "V8": {"pos": 47, "length": 4, "description": "Cell 8 voltage", "multiplier": 0.001, "unit": "V"},
+    "V9": {"pos": 51, "length": 4, "description": "Cell 9 voltage", "multiplier": 0.001, "unit": "V"},
+    "V10": {"pos": 55, "length": 4, "description": "Cell 10 voltage", "multiplier": 0.001, "unit": "V"},
+    "V11": {"pos": 59, "length": 4, "description": "Cell 11 voltage", "multiplier": 0.001, "unit": "V"},
+    "V12": {"pos": 63, "length": 4, "description": "Cell 12 voltage", "multiplier": 0.001, "unit": "V"},
+    "V13": {"pos": 67, "length": 4, "description": "Cell 13 voltage", "multiplier": 0.001, "unit": "V"},
+    "V14": {"pos": 71, "length": 4, "description": "Cell 14 voltage", "multiplier": 0.001, "unit": "V"},
+    "V15": {"pos": 75, "length": 4, "description": "Cell 15 voltage", "multiplier": 0.001, "unit": "V"},
+    "temp1": {"pos": 81, "length": 4, "description": "Battery temperature 1", "multiplier": 0.1, "offset": -273.1, "unit": "C"},
+    "temp2": {"pos": 85, "length": 4, "description": "Battery temperature 2", "multiplier": 0.1, "offset": -273.1, "unit": "C"},
+    "temp3": {"pos": 89, "length": 4, "description": "Battery temperature 3", "multiplier": 0.1, "offset": -273.1, "unit": "C"},
+    "temp4": {"pos": 93, "length": 4, "description": "Battery temperature 4", "multiplier": 0.1, "offset": -273.1, "unit": "C"},
+    "temp5": {"pos": 97, "length": 4, "description": "Battery temperature 5", "multiplier": 0.1, "offset": -273.1, "unit": "C"},
+    "I": {"pos": 101, "length": 4, "description": "Current", "multiplier": 0.1, "unit": "A", "datatype": "int16"},
+    "V": {"pos": 105, "length": 4, "description": "Total voltage", "multiplier": 0.001, "unit": "V"},
+    "capacity_remaining": {"pos": 109, "length": 4, "description": "Remaining capacity", "multiplier": 0.001, "unit": "Ah"},
+    "capacity_total": {"pos": 115, "length": 4, "description": "Module total capacity", "multiplier": 0.001, "unit": "Ah"},
+    "cycle_number": {"pos": 119, "length": 4, "description": "Cycle number"}
+  }
+}
