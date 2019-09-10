@@ -56,7 +56,7 @@ class Reader(object):
             logger.warning("Could not close serial connection", exc_info=True)
 
 
-    def read(self, query, pos, length, resp_termination=None, **kwargs):
+    def read(self, query, pos, length, resp_termination=None, **rdg):
 
         if query in self._stored_responses:
             resp = self._stored_responses[query]
@@ -73,6 +73,7 @@ class Reader(object):
                     resp = self._conn.read_all()
 
                 if resp == b'':
+                    logger.warn("No response received from device")
                     return
             
             except:
@@ -85,7 +86,7 @@ class Reader(object):
         try:
             # Extract the actual values requested
             val_b = resp[pos:pos+length]
-            value = self.process(val_b, **kwargs)
+            value = self.process(val_b, **rdg)
         except:
             logger.error(f"Exception while processing value from response {repr(resp)}, position {pos}, length {length}")
             raise
