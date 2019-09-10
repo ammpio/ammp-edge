@@ -5,7 +5,7 @@
     "args": {}
   },
   "fields": {
-    "disk_usage": {"method": "disk_usage", "args": {"path": "/writable"}, "keypath": [3], "unit": "%"},
-    "cpu_temp": {"method": "sensors_temperatures", "keypath": ["bcm2835_thermal", 0, 1], "unit": "C"}
+    "disk_usage": {"method": "disk_usage", "args": {"path": "/root"}, "keypath": [3], "unit": "%"},
+    "cpu_temp": {"method": "sensors_temperatures", "keypath": ["cpu-thermal", 0, 1], "unit": "C"}
   }
 }
