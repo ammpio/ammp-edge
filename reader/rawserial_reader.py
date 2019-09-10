@@ -97,19 +97,24 @@ class Reader(object):
     def process(cls, val_b, **rdg):
         if rdg.get('parse_as') == 'str':
             try:
-                string = val_b.decode('utf-8')
-                value = float(string)
-            except ValueError:
-                logger.error(f"Could not parse {repr(val_b)} as the string representation of a numerical value")
+                val_s = val_b.decode('utf-8')
+            except UnicodeDecodeError:
+                logger.error(f"Could not decode {repr(val_b)} into a string")
                 return
+            value = cls.value_from_string(val_s, **rdg)
+
         elif rdg.get('parse_as') == 'hex':
             try:
-                hex_string = val_b.decode('utf-8')
-                val_b = bytes.fromhex(hex_string)
+                val_h = val_b.decode('utf-8')
+                val_b = bytes.fromhex(val_h)
+            except UnicodeDecodeError:
+                logger.error(f"Could not decode {repr(val_b)} into a string")
+                return
             except ValueError:
-                logger.error(f"Could not parse {repr(val_b)} as a hex value")
+                logger.error(f"Could not parse {val_h} as a hex value")
                 return
             value = cls.value_from_binary(val_b, **rdg)
+
         else:
             value = cls.value_from_binary(val_b, **rdg)
 
@@ -151,6 +156,35 @@ class Reader(object):
 
         # Convert
         value = struct.unpack('>%s' % fmt_char, val_b)[0]
+
+        return value
+
+
+    @staticmethod
+    def value_from_string(val_s, **rdg):
+
+        DEFAULT_DATATYPE = 'float'
+
+        # Format identifiers used to unpack the binary result into desired format based on datatype
+        typecast = {
+            'int': int, 'int16': int, 'uint16': int, 'int32': int, 'uint32': int,
+            'float': float, 'single': float, 'double': float,
+            'str': str
+        }
+
+        # Check for defined value mappings in the driver
+        if 'valuemap' in rdg:
+            # If the string value exists as a key in the map, return 
+            if val_s in rdg['valuemap']:
+                return rdg['valuemap'][val_s]
+
+        datatype = rdg.get('datatype', DEFAULT_DATATYPE)
+
+        try:
+            value = typecast[datatype](val_s)
+        except ValueError:
+            logger.error(f"Could not parse {val_s} as value of type {datatype}")
+            return
 
         return value
 
