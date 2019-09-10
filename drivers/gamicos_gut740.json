@@ -1,0 +1,32 @@
+{
+    "common": {
+      "fncode": 3,
+      "datatype": "float",
+      "words": 2
+    },
+    "fields": {
+      "level": {
+        "description": "Fuel level",
+        "multiplier": 1,
+        "register": 1,
+        "unit": "m"
+      },
+      "temperature": {
+        "description": "Temperature",
+        "multiplier": 1,
+        "register": 2,
+        "unit": "C"
+      },
+      "sound": {
+        "description": "Sound value",
+        "multiplier": 1,
+        "register": 3
+      },
+      "analog": {
+        "description": "Analog signal value",
+        "multiplier": 1,
+        "register": 4,
+        "unit": "mA"
+      }
+    }
+  }

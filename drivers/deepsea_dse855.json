@@ -1,0 +1,26 @@
+{
+    "fields": {
+        "runtime": {"description": "Engine runtime", "register": 1798, "words": 2, "datatype": "uint32", "multiplier": 1, "unit": "s"},
+        "P": {"description": "Generator total watts", "register": 1536, "words": 2, "datatype": "int32", "multiplier": 1, "unit": "W"},
+        "P_L1": {"description": "Generator L1 watts", "register": 1052, "words": 2, "datatype": "int32", "multiplier": 1, "unit": "W"},
+        "P_L2": {"description": "Generator L2 watts", "register": 1054, "words": 2, "datatype": "int32", "multiplier": 1, "unit": "W"},
+        "P_L3": {"description": "Generator L3 watts", "register": 1056, "words": 2, "datatype": "int32", "multiplier": 1, "unit": "W"},
+        "S": {"description": "Generator total VA", "register": 1544, "words": 2, "datatype": "int32", "multiplier": 1, "unit": "VA"},
+        "S_L1": {"description": "Generator L1 VA", "register": 1538, "words": 2, "datatype": "uint32", "multiplier": 1, "unit": "VA"},
+        "S_L2": {"description": "Generator L2 VA", "register": 1540, "words": 2, "datatype": "uint32", "multiplier": 1, "unit": "VA"},
+        "S_L3": {"description": "Generator L3 VA", "register": 1542, "words": 2, "datatype": "uint32", "multiplier": 1, "unit": "VA"},
+        "V_L1": {"description": "Generator L1-N voltage", "register": 1032, "words": 2, "datatype": "uint32", "multiplier": 0.1, "unit": "V"},
+        "V_L2": {"description": "Generator L2-N voltage", "register": 1034, "words": 2, "datatype": "uint32", "multiplier": 0.1, "unit": "V"},
+        "V_L3": {"description": "Generator L3-N voltage", "register": 1036, "words": 2, "datatype": "uint32", "multiplier": 0.1, "unit": "V"},
+        "power_factor": {"description": "Generator average power factor", "register": 1557, "words": 1, "datatype": "int16", "multiplier": 0.01},
+        "power_factor_L1": {"description": "Generator power factor L1", "register": 1554, "words": 1, "datatype": "int16", "multiplier": 0.01},
+        "power_factor_L2": {"description": "Generator power factor L2", "register": 1555, "words": 1, "datatype": "int16", "multiplier": 0.01},
+        "power_factor_L3": {"description": "Generator power factor L3", "register": 1556, "words": 1, "datatype": "int16", "multiplier": 0.01},
+        "utilization_L1": {"description": "Gen L1 percentage of full power", "register": 1618, "words": 1, "datatype": "int16", "multiplier": 0.1, "unit": "%"},
+        "utilization_L2": {"description": "Gen L2 percentage of full power", "register": 1619, "words": 1, "datatype": "int16", "multiplier": 0.1, "unit": "%"},
+        "utilization_L3": {"description": "Gen L3 percentage of full power", "register": 1620, "words": 1, "datatype": "int16", "multiplier": 0.1, "unit": "%"},
+        "E": {"description": "Generator positive energy", "register": 1800, "words": 2, "datatype": "uint32", "multiplier": 100, "unit": "Wh"},
+        "fuel_used": {"description": "Fuel used", "register": 1826, "words": 2, "datatype": "uint32", "multiplier": 1, "unit": "L"},
+        "module_time": {"description": "Module Time since 1/1/1970", "register": 4911, "words": 2, "datatype": "uint32", "multiplier": 1, "unit": "s"}
+    }
+}
