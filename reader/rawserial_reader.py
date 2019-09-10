@@ -87,7 +87,7 @@ class Reader(object):
             val_b = resp[pos:pos+length]
             value = self.process(val_b, **kwargs)
         except:
-            logger.error(f"Exception while processing value from response {repr(resp)}, position {pos}, length {len}")
+            logger.error(f"Exception while processing value from response {repr(resp)}, position {pos}, length {length}")
             raise
 
         return value
