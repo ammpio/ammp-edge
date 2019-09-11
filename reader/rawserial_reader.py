@@ -69,7 +69,7 @@ class Reader(object):
                     resp = self._conn.read_until(self.get_bytes(resp_termination))
                 else:
                     # Allow time for response to be sent
-                    time.sleep(0.2)
+                    time.sleep(1)
                     resp = self._conn.read_all()
 
                 if resp == b'':
