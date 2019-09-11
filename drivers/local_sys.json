@@ -1,9 +1,0 @@
-{
-  "common": {
-  	"words": 2,
-  	"datatype": "int"
-  },
-  "fields": {
-    "uptime": {"oid": ".1.3.6.1.2.1.1.3.0", "multiplier": 0.01, "unit": "s"}
-  }
-}
