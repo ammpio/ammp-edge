@@ -141,8 +141,9 @@ class Reader(object):
         # Check for defined value mappings in the driver
         # NOTE: The keys for these mappings must be HEX strings
         if 'valuemap' in rdg:
+            # NOTE: Currently only mapping against hex representations works
             # Get hex string representing byte reading
-            val_h = val_b.hex()
+            val_h = '0x' + val_b.hex()
 
             # If the value exists in the map, return 
             if val_h in rdg['valuemap']:
