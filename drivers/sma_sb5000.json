@@ -7,7 +7,7 @@
       "multiplier": 0.01,
       "unit": "Hz",
       "valuemap": {
-        "ffffffff": null
+        "0xffffffff": null
       }
     },
     "total_yield": {
@@ -17,7 +17,7 @@
       "multiplier": 1.0,
       "unit": "Wh",
       "valuemap": {
-        "ffffffff": null
+        "0xffffffff": null
       }
     },
     "V1": {
@@ -27,7 +27,7 @@
       "multiplier": 0.01,
       "unit": "V",
       "valuemap": {
-        "ffffffff": null
+        "0xffffffff": null
       }
     },
     "V2": {
@@ -37,7 +37,7 @@
       "multiplier": 0.01,
       "unit": "V",
       "valuemap": {
-        "ffffffff": null
+        "0xffffffff": null
       }
     },
     "V3": {
@@ -47,7 +47,7 @@
       "multiplier": 0.01,
       "unit": "V",
       "valuemap": {
-        "ffffffff": null
+        "0xffffffff": null
       }
     },
     "I1": {
@@ -57,7 +57,7 @@
       "multiplier": 0.001,
       "unit": "A",
       "valuemap": {
-        "80000000": null
+        "0x80000000": null
       }
     },
     "I2": {
@@ -67,7 +67,7 @@
       "multiplier": 0.001,
       "unit": "A",
       "valuemap": {
-        "80000000": null
+        "0x80000000": null
       }
     },
     "I3": {
@@ -77,15 +77,15 @@
       "multiplier": 0.001,
       "unit": "A",
       "valuemap": {
-        "80000000": null
+        "0x80000000": null
       }
     },
-    "dc_in_I1": {"register": 30769, "words": 2, "datatype": "int32", "multiplier": 0.001, "unit": "A", "valuemap": {"80000000": null}},
-    "dc_in_V1": {"register": 30771, "words": 2, "datatype": "int32", "multiplier": 0.01, "unit": "V", "valuemap": {"80000000": null}},
-    "dc_in_P1": {"register": 30773, "words": 2, "datatype": "int32", "multiplier": 1.0, "unit": "W", "valuemap": {"80000000": null}},
-    "dc_in_I2": {"register": 30957, "words": 2, "datatype": "int32", "multiplier": 0.001, "unit": "A", "valuemap": {"80000000": null}},
-    "dc_in_V2": {"register": 30959, "words": 2, "datatype": "int32", "multiplier": 0.01, "unit": "V", "valuemap": {"80000000": null}},
-    "dc_in_P2": {"register": 30961, "words": 2, "datatype": "int32", "multiplier": 1.0, "unit": "W", "valuemap": {"80000000": null}},
+    "dc_in_I1": {"register": 30769, "words": 2, "datatype": "int32", "multiplier": 0.001, "unit": "A", "valuemap": {"0x80000000": null}},
+    "dc_in_V1": {"register": 30771, "words": 2, "datatype": "int32", "multiplier": 0.01, "unit": "V", "valuemap": {"0x80000000": null}},
+    "dc_in_P1": {"register": 30773, "words": 2, "datatype": "int32", "multiplier": 1.0, "unit": "W", "valuemap": {"0x80000000": null}},
+    "dc_in_I2": {"register": 30957, "words": 2, "datatype": "int32", "multiplier": 0.001, "unit": "A", "valuemap": {"0x80000000": null}},
+    "dc_in_V2": {"register": 30959, "words": 2, "datatype": "int32", "multiplier": 0.01, "unit": "V", "valuemap": {"0x80000000": null}},
+    "dc_in_P2": {"register": 30961, "words": 2, "datatype": "int32", "multiplier": 1.0, "unit": "W", "valuemap": {"0x80000000": null}},
 
     "operating_mode": {
       "register": 30825,
@@ -109,7 +109,7 @@
       "multiplier": 1.0,
       "unit": "W",
       "valuemap": {
-        "80000000": null
+        "0x80000000": null
       }
     },
     "P2": {
@@ -119,7 +119,7 @@
       "multiplier": 1.0,
       "unit": "W",
       "valuemap": {
-        "80000000": null
+        "0x80000000": null
       }
     },
     "P3": {
@@ -129,7 +129,7 @@
       "multiplier": 1.0,
       "unit": "W",
       "valuemap": {
-        "80000000": null
+        "0x80000000": null
       }
     },
     "Q_L2": {
@@ -139,7 +139,7 @@
       "multiplier": 1.0,
       "unit": "VAr",
       "valuemap": {
-        "80000000": null
+        "0x80000000": null
       }
     },
     "S_L2": {
@@ -149,7 +149,7 @@
       "multiplier": 1.0,
       "unit": "VA",
       "valuemap": {
-        "80000000": null
+        "0x80000000": null
       }
     },
     "temp_internal": {
@@ -159,7 +159,7 @@
       "multiplier": 0.1,
       "unit": "C",
       "valuemap": {
-        "80000000": null
+        "0x80000000": null
       }
     },
     "serial": {
