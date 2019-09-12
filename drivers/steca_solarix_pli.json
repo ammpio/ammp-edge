@@ -1,6 +1,7 @@
 {
   "common": {
     "query": "0x5150494753B7A90D",
+    "resp_template": "\\(\\d{3}\\.\\d \\d{2}\\.\\d \\d{3}\\.\\d \\d{2}\\.\\d \\d{4} \\d{4} \\d{3} \\d{3} \\d{2}\\.\\d{2} \\d{3} \\d{3} \\d{4} \\d{4} \\d{3}\\.\\d \\d{2}\\.\\d{2} \\d{5} [01]{8} .. \\d{2} \\d{5} [01]{3}..\r",
     "parse_as": "str",
     "datatype": "float"
   },
@@ -26,6 +27,6 @@
     "state_charging_grid": {"pos": 89, "length": 1, "description": "AC charging status: 1=on, 0=off", "datatype": "int"},
     "state_charging_float": {"pos": 104, "length": 1, "description": "Flag for charging to floating mode", "datatype": "int"},
     "state_on": {"pos": 105, "length": 1, "description": "Switched on", "datatype": "int"},
-    "mode": {"query": "0x514D4F4449C10D", "pos": 1, "length": 1, "description": "Mode", "datatype": "str"}
+    "mode": {"query": "0x514D4F4449C10D", "resp_template": "\\(...\r", "pos": 1, "length": 1, "description": "Mode", "datatype": "str"}
   }
 }

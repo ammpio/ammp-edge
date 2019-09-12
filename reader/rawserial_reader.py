@@ -4,6 +4,7 @@ logger = logging.getLogger(__name__)
 import serial
 import struct
 import time
+import re
 
 class Reader(object):
     def __init__(self, device, baudrate=9600, bytesize=8, parity='none', stopbits=1, timeout=5, **kwargs):
@@ -56,7 +57,7 @@ class Reader(object):
             logger.warning("Could not close serial connection", exc_info=True)
 
 
-    def read(self, query, pos, length, resp_termination=None, **rdg):
+    def read(self, query, pos, length, resp_template=None, resp_termination=None, **rdg):
 
         if query in self._stored_responses:
             resp = self._stored_responses[query]
@@ -75,6 +76,14 @@ class Reader(object):
                 if resp == b'':
                     logger.warn("No response received from device")
                     return
+                
+                # If a template is defined, check whether the response matches it.
+                if resp_template:
+                    # Since resp is binary, the template needs to be also
+                    template_b = resp_template.encode('utf-8')
+                    if not re.match(template_b, resp):
+                        logger.warn(f"Response {repr(resp)} does not match template {resp_template}. Discarding")
+                        return
             
             except:
                 logger.error(f"Exception while reading response to query {repr(query)}")
