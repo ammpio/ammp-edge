@@ -22,6 +22,6 @@
         "E": {"description": "Generator positive energy", "register": 1800, "words": 2, "datatype": "uint32", "multiplier": 100, "unit": "Wh"},
         "fuel_used": {"description": "Fuel used", "register": 1826, "words": 2, "datatype": "uint32", "multiplier": 1, "unit": "L"},
         "module_time": {"description": "Module Time since 1/1/1970", "register": 4911, "words": 2, "datatype": "uint32", "multiplier": 1, "unit": "s"},
-        "alarm_status": {"description": "Alarm status", "register": 774, "words": 2, "datatype": "uint16"}
+        "alarm_status": {"description": "Alarm status", "register": 774, "words": 1, "datatype": "uint16"}
     }
 }
