@@ -55,7 +55,7 @@ parts:
       - drivers
   jfq:
     plugin: nodejs
-#    nodejs-package-manager: npm
+    nodejs-package-manager: npm
     source-type: git
     source: https://github.com/svet-b/jfq.git
 
