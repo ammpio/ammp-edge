@@ -53,6 +53,12 @@ parts:
     source: .
     prime:
       - drivers
+  jfq:
+    plugin: nodejs
+    # stage-packages:
+    #   - gnustep-gui-runtime
+    node-packages:
+      - jfq
 
 plugs:
   provisioning-edge:
