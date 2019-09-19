@@ -30,6 +30,11 @@ apps:
       - log-observe
 
 parts:
+  jfq:
+    plugin: nodejs
+    nodejs-package-manager: npm
+    source-type: local
+    source: ./jfq
   ammp-edge:
     plugin: python
     python-version: python3
@@ -53,11 +58,6 @@ parts:
     source: .
     prime:
       - drivers
-  jfq:
-    plugin: nodejs
-    nodejs-package-manager: npm
-    source-type: local
-    source: ./jfq
 
 plugs:
   provisioning-edge:
