@@ -56,8 +56,7 @@ parts:
   jfq:
     plugin: nodejs
     nodejs-package-manager: npm
-    source: https://github.com/blgm/jfq.git
-    source-tag: v1.2.0
+    source: ./jfq
 
 plugs:
   provisioning-edge:
