@@ -1,4 +1,6 @@
 {
+    "name": "jfq-builder",
+    "version": "0",
     "dependencies": {
         "jfq": "1.2.0"
     }
