@@ -32,10 +32,9 @@ apps:
 parts:
   jfq:
     plugin: nodejs
-#    nodejs-package-manager: npm
+    nodejs-package-manager: npm
     source-type: git
     source: https://github.com/blgm/jfq.git
-    source-tag: v1.2.0
   ammp-edge:
     plugin: python
     python-version: python3
