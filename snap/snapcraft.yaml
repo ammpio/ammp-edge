@@ -55,7 +55,8 @@ parts:
       - drivers
   jfq:
     plugin: nodejs
-    source: https://github.com/blgm/jfq
+    nodejs-package-manager: npm
+    source: https://github.com/blgm/jfq.git
     source-tag: v1.2.0
 
 plugs:
