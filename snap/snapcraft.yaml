@@ -55,10 +55,8 @@ parts:
       - drivers
   jfq:
     plugin: nodejs
-    # stage-packages:
-    #   - gnustep-gui-runtime
-    node-packages:
-      - jfq
+    source: https://github.com/blgm/jfq
+    source-tag: v1.2.0
 
 plugs:
   provisioning-edge:
