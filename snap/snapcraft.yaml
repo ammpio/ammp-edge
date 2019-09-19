@@ -30,11 +30,6 @@ apps:
       - log-observe
 
 parts:
-  jfq:
-    plugin: nodejs
-    nodejs-package-manager: npm
-    source-type: git
-    source: https://github.com/blgm/jfq.git
   ammp-edge:
     plugin: python
     python-version: python3
@@ -58,6 +53,12 @@ parts:
     source: .
     prime:
       - drivers
+  jfq:
+    plugin: nodejs
+#    nodejs-package-manager: npm
+    source-type: git
+    source: https://github.com/svet-b/jfq.git
+    source-tag: 1.2.0
 
 plugs:
   provisioning-edge:
