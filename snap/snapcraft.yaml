@@ -60,6 +60,9 @@ parts:
     source: https://github.com/svet-b/jfq.git
     build-environment:
       - npm_config_unsafe_perm: 'true'
+    stage:
+     - -LICENSE
+     - -README.md
 
 plugs:
   provisioning-edge:
