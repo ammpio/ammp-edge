@@ -141,9 +141,13 @@ def get_readings(node):
     readout['fields']['reading_duration'] = \
         (arrow.utcnow() - readout['_arrow_time']).total_seconds()
 
+    logger.debug(f"Device readings: {dev_rdg}")
+    logger.debug(f"Readout: {readout}")
+
     if 'output' in node.config:
         # Get additional processed values (new model to be used for all readings in future)
         output_fields = get_output(dev_rdg, node.config['output'])
+        logger.debug(f"Output fields: {output_fields}")
         readout['fields'].update(output_fields)
 
     return readout
