@@ -36,7 +36,8 @@ setup(
     packages=[
         'node_mgmt',
         'data_mgmt',
-        'reader'
+        'reader',
+        'processor'
         ],
     py_modules=[
         package_name,
