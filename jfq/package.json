@@ -1,7 +1,0 @@
-{
-    "name": "jfq-builder",
-    "version": "1.0.0",
-    "dependencies": {
-        "jfq": "1.2.0"
-    }
-}

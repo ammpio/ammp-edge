@@ -3,7 +3,7 @@
     "query": "0x5150494753B7A90D",
     "resp_template": "\\(\\d{3}\\.\\d \\d{2}\\.\\d \\d{3}\\.\\d \\d{2}\\.\\d \\d{4} \\d{4} \\d{3} \\d{3} \\d{2}\\.\\d{2} \\d{3} \\d{3} \\d{4} \\d{4} \\d{3}\\.\\d \\d{2}\\.\\d{2} \\d{5} [01]{8} .. \\d{2} \\d{5} [01]{3}..\r",
     "parse_as": "str",
-    "datatype": "float"
+    "typecast": "float"
   },
   "fields": {
     "grid_out_V": {"pos": 1, "length": 5, "description": "Grid voltage", "unit": "V"},
@@ -20,13 +20,13 @@
     "pv_I": {"pos": 60, "length": 4, "description": "PV input current (battery side)", "unit": "A"},
     "pv_V": {"pos": 65, "length": 5, "description": "PV voltage", "unit": "V"},
     "pv_Pdc": {"pos": 98, "length": 5, "description": "PV charging power", "unit": "W"},
-    "state_sbu_priority": {"pos": 83, "length": 1, "description": "SBU priority status: 1=yes, 0=no", "datatype": "int"},
-    "state_load": {"pos": 86, "length": 1, "description": "Load status: 0=load off, 1=load on", "datatype": "int"},
-    "state_charging": {"pos": 88, "length": 1, "description": "Charging status: 1=on, 0=off", "datatype": "int"},
-    "state_charging_pv": {"pos": 89, "length": 1, "description": "Solar charging status: 1=on, 0=off", "datatype": "int"},
-    "state_charging_grid": {"pos": 89, "length": 1, "description": "AC charging status: 1=on, 0=off", "datatype": "int"},
-    "state_charging_float": {"pos": 104, "length": 1, "description": "Flag for charging to floating mode", "datatype": "int"},
-    "state_on": {"pos": 105, "length": 1, "description": "Switched on", "datatype": "int"},
-    "mode": {"query": "0x514D4F4449C10D", "resp_template": "\\(...\r", "pos": 1, "length": 1, "description": "Mode", "datatype": "str"}
+    "state_sbu_priority": {"pos": 83, "length": 1, "description": "SBU priority status: 1=yes, 0=no", "typecast": "int"},
+    "state_load": {"pos": 86, "length": 1, "description": "Load status: 0=load off, 1=load on", "typecast": "int"},
+    "state_charging": {"pos": 88, "length": 1, "description": "Charging status: 1=on, 0=off", "typecast": "int"},
+    "state_charging_pv": {"pos": 89, "length": 1, "description": "Solar charging status: 1=on, 0=off", "typecast": "int"},
+    "state_charging_grid": {"pos": 89, "length": 1, "description": "AC charging status: 1=on, 0=off", "typecast": "int"},
+    "state_charging_float": {"pos": 104, "length": 1, "description": "Flag for charging to floating mode", "typecast": "int"},
+    "state_on": {"pos": 105, "length": 1, "description": "Switched on", "typecast": "int"},
+    "mode": {"query": "0x514D4F4449C10D", "resp_template": "\\(...\r", "pos": 1, "length": 1, "description": "Mode", "typecast": "str"}
   }
 }

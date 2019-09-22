@@ -95,122 +95,12 @@ class Reader(object):
         try:
             # Extract the actual values requested
             val_b = resp[pos:pos+length]
-            value = self.process(val_b, **rdg)
         except:
             logger.error(f"Exception while processing value from response {repr(resp)}, position {pos}, length {length}")
             raise
 
-        return value
+        return val_b
 
-    @classmethod
-    def process(cls, val_b, **rdg):
-        if rdg.get('parse_as') == 'str':
-            try:
-                val_s = val_b.decode('utf-8')
-            except UnicodeDecodeError:
-                logger.error(f"Could not decode {repr(val_b)} into a string")
-                return
-            value = cls.value_from_string(val_s, **rdg)
-
-        elif rdg.get('parse_as') == 'hex':
-            try:
-                val_h = val_b.decode('utf-8')
-                val_b = bytes.fromhex(val_h)
-            except UnicodeDecodeError:
-                logger.error(f"Could not decode {repr(val_b)} into a string")
-                return
-            except ValueError:
-                logger.error(f"Could not parse {val_h} as a hex value")
-                return
-            value = cls.value_from_binary(val_b, **rdg)
-
-        else:
-            value = cls.value_from_binary(val_b, **rdg)
-
-        return cls.process_value(value, **rdg)
-
-
-    @staticmethod
-    def value_from_binary(val_b, **rdg):
-
-        # Format identifiers used to unpack the binary result into desired format based on datatype
-        fmt = {
-            'int16':  'h',
-            'uint16': 'H',
-            'int32':  'i',
-            'sint32': 'i',
-            'uint32': 'I',
-            'float':  'f',
-            'single': 'f',
-            'double': 'd'
-        }
-        # If datatype is not available, fall back on format characters based on data length (in bytes)
-        fmt_fallback = [None, 'B', 'H', None, 'I', None, None, None, 'd']
-
-        # Check for defined value mappings in the driver
-        # NOTE: The keys for these mappings must be HEX strings
-        if 'valuemap' in rdg:
-            # NOTE: Currently only mapping against hex representations works
-            # Get hex string representing byte reading
-            val_h = '0x' + val_b.hex()
-
-            # If the value exists in the map, return 
-            if val_h in rdg['valuemap']:
-                return rdg['valuemap'][val_h]
-
-        # Get the right format character to convert from binary to the desired data type
-        if rdg.get('datatype') in fmt:
-            fmt_char = fmt[rdg['datatype']]
-        else:
-            fmt_char = fmt_fallback[len(val_b)]
-
-        # Convert
-        value = struct.unpack('>%s' % fmt_char, val_b)[0]
-
-        return value
-
-
-    @staticmethod
-    def value_from_string(val_s, **rdg):
-
-        DEFAULT_DATATYPE = 'float'
-
-        # Format identifiers used to unpack the binary result into desired format based on datatype
-        typecast = {
-            'int': int, 'int16': int, 'uint16': int, 'int32': int, 'uint32': int,
-            'float': float, 'single': float, 'double': float,
-            'str': str
-        }
-
-        # Check for defined value mappings in the driver
-        if 'valuemap' in rdg:
-            # If the string value exists as a key in the map, return 
-            if val_s in rdg['valuemap']:
-                return rdg['valuemap'][val_s]
-
-        datatype = rdg.get('datatype', DEFAULT_DATATYPE)
-
-        try:
-            value = typecast[datatype](val_s)
-        except ValueError:
-            logger.error(f"Could not parse {val_s} as value of type {datatype}")
-            return
-
-        return value
-
-
-    @staticmethod
-    def process_value(value, **rdg):
-
-        # Apply a float multiplier if desired
-        if rdg.get('multiplier'):
-            value = value * rdg['multiplier']
-
-        # Apply an offset if desired
-        if rdg.get('offset'):
-            value = value + rdg['offset']
-
-        return value
 
     @staticmethod
     def get_bytes(string):

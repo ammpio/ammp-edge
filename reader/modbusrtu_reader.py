@@ -76,55 +76,8 @@ class Reader(object):
             # The minimalmodbus library helpfully converts the binary result to a list of integers, so
             # it's best to first convert it back to binary (assuming big-endian)
             val_b = struct.pack('>%sH' % len(val_i), *val_i)
-            value = self.__process(val_b, **kwargs)
         except:
             logger.error('Exception while processing value from register %d' % register)
             raise
 
-        return value
-
-    def __process(self, val_b, **rdg):
-
-        # Format identifiers used to unpack the binary result into desired format based on datatype
-        fmt = {
-            'int16':  'h',
-            'uint16': 'H',
-            'int32':  'i',
-            'sint32': 'i',
-            'uint32': 'I',
-            'float':  'f',
-            'single': 'f',
-            'double': 'd'
-        }
-        # If datatype is not available, fall back on format characters based on data length (in bytes)
-        fmt_fallback = [None, 'B', 'H', None, 'I', None, None, None, 'd']
-
-        # Check for defined value mappings in the driver
-        # NOTE: The keys for these mappings must be HEX strings
-        if 'valuemap' in rdg:
-            # NOTE: Currently only mapping against hex representations works
-            # Get hex string representing byte reading
-            val_h = '0x' + val_b.hex()
-
-            # If the value exists in the map, return 
-            if val_h in rdg['valuemap']:
-                return rdg['valuemap'][val_h]
-
-        # Get the right format character to convert from binary to the desired data type
-        if rdg.get('datatype') in fmt:
-            fmt_char = fmt[rdg['datatype']]
-        else:
-            fmt_char = fmt_fallback[len(val_b)]
-
-        # Convert
-        value = struct.unpack('>%s' % fmt_char, val_b)[0]
-
-        # Apply a float multiplier if desired
-        if rdg.get('multiplier'):
-            value = value * rdg['multiplier']
-
-        # Apply an offset if desired
-        if rdg.get('offset'):
-            value = value + rdg['offset']
-
-        return value
+        return val_b

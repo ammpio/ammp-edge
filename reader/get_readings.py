@@ -3,8 +3,11 @@ logger = logging.getLogger(__name__)
 
 import os
 import arrow
+import time
 import threading, queue
 from copy import deepcopy
+
+from processor import process_reading, get_output
 
 DEVICE_DEFAULT_TIMEOUT=30
 DEVICE_READ_MAXTIMEOUT=600
@@ -50,7 +53,7 @@ def get_readings(node):
             dev_rdg[dev_id] = []
 
         # Start by setting reading name
-        rdict = {'reading': rdg}
+        rdict = {'reading': rdg, 'var': var}
         # If applicable, add common reading parameters from driver file (e.g. function code)
         rdict.update(
             node.drivers[drv_id].get('common', {})
@@ -71,7 +74,7 @@ def get_readings(node):
     }
 
     try:
-        readout['fields']['comms_lggr_snap_rev'] = int(os.getenv('SNAP_REVISION',0))
+        readout['fields']['comms_lggr_snap_rev'] = int(os.getenv('SNAP_REVISION', 0))
     except:
         logger.warn('Could not get snap revision number, or could not parse as integer', exc_info=True)
 
@@ -138,6 +141,11 @@ def get_readings(node):
     readout['fields']['reading_duration'] = \
         (arrow.utcnow() - readout['_arrow_time']).total_seconds()
 
+    if 'output' in node.config:
+        # Get additional processed values (new model to be used for all readings in future)
+        output_fields = get_output(dev_rdg, node.config['output'])
+        readout['fields'].update(output_fields)
+
     return readout
 
 
@@ -146,6 +154,8 @@ def read_device(dev, readings, readout_q, dev_lock=None):
     # If the device has a concurrency lock associated with it, make sure it's available
     if dev_lock:
         dev_lock.acquire()
+        # If we've just finished reading another device on this port, let it breathe
+        time.sleep(0.5)
 
     fields = {}
 
@@ -162,28 +172,25 @@ def read_device(dev, readings, readout_q, dev_lock=None):
     if dev['reading_type'] == 'modbustcp':
         reader_config = deepcopy(dev['address'])
         reader_config['timeout'] = dev.get('timeout', DEVICE_DEFAULT_TIMEOUT)
-
         from reader.modbustcp_reader import Reader
 
     elif dev['reading_type'] == 'modbusrtu' or dev['reading_type'] == 'serial':
         reader_config = deepcopy(dev['address'])
-
+        reader_config['timeout'] = dev.get('timeout', DEVICE_DEFAULT_TIMEOUT)
         from reader.modbusrtu_reader import Reader
 
     elif dev['reading_type'] == 'rawserial':
         reader_config = deepcopy(dev['address'])
-
+        reader_config['timeout'] = dev.get('timeout', DEVICE_DEFAULT_TIMEOUT)
         from reader.rawserial_reader import Reader
 
     elif dev['reading_type'] == 'snmp':
         reader_config = deepcopy(dev['address'])
         reader_config['timeout'] = dev.get('timeout', DEVICE_DEFAULT_TIMEOUT)
-
         from reader.snmp_reader import Reader
 
     elif dev['reading_type'] == 'sys':
         reader_config = {}
-
         from reader.sys_reader import Reader
 
     try:
@@ -193,8 +200,8 @@ def read_device(dev, readings, readout_q, dev_lock=None):
 
             for rdg in readings:
                 try:
-                    value = reader.read(**rdg)
-                    if value == None:
+                    val_b = reader.read(**rdg)
+                    if val_b == None:
                         logger.warning('READ: [%s] Returned None for reading %s' % (dev['id'], rdg['reading']))
                         continue
 
@@ -202,10 +209,16 @@ def read_device(dev, readings, readout_q, dev_lock=None):
                     logger.exception('READ: [%s] Could not obtain reading %s. Exception' % (dev['id'], rdg['reading']))
                     continue
 
-                # Append to key-value store            
+                # Get processed value
+                value = process_reading(val_b, **rdg)
+
+                # Append to key-value store
                 fields[rdg['reading']] = value
 
-                logger.debug('READ: [%s] %s = %s %s' % (dev['id'], rdg['reading'], value, rdg.get('unit', '')))
+                # Also save within readings structure
+                rdg['value'] = value
+
+                logger.debug('READ: [%s] %s = %s %s' % (dev['id'], rdg['reading'], repr(val_b), rdg.get('unit', '')))
     except:
         logger.exception('Exception while reading device %s' % dev['id'])
 

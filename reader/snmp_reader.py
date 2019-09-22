@@ -27,32 +27,4 @@ class Reader(object):
         snmpval = self._session.get(oid)
         val = snmpval.value
 
-        value = self.__process(val, **kwargs)
-
-        return value
-
-    def __process(self, val, **rdg):
-
-        # Functions to call based on defined datatype
-        funcs = {
-            'int16':  int,
-            'int32':  int,
-            'int':    int,
-            'float':  float,
-            'single': float,
-            'double': float
-        }
-
-        if 'datatype' in rdg and rdg['datatype'] in funcs:
-            value = funcs[rdg['datatype']](val)
-        else:
-            value = val
-
-        if rdg.get('multiplier'):
-            value = value * rdg['multiplier']
-
-        # Apply an offset if desired
-        if rdg.get('offset'):
-            value = value + rdg['offset']
-
-        return value
+        return val
