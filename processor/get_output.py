@@ -2,6 +2,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 from processor.jsonata import evaluate_jsonata
+from processor.process_reading import typecast
 
 def get_output(dev_rdg, output_config):
     """
@@ -26,6 +27,6 @@ def get_output(dev_rdg, output_config):
     for oc in output_config:
         evaluated_value = evaluate_jsonata(dev_rdg, oc['source'])
         if evaluated_value == None: continue
-        output[oc['field']] = evaluated_value
+        output[oc['field']] = typecast(evaluated_value, **oc)
 
     return output
