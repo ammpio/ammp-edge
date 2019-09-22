@@ -1,0 +1,4 @@
+#!/bin/sh
+set -e
+
+echo "LOGGING_LEVEL=$(snapctl get logging.level)" > $SNAP_COMMON/.env
