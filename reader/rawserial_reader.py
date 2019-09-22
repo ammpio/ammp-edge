@@ -63,6 +63,7 @@ class Reader(object):
             resp = self._stored_responses[query]
         else:
             try:
+                logger.debug(f"Writing {query} to serial port")
                 self._conn.write(self.get_bytes(query))
 
                 # If response termination is explicitly provided, use that. Otherwise attempt to read all.
@@ -72,6 +73,7 @@ class Reader(object):
                     # Allow time for response to be sent
                     time.sleep(1)
                     resp = self._conn.read_all()
+                    logger.debug(f"Received {repr(resp)} from serial port")
 
                 if resp == b'':
                     logger.warn("No response received from device")
