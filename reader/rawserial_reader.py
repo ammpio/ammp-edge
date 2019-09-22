@@ -63,7 +63,7 @@ class Reader(object):
             resp = self._stored_responses[query]
         else:
             try:
-                logger.debug(f"Writing {query} to serial port")
+                logger.debug(f"Writing {repr(query)} to serial port")
                 self._conn.write(self.get_bytes(query))
 
                 # If response termination is explicitly provided, use that. Otherwise attempt to read all.
