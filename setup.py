@@ -50,6 +50,7 @@ setup(
     },
     install_requires=[
         'pyyaml',
+        'python-dotenv',
         'pyModbusTCP',
         'minimalmodbus',
         'pyserial',

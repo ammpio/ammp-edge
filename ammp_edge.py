@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018
 
 # Set up logging
 import logging
@@ -14,6 +13,14 @@ import struct
 import sched, time
 import threading, queue
 import signal
+
+# Load additional environment variables from env file (set by snap configuration)
+from dotenv import load_dotenv
+dotenv_path = os.path.join(os.environ.get('SNAP_COMMON', '.'), '.env')
+load_dotenv(dotenv_path)
+
+if os.environ.get('LOGGING_LEVEL'):
+    logging.getLogger().setLevel(os.environ['LOGGING_LEVEL'])
 
 __version__ = '0.9'
 
