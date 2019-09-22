@@ -1,7 +1,7 @@
 import logging
 logger = logging.getLogger(__name__)
 
-from processor import evaluate_jsonata
+from processor.jsonata import evaluate_jsonata
 
 def get_output(dev_rdg, output_config):
     """
