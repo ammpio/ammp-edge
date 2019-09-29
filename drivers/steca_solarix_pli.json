@@ -6,8 +6,8 @@
     "typecast": "float"
   },
   "fields": {
-    "grid_out_V": {"pos": 1, "length": 5, "description": "Grid voltage", "unit": "V"},
-    "grid_out_freq": {"pos": 7, "length": 4, "description": "Grid frequency", "unit": "Hz"},
+    "grid_in_V": {"pos": 1, "length": 5, "description": "Grid voltage", "unit": "V"},
+    "grid_in_freq": {"pos": 7, "length": 4, "description": "Grid frequency", "unit": "Hz"},
     "binv_V": {"pos": 12, "length": 5, "description": "AC output voltage", "unit": "V"},
     "binv_freq": {"pos": 18, "length": 4, "description": "AC output frequency", "unit": "Hz"},
     "binv_S": {"pos": 23, "length": 4, "description": "AC output apparent power", "unit": "VA"},
