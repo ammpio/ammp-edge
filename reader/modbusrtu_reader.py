@@ -69,7 +69,7 @@ class Reader(object):
 
         try:
             val_i = self._conn.read_registers(register, words, fncode)
-        except minimalmodbus.NoResponseError as e:
+        except minimalmodbus.NoResponseError:
             logger.error(f"No response when trying to read {self._device}: slave {self._slaveaddr}: register {register}")
         except:
             logger.error(f"Exception while reading {self._device}: slave {self._slaveaddr}: register {register}")
