@@ -55,11 +55,6 @@ def parse_val_b(val_b, **rdg):
             return
         value = value_from_string(val_s, **rdg)
 
-        # For strings, we already apply the typecast at this stage, so that
-        # we can potentially do operations on the number before the final
-        # (second) typecast
-        value = typecast(value, **rdg)
-
     elif rdg.get('parse_as') == 'hex':
         try:
             val_h = val_b.decode('utf-8')
@@ -130,15 +125,25 @@ def value_from_string(val_s, **rdg):
 
 def apply_mult_offset(value, **rdg):
 
-    # Apply a float multiplier if set
-    if 'multiplier' in rdg:
-        value = value * rdg['multiplier']
+    # If the raw value is a string or bool, we need to apply a typecast before any
+    # of the below (and this typecast does need to be explicitly defined in the driver)
+    if isinstance(value, (str, bool)):
+        value = typecast(value, **rdg)
 
-    # Apply an offset if set
-    if 'offset' in rdg:
-        value = value + rdg['offset']
+    try:
+        # Apply a float multiplier if set
+        if 'multiplier' in rdg:
+            value = value * rdg['multiplier']
 
-    return value
+        # Apply an offset if set
+        if 'offset' in rdg:
+            value = value + rdg['offset']
+
+        return value
+
+    except:
+        logger.excpetion(f"Exception while applying multiplier and offset to {value}. Parameters: {rdg}")
+        return None
 
 
 def typecast(value, **rdg):
