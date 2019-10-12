@@ -55,6 +55,7 @@ class Reader(object):
 
         return self
 
+
     def __exit__(self, type, value, traceback):
         if not hasattr(self, '_conn'): return
 
@@ -68,8 +69,10 @@ class Reader(object):
 
         try:
             val_i = self._conn.read_registers(register, words, fncode)
-        except Exception:
-            logger.error('Exception while reading register %d' % register)
+        except minimalmodbus.NoResponseError as e:
+            logger.error(f"No response when trying to read {self._device}: slave {self._slaveaddr}: register {register}")
+        except:
+            logger.error(f"Exception while reading {self._device}: slave {self._slaveaddr}: register {register}"")
             raise
 
         try:
