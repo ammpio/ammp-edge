@@ -72,7 +72,7 @@ class Reader(object):
         except minimalmodbus.NoResponseError as e:
             logger.error(f"No response when trying to read {self._device}: slave {self._slaveaddr}: register {register}")
         except:
-            logger.error(f"Exception while reading {self._device}: slave {self._slaveaddr}: register {register}"")
+            logger.error(f"Exception while reading {self._device}: slave {self._slaveaddr}: register {register}")
             raise
 
         try:
