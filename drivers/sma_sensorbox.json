@@ -3,9 +3,9 @@
       "words": 2, "datatype": "uint32"
     },
     "fields": {
-      "int_sol_irr": {"register": 34613, "unit": "W/m2", "multiplier": 1.0, "description": "Total irradiation on sensor surface"},
-      "ext_sol_irr": {"register": 34623, "unit": "W/m2", "multiplier": 1.0, "description": "Total irradiation on external sensor/pyranometer"},
-      "tmp_amb_c": {"register": 34609, "unit": "C", "multiplier": 1.0, "description": "Environment temperature", "datatype": "int32"},
-      "tmp_mdul_c": {"register": 34621, "unit": "C", "multiplier": 1.0, "description": "PV module temperature", "datatype": "int32"}
+      "int_sol_irr": {"register": 34613, "unit": "W/m2", "typecast": "float", "multiplier": 1.0, "description": "Total irradiation on sensor surface"},
+      "ext_sol_irr": {"register": 34623, "unit": "W/m2", "typecast": "float", "multiplier": 1.0, "description": "Total irradiation on external sensor/pyranometer"},
+      "tmp_amb_c": {"register": 34609, "unit": "C", "typecast": "float", "multiplier": 1.0, "description": "Environment temperature", "datatype": "int32"},
+      "tmp_mdul_c": {"register": 34621, "unit": "C", "typecast": "float", "multiplier": 1.0, "description": "PV module temperature", "datatype": "int32"}
     }
 }
