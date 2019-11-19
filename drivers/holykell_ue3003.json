@@ -1,0 +1,10 @@
+{
+  "common": {
+    "parse_as": "str",
+    "typecast": "float"
+  },
+  "fields": {
+    "dist_1": {"query": "0xF00601010179", "pos": 10, "length": 5, "description": "Distance to liquid (address 1)"},
+    "dist_2": {"query": "0xF0060102017A", "pos": 10, "length": 5, "description": "Distance to liquid (address 2)"}
+  }
+}
