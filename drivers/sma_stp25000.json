@@ -1,4 +1,5 @@
 {
+  "fields": {
     "condition": {"register": 30201, "words": 2, "datatype": "uint32", "typecast": "int", "description": "Condition:; 35 = Fault; 303 = Off; 307 = Ok; 455 = Warning"},
     "total_yield": {"register": 30529, "words": 2, "datatype": "uint32", "typecast": "float", "multiplier": 1, "unit": "Wh", "description": "Total yield", "valuemap": {"0xffffffff": null}},
     "dc_in_I1": {"register": 30769, "words": 2, "datatype": "int32", "typecast": "float", "multiplier": 0.001, "unit": "A", "description": "DC current input [1]", "valuemap": {"0x80000000": null}},
@@ -30,4 +31,5 @@
     "I_L2": {"register": 30979, "words": 2, "datatype": "int32", "typecast": "float", "multiplier": 0.001, "unit": "A", "description": "Grid current phase L2", "valuemap": {"0x80000000": null}},
     "I_L3": {"register": 30981, "words": 2, "datatype": "int32", "typecast": "float", "multiplier": 0.001, "unit": "A", "description": "Grid current phase L3", "valuemap": {"0x80000000": null}},
     "status": {"register": 40029, "words": 2, "datatype": "uint32", "typecast": "int", "description": "Operating status:; 295 = MPP; 1467 = Start; 381 = Stop; 2119 = Derating; 1469 = Shut down; 1392 = Fault; 1480 = Waiting for utilities company; 1393 = Waiting for PV voltage; 443 = Constant voltage; 1855 = Stand-alone operation"}
+  }
 }
