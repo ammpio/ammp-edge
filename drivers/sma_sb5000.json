@@ -91,16 +91,12 @@
       "register": 30825,
       "words": 2,
       "datatype": "uint32",
-      "multiplier": null,
-      "unit": null,
       "description": "Operating mode of stat.V stab., stat.V stab. config."
     },
     "condition": {
       "register": 30201,
       "words": 2,
-      "datatype": "uint32",
-      "multiplier": null,
-      "unit": null
+      "datatype": "uint32"
     },
     "P1": {
       "register": 30777,
@@ -165,9 +161,7 @@
     "serial": {
       "register": 30057,
       "words": 2,
-      "datatype": "uint32",
-      "multiplier": null,
-      "unit": null
+      "datatype": "uint32"
     }
   }
 }
