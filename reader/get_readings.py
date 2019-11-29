@@ -59,9 +59,12 @@ def get_readings(node):
             node.drivers[drv_id].get('common', {})
             )
  
-        rdict.update(
-            node.drivers[drv_id]['fields'].get(var, {})
-            )
+        try:
+            rdict.update(
+                node.drivers[drv_id]['fields'][var]
+                )
+        except KeyError:
+            logger.warn(f"Variable {var} not found in driver {drv_id}, or driver definition malformed.")
 
         dev_rdg[dev_id].append(rdict)
 
