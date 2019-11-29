@@ -142,7 +142,7 @@ def apply_mult_offset(value, **rdg):
         return value
 
     except:
-        logger.excpetion(f"Exception while applying multiplier and offset to {value}. Parameters: {rdg}")
+        logger.exception(f"Exception while applying multiplier and offset to {value}. Parameters: {rdg}")
         return None
 
 
