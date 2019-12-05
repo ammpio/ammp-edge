@@ -59,6 +59,7 @@ setup(
         'peewee',
         'psutil',
         'requests',
-        'influxdb'
+        'influxdb',
+        'xmltodict'
     ]
 )

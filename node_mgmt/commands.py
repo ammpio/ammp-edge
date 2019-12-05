@@ -9,6 +9,9 @@ import datetime
 
 import socket
 
+from node_mgmt import EnvScanner
+
+
 def send_log(node):
     """ Upload system logs to S3 """
 
@@ -176,3 +179,28 @@ Content-Length: 20
     logger.info('Response from snapd socket: %s' % resp)
 
     sock.close()
+
+def env_scan(node):
+    logger.info('Starting environment scan')
+
+    scanner = EnvScanner()
+    scan_result = scanner.do_scan()
+
+    logger.info('Completed environment scan. Submitting results to API.')
+
+    try:
+        r = requests.post(f"https://{node.remote_api['host']}/api/{node.remote_api['apiver']}/nodes/{node.node_id}/env_scan",
+            json=scan_result, headers={'Authorization': node.access_key}, timeout=node.config.get('push_timeout') or 120)
+    except requests.exceptions.ConnectionError:
+        logger.warning('Connection error while trying to submit environment scan to API.')
+        return
+    except requests.exceptions.ConnectionError:
+        logger.warning('Timeout error while trying to submit environment scan to API.')
+        return
+    except:
+        logger.warning('Exception while trying to to submit environment scan to API.', exc_info=True)
+        return
+
+    if r.status_code != 200:
+        logger.warning('Error code %d while trying to to submit environment scan to API.' % (r.status_code))
+        return

@@ -36,6 +36,7 @@ parts:
     source: .
     stage-packages:
         - libsnmp-dev
+        - nmap
     override-prime: |
         snapcraftctl prime
         "${SNAPCRAFT_PRIME}"/usr/bin/python3 \
