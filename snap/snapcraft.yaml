@@ -28,8 +28,14 @@ apps:
       - network-observe
       - serial-port
       - log-observe
+    # The following is required in order to make libblas3 visible to nmap
+    environment:
+        LD_LIBRARY_PATH: "$LD_LIBRARY_PATH:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/blas"
   nmap:
     command: nmap
+    environment:
+        LD_LIBRARY_PATH: "$LD_LIBRARY_PATH:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/blas"
+    plugs: [network, network-bind, network-control]
 
 parts:
   ammp-edge:
@@ -39,7 +45,6 @@ parts:
     stage-packages:
         - libsnmp-dev
         - nmap
-        - libblas3
     override-prime: |
         snapcraftctl prime
         "${SNAPCRAFT_PRIME}"/usr/bin/python3 \
