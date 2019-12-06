@@ -147,6 +147,7 @@ def __get_upload_url(node):
 def snap_refresh(node):
     __snapd_socket_post({'action': 'refresh'})
 
+
 def snap_switch_stable(node):
     __snapd_socket_post({'action': 'refresh', 'channel': 'stable'})
 
