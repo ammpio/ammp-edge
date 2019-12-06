@@ -60,6 +60,7 @@ setup(
         'psutil',
         'requests',
         'influxdb',
-        'xmltodict'
+        'xmltodict',
+        'requests-unixsocket'
     ]
 )

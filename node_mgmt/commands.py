@@ -8,6 +8,7 @@ import zipfile
 import datetime
 
 import socket
+import requests_unixsocket
 
 from node_mgmt import EnvScanner
 
@@ -147,7 +148,6 @@ def __get_upload_url(node):
 def snap_refresh(node):
     __snapd_socket_post({'action': 'refresh'})
 
-
 def snap_switch_stable(node):
     __snapd_socket_post({'action': 'refresh', 'channel': 'stable'})
 
@@ -162,42 +162,14 @@ def snap_switch_edge(node):
 
 
 def __snapd_socket_post(payload):
-    # Send request over socket API
 
-    sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-    server_address = '/run/snapd.socket'
-    sock.connect(server_address)
-    req = b"""POST /v2/snaps/ammp-edge HTTP/1.1
-Host: localhost
-User-Agent: curl/7.54.0
-Accept: */*
-Content-Type: application/json
-Content-Length: 20
-
-"""
-
-    req = req + json.dumps(payload)
-
-    sock.sendall(req)
-
-    # Listen for response (but do not block execution while doing so)
-    sock.setblocking(0)
     try:
-        resp = ''
-        chunk = ''
-        # Set max size of 16KB
-        for _ in range(1024):
-            chunk += sock.recv(16).decode('ascii')
-            if not chunk:
-                break
-            else:
-                resp += chunk
+        with requests_unixsocket.Session() as s:
+            res = s.post('http+unix://%2Frun%2Fsnapd.socket/v2/snaps/ammp-edge', json=payload)
     except:
-        logger.exception('Exception while reading from socket')
+        logger.exception('Exception while doing snapd API socket request')
 
-    logger.info('Response from snapd socket: %s' % resp)
-
-    sock.close()
+    logger.info(f"Response from snapd API: Status {res.status_code} / {res.text}")
 
 
 def env_scan(node):
