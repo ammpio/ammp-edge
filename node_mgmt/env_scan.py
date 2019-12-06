@@ -201,3 +201,50 @@ class EnvScanner(object):
 
         return ip_addr
 
+def serial_scan(device='/dev/ttyAMA0'):
+
+    from reader.modbusrtu_reader import Reader
+
+    SIGNATURES = [
+        {
+            'name': 'Gamicos ultrasonic sensor',
+            'readings': [
+                {
+                    'register': 1,
+                    'words': 2,
+                    'fncode': 3
+                }
+            ]
+        },
+        {
+            'name': 'IMT irradiation sensor',
+            'readings': [
+                {
+                    'register': 0,
+                    'words': 1,
+                    'fncode': 4
+                }
+            ]
+        }
+    ]
+
+    BAUD_RATES = [2400, 9600]
+    SLAVE_IDS = [1, 2]
+
+    for br in BAUD_RATES:
+        for slave in SLAVE_IDS:
+            for sig in SIGNATURES:
+                print(f"Testing slave ID {slave} for {sig['name']} at baud rate {br}")
+                with Reader(device, slave, br, timeout=1, debug=True) as r:
+                    success = True
+                    for rdg in sig['readings']:
+                        try:
+                            res = r.read(**rdg)
+                            print(f"Got result {res}")
+                            if res == None:
+                                success = False
+                        except Exception as e:
+                            logger.error("Exception: {e}")
+                            success = False
+                    if success:
+                        print(f"SUCCESS: Device {sig['name']} present as ID {slave} at baud rate {br}")
