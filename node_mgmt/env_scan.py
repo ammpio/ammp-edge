@@ -244,7 +244,7 @@ def serial_scan(device='/dev/ttyAMA0'):
                             if res == None:
                                 success = False
                         except Exception as e:
-                            logger.error("Exception: {e}")
+                            logger.error(f"Exception: {e}")
                             success = False
                     if success:
                         print(f"SUCCESS: Device {sig['name']} present as ID {slave} at baud rate {br}")
