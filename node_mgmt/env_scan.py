@@ -106,7 +106,7 @@ class EnvScanner(object):
         cmd = [nmap_path, '-oX', '-'] + args
         
         try:
-            res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            res = subprocess.run(cmd, stdout=subprocess.PIPE)
         except FileNotFoundError:
             logger.error(f"Executable {cmd[0]} not found. Ensure that nmap is installed")
             return None
