@@ -3,22 +3,17 @@ logger = logging.getLogger(__name__)
 
 import socket
 from fcntl import ioctl
-#from scapy.all import Ether, ARP, srp
-#from ipaddress import ip_interface
-
 import struct
 import arrow
-
 import subprocess
 import os
 import xmltodict
 import json
 
-import threading, queue
-
 
 DEFAULT_IFNAME = 'eth0'
 DEFAULT_PORTS = '22,80,443,502'
+DEFAULT_SERIAL_DEV = '/dev/ttyAMA0'
 
 SIOCGIFADDR = 0x8915
 SIOCGIFNETMASK = 0x891b
@@ -26,19 +21,19 @@ SIOCGIFNETMASK = 0x891b
 
 class EnvScanner(object):
 
-    def __init__(self, ifname=DEFAULT_IFNAME, ip_addr=None, netmask_bits=None):
+    def __init__(self, ifname=DEFAULT_IFNAME, ip_addr=None, netmask_bits=None, serial_dev=DEFAULT_SERIAL_DEV):
 
         self.ifname = ifname
+        self.serial_dev = serial_dev
         if not ip_addr: ip_addr = self.get_interface_ip()
         self.ip_addr = ip_addr
         if not netmask_bits: netmask_bits = self.get_interface_netmask()
         self.netmask_bits = netmask_bits
-        # self.scan_q = queue.Queue()
-        # self.scan_in_progress = threading.Lock()
 
 
     def do_scan(self):
         network_hosts = self.network_scan()
+        serial_devices = self.serial_scan()
 
         scan_result = {
             'time': arrow.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),
@@ -49,7 +44,8 @@ class EnvScanner(object):
                     'netmask': self.netmask_bits,
                     'hosts': network_hosts
                 }
-            ]
+            ],
+            'serial_scan': serial_devices
         }
 
         return scan_result
@@ -123,59 +119,6 @@ class EnvScanner(object):
                 return None
 
 
-    # def scapy_network_scan(self, this_ip_addr=None, netmask_bits=None):
-
-    #     if not this_ip_addr: this_ip_addr = self.ip_addr
-    #     if not netmask_bits: netmask_bits = self.netmask_bits
-
-    #     hosts = []
-    #     hosts_to_scan = ip_interface(
-    #                         this_ip_addr + '/' + str(netmask_bits)
-    #                             ).network.hosts()
-
-    #     jobs = []
-
-    #     for ip_addr in hosts_to_scan:
-    #         addr = str(ip_addr)
-    #         logger.info(f"Scanning ip_addr")
-    #         ip_scan_thread = threading.Thread(
-    #                 target=self.get_mac_of_ip,
-    #                 name='IP-scan-' + addr,
-    #                 args=(addr,),
-    #                 daemon=True
-    #                 )
-            
-    #         jobs.append(ip_scan_thread)
-
-    #     self.scan_in_progress.acquire()
-
-    #     for j in jobs: j.start()
-
-    #     for j in jobs: j.join(timeout=5)
-
-    #     # Get the results for each device and append them to the readout structure
-    #     for j in jobs:
-    #         try:
-    #             hosts.extend(self.scan_q.get(block=False))
-    #         except queue.Empty:
-    #             logger.warning('Not all scan processes completed')
-
-    #     self.scan_in_progress.release()
-
-    #     return hosts
-
-
-    # def get_mac_of_ip(self, ip_addr):
-    #     hosts = []
-    #     pkt = Ether(dst="ff:ff:ff:ff:ff:ff") / ARP(pdst=ip_addr)
-    #     answered, _ = srp(pkt, iface=self.ifname, timeout=5, verbose=False)
-    #     for _, recv in answered:
-    #         if recv:
-    #             hosts.append((recv[ARP].psrc, recv[Ether].src))
-
-    #     self.scan_q.put(hosts)
-
-
     def get_interface_ip(self):
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
             info = ioctl(s.fileno(), SIOCGIFADDR, struct.pack('256s', self.ifname.encode('utf-8')))
@@ -201,50 +144,62 @@ class EnvScanner(object):
 
         return ip_addr
 
-def serial_scan(device='/dev/ttyAMA0'):
 
-    from reader.modbusrtu_reader import Reader
+    def serial_scan(self, device=None):
 
-    SIGNATURES = [
-        {
-            'name': 'Gamicos ultrasonic sensor',
-            'readings': [
-                {
-                    'register': 1,
-                    'words': 2,
-                    'fncode': 3
-                }
-            ]
-        },
-        {
-            'name': 'IMT irradiation sensor',
-            'readings': [
-                {
-                    'register': 0,
-                    'words': 1,
-                    'fncode': 4
-                }
-            ]
-        }
-    ]
+        if not device: device = self.serial_dev
 
-    BAUD_RATES = [2400, 9600]
-    SLAVE_IDS = [1, 2]
+        from reader.modbusrtu_reader import Reader
 
-    for br in BAUD_RATES:
-        for slave in SLAVE_IDS:
-            for sig in SIGNATURES:
-                print(f"Testing slave ID {slave} for {sig['name']} at baud rate {br}")
-                with Reader(device, slave, br, timeout=1, debug=True) as r:
-                    success = True
-                    for rdg in sig['readings']:
-                        try:
-                            res = r.read(**rdg)
-                            print(f"Got result {res}")
-                            if res == None:
+        SIGNATURES = [
+            {
+                'name': 'Gamicos ultrasonic sensor',
+                'readings': [
+                    {
+                        'register': 1,
+                        'words': 2,
+                        'fncode': 3
+                    }
+                ]
+            },
+            {
+                'name': 'IMT irradiation sensor',
+                'readings': [
+                    {
+                        'register': 0,
+                        'words': 1,
+                        'fncode': 4
+                    }
+                ]
+            }
+        ]
+
+        BAUD_RATES = [2400, 9600]
+        SLAVE_IDS = [1, 2]
+
+        result = []
+
+        for br in BAUD_RATES:
+            for slave in SLAVE_IDS:
+                for sig in SIGNATURES:
+                    result.append(f"Testing slave ID {slave} for '{sig['name']}' at baud rate {br}")
+                    with Reader(device, slave, br, timeout=1, debug=True) as r:
+                        success = True
+                        for rdg in sig['readings']:
+                            try:
+                                res = r.read(**rdg)
+                                result.append(f"Got result {res}")
+                                if res == None:
+                                    success = False
+                            except Exception as e:
+                                result.append(f"Exception: {e}")
                                 success = False
-                        except Exception as e:
-                            logger.error(f"Exception: {e}")
-                            success = False
-                    if success:
-                        print(f"SUCCESS: Device {sig['name']} present as ID {slave} at baud rate {br}")
+                        if success:
+                            result.append(f"SUCCESS: Device '{sig['name']}' present as ID {slave} at baud rate {br}")
+
+        return result
+
+def serial_scan():
+    ES = EnvScanner()
+    res = ES.serial_scan()
+    print('\n'.join(res))
