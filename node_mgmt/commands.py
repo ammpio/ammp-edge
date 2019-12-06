@@ -145,6 +145,22 @@ def __get_upload_url(node):
 
 
 def snap_refresh(node):
+    __snapd_socket_post({'action': 'refresh'})
+
+def snap_switch_stable(node):
+    __snapd_socket_post({'action': 'refresh', 'channel': 'stable'})
+
+def snap_switch_candidate(node):
+    __snapd_socket_post({'action': 'refresh', 'channel': 'candidate'})
+
+def snap_switch_beta(node):
+    __snapd_socket_post({'action': 'refresh', 'channel': 'beta'})
+
+def snap_switch_edge(node):
+    __snapd_socket_post({'action': 'refresh', 'channel': 'edge'})
+
+
+def __snapd_socket_post(payload):
     # Send request over socket API
 
     sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
@@ -157,7 +173,9 @@ Accept: */*
 Content-Type: application/json
 Content-Length: 20
 
-{"action":"refresh"}"""
+"""
+
+    req = req + json.dumps(payload)
 
     sock.sendall(req)
 
@@ -179,6 +197,7 @@ Content-Length: 20
     logger.info('Response from snapd socket: %s' % resp)
 
     sock.close()
+
 
 def env_scan(node):
     logger.info('Starting environment scan')
