@@ -38,13 +38,10 @@ class EnvScanner(object):
 
 
     def do_scan(self):
-        start_time = arrow.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),
-
         network_hosts = self.network_scan()
 
         scan_result = {
-            'start_time': start_time,
-            'end_time': arrow.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),
+            'time': arrow.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),
             'network_scan': [
                 {
                     'ifname': self.ifname,
@@ -102,7 +99,7 @@ class EnvScanner(object):
         if not isinstance(args, list): args = [args]
 
         if os.getenv('SNAP'):
-            nmap_path = os.path.join(os.getenv('SNAP'), 'bin', 'nmap')
+            nmap_path = os.path.join(os.getenv('SNAP'), 'usr', 'bin', 'nmap')
         else:
             nmap_path = 'nmap'
 

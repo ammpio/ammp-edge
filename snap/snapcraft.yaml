@@ -28,6 +28,8 @@ apps:
       - network-observe
       - serial-port
       - log-observe
+  nmap:
+    command: nmap
 
 parts:
   ammp-edge:
