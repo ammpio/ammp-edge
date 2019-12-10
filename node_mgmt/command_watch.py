@@ -26,23 +26,29 @@ class CommandWatch(threading.Thread):
     def run(self):
 
         while True:
-            logger.debug('Awaiting request for command check')
+            try:
 
-            self._node.events.get_command.wait(timeout=COMMAND_CHECK_DELAY)
+                logger.debug('Awaiting request for command check')
 
-            logger.info('Proceeding with check for new command')
+                self._node.events.get_command.wait(timeout=COMMAND_CHECK_DELAY)
 
-            command = self.__command_from_api()
-            if command:
-                logger.info('Running command: %s' % command)
-                # Runs function with command name from .commands module
-                try:
-                    commod = import_module('.commands', 'node_mgmt')
-                    getattr(commod, command)(self._node)
-                except:
-                    logger.exception('Could not run command %s' % command)
+                logger.info('Proceeding with check for new command')
 
-            self._node.events.get_command.clear()
+                command = self.__command_from_api()
+                if command:
+                    logger.info('Running command: %s' % command)
+                    # Runs function with command name from .commands module
+                    try:
+                        commod = import_module('.commands', 'node_mgmt')
+                        getattr(commod, command)(self._node)
+                    except:
+                        logger.exception('Could not run command %s' % command)
+
+                self._node.events.get_command.clear()
+
+            except:
+                logger.exception("Exception raised in command watch")
+                time.sleep(COMMAND_CHECK_DELAY)
 
 
     def __command_from_api(self):
@@ -50,8 +56,12 @@ class CommandWatch(threading.Thread):
         logger.info('Obtaining command for node %s from API' % self._node.node_id)
 
         try:
-            r = requests.get('https://%s/api/%s/nodes/%s/command' % (self._node.remote_api['host'], self._node.remote_api['apiver'], self._node.node_id),
-                headers={'Authorization': self._node.access_key})
+            try:
+                r = requests.get('https://%s/api/%s/nodes/%s/command' % (self._node.remote_api['host'], self._node.remote_api['apiver'], self._node.node_id),
+                    headers={'Authorization': self._node.access_key})
+            except requests.exceptions.ConnectionError:
+                logger.error("Connection error while trying to retrieve command from API")
+                return None
 
             if r.status_code == 200:
                 try:
