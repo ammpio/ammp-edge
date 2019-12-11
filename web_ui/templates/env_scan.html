@@ -22,10 +22,10 @@
         <td>{{ host['ipv4'] }}</td>
         <td>{{ host['mac'] }}</td>
         <td>{{ host['vendor'] }}</td>
-        <td style="text-align: center;">{{ 'X' if '502' in host['ports'] }}</td>
-        <td style="text-align: center;">{{ 'X' if '80' in host['ports'] }}</td>
-        <td style="text-align: center;">{{ 'X' if '443' in host['ports'] }}</td>
-        <td style="text-align: center;">{{ 'X' if '22' in host['ports'] }}</td>
+        <td style="text-align: center;">{{ 'Y' if '502' in host['ports'] }}</td>
+        <td style="text-align: center;">{{ 'Y' if '80' in host['ports'] }}</td>
+        <td style="text-align: center;">{{ 'Y' if '443' in host['ports'] }}</td>
+        <td style="text-align: center;">{{ 'Y' if '22' in host['ports'] }}</td>
       </tr>
       {% endfor %}
     </table>

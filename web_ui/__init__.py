@@ -35,6 +35,6 @@ def env_scan():
         scan_result = scanner.do_scan()
     except Exception as e:
         logger.exception("Exception while doing scan")
-        return f"Exception: {e}"
+        return f"Error: {e}"
 
     return render_template('env_scan.html', node_id=node_id, scan_result=scan_result)
