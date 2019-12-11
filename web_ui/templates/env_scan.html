@@ -1,0 +1,48 @@
+<html>
+  <head>
+    <title>Environment scan - AMMP Edge {{ node_id }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+  </head>
+  <body>
+    <h2>Site scan results {% if node_id %} for node_id {% endif %}</h2>
+
+    <h3>Network scan</h3>
+    <table>
+      <tr>
+        <th>IP address</th>
+        <th>MAC address</th>
+        <th>Vendor</th>
+        <th>Modbus</th>
+        <th>HTTP</th>
+        <th>HTTPS</th>
+        <th>SSH</th>
+      </tr>
+      {% for host in scan_result['network_scan'][0]['hosts'] %}
+      <tr>
+        <td>{{ host['ipv4'] }}</td>
+        <td>{{ host['mac'] }}</td>
+        <td>{{ host['vendor'] }}</td>
+        <td style="text-align: center;">{{ 'X' if '502' in host['ports'] }}</td>
+        <td style="text-align: center;">{{ 'X' if '80' in host['ports'] }}</td>
+        <td style="text-align: center;">{{ 'X' if '443' in host['ports'] }}</td>
+        <td style="text-align: center;">{{ 'X' if '22' in host['ports'] }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+
+    <h3>Serial scan</h3>
+    <table>
+      <tr>
+        <th>Test</th>
+        <th>Result</th>
+      </tr>
+      {% for line in scan_result['serial_scan'] %}
+      <tr>
+        <td>{{ line[0] }}</td>
+        <td>{{ line[1] }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+
+  </body>
+</html>

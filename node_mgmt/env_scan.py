@@ -182,20 +182,22 @@ class EnvScanner(object):
         for br in BAUD_RATES:
             for slave in SLAVE_IDS:
                 for sig in SIGNATURES:
-                    result.append(f"Testing slave ID {slave} for '{sig['name']}' at baud rate {br}")
+                    test = f"Testing slave ID {slave} for '{sig['name']}' at baud rate {br}"
                     with Reader(device, slave, br, timeout=1, debug=True) as r:
                         success = True
                         for rdg in sig['readings']:
                             try:
-                                res = r.read(**rdg)
-                                result.append(f"Got result {res}")
-                                if res == None:
+                                response = r.read(**rdg)
+                                res = f"Got response {response}"
+                                if response == None:
                                     success = False
                             except Exception as e:
-                                result.append(f"Exception: {e}")
+                                res = f"Error: {e}"
                                 success = False
                         if success:
-                            result.append(f"SUCCESS: Device '{sig['name']}' present as ID {slave} at baud rate {br}")
+                            res = res + f"==> SUCCESS: Device '{sig['name']}' present as ID {slave} at baud rate {br}"
+
+                    result.append([test, res])
 
         return result
 
