@@ -30,14 +30,15 @@ setup(
     version=get_version(),
     author='AMMP Technologies',
     author_email='contact@ammp.io',
-    description='Secure Telemetry, Remote Operation and Monitoring for Mini-Grids',
+    description='Edge application for AMMP',
     url='https://www.ammp.io/',
     long_description=get_long_description(),
     packages=[
         'node_mgmt',
         'data_mgmt',
         'reader',
-        'processor'
+        'processor',
+        'web_ui'
         ],
     py_modules=[
         package_name,
@@ -61,6 +62,7 @@ setup(
         'requests',
         'influxdb',
         'xmltodict',
-        'requests-unixsocket'
+        'requests-unixsocket',
+        'flask'
     ]
 )

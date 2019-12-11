@@ -30,12 +30,25 @@ apps:
       - log-observe
     # The following is required in order to make libblas3 visible to nmap
     environment:
-        LD_LIBRARY_PATH: "$LD_LIBRARY_PATH:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/blas"
+      LD_LIBRARY_PATH: "$LD_LIBRARY_PATH:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/blas"
+  web-ui:
+    command: flask run
+    daemon: simple
+    restart-condition: always
+    plugs:
+      - network-bind
+    environment:
+      FLASK_APP: web_ui
+      LC_ALL: C.UTF-8
+      LANG: C.UTF-8
   nmap:
     command: nmap
     environment:
         LD_LIBRARY_PATH: "$LD_LIBRARY_PATH:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/blas"
-    plugs: [network, network-bind, network-control]
+    plugs:
+      - network
+      - network-bind
+      - network-control
 
 parts:
   ammp-edge:
