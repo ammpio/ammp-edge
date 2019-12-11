@@ -1,0 +1,2 @@
+include web_ui/templates/*
+recursive-include web_ui/static *

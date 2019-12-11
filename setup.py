@@ -44,6 +44,7 @@ setup(
         package_name,
         'db_model'
         ],
+    include_package_data=True,
     entry_points={
         'console_scripts': [
             'ammp_edge = ammp_edge:main'

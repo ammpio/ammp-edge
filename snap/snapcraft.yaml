@@ -43,6 +43,7 @@ apps:
       FLASK_RUN_PORT: 8000
       LC_ALL: C.UTF-8
       LANG: C.UTF-8
+      LD_LIBRARY_PATH: "$LD_LIBRARY_PATH:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/blas"
   nmap:
     command: nmap
     environment:
