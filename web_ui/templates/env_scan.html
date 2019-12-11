@@ -4,7 +4,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
   </head>
   <body>
-    <h2>Site scan results {% if node_id %} for node_id {% endif %}</h2>
+    <h2>Site scan results {% if node_id %} for {{ node_id }} {% endif %}</h2>
 
     <h3>Network scan</h3>
     <table>
