@@ -1,10 +1,32 @@
 <html>
-    <head>
-        <title>AMMP Edge {{ node_id }}</title>
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
-    </head>
-    <body>
-        <h2>Hello!</h2>
-        <a href="/env_scan">Do a site scan</a>
-    </body>
+  <head>
+    <title>AMMP Edge {{ node_id }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+  </head>
+  <body>
+    <h2>AMMP-edge node ID {{ node_id }}</h2>
+
+    <h3>Status information</h3>
+
+    <h3>Network interfaces</h3>
+    <table>
+      <tr>
+        <th>Interface</th>
+        <th>MAC address</th>
+        <th>IP address</th>
+        <th>Scan</th>
+      </tr>
+      {% for interface in network_interfaces %}
+      <tr>
+        <td>{{ interface['name'] }}</td>
+        <td>{{ interface['mac'] }}</td>
+        <td>{{ interface['ip'] }}</td>
+        <td style="text-align: center;"><a href="/network_scan?interface={{ interface['name'] }}"></td>
+      </tr>
+      {% endfor %}
+    </table>
+
+    <a href="/env_scan">Do a regular site scan</a>
+
+  </body>
 </html>

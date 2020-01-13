@@ -17,21 +17,24 @@ DEFAULT_SERIAL_DEV = '/dev/ttyAMA0'
 
 class NetworkEnv():
 
-    def __init__(self, default_ifname=None, default_ip_addr=None, default_netmask_bits=None):
+    def __init__(self, default_ifname=None, default_ip=None, default_netmask_bits=None):
 
         self.interfaces = self.get_interfaces()
 
-        self.default_ip = self.get_default_ip()
-
         if default_ifname is not None:
             self.default_ifname = default_ifname
-        else:
-            self.default_ifname = self.get_interface_from_ip(self.default_ip)
+            self.default_ip = default_ip or self.interfaces.get(self.default_ifname, {}).get('ip')
+            self.default_netmask_bits = default_netmask_bits or self.interfaces.get(self.default_ifname, {}).get('netmask_bits')
 
-        if default_netmask_bits is not None:
-            self.default_netmask_bits = default_netmask_bits
-        else:
-            self.default_netmask_bits = self.interfaces[self.default_ifname].get('netmask_bits')
+            # If we've obtained an IP and netmask for the selected interface, then we can stop here
+            if self.default_ip is not None and self.default_netmask_bits is not None:
+                return
+
+        # Otherwise we get the IP corresponding to the default route, and the associated interface and netmask
+        # Note that in this case the provided interface name will be overridden
+        self.default_ip = self.get_default_ip()
+        self.default_ifname = self.get_interface_from_ip(self.default_ip)
+        self.default_netmask_bits = self.interfaces[self.default_ifname].get('netmask_bits')
 
     @classmethod
     def get_interfaces(cls):
