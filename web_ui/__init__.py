@@ -5,7 +5,7 @@ from flask import Flask, render_template, request
 from node_mgmt import NetworkEnv, EnvScanner
 from db_model import NodeConfig
 import os
-import requests
+from urllib.request import urlopen
 
 logging.basicConfig(format='%(name)s [%(levelname)s] %(message)s', level='INFO')
 logger = logging.getLogger(__name__)
@@ -86,7 +86,7 @@ def network_scan():
 def test_online():
     TEST_URL = 'https://www.ammp.io/'
     try:
-        requests.get(TEST_URL)
+        urlopen(TEST_URL, timeout=20)
         return True
     except Exception as e:
         logger.error(f"Error {e} while checking internet connectivity")
