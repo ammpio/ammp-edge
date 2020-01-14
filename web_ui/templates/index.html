@@ -13,8 +13,21 @@
     <div class="text-center mb-4">
       <h1 class="h3 mb-3">AMMP-edge node ID {{ node_id }}</h1>
 
+      <div style="height: 30px"></div>
       <h3 class="h4 mb-3">Status information</h3>
+      <table class="table-bordered table-striped" style="width: 50%">
+        <tr>
+          <td style="width: 40%"><b>Node ID</b></td><td>{{ node_id }}</td>
+        </tr>
+        <tr>
+          <td><b>Device online</b></td><td>{% if device_online %}Yes{% else %}No{% endif %}</td>
+        </tr>
+        <tr>
+          <td><b>Snap revision</b></td><td>{{ snap_revision }}</td>
+        </tr>
+      </table>
 
+      <div style="height: 50px"></div>
       <h3 class="h4 mb-3">Network interfaces</h3>
 
       <table class="table-bordered table-striped" style="width: 50%">
@@ -34,6 +47,7 @@
         {% endfor %}
       </table>
 
+      <div style="height: 30px"></div>
       <p><a href="/env_scan">Do a regular site scan</a></p>
 
     </div>

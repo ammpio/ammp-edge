@@ -4,12 +4,13 @@ import logging
 from flask import Flask, render_template, request
 from node_mgmt import NetworkEnv, EnvScanner
 from db_model import NodeConfig
+import os
+import requests
 
 logging.basicConfig(format='%(name)s [%(levelname)s] %(message)s', level='INFO')
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-
 
 try:
     nodeconf = NodeConfig.get()
@@ -25,6 +26,9 @@ except ValueError:
 @app.route("/")
 def index():
 
+    device_online = test_online()
+    snap_revision = os.getenv('SNAP_REVISION', 'N/A')
+
     try:
         net_env = NetworkEnv()
         # An ugly-ish way to combine two dicts, in order to get the interface names on the same level
@@ -36,6 +40,8 @@ def index():
     return render_template(
         'index.html',
         node_id=node_id,
+        device_online=device_online,
+        snap_revision=snap_revision,
         network_interfaces=network_interfaces,
         )
 
@@ -75,3 +81,13 @@ def network_scan():
         interface=interface,
         network_scan_hosts=network_scan_hosts
         )
+
+
+def test_online():
+    TEST_URL = 'https://www.ammp.io/'
+    try:
+        requests.get(TEST_URL)
+        return True
+    except Exception as e:
+        logger.error(f"Error {e} while checking internet connectivity")
+        return False
