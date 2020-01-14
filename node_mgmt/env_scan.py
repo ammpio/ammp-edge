@@ -19,6 +19,13 @@ class NetworkEnv():
 
     def __init__(self, default_ifname=None, default_ip=None, default_netmask_bits=None):
 
+        # Define the socket address families that may contain MAC addresses
+        self.__mac_socket_family = []
+        if hasattr(socket, 'AF_PACKET'):
+            self.__mac_socket_family.append(socket.AF_PACKET)
+        if hasattr(socket, 'AF_LINK'):
+            self.__mac_socket_family.append(socket.AF_LINK)
+
         self.interfaces = self.get_interfaces()
 
         if default_ifname is not None:
@@ -36,8 +43,7 @@ class NetworkEnv():
         self.default_ifname = self.get_interface_from_ip(self.default_ip)
         self.default_netmask_bits = self.interfaces[self.default_ifname].get('netmask_bits')
 
-    @classmethod
-    def get_interfaces(cls):
+    def get_interfaces(self):
 
         all_interfaces = net_if_addrs()
         interfaces = defaultdict(dict)
@@ -54,11 +60,11 @@ class NetworkEnv():
                     # It's an IPv4 address
                     interfaces[if_name]['ip'] = addr.address
                     interfaces[if_name]['netmask'] = addr.netmask
-                    interfaces[if_name]['netmask_bits'] = cls.get_netmask_bits_from_string(addr.netmask)
+                    interfaces[if_name]['netmask_bits'] = self.get_netmask_bits_from_string(addr.netmask)
                 elif addr.family == socket.AF_INET6:
                     # It's an IPv6 address
                     interfaces[if_name]['ipv6'] = addr.address
-                elif addr.family == socket.AF_LINK:
+                elif addr.family in self.__mac_socket_family:
                     # It's a MAC address
                     interfaces[if_name]['mac'] = addr.address
 
