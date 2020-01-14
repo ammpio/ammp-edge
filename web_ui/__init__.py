@@ -2,7 +2,7 @@
 import logging
 
 from flask import Flask, render_template, request
-from node_mgmt import NetworkEnv, SerialEnv, EnvScanner
+from node_mgmt import NetworkEnv, EnvScanner
 from db_model import NodeConfig
 
 logging.basicConfig(format='%(name)s [%(levelname)s] %(message)s', level='INFO')
@@ -49,11 +49,15 @@ def env_scan():
         logger.exception("Exception while doing scan")
         return f"Error: {e}"
 
-    return render_template('env_scan.html', node_id=node_id, scan_result=scan_result)
+    return render_template(
+        'env_scan.html',
+        node_id=node_id,
+        scan_result=scan_result
+        )
 
 
 @app.route("/network_scan")
-def net_scan():
+def network_scan():
     interface = request.args.get('interface')
 
     try:

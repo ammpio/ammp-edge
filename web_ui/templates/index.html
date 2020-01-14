@@ -1,32 +1,41 @@
 <html>
   <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
     <title>AMMP Edge {{ node_id }}</title>
+    
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <!-- Bootstrap core CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
   </head>
   <body>
-    <h2>AMMP-edge node ID {{ node_id }}</h2>
+    <div class="text-center mb-4">
+      <h1 class="h3 mb-3">AMMP-edge node ID {{ node_id }}</h1>
 
-    <h3>Status information</h3>
+      <h3 class="h4 mb-3">Status information</h3>
 
-    <h3>Network interfaces</h3>
-    <table>
-      <tr>
-        <th>Interface</th>
-        <th>MAC address</th>
-        <th>IP address</th>
-        <th>Scan</th>
-      </tr>
-      {% for interface in network_interfaces %}
-      <tr>
-        <td>{{ interface['name'] }}</td>
-        <td>{{ interface['mac'] }}</td>
-        <td>{{ interface['ip'] }}</td>
-        <td style="text-align: center;"><a href="/network_scan?interface={{ interface['name'] }}"></td>
-      </tr>
-      {% endfor %}
-    </table>
+      <h3 class="h4 mb-3">Network interfaces</h3>
 
-    <a href="/env_scan">Do a regular site scan</a>
+      <table class="table-bordered table-striped" style="width: 50%">
+        <tr>
+          <th>Interface</th>
+          <th>MAC address</th>
+          <th>IP/Netmask</th>
+          <th>Scan</th>
+        </tr>
+        {% for interface in network_interfaces %}
+        <tr>
+          <td>{{ interface['name'] }}</td>
+          <td>{{ interface['mac'] }}</td>
+          <td>{{ interface['ip'] }}{% if interface.get('netmask_bits') %}/{{ interface['netmask_bits'] }} {% endif %}</td>
+          <td style="text-align: center;">{% if interface['ip'] and interface['netmask_bits'] %}<a href="/network_scan?interface={{ interface['name'] }}">Scan</a>{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </table>
 
+      <p><a href="/env_scan">Do a regular site scan</a></p>
+
+    </div>
   </body>
 </html>

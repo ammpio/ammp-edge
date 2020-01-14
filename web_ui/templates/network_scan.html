@@ -2,33 +2,37 @@
   <head>
     <title>Network scan - AMMP Edge {{ node_id }} - interface {{ if_name }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <!-- Bootstrap core CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
   </head>
   <body>
-    <h2>Network scan results {% if node_id %} for {{ node_id }} {% endif %}{% if interface %}, interface {{ interface }} {% endif %} </h2>
+    <div class="text-center mb-4">
+      <h1 class="h3 mb-3">Network scan results{% if node_id %} for {{ node_id }} {% endif %}{% if interface %}, interface {{ interface }} {% endif %} </h1>
 
-    <h3>Network scan</h3>
-    <table>
-      <tr>
-        <th>IP address</th>
-        <th>MAC address</th>
-        <th>Vendor</th>
-        <th>Modbus</th>
-        <th>HTTP</th>
-        <th>HTTPS</th>
-        <th>SSH</th>
-      </tr>
-      {% for host in network_scan_hosts %}
-      <tr>
-        <td>{{ host['ipv4'] }}</td>
-        <td>{{ host['mac'] }}</td>
-        <td>{{ host['vendor'] }}</td>
-        <td style="text-align: center;">{{ 'Y' if '502' in host['ports'] }}</td>
-        <td style="text-align: center;">{{ 'Y' if '80' in host['ports'] }}</td>
-        <td style="text-align: center;">{{ 'Y' if '443' in host['ports'] }}</td>
-        <td style="text-align: center;">{{ 'Y' if '22' in host['ports'] }}</td>
-      </tr>
-      {% endfor %}
-    </table>
+      <h3 class="h4 mb-3">Network scan</h3>
+      <table class="table-bordered table-striped" style="width: 50%">
+        <tr>
+          <th>IP address</th>
+          <th>MAC address</th>
+          <th>Vendor</th>
+          <th>Modbus</th>
+          <th>HTTP</th>
+          <th>HTTPS</th>
+          <th>SSH</th>
+        </tr>
+        {% for host in network_scan_hosts %}
+        <tr>
+          <td>{{ host['ipv4'] }}</td>
+          <td>{{ host['mac'] }}</td>
+          <td>{{ host['vendor'] }}</td>
+          <td style="text-align: center;">{{ 'Y' if '502' in host['ports'] }}</td>
+          <td style="text-align: center;">{{ 'Y' if '80' in host['ports'] }}</td>
+          <td style="text-align: center;">{{ 'Y' if '443' in host['ports'] }}</td>
+          <td style="text-align: center;">{{ 'Y' if '22' in host['ports'] }}</td>
+        </tr>
+        {% endfor %}
+      </table>
+    </div>
 
   </body>
 </html>

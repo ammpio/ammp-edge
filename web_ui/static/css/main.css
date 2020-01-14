@@ -8,6 +8,14 @@ table, th, td {
     border-collapse: collapse;
 }
 
+th {
+    text-align: center;
+}
+
+table {
+    margin: auto;
+ }
+
 th, td {
     padding: 15px;
 }
