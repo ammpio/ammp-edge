@@ -1,3 +1,7 @@
-#!/bin/sh -e
+#!/bin/bash -e
 
-echo "LOGGING_LEVEL=$(snapctl get logging.level)" > $SNAP_COMMON/.env
+cat > $SNAP_COMMON/.env << EOF
+LOGGING_LEVEL="$(snapctl get logging.level)"
+SSH_FINGERPRINT="$(ssh-keygen -lf <(ssh-keyscan -t ecdsa -T 5 localhost 2>/dev/null) 2>/dev/null | cut -d ' ' -f 2 | cut -d ':' -f 2)"
+EOF
+
