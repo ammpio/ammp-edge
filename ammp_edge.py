@@ -1,37 +1,38 @@
 #!/usr/bin/env python3
 
-# Set up logging
 import logging
+import sys
+import os
+import sched
+import time
+import queue
+import signal
+
+from dotenv import load_dotenv
+
+import node_mgmt
+from data_mgmt import DataPusher, NonVolatileQProc
+from reader import get_readings
+
+# Set up logging
 logging.basicConfig(format='%(threadName)s:%(name)s [%(levelname)s] %(message)s', level='INFO')
 logger = logging.getLogger(__name__)
 
-import sys, os
-import argparse
-import arrow
-import json
-import struct
-import sched, time
-import threading, queue
-import signal
-
 # Load additional environment variables from env file (set by snap configuration)
-from dotenv import load_dotenv
 dotenv_path = os.path.join(os.environ.get('SNAP_COMMON', '.'), '.env')
 load_dotenv(dotenv_path)
 
 if os.environ.get('LOGGING_LEVEL'):
     try:
         logging.getLogger().setLevel(os.environ['LOGGING_LEVEL'])
-    except:
+    except Exception:
         logger.warn(f"Failed to set log level to {os.environ['LOGGING_LEVEL']}", exc_info=True)
 
 __version__ = '0.9'
 
-import node_mgmt
-from data_mgmt import *
-from reader import get_readings
 
-VOLATILE_QUEUE_MAXSIZE=10000
+VOLATILE_QUEUE_MAXSIZE = 10000
+
 
 def reading_cycle(node, qs, sc=None):
     # Check if scheduler has been applied, and if so schedule this function to be run again
@@ -51,15 +52,15 @@ def reading_cycle(node, qs, sc=None):
 
     try:
         readout = get_readings(node)
-        # Put the readout in each of the data queues. We create individual copies 
+        # Put the readout in each of the data queues. We create individual copies
         # so that separate queues don't overwrite each other's copies if modifying
         for q in qs:
             q.put(readout)
-    
-    except:
+
+    except Exception:
         logger.exception('READ: Exception getting readings')
 
-        
+
 def roundtime(interval):
     tnow = time.time()
     next_roundtime = tnow + interval - (tnow % interval)
@@ -88,23 +89,8 @@ class StreamToLogger(object):
     def flush(self):
         pass
 
+
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-l', '--logfile', type=str, help='Log file to use as fallback if systemd logging is not available')
-    parser.add_argument('-d', '--debug', dest='debug', action='store_true', default=False, help='Debug mode')
-
-    args = parser.parse_args()
-    pargs = vars(args)
-
-    # Set up logging parameters 
-    if pargs['debug']:
-        logger.setLevel(logging.DEBUG)
-    else:
-        logger.setLevel(logging.INFO)    
-
-    if pargs['logfile']:
-        fh = logging.FileHandler(pargs['logfile'])
-        logger.addHandler(fh)
 
     node = node_mgmt.Node()
 
@@ -133,7 +119,6 @@ def main():
             nvqproc = NonVolatileQProc(node, q)
             nvqproc.start()
 
-
     if node.config.get('read_interval'):
         # We will be carrying out periodic readings (daemon mode)
         try:
@@ -151,12 +136,14 @@ def main():
 
         except (KeyboardInterrupt, SystemExit):
             node.events.do_shutdown.set()
-            for q in qs: q.put({})            
+            for q in qs:
+                q.put({})
 
     else:
         # Carry out a one-off reading, with no scheduler
         reading_cycle(node, q)
         q.put({})
+
 
 if __name__ == '__main__':
     main()
