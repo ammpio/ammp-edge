@@ -6,6 +6,7 @@ from node_mgmt import NetworkEnv, EnvScanner
 from db_model import NodeConfig
 import os
 from urllib.request import urlopen
+from dotenv import load_dotenv
 
 logging.basicConfig(format='%(name)s [%(levelname)s] %(message)s', level='INFO')
 logger = logging.getLogger(__name__)
@@ -17,11 +18,14 @@ try:
     node_id = nodeconf.node_id
 except NodeConfig.DoesNotExist:
     logger.info('No node configuration found in internal database.')
-    node_id = ''
+    node_id = 'Not yet initialized'
 except ValueError:
     logger.warning('ValueError in node config.', exc_info=True)
     node_id = ''
 
+# Load additional environment variables from env file
+dotenv_path = os.path.join(os.environ.get('SNAP_COMMON', '.'), '.env')
+load_dotenv(dotenv_path)
 
 @app.route("/")
 def index():
@@ -42,6 +46,7 @@ def index():
         node_id=node_id,
         device_online=device_online,
         snap_revision=snap_revision,
+        ssh_fingerprint=os.environ.get('SSH_FINGERPRINT'),
         network_interfaces=network_interfaces,
         )
 
