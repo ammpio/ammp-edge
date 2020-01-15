@@ -30,8 +30,10 @@ class NetworkEnv():
 
         if default_ifname is not None:
             self.default_ifname = default_ifname
-            self.default_ip = default_ip or self.interfaces.get(self.default_ifname, {}).get('ip')
-            self.default_netmask_bits = default_netmask_bits or self.interfaces.get(self.default_ifname, {}).get('netmask_bits')
+            self.default_ip = default_ip or \
+                self.interfaces.get(self.default_ifname, {}).get('ip')
+            self.default_netmask_bits = default_netmask_bits or \
+                self.interfaces.get(self.default_ifname, {}).get('netmask_bits')
 
             # If we've obtained an IP and netmask for the selected interface, then we can stop here
             if self.default_ip is not None and self.default_netmask_bits is not None:
