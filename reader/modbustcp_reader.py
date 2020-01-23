@@ -1,11 +1,12 @@
 import logging
+
+from pyModbusTCP.client import ModbusClient
+import os
+import socket
+import struct
+
 logger = logging.getLogger(__name__)
 
-#from reader.pyModbusTCP_alt import ModbusClient_alt
-from pyModbusTCP.client import ModbusClient
-
-import os, socket
-import struct
 
 class Reader(object):
     def __init__(self, host, port=502, unit_id=1, timeout=10, conn_check=False, conn_retry=10, debug=False, **kwargs):
@@ -30,10 +31,10 @@ class Reader(object):
                 auto_open=False,
                 auto_close=False
             )
-        except:
+        except Exception:
             logger.exception("Attempting to create ModbusTCP client raised exception:")
             raise
-    
+
         try:
             # Make sure we have an open connection to device
             if self.__open_connection(self._conn_retry):
@@ -41,20 +42,20 @@ class Reader(object):
             else:
                 logger.error(f"Unable to open ModbusTCP connection to {self._host}:{self._port}/{self._unit_id}")
                 return None
-        except:
+        except Exception:
             logger.error("Exception while attempting to open ModbusTCP connection:")
             raise
 
         return self
 
     def __exit__(self, type, value, traceback):
-        if not hasattr(self, '_conn'): return
+        if not hasattr(self, '_conn'):
+            return
 
         try:
             self._conn.close()
-        except:
+        except Exception:
             logger.warning(f"Exception while trying to close ModbusTCP connection", exc_info=True)
-
 
     def __open_connection(self, retries_left=0):
         # Make sure we have an open connection to server
@@ -72,7 +73,7 @@ class Reader(object):
                 try:
                     sock.connect((self._host, self._port))
                     logger.debug(f"Successfully opened test connection to {self._host}:{self._port}")
-                except:
+                except Exception:
                     logger.exception(f"Cannot open ModbusTCP socket on {self._host}:{self._port}")
                 finally:
                     sock.close()
@@ -85,14 +86,13 @@ class Reader(object):
             logger.warn(f"Connection attempt to {self._host}:{self._port}/{self._unit_id} failed. Retrying")
             return self.__open_connection(retries_left - 1)
         else:
-            return False       
-
+            return False
 
     def read(self, register, words, fncode=3, **kwargs):
 
         # Make sure connection is open
         if not self.__open_connection():
-            logger.warning(f"Cannot open ModbusTCP connection to {self._host}:{self._port}/{self._unit_id} in order to take reading")
+            logger.warning(f"Cannot open ModbusTCP connection to {self._host}:{self._port}/{self._unit_id}")
             return
 
         try:
@@ -100,14 +100,14 @@ class Reader(object):
             # (having a "0x" prefix is acceptable but optional)
             if type(register) is str:
                 register = int(register, 16)
-            
-            if fncode == 3: # Default is fncode 3
+
+            if fncode == 3:  # Default is fncode 3
                 val_i = self._conn.read_holding_registers(register, words)
             elif fncode == 4:
                 val_i = self._conn.read_input_registers(register, words)
             else:
                 logger.warn(f"Unrecognized Modbus function code '{fncode}'")
-        except:
+        except Exception:
             logger.error(f"Exception while processing register {register}")
             raise
 
@@ -124,7 +124,7 @@ class Reader(object):
 
             val_b = struct.pack('>%sH' % len(val_i), *val_i)
 
-        except:
+        except Exception:
             logger.error(f"Exception while processing register {register}")
             raise
 

@@ -1,11 +1,15 @@
 import logging
-logger = logging.getLogger(__name__)
 
-import minimalmodbus, serial
+import minimalmodbus
+import serial
 import struct
 
+logger = logging.getLogger(__name__)
+
+
 class Reader(object):
-    def __init__(self, device, slaveaddr, baudrate=9600, bytesize=8, parity='none', stopbits=1, timeout=5, debug=False, **kwargs):
+    def __init__(self, device, slaveaddr, baudrate=9600, bytesize=8, parity='none', stopbits=1, timeout=5, debug=False,
+                 **kwargs):
 
         self._device = device
         self._slaveaddr = slaveaddr
@@ -18,12 +22,11 @@ class Reader(object):
         paritysel = {'none': serial.PARITY_NONE, 'odd': serial.PARITY_ODD, 'even': serial.PARITY_EVEN}
         self._parity = paritysel[parity]
 
-
     def __enter__(self):
         # Create a Serial connection to be used for all our requests
         try:
             self._conn = minimalmodbus.Instrument(port=self._device, slaveaddress=self._slaveaddr)
-        except:
+        except Exception:
             logger.error('Exception while attempting to create serial connection:')
             raise
 
@@ -36,7 +39,7 @@ class Reader(object):
             self._conn.serial.bytesize = self._bytesize
             self._conn.serial.parity = self._parity
             self._conn.serial.stopbits = self._stopbits
-        except:
+        except Exception:
             logger.error('Exception while attempting to configure serial connection:')
             raise
 
@@ -49,21 +52,20 @@ class Reader(object):
                 else:
                     logger.error('Unable to open serial connection to %s:%s' % (self._device, self._slaveaddr))
                     return None
-        except:
+        except Exception:
             logger.error('Exception while attempting to open serial connection:')
             raise
 
         return self
 
-
     def __exit__(self, type, value, traceback):
-        if not hasattr(self, '_conn'): return
+        if not hasattr(self, '_conn'):
+            return
 
         try:
             self._conn.serial.close()
-        except:
+        except Exception:
             logger.warning('Could not close serial connection', exc_info=True)
-
 
     def read(self, register, words, fncode, **kwargs):
 
@@ -72,7 +74,7 @@ class Reader(object):
         except minimalmodbus.NoResponseError:
             logger.error(f"No response when trying to read {self._device}: slave {self._slaveaddr}: register {register}")
             raise
-        except:
+        except Exception:
             logger.error(f"Exception while reading {self._device}: slave {self._slaveaddr}: register {register}")
             raise
 
@@ -80,7 +82,7 @@ class Reader(object):
             # The minimalmodbus library helpfully converts the binary result to a list of integers, so
             # it's best to first convert it back to binary (assuming big-endian)
             val_b = struct.pack('>%sH' % len(val_i), *val_i)
-        except:
+        except Exception:
             logger.error('Exception while processing value from register %d' % register)
             raise
 

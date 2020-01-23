@@ -1,16 +1,19 @@
 import logging
-logger = logging.getLogger(__name__)
 
 import os
 import arrow
 import time
-import threading, queue
+import threading
+import queue
 from copy import deepcopy
 
 from processor import process_reading, get_output
 
-DEVICE_DEFAULT_TIMEOUT=30
-DEVICE_READ_MAXTIMEOUT=600
+logger = logging.getLogger(__name__)
+
+DEVICE_DEFAULT_TIMEOUT = 30
+DEVICE_READ_MAXTIMEOUT = 600
+
 
 def get_readings(node):
 
@@ -20,13 +23,15 @@ def get_readings(node):
     for rdg in node.config['readings']:
         # Ignore readings that are explicitly disabled
         # (if 'enabled' key is missing altogether, assume enabled by default)
-        if not node.config['readings'][rdg].get('enabled', True): continue
+        if not node.config['readings'][rdg].get('enabled', True):
+            continue
 
         # Get device and variable name for reading; if not available then move on
         try:
             dev_id = node.config['readings'][rdg]['device']
             var = node.config['readings'][rdg]['var']
-        except KeyError: continue
+        except KeyError:
+            continue
 
         # Ignore devices that are explicitly disabled in the devices configuration
         # (if 'enabled' key is missing altogether, assume enabled by default)
@@ -36,12 +41,13 @@ def get_readings(node):
             logger.error('Reading from device %s requested, but device not defined. Skipping' % dev_id)
             continue
 
-        if not dev.get('enabled', True): continue
+        if not dev.get('enabled', True):
+            continue
 
         # Get the driver name
         drv_id = dev['driver']
-        if not drv_id in node.drivers:
-            logger.error('Reading using driver %s requested, but driver not found. Skipping device %s' % (drv_id, dev_id))
+        if drv_id not in node.drivers:
+            logger.error(f"Reading using driver {drv_id} requested, but driver not found. Skipping device {dev_id}")
             continue
 
         # Save all necessary reading parameters in dev_rdg
@@ -49,7 +55,7 @@ def get_readings(node):
         # 1st level: dict with the device name as the key (so we can query each device separately)
         # 2nd level: list of individual readings that need to be taken from device
         # 3rd level: for each reading, a dict determining how the reading should be taken
-        if not dev_id in dev_rdg:
+        if dev_id not in dev_rdg:
             dev_rdg[dev_id] = []
 
         # Start by setting reading name
@@ -58,7 +64,7 @@ def get_readings(node):
         rdict.update(
             node.drivers[drv_id].get('common', {})
             )
- 
+
         try:
             rdict.update(
                 node.drivers[drv_id]['fields'][var]
@@ -78,7 +84,7 @@ def get_readings(node):
 
     try:
         readout['fields']['comms_lggr_snap_rev'] = int(os.getenv('SNAP_REVISION', 0))
-    except:
+    except Exception:
         logger.warn('Could not get snap revision number, or could not parse as integer', exc_info=True)
 
     # Set up queue in which to save readouts from the multiple threads that are reading each device
@@ -102,7 +108,7 @@ def get_readings(node):
             d = dev['address'].get('device') or dev['address'].get('host')
 
             # Create a lock for this device or host name if it doesn't already exist
-            if d and not d in locks:
+            if d and d not in locks:
                 locks[d] = threading.Lock()
 
     # Set up threads for reading each of the devices
@@ -122,7 +128,7 @@ def get_readings(node):
                 args=(dev, dev_rdg[dev_id], readout_q, dev_lock),
                 daemon=True
                 )
-        
+
         jobs.append(dev_thread)
 
     # Start each of the device reading jobs
@@ -208,11 +214,11 @@ def read_device(dev, readings, readout_q, dev_lock=None):
             for rdg in readings:
                 try:
                     val_b = reader.read(**rdg)
-                    if val_b == None:
+                    if val_b is None:
                         logger.warning('READ: [%s] Returned None for reading %s' % (dev['id'], rdg['reading']))
                         continue
 
-                except:
+                except Exception:
                     logger.exception('READ: [%s] Could not obtain reading %s. Exception' % (dev['id'], rdg['reading']))
                     continue
 
@@ -226,7 +232,7 @@ def read_device(dev, readings, readout_q, dev_lock=None):
                 rdg['value'] = value
 
                 logger.debug('READ: [%s] %s = %s %s' % (dev['id'], rdg['reading'], repr(val_b), rdg.get('unit', '')))
-    except:
+    except Exception:
         logger.exception('Exception while reading device %s' % dev['id'])
 
     logger.info('READ: Finished reading %s' % dev['id'])
