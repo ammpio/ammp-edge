@@ -11,7 +11,7 @@ from processor import process_reading, get_output
 
 logger = logging.getLogger(__name__)
 
-DEVICE_DEFAULT_TIMEOUT = 30
+DEVICE_DEFAULT_TIMEOUT = 5
 DEVICE_READ_MAXTIMEOUT = 600
 
 
