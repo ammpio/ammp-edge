@@ -27,6 +27,7 @@ except ValueError:
 dotenv_path = os.path.join(os.environ.get('SNAP_COMMON', '.'), '.env')
 load_dotenv(dotenv_path)
 
+
 @app.route("/")
 def index():
 

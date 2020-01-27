@@ -1,9 +1,10 @@
 import logging
-logger = logging.getLogger(__name__)
-
 import os
 import subprocess
 import json
+
+logger = logging.getLogger(__name__)
+
 
 def evaluate_jsonata(data_dict, expr):
     if os.getenv('SNAP'):
@@ -11,7 +12,7 @@ def evaluate_jsonata(data_dict, expr):
     else:
         jfq = 'jfq'
     cmd = [jfq, '-j', expr]
-    
+
     inp = json.dumps(data_dict).encode('utf-8')
     try:
         res = subprocess.run(cmd, stdout=subprocess.PIPE, input=inp)
@@ -20,12 +21,12 @@ def evaluate_jsonata(data_dict, expr):
         return None
 
     res_str = res.stdout.decode('utf-8').rstrip()
-    
+
     if not res_str:
         return None
     else:
         try:
             return json.loads(res_str)
-        except:
+        except Exception:
             logger.error(f"JSONata parser did not return valid JSON: {res_str}")
             return None
