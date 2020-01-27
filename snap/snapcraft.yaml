@@ -88,6 +88,11 @@ parts:
     stage:
      - -LICENSE
      - -README.md
+  get-ssh-fingerprint:
+    plugin: dump
+    source: .
+    prime:
+      - bin/get_ssh_fingerprint.sh
 
 plugs:
   provisioning-edge:

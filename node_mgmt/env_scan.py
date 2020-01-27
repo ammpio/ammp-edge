@@ -281,6 +281,23 @@ class EnvScanner(object):
         return scan_result
 
 
+def get_ssh_fingerprint():
+    if os.getenv('SNAP'):
+        cmd = os.path.join(os.getenv('SNAP'), 'bin', 'get_ssh_fingerprint.sh')
+    else:
+        cmd = 'get_ssh_fingerprint.sh'
+
+    try:
+        res = subprocess.run([cmd], stdout=subprocess.PIPE)
+    except FileNotFoundError:
+        logger.error(f"Executable {cmd} not found. Ensure that it is available")
+        return None
+
+    res_str = res.stdout.decode('utf-8').rstrip()
+
+    return res_str
+
+
 def serial_scan():
     SE = SerialEnv()
     res = SE.serial_scan()
