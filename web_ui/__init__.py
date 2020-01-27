@@ -2,11 +2,10 @@
 import logging
 
 from flask import Flask, render_template, request
-from node_mgmt import NetworkEnv, EnvScanner
+from node_mgmt import NetworkEnv, EnvScanner, get_ssh_fingerprint
 from db_model import NodeConfig
 import os
 from urllib.request import urlopen
-from dotenv import load_dotenv
 
 logging.basicConfig(format='%(name)s [%(levelname)s] %(message)s', level='INFO')
 logger = logging.getLogger(__name__)
@@ -23,16 +22,18 @@ except ValueError:
     logger.warning('ValueError in node config.', exc_info=True)
     node_id = ''
 
-# Load additional environment variables from env file
-dotenv_path = os.path.join(os.environ.get('SNAP_COMMON', '.'), '.env')
-load_dotenv(dotenv_path)
-
 
 @app.route("/")
 def index():
 
     device_online = test_online()
     snap_revision = os.getenv('SNAP_REVISION', 'N/A')
+
+    try:
+        ssh_fingerprint = get_ssh_fingerprint()
+    except Exception:
+        logger.exception("Exception while getting SSH fingerprint")
+        ssh_fingerprint = 'N/A'
 
     try:
         net_env = NetworkEnv()
@@ -47,7 +48,7 @@ def index():
         node_id=node_id,
         device_online=device_online,
         snap_revision=snap_revision,
-        ssh_fingerprint=os.environ.get('SSH_FINGERPRINT'),
+        ssh_fingerprint=ssh_fingerprint,
         network_interfaces=network_interfaces,
         )
 
