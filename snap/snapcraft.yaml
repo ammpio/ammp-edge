@@ -51,7 +51,7 @@ apps:
     plugs: [network, network-bind, network-control]
   redis:
     adapter: full
-    command: bin/redis-server $SNAP_COMMON/redis/redis.conf
+    command: bin/redis-server $SNAP/redis.conf --dir $SNAP_COMMON
     daemon: simple
     plugs: [network, network-bind]
   redis-cli:
@@ -74,11 +74,12 @@ parts:
         -q \
         --workers 0 \
         "${SNAPCRAFT_PRIME}"
-  ammp-edge-remote-cfg:
+  configs:
     plugin: dump
     source: config
     prime:
       - remote.yaml
+      - redis.conf
   drivers:
     plugin: dump
     source: drivers
@@ -96,9 +97,8 @@ parts:
     plugin: make
     source: https://github.com/antirez/redis.git
     source-tag: 5.0.7
+    source-depth: 1
     make-install-var: PREFIX
-    build-packages:
-      - build-essential
   bin:
     plugin: dump
     source: bin
