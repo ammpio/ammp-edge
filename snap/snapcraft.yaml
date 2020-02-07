@@ -20,7 +20,7 @@ apps:
     command: bin/ammp_edge
     daemon: simple
     restart-condition: always
-    after: [redis]
+    after: [redis-server]
     plugs:
       - network
       - system-observe
