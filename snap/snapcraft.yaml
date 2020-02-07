@@ -74,34 +74,34 @@ parts:
         -q \
         --workers 0 \
         "${SNAPCRAFT_PRIME}"
-  # ammp-edge-remote-cfg:
-  #   plugin: dump
-  #   source: config
-  #   prime:
-  #     - remote.yaml
-  # drivers:
-  #   plugin: dump
-  #   source: drivers
-  # jfq:
-  #   plugin: nodejs
-  #   nodejs-package-manager: npm
-  #   source-type: git
-  #   source: https://github.com/svet-b/jfq.git
-  #   build-environment:
-  #     - npm_config_unsafe_perm: 'true'
-  #   stage:
-  #     - -LICENSE
-  #     - -README.md
-  # redis-server:
-  #   plugin: make
-  #   source: https://github.com/antirez/redis.git
-  #   source-tag: 5.0.7
-  #   make-install-var: PREFIX
-  #   build-packages:
-  #     - build-essential
-  # bin:
-  #   plugin: dump
-  #   source: bin
+  ammp-edge-remote-cfg:
+    plugin: dump
+    source: config
+    prime:
+      - remote.yaml
+  drivers:
+    plugin: dump
+    source: drivers
+  jfq:
+    plugin: nodejs
+    nodejs-package-manager: npm
+    source-type: git
+    source: https://github.com/svet-b/jfq.git
+    build-environment:
+      - npm_config_unsafe_perm: 'true'
+    stage:
+      - -LICENSE
+      - -README.md
+  redis-server:
+    plugin: make
+    source: https://github.com/antirez/redis.git
+    source-tag: 5.0.7
+    make-install-var: PREFIX
+    build-packages:
+      - build-essential
+  bin:
+    plugin: dump
+    source: bin
 
 plugs:
   provisioning-edge:
