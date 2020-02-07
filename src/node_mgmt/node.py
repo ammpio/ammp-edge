@@ -22,7 +22,7 @@ class Node(object):
 
         try:
             # Load base config from YAML file
-            with open(os.path.join(os.getenv('SNAP', './'), 'remote.yaml'), 'r') as remote_yaml:
+            with open(os.path.join(os.getenv('SNAP', './'), 'config/remote.yaml'), 'r') as remote_yaml:
                 remote = yaml.safe_load(remote_yaml)
                 self.remote_api = remote['api']
                 self.data_endpoints = remote.get('data-endpoints', [])
