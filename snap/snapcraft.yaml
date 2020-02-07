@@ -32,7 +32,7 @@ apps:
     environment:
       LD_LIBRARY_PATH: "$LD_LIBRARY_PATH:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/blas"
   web-ui:
-    command: flask run
+    command: python3 -m flask run
     daemon: simple
     restart-condition: always
     plugs:
@@ -49,7 +49,7 @@ apps:
     environment:
         LD_LIBRARY_PATH: "$LD_LIBRARY_PATH:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/blas"
     plugs: [network, network-bind, network-control]
-  redis:
+  redis-server:
     adapter: full
     command: bin/redis-server $SNAP/redis.conf --dir $SNAP_COMMON
     daemon: simple
@@ -83,6 +83,9 @@ parts:
   drivers:
     plugin: dump
     source: drivers
+    organize:
+      '*': drivers/
+    prime: [drivers]
   jfq:
     plugin: nodejs
     nodejs-package-manager: npm
@@ -102,6 +105,9 @@ parts:
   bin:
     plugin: dump
     source: bin
+    organize:
+      '*': bin/
+    prime: [bin]
 
 plugs:
   provisioning-edge:
