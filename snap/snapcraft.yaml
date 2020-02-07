@@ -20,6 +20,7 @@ apps:
     command: bin/ammp_edge
     daemon: simple
     restart-condition: always
+    after: [redis]
     plugs:
       - network
       - system-observe
@@ -47,27 +48,22 @@ apps:
     command: nmap
     environment:
         LD_LIBRARY_PATH: "$LD_LIBRARY_PATH:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/blas"
-    plugs:
-      - network
-      - network-bind
-      - network-control
-  redis-server:
-    command: bin/redis-server
+    plugs: [network, network-bind, network-control]
+  redis:
+    adapter: full
+    command: bin/redis-server $SNAP_COMMON/redis/redis.conf
     daemon: simple
-    restart-condition: always
-    plugs:
-      - network
-      - network-bind
+    plugs: [network, network-bind]
   redis-cli:
+    adapter: full
     command: bin/redis-cli
-    plugs:
-      - network
+    plugs: [network]
 
 parts:
   ammp-edge:
     plugin: python
     python-version: python3
-    source: .
+    source: src
     stage-packages:
       - libsnmp-dev
       - nmap
@@ -80,14 +76,12 @@ parts:
         "${SNAPCRAFT_PRIME}"
   ammp-edge-remote-cfg:
     plugin: dump
-    source: .
+    source: config
     prime:
       - remote.yaml
   drivers:
     plugin: dump
-    source: .
-    prime:
-      - drivers
+    source: drivers
   jfq:
     plugin: nodejs
     nodejs-package-manager: npm
@@ -107,7 +101,7 @@ parts:
       - build-essential
   bin:
     plugin: dump
-    source: bin/
+    source: bin
 
 plugs:
   provisioning-edge:
