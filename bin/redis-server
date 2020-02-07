@@ -1,0 +1,5 @@
+#!/bin/sh
+set -eu
+
+## Start redis-server
+"$SNAP/bin/redis-server" "$SNAP_COMMON/redis/redis.conf" "$@"

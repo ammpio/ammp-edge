@@ -1,0 +1,15 @@
+#!/bin/bash
+
+set -eu
+
+mkdir -p ${SNAP_COMMON}/redis
+
+cat > ${SNAP_COMMON}/redis/redis.conf << EOF
+dir ${SNAP_COMMON}/redis/
+bind 127.0.0.1 ::1
+port 6379
+appendonly yes
+appendfsync everysec
+aof-load-truncated yes
+notify-keyspace-events $lshzK
+EOF

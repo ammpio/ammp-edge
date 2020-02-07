@@ -20,7 +20,6 @@ apps:
     command: bin/ammp_edge
     daemon: simple
     restart-condition: always
-#    restart-delay: 60
     plugs:
       - network
       - system-observe
@@ -52,6 +51,17 @@ apps:
       - network
       - network-bind
       - network-control
+  redis-server:
+    command: bin/redis-server
+    daemon: simple
+    restart-condition: always
+    plugs:
+      - network
+      - network-bind
+  redis-cli:
+    command: bin/redis-cli
+    plugs:
+      - network
 
 parts:
   ammp-edge:
@@ -59,11 +69,11 @@ parts:
     python-version: python3
     source: .
     stage-packages:
-        - libsnmp-dev
-        - nmap
+      - libsnmp-dev
+      - nmap
     override-prime: |
-        snapcraftctl prime
-        "${SNAPCRAFT_PRIME}"/usr/bin/python3 \
+      snapcraftctl prime
+      "${SNAPCRAFT_PRIME}"/usr/bin/python3 \
         -m compileall \
         -q \
         --workers 0 \
@@ -86,13 +96,18 @@ parts:
     build-environment:
       - npm_config_unsafe_perm: 'true'
     stage:
-     - -LICENSE
-     - -README.md
-  get-ssh-fingerprint:
+      - -LICENSE
+      - -README.md
+  redis-server:
+    plugin: make
+    source: https://github.com/antirez/redis.git
+    source-tag: 5.0.7
+    make-install-var: PREFIX
+    build-packages:
+      - build-essential
+  bin:
     plugin: dump
-    source: .
-    prime:
-      - bin/get_ssh_fingerprint.sh
+    source: bin/
 
 plugs:
   provisioning-edge:
