@@ -6,6 +6,9 @@ verify_ssl = true
 [dev-packages]
 flake8 = "*"
 bandit = "*"
+flake8-annotations = "*"
+mypy = "*"
+flake8-mypy = "*"
 
 [packages]
 pyyaml = "*"
@@ -22,6 +25,7 @@ influxdb = "*"
 xmltodict = "*"
 requests-unixsocket = "*"
 flask = "*"
+redis = "*"
 
 [requires]
 python_version = "3.6"
