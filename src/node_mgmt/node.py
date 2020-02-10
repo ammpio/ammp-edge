@@ -1,16 +1,17 @@
 import logging
-logger = logging.getLogger(__name__)
-
-import yaml, json
+import yaml
+import json
 import requests
-import sys, os
+import sys
+import os
 import time
-
 
 from db_model import NodeConfig
 from .events import NodeEvents
 from .config_watch import ConfigWatch
 from .command_watch import CommandWatch
+
+logger = logging.getLogger(__name__)
 
 # If activation is not successful, wait ACTIVATE_RETRY_DELAY seconds before retrying
 ACTIVATE_RETRY_DELAY = 60
@@ -26,7 +27,7 @@ class Node(object):
                 remote = yaml.safe_load(remote_yaml)
                 self.remote_api = remote['api']
                 self.data_endpoints = remote.get('data-endpoints', [])
-        except:
+        except Exception:
             logger.exception('Base configuration file remote.yaml cannot be loaded. Quitting')
             sys.exit('Base configuration file remote.yaml cannot be loaded. Quitting')
 
@@ -41,7 +42,7 @@ class Node(object):
                     logger.info("No valid data-endpoints definition found in provisioning remote.yaml")
         except FileNotFoundError:
             logger.info("No provisioning remote.yaml found")
-        except:
+        except Exception:
             logger.exception('Exception while trying to process provisioning remote.yaml')
 
         try:
@@ -58,7 +59,6 @@ class Node(object):
 
         self.node_id = self._dbconfig.node_id
         self.access_key = self._dbconfig.access_key
-
 
         logger.info('Node ID: %s', self.node_id)
 
@@ -84,18 +84,17 @@ class Node(object):
                     self.config = config
             except FileNotFoundError:
                 logger.info("No provisioning config.json file found")
-            except:
+            except Exception:
                 logger.exception("Exception while trying to process provisioning config.json")
 
         # Even if we loaded a stored config, check for a new one
         self.events.check_new_config.set()
 
         # If we still have not got a config, wait for one to be provided
-        if self.config == None:
+        if self.config is None:
             logger.info('No stored configuration available')
             with self.events.getting_config:
                 self.events.getting_config.wait_for(lambda: self.config is not None)
-
 
         # Load drivers from files, and also add any from the config
         self.drivers = self.__get_drivers()
@@ -115,7 +114,7 @@ class Node(object):
 
     @config.setter
     def config(self, value):
-        self._config = value        
+        self._config = value
 
     @property
     def access_key(self):
@@ -131,8 +130,7 @@ class Node(object):
 
     @drivers.setter
     def drivers(self, value):
-        self._drivers = value        
-
+        self._drivers = value
 
     def __initialize(self):
         node_id = self.__generate_node_id()
@@ -151,14 +149,13 @@ class Node(object):
             n_deleted = q.execute()
             if n_deleted:
                 logger.info('Deleted %d existing config(s)' % n_deleted)
-        except:
+        except Exception:
             logger.warning('Could not clean existing config database')
 
         # Save node_id and access_key in database
         self._dbconfig = NodeConfig.create(node_id=node_id, access_key=access_key)
         self._dbconfig.save()
         logger.debug('Saved new config for node ID %s' % node_id)
-
 
     def __generate_node_id(self):
         # Get ID (ideally hardware MAC address) that is used to identify logger when pushing data
@@ -173,7 +170,7 @@ class Node(object):
             return info[18:24].hex()
 
         node_id = None
-        
+
         # First try to get the address of the primary Ethernet adapter
         ifn_wanted = ['eth0', 'en0', 'eth1', 'en1', 'em0', 'em1', 'wlan0', 'wlan1']
         for ifn in ifn_wanted:
@@ -181,7 +178,7 @@ class Node(object):
                 node_id = get_hw_addr(ifn)
             except Exception as e:
                 logger.warn(f"Could not get MAC address of interface {ifn}. Exception {e}")
-            
+
             if node_id:
                 break
 
@@ -190,11 +187,11 @@ class Node(object):
 
             try:
                 from uuid import getnode
-                
+
                 uuid_node = getnode()
                 node_id = "{0:0{1}x}".format(uuid_node, 12)
 
-            except:
+            except Exception:
                 logger.exception('Cannot get MAC via UUID method; generating random node ID starting with ff')
 
                 # If that also doesn't work, generate a random 12-character hex string
@@ -213,9 +210,11 @@ class Node(object):
 
         # Initiate activation
         logger.info('Requesting activation for node %s' % node_id)
-        
+
         try:
-            r1 = requests.get('https://%s/api/%s/nodes/%s/activate' % (self.remote_api['host'], self.remote_api['apiver'], node_id))
+            r1 = requests.get(
+                'https://%s/api/%s/nodes/%s/activate' % (self.remote_api['host'], self.remote_api['apiver'], node_id)
+                )
             rtn = json.loads(r1.text)
 
             if r1.status_code == 200:
@@ -228,7 +227,7 @@ class Node(object):
                 if rtn:
                     logger.debug('API response: %s' % rtn)
                 return None
-        except:
+        except Exception:
             logger.exception('Exception raised while requesting activation from API')
             return None
 
@@ -236,8 +235,10 @@ class Node(object):
         logger.info('Confirming activation for node %s' % node_id)
 
         try:
-            r2 = requests.post('https://%s/api/%s/nodes/%s/activate' % (self.remote_api['host'], self.remote_api['apiver'], node_id),
-                headers={'Authorization': access_key})
+            r2 = requests.post(
+                'https://%s/api/%s/nodes/%s/activate' % (self.remote_api['host'], self.remote_api['apiver'], node_id),
+                headers={'Authorization': access_key}
+                )
             rtn = json.loads(r2.text)
 
             if r2.status_code == 200:
@@ -249,12 +250,11 @@ class Node(object):
                 if rtn:
                     logger.debug('API response: %s' % rtn)
                 return None
-        except:
+        except Exception:
             logger.exception('Exception raised while confirming activation with API')
             return None
 
         return access_key
-    
 
     def __get_drivers(self):
 
@@ -268,22 +268,22 @@ class Node(object):
                 with open(os.path.join(drvpath, drv)) as driver_file:
                     drivers[os.path.splitext(drv)[0]] = json.load(driver_file)
                     logger.info('Loaded driver %s' % drv)
-            except:
+            except Exception:
                 logger.error('Could not load driver %s' % drv, exc_info=True)
 
         return drivers
 
     def save_config(self):
         """
-        This method saves the current config to the database. It is not only an internal method, as it needs to be called
-        also by the config_watch thread, when a new config has been obtained from the API.
+        This method saves the current config to the database. It is not only an internal method, as it needs to be
+        called also by the config_watch thread, when a new config has been obtained from the API.
         """
 
         try:
             self._dbconfig.config = self.config
             self._dbconfig.save()
             logger.debug('Saved active config to internal database')
-        except:
+        except Exception:
             logger.exception('Exception raised when attempting to commit configuration to database')
 
     def update_drv_from_config(self):
