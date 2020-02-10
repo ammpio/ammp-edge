@@ -20,8 +20,8 @@ def monitor_and_update(wifi_ap: WifiAPSnapCtl, kvs: KVStore) -> None:
         try:
             wifi_ap_cfg = kvs.waitfor(KVS_CONFIG_KEY)
             wifi_ap.configure(wifi_ap_cfg)
-        except Exception:
-            logger.info("Exception while monitoring for new config")
+        except Exception as e:
+            logger.info(f"Exception while monitoring for new config: {type(e).__name__}: {e}")
             sleep(60)
 
 

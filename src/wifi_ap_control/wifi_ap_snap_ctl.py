@@ -39,20 +39,21 @@ class WifiAPSnapCtl(object):
 
         # Make sure we are able to read status from the wifi-ap API
         retries = 0
-        # while True:
-        #     try:
-        #         with requests_unixsocket.Session() as s:
-        #             res = s.get(f"http+unix://{quote(SOCKET_PATH, safe='')}/v1/status")
-        #         logger.info(f"Response from wifi-ap snap API: Status {res.status_code} / {res.text}")
-        #         break
-        #     except ConnectionError as e:
-        #         logger.error(f"Connection error while making wifi-ap API socket request: {e}")
-        #         if retries < INIT_RETRY_COUNT:
-        #             sleep(INIT_RETRY_HOLDOFF)
-        #             retries += 1
-        #             logger.info(f"Retrying ({retries}/{INIT_RETRY_COUNT})")
-        #         else:
-        #             raise(e)
+        while True:
+            try:
+                logger.info(f"Testing socket connection to {SOCKET_PATH}")
+                with requests_unixsocket.Session() as s:
+                    res = s.get(f"http+unix://{quote(SOCKET_PATH, safe='')}/v1/status")
+                logger.info(f"Response from wifi-ap snap API: Status {res.status_code} / {res.text}")
+                break
+            except ConnectionError as e:
+                logger.error(f"Connection error while making wifi-ap API socket request: {e}")
+                if retries < INIT_RETRY_COUNT:
+                    sleep(INIT_RETRY_HOLDOFF)
+                    retries += 1
+                    logger.info(f"Retrying ({retries}/{INIT_RETRY_COUNT})")
+                else:
+                    raise(e)
 
     def configure(self, config: dict) -> bool:
 
@@ -66,10 +67,11 @@ class WifiAPSnapCtl(object):
             logger.warn(f"Wifi AP config type must be dict. Provided: {type(config)}. Using default config")
 
         try:
+            logger.info(f"Sending new configuration to Wifi AP API")
             with requests_unixsocket.Session() as s:
                 res = s.post(f"http+unix://{quote(SOCKET_PATH, safe='')}/v1/configuration", json=conf_payload)
-                logger.info(f"Response from wifi-ap snap API: Status {res.status_code} / {res.text}")
-                return res.status_code == 200
+            logger.info(f"Response from wifi-ap snap API: Status {res.status_code} / {res.text}")
+            return res.status_code == 200
         except ConnectionError as e:
             logger.error(f"Connection error while making wifi-ap API socket request: {e}")
         except Exception as e:

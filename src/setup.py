@@ -50,7 +50,7 @@ setup(
     entry_points={
         'console_scripts': [
             'ammp_edge = ammp_edge:main',
-            'wifi_ap_control = ammp_edge.wifi_ap_control:main'
+            'wifi_ap_control = wifi_ap_control:main'
         ]
     },
     install_requires=[
