@@ -1,16 +1,15 @@
 import logging
-logger = logging.getLogger(__name__)
-
 import requests
 import json
-import sys, os
+import os
 import zipfile
 import datetime
 
-import socket
 import requests_unixsocket
 
 from node_mgmt import EnvScanner
+
+logger = logging.getLogger(__name__)
 
 
 def send_log(node):
@@ -31,7 +30,7 @@ def send_log(node):
     # Send logs
     try:
         fh = open(zipped_logs, 'rb')
-    except:
+    except Exception:
         logger.exception('Cannot open log archive. Exiting log upload.')
         return
 
@@ -48,28 +47,29 @@ def send_log(node):
         else:
             logger.warn('Upload not successful')
             logger.info(r.text)
-    except:
+    except Exception:
         logger.exception('Exception while uploading log archive')
     finally:
-	    fh.close()    
+        fh.close()
 
     # Delete temporary file
     try:
         os.remove(zipped_logs)
-    except:
+    except Exception:
         logger.warn('Cannot delete local log archive', exc_info=True)
 
 
 def __create_log_archive(node):
     """ Find the systemd logs and create a zipped archive of them """
 
-    # List of directories where to look for logs. The function will stop and try to get logs from the first one that exists
+    # List of directories where to look for logs.
+    # The function will stop and try to get logs from the first one that exists
     LOG_DIRS_TO_CHECK = ['/run/log/journal/']
     output_path = None
 
     for log_dir in LOG_DIRS_TO_CHECK:
         if os.path.isdir(log_dir):
-            filename = 'logs' + '_' + node.node_id + '_' + datetime.datetime.utcnow().strftime('%Y%m%dT%H%M%SZ') + '.zip'
+            filename = f"logs_{node.node_id}_{datetime.datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')}.zip"
             output_path = os.path.join(os.environ['SNAP_DATA'], filename)
 
             logger.info('Zipping logs in %s into %s' % (log_dir, output_path))
@@ -116,13 +116,16 @@ def __zip_directory(dir_path, output_path):
         zip_file.close()
         return True
 
+
 def __get_upload_url(node):
 
     logger.debug('Obtaining upload URL from API')
 
     try:
-        r = requests.get('https://%s/api/%s/nodes/%s/upload_url' % (node.remote_api['host'], node.remote_api['apiver'], node.node_id),
-            headers={'Authorization': node.access_key})
+        r = requests.get(
+            f"https://{node.remote_api['host']}/api/{node.remote_api['apiver']}/nodes/{node.node_id}/upload_url",
+            headers={'Authorization': node.access_key}
+            )
         rtn = json.loads(r.text)
 
         if r.status_code == 200:
@@ -140,7 +143,7 @@ def __get_upload_url(node):
             if rtn:
                 logger.debug('API response: %s' % rtn)
             return None
-    except:
+    except Exception:
         logger.exception('Exception raised while requesting upload URL from API')
         return None
 
@@ -148,14 +151,18 @@ def __get_upload_url(node):
 def snap_refresh(node):
     __snapd_socket_post({'action': 'refresh'})
 
+
 def snap_switch_stable(node):
     __snapd_socket_post({'action': 'refresh', 'channel': 'stable'})
+
 
 def snap_switch_candidate(node):
     __snapd_socket_post({'action': 'refresh', 'channel': 'candidate'})
 
+
 def snap_switch_beta(node):
     __snapd_socket_post({'action': 'refresh', 'channel': 'beta'})
+
 
 def snap_switch_edge(node):
     __snapd_socket_post({'action': 'refresh', 'channel': 'edge'})
@@ -166,10 +173,9 @@ def __snapd_socket_post(payload):
     try:
         with requests_unixsocket.Session() as s:
             res = s.post('http+unix://%2Frun%2Fsnapd.socket/v2/snaps/ammp-edge', json=payload)
-    except:
+        logger.info(f"Response from snapd API: Status {res.status_code} / {res.text}")
+    except Exception:
         logger.exception('Exception while doing snapd API socket request')
-
-    logger.info(f"Response from snapd API: Status {res.status_code} / {res.text}")
 
 
 def env_scan(node):
@@ -181,15 +187,18 @@ def env_scan(node):
     logger.info('Completed environment scan. Submitting results to API.')
 
     try:
-        r = requests.post(f"https://{node.remote_api['host']}/api/{node.remote_api['apiver']}/nodes/{node.node_id}/env_scan",
-            json=scan_result, headers={'Authorization': node.access_key}, timeout=node.config.get('push_timeout') or 120)
+        r = requests.post(
+            f"https://{node.remote_api['host']}/api/{node.remote_api['apiver']}/nodes/{node.node_id}/env_scan",
+            json=scan_result,
+            headers={'Authorization': node.access_key},
+            timeout=node.config.get('push_timeout') or 120)
     except requests.exceptions.ConnectionError:
         logger.warning('Connection error while trying to submit environment scan to API.')
         return
     except requests.exceptions.ConnectionError:
         logger.warning('Timeout error while trying to submit environment scan to API.')
         return
-    except:
+    except Exception:
         logger.warning('Exception while trying to to submit environment scan to API.', exc_info=True)
         return
 
