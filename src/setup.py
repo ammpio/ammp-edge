@@ -38,16 +38,19 @@ setup(
         'data_mgmt',
         'reader',
         'processor',
-        'web_ui'
+        'web_ui',
+        'wifi_ap_control'
         ],
     py_modules=[
         package_name,
-        'db_model'
+        'db_model',
+        'kvstore'
         ],
     include_package_data=True,
     entry_points={
         'console_scripts': [
-            'ammp_edge = ammp_edge:main'
+            'ammp_edge = ammp_edge:main',
+            'wifi_ap_control = ammp_edge.wifi_ap_control:main'
         ]
     },
     install_requires=[
@@ -64,6 +67,7 @@ setup(
         'influxdb',
         'xmltodict',
         'requests-unixsocket',
-        'flask'
+        'flask',
+        'redis'
     ]
 )

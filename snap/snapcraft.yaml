@@ -49,6 +49,12 @@ apps:
     environment:
         LD_LIBRARY_PATH: "$LD_LIBRARY_PATH:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/blas"
     plugs: [network, network-bind, network-control]
+  wifi-ap-control:
+    command: bin/wifi_ap_control
+    daemon: simple
+    restart-condition: always
+    after: [redis-server]
+    plugs: [network]
   redis-server:
     adapter: full
     command: bin/redis-server $SNAP/redis.conf --dir $SNAP_COMMON
@@ -114,3 +120,7 @@ plugs:
     interface: content
     content: ammp-edge-provisioning
     target: $SNAP/provisioning
+  control:
+    interface: content
+    content: socket-directory
+    target: $SNAP_DATA/sockets/wifi-ap
