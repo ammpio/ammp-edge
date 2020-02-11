@@ -52,7 +52,7 @@ apps:
   wifi-ap-control:
     command: bin/wifi_ap_control
     daemon: simple
-    restart-condition: always
+    restart-condition: on-abnormal
     after: [redis-server]
     plugs: [network]
   redis-server:
