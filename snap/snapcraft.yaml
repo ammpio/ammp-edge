@@ -120,7 +120,7 @@ plugs:
     interface: content
     content: ammp-edge-provisioning
     target: $SNAP/provisioning
-  control:
+  wifi-ap-control:
     interface: content
     content: socket-directory
     target: $SNAP_DATA/sockets/wifi-ap
