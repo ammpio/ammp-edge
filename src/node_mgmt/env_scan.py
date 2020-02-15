@@ -226,7 +226,7 @@ class SerialEnv():
             }
         ]
 
-        BAUD_RATES = [2400, 9600]
+        BAUD_RATES = [9600, 2400]
         SLAVE_IDS = [1, 2]
 
         result = []
