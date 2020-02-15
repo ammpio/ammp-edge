@@ -6,11 +6,16 @@ from node_mgmt import NetworkEnv, EnvScanner, get_ssh_fingerprint
 from db_model import NodeConfig
 import os
 from urllib.request import urlopen
+from kvstore import KVStore
 
 logging.basicConfig(format='%(name)s [%(levelname)s] %(message)s', level='INFO')
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
+
+kvs = KVStore()
+KVS_WIFI_AP_CONFIG = 'node:wifi_ap_config'
+KVS_WIFI_AP_AVAILABLE = 'node:wifi_ap_available'
 
 try:
     nodeconf = NodeConfig.get()
@@ -90,10 +95,41 @@ def network_scan():
         )
 
 
+@app.route("/wifi_ap")
+def wifi_ap_status():
+    args = dict(
+        disabled=request.args.get('disabled', type=int)
+        )
+
+    logger.info(f"Arguments received: {args}")
+
+    # Carry out disable/enable command if set
+    if args['disabled'] == 1:
+        kvs.set(KVS_WIFI_AP_CONFIG, {'disabled': True})
+    elif args['disabled'] == 0:
+        kvs.set(KVS_WIFI_AP_CONFIG, {'disabled': False})
+
+    wifi_ap_available = kvs.get(KVS_WIFI_AP_AVAILABLE)
+    wifi_ap_cfg = kvs.get(KVS_WIFI_AP_CONFIG)
+
+    if wifi_ap_available:
+        if wifi_ap_cfg is None:
+            wifi_ap_cfg = {'disabled': False}
+        elif not isinstance(wifi_ap_cfg, dict):
+            wifi_ap_cfg = {'': 'Invalid configuration stored'}
+
+    return render_template(
+        'wifi_ap_status.html',
+        node_id=node_id,
+        wifi_ap_available=wifi_ap_available,
+        wifi_ap_cfg=wifi_ap_cfg
+        )
+
+
 def test_online():
     TEST_URL = 'https://www.ammp.io/'
     try:
-        urlopen(TEST_URL, timeout=20)
+        urlopen(TEST_URL, timeout=30)
         return True
     except Exception as e:
         logger.error(f"Error {e} while checking internet connectivity")
