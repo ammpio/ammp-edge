@@ -119,7 +119,7 @@ def wifi_ap_status():
             wifi_ap_cfg = {'': 'Invalid configuration stored'}
 
     return render_template(
-        'wifi_ap_status.html',
+        'wifi_ap.html',
         node_id=node_id,
         wifi_ap_available=wifi_ap_available,
         wifi_ap_cfg=wifi_ap_cfg
