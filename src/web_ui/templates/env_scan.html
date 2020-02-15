@@ -2,47 +2,64 @@
   <head>
     <title>Environment scan - AMMP Edge {{ node_id }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <!-- Bootstrap core CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
   </head>
   <body>
-    <h2>Site scan results {% if node_id %} for {{ node_id }} {% endif %}</h2>
+    <div class="text-center mb-4">
+      <h1 class="h3 mb-3">Site scan results {% if node_id %} for {{ node_id }} {% endif %}</h1>
 
-    <h3>Network scan</h3>
-    <table>
-      <tr>
-        <th>IP address</th>
-        <th>MAC address</th>
-        <th>Vendor</th>
-        <th>Modbus</th>
-        <th>HTTP</th>
-        <th>HTTPS</th>
-        <th>SSH</th>
-      </tr>
-      {% for host in scan_result['network_scan'][0]['hosts'] %}
-      <tr>
-        <td>{{ host['ipv4'] }}</td>
-        <td>{{ host['mac'] }}</td>
-        <td>{{ host['vendor'] }}</td>
-        <td style="text-align: center;">{{ 'Y' if '502' in host['ports'] }}</td>
-        <td style="text-align: center;">{{ 'Y' if '80' in host['ports'] }}</td>
-        <td style="text-align: center;">{{ 'Y' if '443' in host['ports'] }}</td>
-        <td style="text-align: center;">{{ 'Y' if '22' in host['ports'] }}</td>
-      </tr>
-      {% endfor %}
-    </table>
+      <div style="height: 30px"></div>
+      <h3 class="h4 mb-3">Network scan</h3>
+      <table class="table-bordered table-striped" style="width: 80%">
+        <tr>
+          <th>IP address</th>
+          <th>MAC address</th>
+          <th>Vendor</th>
+          <th>Modbus</th>
+          <th>HTTP</th>
+          <th>HTTPS</th>
+          <th>SSH</th>
+        </tr>
+        {% for host in scan_result['network_scan'][0]['hosts'] %}
+        <tr>
+          <td>{{ host['ipv4'] }}</td>
+          <td>{{ host['mac'] }}</td>
+          <td>{{ host['vendor'] }}</td>
+          <td style="text-align: center;">{{ 'Y' if '502' in host['ports'] }}</td>
+          <td style="text-align: center;">{{ 'Y' if '80' in host['ports'] }}</td>
+          <td style="text-align: center;">{{ 'Y' if '443' in host['ports'] }}</td>
+          <td style="text-align: center;">{{ 'Y' if '22' in host['ports'] }}</td>
+        </tr>
+        {% endfor %}
+      </table>
 
-    <h3>Serial scan</h3>
-    <table>
-      <tr>
-        <th>Test</th>
-        <th>Result</th>
-      </tr>
-      {% for line in scan_result['serial_scan'] %}
-      <tr>
-        <td>{{ line[0] }}</td>
-        <td>{{ line[1] }}</td>
-      </tr>
-      {% endfor %}
-    </table>
+      <p><em>Tip: If devices (such as inverters) that you expect to see in the table above do not appear, check that:
+        <ul>
+          <li>The network cable connections are in order, and that any lights on the network ports are lit/blinking</li>
+          <li>The devices are set to automatically obtain their network address from the router via DHCP</li>
+        </ul>
+        If devices that should be monitored appear above but do not have "Y" in the Modbus column, please ensure that Modbus is enabled in their settings.
+      </em></p>
 
+      <div style="height: 30px"></div>
+      <h3 class="h4 mb-3">Serial scan</h3>
+
+      <table class="table-bordered table-striped" style="width: 80%">
+        <tr>
+          <th>Test</th>
+          <th>Result</th>
+        </tr>
+        {% for line in scan_result['serial_scan'] %}
+        <tr>
+          <td>{{ line[0] }}</td>
+          <td>{{ line[1] }}</td>
+        </tr>
+        {% endfor %}
+      </table>
+
+      <p><em>Tip: If sensors are not detected in the table above, please check the cable connections.
+      </em></p>
+    </div>
   </body>
 </html>
