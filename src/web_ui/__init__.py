@@ -96,7 +96,7 @@ def network_scan():
 
 
 @app.route("/wifi_ap")
-def wifi_ap_status():
+def wifi_ap():
     args = dict(
         disabled=request.args.get('disabled', type=int)
         )
@@ -123,6 +123,29 @@ def wifi_ap_status():
         node_id=node_id,
         wifi_ap_available=wifi_ap_available,
         wifi_ap_cfg=wifi_ap_cfg
+        )
+
+
+@app.route("/custom_actions")
+def wifi_ap_status():
+    args = dict(
+        action=request.args.get('action', type=str)
+        )
+
+    logger.info(f"Arguments received: {args}")
+
+    # Carry out action command if set
+    if args['action'] == 'imt_sensor_address':
+        from node_mgmt.commands import imt_sensor_address
+        action_result = imt_sensor_address(None)
+    else:
+        action_result = None
+
+    return render_template(
+        'custom_actions.html',
+        node_id=node_id,
+        action_requested=args.get('action'),
+        action_result=action_result
         )
 
 
