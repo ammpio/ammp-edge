@@ -1,0 +1,42 @@
+<html>
+  <head>
+    <title>Wifi AP status - AMMP Edge {{ node_id }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <!-- Bootstrap core CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+  </head>
+  <body>
+    <div class="text-center mb-4">
+      <h1 class="h3 mb-3">Wifi access point status</h1>
+      <div style="height: 30px"></div>
+      {% if wifi_ap_available %}
+      <h3 class="h4 mb-3">Current configuration</h3>
+<!--
+        <table class="table-bordered table-striped" style="width: 50%">
+          {% for key, value in wifi_ap_cfg.items() %}
+          <tr>
+              <th> {{ key }} </th>
+              <td> {{ value }} </td>
+          </tr>
+          {% endfor %}
+        </table>
+-->
+        {% if wifi_ap_cfg.get('disabled') %}
+          <p><b>Disabled</b></p>
+        {% else %}
+          <p style="color: green"><b>Enabled</b></p>
+        {% endif %}
+        <div style="height: 30px"></div>
+        <h3 class="h4 mb-3">Configuration options</h3>
+          {% if wifi_ap_cfg.get('disabled') %}
+            <p><a href="/wifi_ap?disabled=0">Enable Wifi access point</a></p>
+          {% else %}
+            <p><a href="/wifi_ap?disabled=1" style="color: red">Disable Wifi access point</a></p>
+          {% endif %}
+      {% else %}
+        <p>Wifi access point not available on device.</p>
+      {% endif %}
+      </div>
+
+  </body>
+</html>

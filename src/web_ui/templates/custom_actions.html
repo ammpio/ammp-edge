@@ -1,0 +1,37 @@
+<html>
+  <head>
+    <title>Custom actions - AMMP Edge {{ node_id }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <!-- Bootstrap core CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+  </head>
+  <body>
+    <div class="text-center mb-4">
+      <h1 class="h3 mb-3">Custom actions</h1>
+      {% if action_requested %}
+      <div style="height: 30px"></div>
+      <h3 class="h4 mb-3">Action result for {{ action_requested }}</h3>
+        {% if not action_result %}
+          <p>Action returned no result</p>
+        {% else %}
+          <table class="table-bordered table-striped" style="width: 50%">
+            <tr>
+              <th>Action component</th>
+              <th>Action response</th>
+            </tr>
+            {% for key, value in action_result.items() %}
+            <tr>
+                <td> {{ key }} </td>
+                <td> {{ value }} </td>
+            </tr>
+            {% endfor %}
+          </table>
+        {% endif %}
+      {% endif %}
+      <div style="height: 30px"></div>
+      <h3 class="h4 mb-3">Available actions</h3>
+      <p><a href="/custom_actions?action=imt_sensor_address">Change IMT sensor address from 1 to 2</a></p>
+    </div>
+
+  </body>
+</html>
