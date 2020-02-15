@@ -6,12 +6,12 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
   </head>
   <body>
-    <div class="text-center mb-4">
+    <div class="text-center mb-4" style="width: 75%;">
       <h1 class="h3 mb-3">Site scan results {% if node_id %} for {{ node_id }} {% endif %}</h1>
 
       <div style="height: 30px"></div>
       <h3 class="h4 mb-3">Network scan</h3>
-      <table class="table-bordered table-striped" style="width: 80%">
+      <table class="table-bordered table-striped">
         <tr>
           <th>IP address</th>
           <th>MAC address</th>
@@ -35,7 +35,7 @@
       </table>
 
       <div style="height: 30px"></div>
-      <div class="card text-left" style="width: 80%;">
+      <div class="card text-left mx-auto">
         <div class="card-body">
           <h5 class="card-title">Tip</h5>
           <p class="card-text">
@@ -52,7 +52,7 @@
       <div style="height: 30px"></div>
       <h3 class="h4 mb-3">Serial scan</h3>
 
-      <table class="table-bordered table-striped" style="width: 80%">
+      <table class="table-bordered table-striped">
         <tr>
           <th>Test</th>
           <th>Result</th>
@@ -65,7 +65,8 @@
         {% endfor %}
       </table>
 
-      <div class="card text-left" style="width: 80%;">
+      <div style="height: 30px"></div>
+      <div class="card text-left mx-auto">
         <div class="card-body">
           <h5 class="card-title">Tip</h5>
           <p class="card-text">
