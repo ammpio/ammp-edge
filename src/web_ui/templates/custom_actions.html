@@ -15,9 +15,13 @@
           <p>Action returned no result</p>
         {% else %}
           <table class="table-bordered table-striped" style="width: 50%">
+            <tr>
+              <th>Action component</th>
+              <th>Action response</th>
+            </tr>
             {% for key, value in action_result.items() %}
             <tr>
-                <th> {{ key }} </th>
+                <td> {{ key }} </td>
                 <td> {{ value }} </td>
             </tr>
             {% endfor %}
