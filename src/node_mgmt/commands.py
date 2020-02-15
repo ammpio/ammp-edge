@@ -208,6 +208,9 @@ def env_scan(node):
 
 
 def imt_sensor_address(node):
+    # Note: unlike the other commands here, this one is normally triggered from the Web UI
+    # Ideally this will be placed elsewhere in future, within a more systematic
+    # action/command framework
     import serial
     from reader.modbusrtu_reader import Reader
 
