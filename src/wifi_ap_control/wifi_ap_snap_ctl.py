@@ -22,6 +22,8 @@ DEFAULT_CONFIG = {
     'wifi.ssid': 'ammp-edge',
     'wifi.security': 'wpa2',
     'wifi.security-passphrase': 'ammp12345',
+    'wifi.channel': '6',
+    'wifi.country-code': 'US',
     'share.disabled': True,
     'share.network-interface': 'eth0',
     'dhcp.range-start': '192.168.4.100',
@@ -73,3 +75,5 @@ class WifiAPSnapCtl(object):
             logger.error(f"Connection error while making wifi-ap API socket request: {e}")
         except Exception as e:
             logger.exception(f"Exception while making wifi-ap API socket request: {e}")
+
+    def __
