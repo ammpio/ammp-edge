@@ -44,7 +44,8 @@ setup(
     py_modules=[
         package_name,
         'db_model',
-        'kvstore'
+        'kvstore',
+        'edge_api'
         ],
     include_package_data=True,
     entry_points={
