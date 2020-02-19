@@ -67,6 +67,7 @@ class Node(object):
         logger.info('Node ID: %s', self.node_id)
 
         self.api = EdgeAPI()
+        logger.info("Instantiated API")
 
         self.events = NodeEvents()
         config_watch = ConfigWatch(self)
