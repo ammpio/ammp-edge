@@ -6,11 +6,9 @@ import datetime
 
 import requests_unixsocket
 
-from edge_api import EdgeAPI
 from node_mgmt import EnvScanner
 
 logger = logging.getLogger(__name__)
-api = EdgeAPI()
 
 
 def send_log(node):
@@ -23,7 +21,7 @@ def send_log(node):
         return
 
     # Obtain S3 location for file upload
-    upload_url = api.get_upload_url()
+    upload_url = node.api.get_upload_url()
     if not upload_url:
         logger.warn('No upload URL available. Exiting log upload.')
         return
@@ -153,7 +151,7 @@ def env_scan(node):
     scanner = EnvScanner()
     scan_result = scanner.do_scan()
     logger.info('Completed environment scan. Submitting results to API.')
-    api.post_env_scan(scan_result)
+    node.api.post_env_scan(scan_result)
 
 
 def imt_sensor_address(node):

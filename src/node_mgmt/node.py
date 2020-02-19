@@ -8,6 +8,7 @@ import time
 
 from db_model import NodeConfig
 from kvstore import KVStore
+from edge_api import EdgeAPI
 from .events import NodeEvents
 from .config_watch import ConfigWatch
 from .command_watch import CommandWatch
@@ -64,6 +65,8 @@ class Node(object):
         self.access_key = self._dbconfig.access_key
 
         logger.info('Node ID: %s', self.node_id)
+
+        self.api = EdgeAPI()
 
         self.events = NodeEvents()
         config_watch = ConfigWatch(self)
