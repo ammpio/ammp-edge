@@ -29,6 +29,23 @@ class EdgeAPI(object):
         self._session.headers.update({'Authorization': self.access_key})
         self.__request_timeout = remote_api.get('timeout', DEFAULT_REQUEST_TIMEOUT)
 
+    def get_config(self) -> dict:
+        status_code, rtn = self.__get_request('config')
+            
+        if status_code == 200:
+            if rtn.get('config'):
+                logger.info(f"Obtained config from API")
+                logger.debug('Config payload: %s' % rtn['config'])
+                return rtn['config']
+            else:
+                logger.error('API call successful but response did not include a config payload')
+                return None
+        else:
+            logger.error(f"Error {status_code} returned from config API request")
+            if rtn:
+                logger.info(f"API response: rtn")
+            return None
+
     def get_command(self) -> str:
         status_code, rtn = self.__get_request('command')
 

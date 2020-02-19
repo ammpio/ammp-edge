@@ -1,15 +1,16 @@
 import logging
-logger = logging.getLogger(__name__)
-
 import time
 import json
 import threading
 import requests
 
-# If API endpoint can't be reached wait API_RETRY_DELAY seconds before retrying
+logger = logging.getLogger(__name__)
+
+# If API endpoint doesn't return config, wait API_RETRY_DELAY seconds before retrying
 API_RETRY_DELAY = 10
 # Even if this is not explicitly requested, carry out a configuration check every CONFIG_REFRESH_DELAY seconds
 CONFIG_REFRESH_DELAY = 900
+
 
 class ConfigWatch(threading.Thread): 
     """Request new configuration for node if flag is set"""
@@ -31,17 +32,18 @@ class ConfigWatch(threading.Thread):
             logger.info('Proceeding with check for new configuration')
 
             try:
-                        
+
                 if self.__new_config_available():
 
                     with self._node.events.getting_config:
                         config = None
 
                         while not config:
-                            config = self.__config_from_api()
+                            logger.info(f"Obtaining configuration for node {self._node.node_id} from API")
+                            config = self._node.api.get_config()
                             # Keep trying to get the configuration if not successful
                             if not config:
-                                logger.error('No config obtained from API; retrying in %d seconds' % API_RETRY_DELAY)
+                                logger.error(f"No config obtained from API; retrying in {API_RETRY_DELAY} seconds")
                                 time.sleep(API_RETRY_DELAY)
 
                         # Update config definition, save it to DB, and load any custom drivers from it
@@ -53,43 +55,14 @@ class ConfigWatch(threading.Thread):
 
                 self._node.events.check_new_config.clear()
 
-            except:
-                logger.exception('Exception while checking/obtaining/applying config; sleeping %d seconds' % API_RETRY_DELAY)
+            except Exception:
+                logger.exception(
+                    f"Exception while checking/obtaining/applying config; sleeping {API_RETRY_DELAY} seconds"
+                    )
                 time.sleep(API_RETRY_DELAY)
 
-
-    def __config_from_api(self):
-
-        logger.info('Obtaining configuration for node %s from API' % self._node.node_id)
-
-        try:
-            r = requests.get('https://%s/api/%s/nodes/%s/config' % (self._node.remote_api['host'], self._node.remote_api['apiver'], self._node.node_id),
-                headers={'Authorization': self._node.access_key})
-            
-            if r.status_code == 200:
-                rtn = json.loads(r.text)
-
-                if 'message' in rtn:
-                    logger.debug('API message: %s' % rtn['message'])
-
-                if rtn.get('config'):
-                    logger.info('Obtained config from API')
-                    logger.debug('Config payload: %s' % rtn['config'])
-                    return rtn['config']
-                else:
-                    logger.error('API call successful but response did not include a config payload')
-                    return None
-            else:
-                logger.error('Error %d requesting configuration from API' % r.status_code)
-                if r.text:
-                    logger.info('API response: %s' % r.text)
-                return None
-        except:
-            logger.exception('Exception raised while requesting configuration from API')
-            return None
-
     def __new_config_available(self):
-
+        # TODO: Move this into the edge_api module
         logger.info('Checking for configuration for node %s from API' % self._node.node_id)
 
         try:
@@ -126,6 +99,6 @@ class ConfigWatch(threading.Thread):
                     logger.info('API response: %s' % r.text)
                 return None
 
-        except:
+        except Exception:
             logger.exception('Exception raised while requesting node info from API')
             return None
