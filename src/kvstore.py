@@ -44,8 +44,13 @@ class KVStore(Redis):
         else:
             return json.loads(value.decode(STR_ENCODING))
 
-    def set(self, key: str, value) -> bool:
-        res = self.r.set(key, json.dumps(value).encode(STR_ENCODING))
+    def set(self, key: str, value, force: bool = False) -> bool:
+        # If the current value is already the same as what is being set,
+        # (and "force" is not set) then take no action
+        if force or self.get(key) != value:
+            res = self.r.set(key, json.dumps(value).encode(STR_ENCODING))
+        else:
+            res = True
         return res
 
     def waitfor(self, key: str):

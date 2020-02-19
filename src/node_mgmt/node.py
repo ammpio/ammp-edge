@@ -7,6 +7,7 @@ import os
 import time
 
 from db_model import NodeConfig
+from kvstore import KVStore
 from .events import NodeEvents
 from .config_watch import ConfigWatch
 from .command_watch import CommandWatch
@@ -19,7 +20,9 @@ ACTIVATE_RETRY_DELAY = 60
 
 class Node(object):
 
-    def __init__(self):
+    def __init__(self) -> None:
+
+        self.kvs = KVStore()
 
         try:
             # Load base config from YAML file
@@ -101,38 +104,51 @@ class Node(object):
         self.update_drv_from_config()
 
     @property
-    def node_id(self):
+    def node_id(self) -> str:
         return self._node_id
 
     @node_id.setter
-    def node_id(self, value):
+    def node_id(self, value) -> None:
         self._node_id = value
+        self.kvs.set('node:node_id', value)
 
     @property
-    def config(self):
+    def config(self) -> dict:
         return self._config
 
     @config.setter
-    def config(self, value):
+    def config(self, value) -> None:
         self._config = value
+        if value is not None:
+            self.kvs.set('node:config', value)
 
     @property
-    def access_key(self):
+    def access_key(self) -> str:
         return self._access_key
 
     @access_key.setter
-    def access_key(self, value):
+    def access_key(self, value) -> None:
         self._access_key = value
+        self.kvs.set('node:access_key', value)
 
     @property
-    def drivers(self):
+    def remote_api(self) -> dict:
+        return self._remote_api
+
+    @remote_api.setter
+    def remote_api(self, value) -> None:
+        self._remote_api = value
+        self.kvs.set('node:remote_api', value)
+
+    @property
+    def drivers(self) -> dict:
         return self._drivers
 
     @drivers.setter
-    def drivers(self, value):
+    def drivers(self, value) -> None:
         self._drivers = value
 
-    def __initialize(self):
+    def __initialize(self) -> None:
         node_id = self.__generate_node_id()
         logger.info('Generated node ID %s' % node_id)
 
@@ -157,9 +173,9 @@ class Node(object):
         self._dbconfig.save()
         logger.debug('Saved new config for node ID %s' % node_id)
 
-    def __generate_node_id(self):
+    def __generate_node_id(self) -> str:
         # Get ID (ideally hardware MAC address) that is used to identify logger when pushing data
-        def get_hw_addr(ifname):
+        def get_hw_addr(ifname: str) -> str:
             import socket
             from fcntl import ioctl
             import struct
@@ -206,7 +222,7 @@ class Node(object):
 
         return node_id
 
-    def __do_node_activation(self, node_id):
+    def __do_node_activation(self, node_id: str) -> str:
 
         # Initiate activation
         logger.info('Requesting activation for node %s' % node_id)
@@ -256,7 +272,7 @@ class Node(object):
 
         return access_key
 
-    def __get_drivers(self):
+    def __get_drivers(self) -> dict:
 
         drivers = {}
 
@@ -273,7 +289,7 @@ class Node(object):
 
         return drivers
 
-    def save_config(self):
+    def save_config(self) -> None:
         """
         This method saves the current config to the database. It is not only an internal method, as it needs to be
         called also by the config_watch thread, when a new config has been obtained from the API.
@@ -286,7 +302,7 @@ class Node(object):
         except Exception:
             logger.exception('Exception raised when attempting to commit configuration to database')
 
-    def update_drv_from_config(self):
+    def update_drv_from_config(self) -> None:
         """
         Check whether there are custom drivers in the config definition, and if so add them to the driver definition.
         """
