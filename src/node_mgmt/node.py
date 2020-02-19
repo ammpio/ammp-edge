@@ -7,6 +7,7 @@ import os
 import time
 
 from db_model import NodeConfig
+from kvstore import KVStore
 from .events import NodeEvents
 from .config_watch import ConfigWatch
 from .command_watch import CommandWatch
@@ -20,6 +21,8 @@ ACTIVATE_RETRY_DELAY = 60
 class Node(object):
 
     def __init__(self):
+
+        self.kvs = KVStore()
 
         try:
             # Load base config from YAML file
@@ -107,6 +110,7 @@ class Node(object):
     @node_id.setter
     def node_id(self, value):
         self._node_id = value
+        self.kvs.set('node:node_id', value)
 
     @property
     def config(self):
@@ -115,6 +119,8 @@ class Node(object):
     @config.setter
     def config(self, value):
         self._config = value
+        if value is not None:
+            self.kvs.set('node:config', value)
 
     @property
     def access_key(self):
@@ -123,6 +129,16 @@ class Node(object):
     @access_key.setter
     def access_key(self, value):
         self._access_key = value
+        self.kvs.set('node:access_key', value)
+
+    @property
+    def remote_api(self):
+        return self._remote_api
+
+    @remote_api.setter
+    def remote_api(self, value):
+        self._remote_api = value
+        self.kvs.set('node:remote_api', value)
 
     @property
     def drivers(self):
