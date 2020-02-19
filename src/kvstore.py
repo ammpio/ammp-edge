@@ -11,7 +11,7 @@ HEALTH_CHECK_INT = 30
 STR_ENCODING = 'utf-8'
 
 
-class KVStore(Redis):
+class KVStore(object):
     def __init__(self, db: int = DEFAULT_DB) -> None:
         self.db = db
         self.r = Redis(
@@ -71,3 +71,14 @@ class KVStore(Redis):
             if message:
                 return self.get(key)
             sleep(0.01)
+
+    def get_or_wait(self, key: str):
+        """
+        Gets value, or waits for value to be set if not set
+        """
+
+        value = self.get(key)
+        while value is None:
+            value = self.waitfor(key)
+
+        return value
