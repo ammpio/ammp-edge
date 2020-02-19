@@ -11,7 +11,7 @@ HEALTH_CHECK_INT = 30
 STR_ENCODING = 'utf-8'
 
 
-class KVStore(Redis):
+class KVStore(object):
     def __init__(self, db: int = DEFAULT_DB) -> None:
         self.db = db
         self.r = Redis(
@@ -44,8 +44,13 @@ class KVStore(Redis):
         else:
             return json.loads(value.decode(STR_ENCODING))
 
-    def set(self, key: str, value) -> bool:
-        res = self.r.set(key, json.dumps(value).encode(STR_ENCODING))
+    def set(self, key: str, value, force: bool = False) -> bool:
+        # If the current value is already the same as what is being set,
+        # (and "force" is not set) then take no action
+        if force or self.get(key) != value:
+            res = self.r.set(key, json.dumps(value).encode(STR_ENCODING))
+        else:
+            res = True
         return res
 
     def waitfor(self, key: str):
@@ -66,3 +71,14 @@ class KVStore(Redis):
             if message:
                 return self.get(key)
             sleep(0.01)
+
+    def get_or_wait(self, key: str):
+        """
+        Gets value, or waits for value to be set if not set
+        """
+
+        value = self.get(key)
+        while value is None:
+            value = self.waitfor(key)
+
+        return value

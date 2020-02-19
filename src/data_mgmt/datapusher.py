@@ -1,6 +1,4 @@
 import logging
-logger = logging.getLogger(__name__)
-
 import time
 import arrow
 import json
@@ -10,6 +8,9 @@ from copy import deepcopy
 from influxdb import InfluxDBClient
 from influxdb.exceptions import InfluxDBClientError
 from influxdb.exceptions import InfluxDBServerError
+
+logger = logging.getLogger(__name__)
+
 
 class DataPusher(threading.Thread): 
     def __init__(self, node, queue, dep): 
@@ -23,7 +24,6 @@ class DataPusher(threading.Thread):
         self._queue = queue
         self._dep = dep
         self._is_default_endpoint = dep.get('isdefault', False)
-
 
         if dep.get('type') == 'api':
             self._session = requests.Session()
@@ -39,7 +39,7 @@ class DataPusher(threading.Thread):
 
             # queue.get() blocks the current thread until an item is retrieved
             logger.debug(f"PUSH: [{self.dep_name}] Waiting to get readings from queue")
-            readout = self._queue.get() 
+            readout = self._queue.get()
 
             # If we get the "stop" signal (i.e. empty dict) we exit
             if readout == {}:
@@ -78,6 +78,7 @@ class DataPusher(threading.Thread):
 
 
     def __push_readout(self, readout_to_push):
+        # TODO: Use API object/session
 
         # This ensures that any modifications are only local to this function, and do not affect the original (in case
         # it needs to be pushed back into the queue)
@@ -103,7 +104,7 @@ class DataPusher(threading.Thread):
             except requests.exceptions.ConnectionError:
                 logger.warning('Connection error while trying to push data at %s to API.' % readout['time'])
                 return False
-            except requests.exceptions.ConnectionError:
+            except requests.exceptions.Timeout:
                 logger.warning('Timeout error while trying to push data at %s to API.' % readout['time'])
                 return False
             except:
