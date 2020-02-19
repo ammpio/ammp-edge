@@ -1,15 +1,16 @@
 import logging
 import requests
-import json
 import os
 import zipfile
 import datetime
 
 import requests_unixsocket
 
+from edge_api import EdgeAPI
 from node_mgmt import EnvScanner
 
 logger = logging.getLogger(__name__)
+api = EdgeAPI()
 
 
 def send_log(node):
@@ -22,7 +23,7 @@ def send_log(node):
         return
 
     # Obtain S3 location for file upload
-    upload_url = __get_upload_url(node)
+    upload_url = api.get_upload_url()
     if not upload_url:
         logger.warn('No upload URL available. Exiting log upload.')
         return
@@ -117,37 +118,6 @@ def __zip_directory(dir_path, output_path):
         return True
 
 
-def __get_upload_url(node):
-
-    logger.debug('Obtaining upload URL from API')
-
-    try:
-        r = requests.get(
-            f"https://{node.remote_api['host']}/api/{node.remote_api['apiver']}/nodes/{node.node_id}/upload_url",
-            headers={'Authorization': node.access_key}
-            )
-        rtn = json.loads(r.text)
-
-        if r.status_code == 200:
-            if 'message' in rtn:
-                logger.debug('API message: %s' % rtn['message'])
-
-            if rtn.get('upload_url'):
-                logger.info('Obtained upload URL from API: %s' % rtn['upload_url'])
-                return rtn['upload_url']
-            else:
-                logger.error('API call successful but response did not include a URL payload')
-                return None
-        else:
-            logger.error('Error %d requesting URL from API' % r.status_code)
-            if rtn:
-                logger.debug('API response: %s' % rtn)
-            return None
-    except Exception:
-        logger.exception('Exception raised while requesting upload URL from API')
-        return None
-
-
 def snap_refresh(node):
     __snapd_socket_post({'action': 'refresh'})
 
@@ -180,31 +150,10 @@ def __snapd_socket_post(payload):
 
 def env_scan(node):
     logger.info('Starting environment scan')
-
     scanner = EnvScanner()
     scan_result = scanner.do_scan()
-
     logger.info('Completed environment scan. Submitting results to API.')
-
-    try:
-        r = requests.post(
-            f"https://{node.remote_api['host']}/api/{node.remote_api['apiver']}/nodes/{node.node_id}/env_scan",
-            json=scan_result,
-            headers={'Authorization': node.access_key},
-            timeout=node.config.get('push_timeout') or 120)
-    except requests.exceptions.ConnectionError:
-        logger.warning('Connection error while trying to submit environment scan to API.')
-        return
-    except requests.exceptions.ConnectionError:
-        logger.warning('Timeout error while trying to submit environment scan to API.')
-        return
-    except Exception:
-        logger.warning('Exception while trying to to submit environment scan to API.', exc_info=True)
-        return
-
-    if r.status_code != 200:
-        logger.warning('Error code %d while trying to to submit environment scan to API.' % (r.status_code))
-        return
+    api.post_env_scan(scan_result)
 
 
 def imt_sensor_address(node):
