@@ -126,5 +126,6 @@ class EdgeAPI(object):
         try:
             return r.status_code, r.json()
         except ValueError:
-            logger.error(f"Response from API: {r.text}. Cannot be parsed as JSON")
+            if r.status_code != 204:
+                logger.error(f"Response from API: {r.text}. Cannot be parsed as JSON")
             return r.status_code, None
