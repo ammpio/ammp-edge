@@ -31,12 +31,8 @@ class EdgeAPI(object):
 
     def get_config(self) -> dict:
         status_code, rtn = self.__get_request('config')
-<<<<<<< HEAD
 
-=======
-            
->>>>>>> 92c244fdde828f63725ee977dcb5a52209432269
-        if status_code == 200:
+        if status_code in [200, 204]:
             if rtn.get('config'):
                 logger.info(f"Obtained config from API")
                 logger.debug('Config payload: %s' % rtn['config'])
@@ -77,11 +73,7 @@ class EdgeAPI(object):
 
     def post_env_scan(self, scan_result: dict) -> bool:
         status_code, rtn = self.__post_request('env_scan', payload=scan_result)
-<<<<<<< HEAD
         if status_code in [200, 204]:
-=======
-        if status_code == 200:
->>>>>>> 92c244fdde828f63725ee977dcb5a52209432269
             logger.info("Successfully submitted environment scan")
             return True
         else:
