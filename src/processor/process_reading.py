@@ -1,9 +1,10 @@
 import logging
-logger = logging.getLogger(__name__)
-
 import struct
 
-def process_reading(val_b, **rdg):
+logger = logging.getLogger(__name__)
+
+
+def process_reading(val_b: bytes, **rdg):
     """
     Process reading obtained from device. Inputs:
     val_b: Reading value - in most cases a bytes object;
@@ -17,7 +18,7 @@ def process_reading(val_b, **rdg):
         'int16', 'uint16', 'int32', 'uint32', 'float', 'single', 'double'
       - typecast: used when obtaining value from string; one of
         'int', 'float', 'str', 'bool'
-      - valuemap: 
+      - valuemap:
         - for 'bytes' and 'hex' values: a dict where the keys are hex values of
         the form '0x123abc' - the leading '0x' is required and the representation
         should be lowercase. If bytes value mathes any of the keys in the dict, the
@@ -34,7 +35,8 @@ def process_reading(val_b, **rdg):
         value = val_b
 
     # Don't do further processing if we don't have a value
-    if value == None: return None
+    if value is None:
+        return None
 
     # Apply multiplier and offset, unless we're dealing with a string or boolean value
     if rdg.get('typecast') not in ['str', 'bool']:
@@ -45,7 +47,7 @@ def process_reading(val_b, **rdg):
     return value
 
 
-def parse_val_b(val_b, **rdg):
+def parse_val_b(val_b: bytes, **rdg):
 
     if rdg.get('parse_as') == 'str':
         try:
@@ -73,7 +75,7 @@ def parse_val_b(val_b, **rdg):
     return value
 
 
-def value_from_bytes(val_b, **rdg):
+def value_from_bytes(val_b: bytes, **rdg):
 
     # Format identifiers used to unpack the binary result into desired format based on datatype
     fmt = {
@@ -95,7 +97,7 @@ def value_from_bytes(val_b, **rdg):
         # Get hex string representing byte reading
         val_h = '0x' + val_b.hex()
 
-        # If the value exists in the map, return 
+        # If the value exists in the map, return
         if val_h in rdg['valuemap']:
             return rdg['valuemap'][val_h]
 
@@ -111,11 +113,11 @@ def value_from_bytes(val_b, **rdg):
     return value
 
 
-def value_from_string(val_s, **rdg):
+def value_from_string(val_s: str, **rdg):
 
     # Check for defined value mappings in the driver
     if 'valuemap' in rdg:
-        # If the string value exists as a key in the map, return 
+        # If the string value exists as a key in the map, return
         if val_s in rdg['valuemap']:
             return rdg['valuemap'][val_s]
 
@@ -141,20 +143,23 @@ def apply_mult_offset(value, **rdg):
 
         return value
 
-    except:
+    except Exception:
         logger.exception(f"Exception while applying multiplier and offset to {value}. Parameters: {rdg}")
         return None
 
 
 def typecast(value, **rdg):
 
-    if value == None: return None
+    if value is None:
+        return None
 
     if 'typecast' in rdg:
         if rdg['typecast'] in ['int', 'float', 'str', 'bool']:
             typecast_fn = {'int': int, 'float': float, 'str': str, 'bool': bool}[rdg['typecast']]
         else:
-            logger.warn(f"Not applying invalid typecast value {rdg['typecast']}. Must be one of 'int', 'float', 'str', 'bool'.")
+            logger.warn(
+                f"Not applying invalid typecast value {rdg['typecast']}. Must be one of 'int', 'float', 'str', 'bool'."
+                )
             return value
     else:
         return value
