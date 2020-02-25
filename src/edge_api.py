@@ -6,8 +6,8 @@ from kvstore import KVStore
 logger = logging.getLogger(__name__)
 
 DEFAULT_REQUEST_TIMEOUT = 60
-MAX_REQUEST_RETRIES = 3
-REQUEST_HOLDOFF = 5
+MAX_REQUEST_RETRIES = 5
+REQUEST_HOLDOFF = 15
 
 
 class EdgeAPI(object):
