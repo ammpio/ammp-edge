@@ -197,6 +197,11 @@ def read_device(dev, readings, readout_q, dev_lock=None):
         reader_config['timeout'] = dev.get('timeout', DEVICE_DEFAULT_TIMEOUT)
         from reader.rawserial_reader import Reader
 
+    elif dev['reading_type'] == 'rawtcp':
+        reader_config = deepcopy(dev['address'])
+        reader_config['timeout'] = dev.get('timeout', DEVICE_DEFAULT_TIMEOUT)
+        from reader.rawtcp_reader import Reader
+
     elif dev['reading_type'] == 'snmp':
         reader_config = deepcopy(dev['address'])
         reader_config['timeout'] = dev.get('timeout', DEVICE_DEFAULT_TIMEOUT)
