@@ -6,13 +6,11 @@ from importlib import import_module
 
 logger = logging.getLogger(__name__)
 
-# If API endpoint can't be reached wait API_RETRY_DELAY seconds before retrying
-API_RETRY_DELAY = 10
 # Even if this is not explicitly requested, carry out a command check every COMMAND_CHECK_DELAY seconds
 COMMAND_CHECK_DELAY = 900.0
 
 
-class CommandWatch(threading.Thread): 
+class CommandWatch(threading.Thread):
     """Request command from node if flag is set"""
     def __init__(self, node): 
         threading.Thread.__init__(self)
