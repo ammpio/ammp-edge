@@ -1,10 +1,10 @@
 import logging
-logger = logging.getLogger(__name__)
-
 import serial
-import struct
 import time
 import re
+
+logger = logging.getLogger(__name__)
+
 
 class Reader(object):
     def __init__(self, device, baudrate=9600, bytesize=8, parity='none', stopbits=1, timeout=5, **kwargs):
@@ -23,13 +23,14 @@ class Reader(object):
     def __enter__(self):
         # Create a Serial connection to be used for all our requests
         try:
-            self._conn = serial.Serial(port=self._device,
+            self._conn = serial.Serial(
+                                    port=self._device,
                                     baudrate=self._baudrate,
                                     bytesize=self._bytesize,
                                     parity=self._parity,
                                     stopbits=self._stopbits,
                                     timeout=self._timeout)
-        except:
+        except Exception:
             logger.error('Exception while attempting to create serial connection:')
             raise
 
@@ -42,20 +43,20 @@ class Reader(object):
                 else:
                     logger.error(f"Unable to open serial connection to {self._device}")
                     return None
-        except:
+        except Exception:
             logger.error("Exception while attempting to open serial connection:")
             raise
 
         return self
 
     def __exit__(self, type, value, traceback):
-        if not hasattr(self, '_conn'): return
+        if not hasattr(self, '_conn'):
+            return
 
         try:
             self._conn.close()
-        except:
+        except Exception:
             logger.warning("Could not close serial connection", exc_info=True)
-
 
     def read(self, query, pos, length, resp_template=None, resp_termination=None, **rdg):
 
@@ -78,7 +79,7 @@ class Reader(object):
                 if resp == b'':
                     logger.warn("No response received from device")
                     return
-                
+
                 # If a template is defined, check whether the response matches it.
                 if resp_template:
                     # Since resp is binary, the template needs to be also
@@ -86,8 +87,8 @@ class Reader(object):
                     if not re.match(template_b, resp):
                         logger.warn(f"Response {repr(resp)} does not match template {resp_template}. Discarding")
                         return
-            
-            except:
+
+            except Exception:
                 logger.error(f"Exception while reading response to query {repr(query)}")
                 raise
 
@@ -97,12 +98,13 @@ class Reader(object):
         try:
             # Extract the actual values requested
             val_b = resp[pos:pos+length]
-        except:
-            logger.error(f"Exception while processing value from response {repr(resp)}, position {pos}, length {length}")
+        except Exception:
+            logger.error(
+                f"Exception while processing value from response {repr(resp)}, position {pos}, length {length}"
+                )
             raise
 
         return val_b
-
 
     @staticmethod
     def get_bytes(string):
