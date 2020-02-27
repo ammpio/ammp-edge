@@ -1,0 +1,74 @@
+{
+  "common": {
+    "schema": {
+      "request": {
+        "sequence": [
+          {
+            "type": "input",
+            "input_field": "unit_id",
+            "input_datatype": "uint",
+            "num_bytes": 4,
+            "byte_order": "msb"
+          },
+          {
+            "type": "const",
+            "value": "0x01"
+          },
+          {
+            "type": "input",
+            "input_field": "fncode",
+            "input_datatype": "uint",
+            "num_bytes": 1,
+            "byte_order": "msb"
+          },
+          {
+            "type": "input",
+            "input_field": "register",
+            "input_datatype": "uint",
+            "num_bytes": 2,
+            "byte_order": "msb"
+          },
+          {
+            "type": "input",
+            "input_field": "words",
+            "input_datatype": "uint",
+            "num_bytes": 2,
+            "byte_order": "msb"
+          },
+          {
+            "type": "crc",
+            "num_bytes": 2,
+            "byte_order": "msb"
+          }
+        ]
+      },
+      "response": {
+        "check_crc16": true,
+        "pos": {
+          "type": "const",
+          "value": 6
+        },
+        "length": {
+          "type": "from_input",
+          "input_name": "words",
+          "multiplier": 2
+        }
+      }
+    },
+    "fncode": 4,
+    "words": 2,
+    "datatype": "float",
+    "typecast": "float"
+  },
+  "fields": {
+    "V_L1": {"register":   0, "unit": "V", "description": "Phase 1 line to neutral volts"},
+    "V_L2": {"register":   2, "unit": "V", "description": "Phase 2 line to neutral volts"},
+    "V_L3": {"register":   4, "unit": "V", "description": "Phase 3 line to neutral volts"},
+    "I_L1": {"register":   6, "unit": "A", "description": "Phase 1 current"},
+    "I_L2": {"register":   8, "unit": "A", "description": "Phase 2 current"},
+    "I_L3": {"register":  10, "unit": "A", "description": "Phase 3 current"},
+    "P_L1": {"register":  12, "unit": "P", "description": "Phase 1 active power"},
+    "P_L2": {"register":  14, "unit": "P", "description": "Phase 2 active power"},
+    "P_L3": {"register":  16, "unit": "P", "description": "Phase 3 lactive power"}
+  }
+}
