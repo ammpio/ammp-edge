@@ -29,9 +29,9 @@ def generate_request(request_schema: dict, **rdg: dict) -> bytes:
             else:
                 byte_order = 'big'
 
-            input_value = rdg.get(c['name'], c.get('default_value'))
+            input_value = rdg.get(c['input_field'], c.get('default_value'))
             if input_value is None:
-                logger.warn(f"Input value '{c['name']}' not provided. Skipping")
+                logger.warn(f"Input value '{c['input_field']}' not provided. Skipping")
                 continue
 
             if c['input_datatype'] == 'uint':
@@ -74,15 +74,16 @@ def parse_response(response: bytes, response_schema: dict, **rdg: dict) -> bytes
             logger.warn("Response CRC doesn't match calculated CRC. Ignoring")
             return None
 
-    if isinstance(response_schema['pos'], int):
-        pos = response_schema['pos']
+    response_param = {}
+    for p in ['pos', 'length']:
+        if response_schema[p]['type'] == 'const':
+            response_param[p] = response_schema[p]['value']
+        elif response_schema[p]['type'] == 'from_input':
+            response_param[p] = rdg[response_schema[p]['input_field']] \
+                                    * response_schema[p].get('multiplier', 1) \
+                                    + response_schema[p].get('offset', 0)
 
-    if isinstance(response_schema['length'], int):
-        length = response_schema['length']
-    elif isinstance(response_schema['length'], dict):
-        length = rdg[response_schema['length']['name']] * response_schema['length'].get('multiplier', 1)
-
-    return response[pos:pos+length]
+    return response[response_param['pos']:response_param['pos'] + response_param['length']]
 
 
 def crc16(input_bytes: bytes) -> bytes:
@@ -105,66 +106,3 @@ def get_bytes(string: str) -> bytes:
             logger.warn(f"String {string} starts with 0x but is not hexadecimal. Interpreting literally")
 
     return string.encode('utf-8')
-
-
-# Example schema:
-# example_schema = {
-#     'request': {
-#         'sequence': [
-#             {
-#                 'name': 'unit_id',
-#                 'type': 'input',
-#                 'input_datatype': 'uint',
-#                 'num_bytes': 4,
-#                 'byte_order': 'msb'
-#             },
-#             {
-#                 'name': '_reserved',
-#                 'type': 'const',
-#                 'value': '0x01',
-#             },
-#             {
-#                 'name': 'fn_code',
-#                 'type': 'input',
-#                 'input_datatype': 'uint',
-#                 'num_bytes': 1,
-#                 'byte_order': 'msb'
-#             },
-#             {
-#                 'name': 'register',
-#                 'type': 'input',
-#                 'input_datatype': 'uint',
-#                 'num_bytes': 2,
-#                 'byte_order': 'msb'
-#             },
-#             {
-#                 'name': 'words',
-#                 'type': 'input',
-#                 'input_datatype': 'uint',
-#                 'num_bytes': 2,
-#                 'byte_order': 'msb'
-#             },
-#             {
-#                 'name': '_crc',
-#                 'type': 'crc',
-#                 'num_bytes': 2,
-#                 'byte_order': 'msb',
-#             }
-#         ]
-#     },
-#     'response': {
-#         'check_crc16': True,
-#         'pos': 6,
-#         'length': {
-#             'name': 'words',
-#             'multiplier': 2
-#         }
-#     }
-# }
-#
-# example_inputs = {
-#     'unit_id': 234234,
-#     'fn_code': 4,
-#     'register': 2,
-#     'words': 2
-# }
