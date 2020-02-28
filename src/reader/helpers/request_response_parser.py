@@ -89,7 +89,12 @@ def parse_response(response: bytes, response_schema: dict, device_args: dict, **
                                     * response_schema[p].get('multiplier', 1) \
                                     + response_schema[p].get('offset', 0)
 
-    return response[response_param['pos']:response_param['pos'] + response_param['length']]
+    # Do this since the actual index is zero-based, so for example in order to start with the
+    # 5th byte, we need to set the start index to 4.
+    pos = response_param['pos'] - 1
+    length = response_param['length']
+
+    return response[pos:pos + length]
 
 
 def crc16(input_bytes: bytes) -> bytes:

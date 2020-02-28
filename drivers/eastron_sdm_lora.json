@@ -46,11 +46,11 @@
         "check_crc16": true,
         "pos": {
           "type": "const",
-          "value": 6
+          "value": 8
         },
         "length": {
           "type": "from_input",
-          "input_name": "words",
+          "input_field": "words",
           "multiplier": 2
         }
       }
