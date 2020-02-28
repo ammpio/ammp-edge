@@ -5,36 +5,31 @@
   	"datatype": "float"
   },
   "fields": {
-    "V_L1": {"register":  0, "unit": "V"},
-    "V_L2": {"register":  2, "unit": "V"},
-    "V_L3": {"register":  4, "unit": "V"},
-
-    "I_L1": {"register":  6, "unit": "A"},
-    "I_L2": {"register":  8, "unit": "A"},
-    "I_L3": {"register": 10, "unit": "A"},
-    "I_total": {"register": 48, "unit": "A"},
-
-    "P_L1": {"register": 12, "unit": "W"},
-    "P_L2": {"register": 14, "unit": "W"},
-    "P_L3": {"register": 16, "unit": "W"},
-    "P_total": {"register": 52, "unit": "W"},
-
-    "freq": {"register": 70, "unit": "Hz"},
-
-    "E_imported": {"register": 72, "multiplier": 1000, "unit": "Wh"},
-    "E_exported": {"register": 74, "multiplier": 1000, "unit": "Wh"},
-    "E_total":  {"register": 342, "multiplier": 1000, "unit": "Wh"},
-
-    "S_L1": {"register": 18, "unit": "VA"},
-    "S_L2": {"register": 20, "unit": "VA"},
-    "S_L3": {"register": 22, "unit": "VA"},
-
-    "Q_L1": {"register": 24, "unit": "VAr"},
-    "Q_L2": {"register": 26, "unit": "VAr"},
-    "Q_L3": {"register": 28, "unit": "VAr"},
-
-    "pf_L1": {"register": 30},
-    "pf_L2": {"register": 32},
-    "pf_L3": {"register": 34}
+    "V_L1": {"register":   0, "unit": "V", "description": "Phase 1 line to neutral volts"},
+    "V_L2": {"register":   2, "unit": "V", "description": "Phase 2 line to neutral volts"},
+    "V_L3": {"register":   4, "unit": "V", "description": "Phase 3 line to neutral volts"},
+    "I_L1": {"register":   6, "unit": "A", "description": "Phase 1 current"},
+    "I_L2": {"register":   8, "unit": "A", "description": "Phase 2 current"},
+    "I_L3": {"register":  10, "unit": "A", "description": "Phase 3 current"},
+    "P_L1": {"register":  12, "unit": "W", "description": "Phase 1 active power"},
+    "P_L2": {"register":  14, "unit": "W", "description": "Phase 2 active power"},
+    "P_L3": {"register":  16, "unit": "W", "description": "Phase 3 active power"},
+    "S_L1": {"register":  18, "unit": "VA", "description": "Phase 1 apparent power"},
+    "S_L2": {"register":  20, "unit": "VA", "description": "Phase 2 apparent power"},
+    "S_L3": {"register":  22, "unit": "VA", "description": "Phase 3 apparent power"},
+    "Q_L1": {"register":  24, "unit": "VAr", "description": "Phase 1 reactive power"},
+    "Q_L2": {"register":  26, "unit": "VAr", "description": "Phase 2 reactive power"},
+    "Q_L3": {"register":  28, "unit": "VAr", "description": "Phase 3 reactive power"},
+    "pf_L1": {"register": 30, "description": "Phase 1 power factor"},
+    "pf_L2": {"register": 32, "description": "Phase 2 power factor"},
+    "pf_L3": {"register": 34, "description": "Phase 3 power factor"},
+    "V_avg": {"register": 42, "unit": "V", "description": "Average line to neutral volts"},
+    "I_avg": {"register": 46, "unit": "A", "description": "Average line current"},
+    "I_total": {"register": 48, "unit": "A", "description": "Sum of line currents"},
+    "P_total": {"register": 52, "unit": "W", "description": "Total system power"},
+    "freq": {"register": 70, "unit": "Hz", "description": "Frequency of supply voltages"},
+    "E_imported": {"register": 72, "multiplier": 1000, "unit": "Wh", "description": "Total import energy"},
+    "E_exported": {"register": 74, "multiplier": 1000, "unit": "Wh", "description": "Total export energy"},
+    "E_total":  {"register": 342, "multiplier": 1000, "unit": "Wh", "description": "Total energy"}
   }
 }
