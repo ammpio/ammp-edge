@@ -9,9 +9,11 @@ import serial.tools.list_ports
 import xmltodict
 from collections import defaultdict
 
+from kvstore import KVStore
+
 logger = logging.getLogger(__name__)
 
-DEFAULT_SCAN_PORTS = '22,80,443,502'
+DEFAULT_NMAP_SCAN_OPTS = ['-p', '22,80,443,502']
 DEFAULT_SERIAL_DEV = '/dev/ttyAMA0'
 
 
@@ -44,6 +46,9 @@ class NetworkEnv():
         self.default_ip = self.get_default_ip()
         self.default_ifname = self.get_interface_from_ip(self.default_ip)
         self.default_netmask_bits = self.interfaces[self.default_ifname].get('netmask_bits')
+        logger.info(
+            f"Initialized network env on {self.default_ifname} with IP {self.default_ip}/{self.default_netmask_bits}"
+            )
 
     def get_interfaces(self):
 
@@ -98,7 +103,12 @@ class NetworkEnv():
 
         return netmask_bits
 
-    def network_scan(self, this_ip_addr=None, netmask_bits=None):
+    def network_scan(self,
+                     this_ip_addr: str = None,
+                     netmask_bits: int = None,
+                     nmap_scan_opts: list = DEFAULT_NMAP_SCAN_OPTS,
+                     save_to_kvs: bool = True
+                     ) -> dict:
         if not this_ip_addr:
             this_ip_addr = self.default_ip
         if not netmask_bits:
@@ -106,7 +116,10 @@ class NetworkEnv():
 
         net_to_scan = this_ip_addr + '/' + str(netmask_bits)
 
-        scan_res = self.run_nmap([net_to_scan, '-p', DEFAULT_SCAN_PORTS])
+        nmap_args = [net_to_scan] + nmap_scan_opts
+        logger.info(f"Running nmap scan on {' '.join(nmap_args)}")
+        scan_res = self.run_nmap(nmap_args)
+        logger.debug(f"nmap scan result: {scan_res}")
 
         if scan_res is None:
             return
@@ -114,7 +127,7 @@ class NetworkEnv():
         hosts = []
         for h in scan_res['nmaprun'].get('host', []):
             if h['status']['state'] == 'up':
-                this_host = {'ports': []}
+                this_host = {}
 
                 for a in h['address']:
                     if a.get('addrtype') == 'ipv4':
@@ -127,11 +140,25 @@ class NetworkEnv():
                 if h['hostnames']:
                     this_host['hostname'] = h['hostnames']['hostname'][0].get('name')
 
-                for p in h['ports']['port']:
-                    if p['state']['state'] == 'open':
-                        this_host['ports'].append(p['portid'])
+                if 'ports' in h:
+                    this_host['ports'] = []
+                    for p in h['ports'].get('port', []):
+                        if p['state']['state'] == 'open':
+                            this_host['ports'].append(p['portid'])
 
                 hosts.append(this_host)
+
+        # The default behavior is to save the results to the key-value store,
+        # for potential use by other processes
+        if save_to_kvs:
+            try:
+                kvs = KVStore()
+                for h in hosts:
+                    if h.get('mac'):  # Skip any hosts without MAC addresses
+                        this_mac = h['mac'].replace(':', '').lower()
+                        kvs.set(f"ether:mac:{this_mac}", h)
+            except Exception as e:
+                logger.error(f"Cannot save scan results to kvs: {e}")
 
         return hosts
 
