@@ -44,7 +44,8 @@ setup(
     entry_points={
         'console_scripts': [
             'ammp_edge = ammp_edge:main',
-            'wifi_ap_control = wifi_ap_control:main'
+            'wifi_ap_control = wifi_ap_control:main',
+            'env_scan_svc = env_scan_svc:main'
         ]
     },
     install_requires=[

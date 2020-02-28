@@ -55,6 +55,12 @@ apps:
     restart-condition: on-abnormal
     after: [redis-server]
     plugs: [network]
+  env-scan:
+    command: bin/env_scan_svc
+    daemon: oneshot
+    after: [redis-server]
+    plugs: [network, network-observe]
+    timer: 0:00-24:00/96
   redis-server:
     adapter: full
     command: bin/redis-server $SNAP/redis.conf --dir $SNAP_COMMON
