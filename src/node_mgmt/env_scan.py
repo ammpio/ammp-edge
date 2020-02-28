@@ -156,9 +156,9 @@ class NetworkEnv():
                 for h in hosts:
                     if h.get('mac'):  # Skip any hosts without MAC addresses
                         this_mac = h['mac'].replace(':', '').lower()
-                        kvs.set(f"ether:mac:{this_mac}", h)
+                        kvs.set(f"env:net:mac:{this_mac}", h)
             except Exception as e:
-                logger.error(f"Cannot save scan results to kvs: {e}")
+                logger.error(f"Cannot save scan results to key-value store: {e}")
 
         return hosts
 
