@@ -9,7 +9,7 @@ TODO: Make necessary extensions to also be usable by rawserial reader.
 """
 
 
-def generate_request(request_schema: dict, **rdg: dict) -> bytes:
+def generate_request(request_schema: dict, device_args: dict, **rdg: dict) -> bytes:
     """
     Inputs:
         'schema' is the request schema
@@ -23,13 +23,19 @@ def generate_request(request_schema: dict, **rdg: dict) -> bytes:
 
     for c in request_schema['sequence']:
 
-        if c['type'] == 'input':
+        component = b''
+
+        if c['type'] == 'input' or c['type'] == 'device_arg':
             if c.get('byte_order', 'msb') in ['lsb', 'little']:
                 byte_order = 'little'
             else:
                 byte_order = 'big'
 
-            input_value = rdg.get(c['input_field'], c.get('default_value'))
+            if c['type'] == 'input':
+                input_value = rdg.get(c['input_field'], c.get('default_value'))
+            elif c['type'] == 'device_arg':
+                input_value = device_args.get(c['input_field'], c.get('default_value'))
+
             if input_value is None:
                 logger.warn(f"Input value '{c['input_field']}' not provided. Skipping")
                 continue
@@ -56,7 +62,7 @@ def generate_request(request_schema: dict, **rdg: dict) -> bytes:
     return request
 
 
-def parse_response(response: bytes, response_schema: dict, **rdg: dict) -> bytes:
+def parse_response(response: bytes, response_schema: dict, device_args: dict, **rdg: dict) -> bytes:
     """
     Inputs:
         'response' is the response being parsed

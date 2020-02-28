@@ -4,7 +4,7 @@
       "request": {
         "sequence": [
           {
-            "type": "input",
+            "type": "device_arg",
             "input_field": "unit_id",
             "input_datatype": "uint",
             "num_bytes": 4,

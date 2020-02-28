@@ -22,6 +22,7 @@ class Reader(object):
         self._port = port
         self._recv_buffer_size = recv_buffer_size
         self._timeout = timeout
+        self._device_args = {'host': host, 'port': port, **kwargs}
 
         self._stored_responses = {}
 
@@ -30,7 +31,7 @@ class Reader(object):
         self._conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._conn.settimeout(self._timeout)
         try:
-            self._conn.connect((self._tcp.host, self._tcp.port))
+            self._conn.connect((self._host, self._port))
         except Exception:
             logger.error('Exception while attempting to create TCP connection:')
             raise
@@ -48,7 +49,7 @@ class Reader(object):
 
     def read(self, schema, **rdg):
 
-        request = generate_request(schema['request'], **rdg)
+        request = generate_request(schema['request'], self._device_args, **rdg)
 
         if request in self._stored_responses:
             response = self._stored_responses[request]
@@ -74,7 +75,7 @@ class Reader(object):
 
         try:
             # Parse the response to obtain the actual value
-            val_b = parse_response(response, schema['response'], **rdg)
+            val_b = parse_response(response, schema['response'], self._device_args, **rdg)
         except Exception:
             logger.error(
                 f"Exception while processing value from response {repr(response)}"
