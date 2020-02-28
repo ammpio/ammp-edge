@@ -47,7 +47,7 @@ apps:
   nmap:
     command: nmap
     environment:
-        LD_LIBRARY_PATH: "$LD_LIBRARY_PATH:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/blas"
+      LD_LIBRARY_PATH: "$LD_LIBRARY_PATH:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/blas"
     plugs: [network, network-bind, network-control]
   wifi-ap-control:
     command: bin/wifi_ap_control
@@ -57,10 +57,12 @@ apps:
     plugs: [network]
   env-scan:
     command: bin/env_scan_svc
-    daemon: oneshot
+    daemon: simple
     after: [redis-server]
     plugs: [network, network-observe]
     timer: 0:00-24:00/96
+    environment:
+      LD_LIBRARY_PATH: "$LD_LIBRARY_PATH:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/blas"
   redis-server:
     adapter: full
     command: bin/redis-server $SNAP/redis.conf --dir $SNAP_COMMON
