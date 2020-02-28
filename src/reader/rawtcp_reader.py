@@ -1,7 +1,7 @@
 import logging
 import socket
 
-from .helpers.request_response_parser import generate_request, parse_response
+from .helpers import generate_request, parse_response
 
 logger = logging.getLogger(__name__)
 

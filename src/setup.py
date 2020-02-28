@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # coding=utf-8
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 
 package_name = 'ammp_edge'
@@ -33,14 +33,7 @@ setup(
     description='Edge application for AMMP',
     url='https://www.ammp.io/',
     long_description=get_long_description(),
-    packages=[
-        'node_mgmt',
-        'data_mgmt',
-        'reader',
-        'processor',
-        'web_ui',
-        'wifi_ap_control'
-        ],
+    packages=find_packages(),
     py_modules=[
         package_name,
         'db_model',
