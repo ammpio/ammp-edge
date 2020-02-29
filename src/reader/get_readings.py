@@ -8,6 +8,7 @@ import queue
 from copy import deepcopy
 
 from processor import process_reading, get_output
+from .helpers import set_host_from_mac
 
 logger = logging.getLogger(__name__)
 
@@ -184,6 +185,7 @@ def read_device(dev, readings, readout_q, dev_lock=None):
 
     if dev['reading_type'] == 'modbustcp':
         reader_config = deepcopy(dev['address'])
+        set_host_from_mac(reader_config)
         reader_config['timeout'] = dev.get('timeout', DEVICE_DEFAULT_TIMEOUT)
         from reader.modbustcp_reader import Reader
 
@@ -199,11 +201,13 @@ def read_device(dev, readings, readout_q, dev_lock=None):
 
     elif dev['reading_type'] == 'rawtcp':
         reader_config = deepcopy(dev['address'])
+        set_host_from_mac(reader_config)
         reader_config['timeout'] = dev.get('timeout', DEVICE_DEFAULT_TIMEOUT)
         from reader.rawtcp_reader import Reader
 
     elif dev['reading_type'] == 'snmp':
         reader_config = deepcopy(dev['address'])
+        set_host_from_mac(reader_config)
         reader_config['timeout'] = dev.get('timeout', DEVICE_DEFAULT_TIMEOUT)
         from reader.snmp_reader import Reader
 
