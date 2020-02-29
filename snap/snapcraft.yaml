@@ -60,7 +60,7 @@ apps:
     daemon: simple
     after: [redis-server]
     plugs: [network, network-observe]
-    timer: 0:00-24:00/96
+    timer: 0:00~24:00/4
     environment:
       LD_LIBRARY_PATH: "$LD_LIBRARY_PATH:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/blas"
   redis-server:
