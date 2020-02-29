@@ -23,16 +23,28 @@ class EdgeAPI(object):
         self.node_id = self._kvs.get_or_wait('node:node_id')
         self.access_key = self._kvs.get_or_wait('node:access_key')
 
-        self._base_url = f"https://{self.api_host}/api/{self.api_ver}/nodes/{self.node_id}/"
+        self._base_url = f"https://{self.api_host}/api/{self.api_ver}/nodes/{self.node_id}"
 
         self._session = requests.Session()
         self._session.headers.update({'Authorization': self.access_key})
         self.__request_timeout = remote_api.get('timeout', DEFAULT_REQUEST_TIMEOUT)
 
-    def get_config(self) -> dict:
-        status_code, rtn = self.__get_request('config')
+    def get_node(self) -> dict:
+        status_code, rtn = self.__get_request('')
 
-        if status_code in [200, 204]:
+        if status_code == 200:
+            logger.info(f"Obtained node metadata from API")
+            logger.debug('Payload: %s' % rtn)
+            return rtn
+        else:
+            logger.error(f"Error {status_code} returned from metadata API request")
+            logger.info(f"API response: {rtn}")
+            return None
+
+    def get_config(self) -> dict:
+        status_code, rtn = self.__get_request('/config')
+
+        if status_code == 200:
             if rtn.get('config'):
                 logger.info(f"Obtained config from API")
                 logger.debug('Config payload: %s' % rtn['config'])
@@ -42,12 +54,11 @@ class EdgeAPI(object):
                 return None
         else:
             logger.error(f"Error {status_code} returned from config API request")
-            if rtn:
-                logger.info(f"API response: rtn")
+            logger.info(f"API response: {rtn}")
             return None
 
     def get_command(self) -> str:
-        status_code, rtn = self.__get_request('command')
+        status_code, rtn = self.__get_request('/command')
 
         if status_code == 200:
             if rtn.get('command'):
@@ -58,10 +69,11 @@ class EdgeAPI(object):
             return None
         else:
             logger.error(f"HTTP Error {status_code} returned from command API request")
+            logger.info(f"API response: {rtn}")
             return None
 
     def get_upload_url(self) -> str:
-        status_code, rtn = self.__get_request('upload_url')
+        status_code, rtn = self.__get_request('/upload_url')
 
         if status_code == 200:
             if rtn.get('upload_url'):
@@ -72,7 +84,7 @@ class EdgeAPI(object):
             return None
 
     def post_env_scan(self, scan_result: dict) -> bool:
-        status_code, rtn = self.__post_request('env_scan', payload=scan_result)
+        status_code, rtn = self.__post_request('/env_scan', payload=scan_result)
         if status_code in [200, 204]:
             logger.info("Successfully submitted environment scan")
             return True
