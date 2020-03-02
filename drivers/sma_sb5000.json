@@ -6,86 +6,62 @@
       "datatype": "uint32",
       "multiplier": 0.01,
       "unit": "Hz",
-      "valuemap": {
-        "0xffffffff": null
-      }
-    },
+      "valuemap": {"0x80000000": null, "0xffffffff": null}},
     "total_yield": {
       "register": 30529,
       "words": 2,
       "datatype": "uint32",
       "multiplier": 1.0,
       "unit": "Wh",
-      "valuemap": {
-        "0xffffffff": null
-      }
-    },
+      "valuemap": {"0x80000000": null, "0xffffffff": null}},
     "V1": {
       "register": 30783,
       "words": 2,
       "datatype": "uint32",
       "multiplier": 0.01,
       "unit": "V",
-      "valuemap": {
-        "0xffffffff": null
-      }
-    },
+      "valuemap": {"0x80000000": null, "0xffffffff": null}},
     "V2": {
       "register": 30785,
       "words": 2,
       "datatype": "uint32",
       "multiplier": 0.01,
       "unit": "V",
-      "valuemap": {
-        "0xffffffff": null
-      }
-    },
+      "valuemap": {"0x80000000": null, "0xffffffff": null}},
     "V3": {
       "register": 30787,
       "words": 2,
       "datatype": "uint32",
       "multiplier": 0.01,
       "unit": "V",
-      "valuemap": {
-        "0xffffffff": null
-      }
-    },
+      "valuemap": {"0x80000000": null, "0xffffffff": null}},
     "I1": {
       "register": 30977,
       "words": 2,
       "datatype": "int32",
       "multiplier": 0.001,
       "unit": "A",
-      "valuemap": {
-        "0x80000000": null
-      }
-    },
+      "valuemap": {"0x80000000": null, "0xffffffff": null}},
     "I2": {
       "register": 30979,
       "words": 2,
       "datatype": "int32",
       "multiplier": 0.001,
       "unit": "A",
-      "valuemap": {
-        "0x80000000": null
-      }
-    },
+      "valuemap": {"0x80000000": null, "0xffffffff": null}},
     "I3": {
       "register": 30981,
       "words": 2,
       "datatype": "int32",
       "multiplier": 0.001,
       "unit": "A",
-      "valuemap": {
-        "0x80000000": null
-      }
-    },
-    "dc_in_I1": {"register": 30769, "words": 2, "datatype": "int32", "multiplier": 0.001, "unit": "A", "valuemap": {"0x80000000": null}},
-    "dc_in_V1": {"register": 30771, "words": 2, "datatype": "int32", "multiplier": 0.01, "unit": "V", "valuemap": {"0x80000000": null}},
-    "dc_in_P1": {"register": 30773, "words": 2, "datatype": "int32", "multiplier": 1.0, "unit": "W", "valuemap": {"0x80000000": null}},
-    "dc_in_I2": {"register": 30957, "words": 2, "datatype": "int32", "multiplier": 0.001, "unit": "A", "valuemap": {"0x80000000": null}},
-    "dc_in_V2": {"register": 30959, "words": 2, "datatype": "int32", "multiplier": 0.01, "unit": "V", "valuemap": {"0x80000000": null}},
-    "dc_in_P2": {"register": 30961, "words": 2, "datatype": "int32", "multiplier": 1.0, "unit": "W", "valuemap": {"0x80000000": null}},
+      "valuemap": {"0x80000000": null, "0xffffffff": null}},
+    "dc_in_I1": {"register": 30769, "words": 2, "datatype": "int32", "multiplier": 0.001, "unit": "A", "valuemap": {"0x80000000": null, "0xffffffff": null}},
+    "dc_in_V1": {"register": 30771, "words": 2, "datatype": "int32", "multiplier": 0.01, "unit": "V", "valuemap": {"0x80000000": null, "0xffffffff": null}},
+    "dc_in_P1": {"register": 30773, "words": 2, "datatype": "int32", "multiplier": 1.0, "unit": "W", "valuemap": {"0x80000000": null, "0xffffffff": null}},
+    "dc_in_I2": {"register": 30957, "words": 2, "datatype": "int32", "multiplier": 0.001, "unit": "A", "valuemap": {"0x80000000": null, "0xffffffff": null}},
+    "dc_in_V2": {"register": 30959, "words": 2, "datatype": "int32", "multiplier": 0.01, "unit": "V", "valuemap": {"0x80000000": null, "0xffffffff": null}},
+    "dc_in_P2": {"register": 30961, "words": 2, "datatype": "int32", "multiplier": 1.0, "unit": "W", "valuemap": {"0x80000000": null, "0xffffffff": null}},
 
     "operating_mode": {
       "register": 30825,
@@ -104,60 +80,42 @@
       "datatype": "int32",
       "multiplier": 1.0,
       "unit": "W",
-      "valuemap": {
-        "0x80000000": null
-      }
-    },
+      "valuemap": {"0x80000000": null, "0xffffffff": null}},
     "P2": {
       "register": 30779,
       "words": 2,
       "datatype": "int32",
       "multiplier": 1.0,
       "unit": "W",
-      "valuemap": {
-        "0x80000000": null
-      }
-    },
+      "valuemap": {"0x80000000": null, "0xffffffff": null}},
     "P3": {
       "register": 30781,
       "words": 2,
       "datatype": "int32",
       "multiplier": 1.0,
       "unit": "W",
-      "valuemap": {
-        "0x80000000": null
-      }
-    },
+      "valuemap": {"0x80000000": null, "0xffffffff": null}},
     "Q_L2": {
       "register": 30809,
       "words": 2,
       "datatype": "int32",
       "multiplier": 1.0,
       "unit": "VAr",
-      "valuemap": {
-        "0x80000000": null
-      }
-    },
+      "valuemap": {"0x80000000": null, "0xffffffff": null}},
     "S_L2": {
       "register": 30817,
       "words": 2,
       "datatype": "int32",
       "multiplier": 1.0,
       "unit": "VA",
-      "valuemap": {
-        "0x80000000": null
-      }
-    },
+      "valuemap": {"0x80000000": null, "0xffffffff": null}},
     "temp_internal": {
       "register": 30953,
       "words": 2,
       "datatype": "int32",
       "multiplier": 0.1,
       "unit": "C",
-      "valuemap": {
-        "0x80000000": null
-      }
-    },
+      "valuemap": {"0x80000000": null, "0xffffffff": null}},
     "serial": {
       "register": 30057,
       "words": 2,
