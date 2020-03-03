@@ -34,7 +34,7 @@ class EdgeAPI(object):
 
         if status_code == 200:
             logger.info(f"Obtained node metadata from API")
-            logger.debug('Payload: %s' % rtn)
+            logger.debug(f"Payload: {rtn}")
             return rtn
         else:
             logger.error(f"Error {status_code} returned from metadata API request")
@@ -47,7 +47,7 @@ class EdgeAPI(object):
         if status_code == 200:
             if rtn.get('config'):
                 logger.info(f"Obtained config from API")
-                logger.debug('Config payload: %s' % rtn['config'])
+                logger.debug(f"Payload: {rtn}")
                 return rtn['config']
             else:
                 logger.error('API call successful but response did not include a config payload')

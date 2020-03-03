@@ -63,10 +63,10 @@ class ConfigWatch(Thread):
         logger.info(f"Checking for configuration for node {self._node.node_id} from API")
 
         try:
-            node_meta = self._node.api.get_config()
+            node_meta = self._node.api.get_node()
             if node_meta:
                 if 'message' in node_meta:
-                    logger.debug(f"API message: {node_meta['message']}")
+                    logger.info(f"API message: {node_meta['message']}")
 
                 if 'config_id' in node_meta:
                     if not self._node.config:
@@ -74,10 +74,10 @@ class ConfigWatch(Thread):
                         return True
 
                     if self._node.config.get('config_id') == node_meta['config_id']:
-                        logger.debug('Latest remote configuration is in use locally')
+                        logger.info('Latest remote configuration is in use locally')
                         return False
                     else:
-                        logger.debug(f"New configuration with ID {node_meta['config_id']} is available from API")
+                        logger.info(f"New configuration with ID {node_meta['config_id']} is available from API")
                         return True
                 else:
                     logger.warn("No configuration info returned from API")
