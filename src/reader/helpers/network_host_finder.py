@@ -9,7 +9,12 @@ ipr = IPRoute()
 
 
 def get_mac_from_ip(ip: str) -> str:
-    arp_for_ip = ipr.get_neighbours(family=2, dst=ip)
+    try:
+        arp_for_ip = ipr.get_neighbours(family=2, dst=ip)
+    except Exception:
+        logger.exception(f"Exception while ipr.get_neighbours for IP {ip}")
+        return None
+
     if len(arp_for_ip) == 1:
         mac = arp_for_ip[0].get_attr('NDA_LLADDR').lower()
         logger.debug(f"ARP table: Obtained MAC {mac} from IP {ip}")
@@ -20,7 +25,12 @@ def get_mac_from_ip(ip: str) -> str:
 
 
 def get_ip_from_mac(mac: str) -> str:
-    arp_for_mac = ipr.get_neighbours(family=2, lladdr=mac.lower())
+    try:
+        arp_for_mac = ipr.get_neighbours(family=2, lladdr=mac.lower())
+    except Exception:
+        logger.exception(f"Exception while running ipr.get_neighbours for MAC {mac}")
+        return None
+
     if len(arp_for_mac) == 1:
         ip = arp_for_mac[0].get_attr('NDA_DST')
         logger.debug(f"ARP table: Obtained IP {ip} from MAC {mac}")
@@ -31,8 +41,8 @@ def get_ip_from_mac(mac: str) -> str:
 
 
 def trigger_network_scan() -> None:
-    from env_scan_svc import main as env_scan_svc
-    env_scan_svc()
+    from env_scan_svc import main as do_env_scan
+    do_env_scan()
 
 
 def set_host_from_mac(address: dict) -> None:
