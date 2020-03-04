@@ -12,7 +12,7 @@ def get_mac_from_ip(ip: str) -> str:
     arp_for_ip = ipr.get_neighbours(family=2, dst=ip)
     if len(arp_for_ip) == 1:
         mac = arp_for_ip[0].get_attr('NDA_LLADDR').lower()
-        logger.debug(f"Obtained MAC {mac} from IP {ip}")
+        logger.debug(f"ARP table: Obtained MAC {mac} from IP {ip}")
         return mac
     else:
         logger.debug(f"Cannot get MAC based on ARP table entries when looking for IP {ip}: {arp_for_ip}")
@@ -23,7 +23,7 @@ def get_ip_from_mac(mac: str) -> str:
     arp_for_mac = ipr.get_neighbours(family=2, lladdr=mac.lower())
     if len(arp_for_mac) == 1:
         ip = arp_for_mac[0].get_attr('NDA_DST')
-        logger.debug(f"Obtained IP {ip} from MAC {mac}")
+        logger.debug(f"ARP table: Obtained IP {ip} from MAC {mac}")
         return ip
     else:
         logger.debug(f"Cannot get IP based on ARP table entries when looking for MAC {mac}: {arp_for_mac}")
@@ -58,6 +58,7 @@ def set_host_from_mac(address: dict) -> None:
         # If not available in ARP cache, look in key-value store
         if not ip:
             ip = kvs.get(f"env:net:mac:{mac}").get('ipv4')
+            logger.debug(f"KVS cache: Obtained IP {ip} from MAC {mac}")
 
             if ip:
                 # Check this to make sure it does not contradict the cache
