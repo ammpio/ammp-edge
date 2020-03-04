@@ -8,7 +8,11 @@ kvs = KVStore()
 ipr = IPRoute()
 
 
-def get_mac_from_ip(ip: str) -> str:
+def arp_get_mac_from_ip(ip: str) -> str:
+    if not isinstance(ip, str):
+        logger.error(f"IP address must be string. Provided: {ip}")
+        return None
+
     try:
         arp_for_ip = ipr.get_neighbours(family=2, dst=ip)
     except Exception:
@@ -26,7 +30,11 @@ def get_mac_from_ip(ip: str) -> str:
     return None
 
 
-def get_ip_from_mac(mac: str) -> str:
+def arp_get_ip_from_mac(mac: str) -> str:
+    if not isinstance(mac, str):
+        logger.error(f"MAC address must be string. Provided: {mac}")
+        return None
+
     try:
         arp_for_mac = ipr.get_neighbours(family=2, lladdr=mac.lower())
     except Exception:
@@ -66,22 +74,23 @@ def set_host_from_mac(address: dict) -> None:
         mac = address['mac'].lower()
 
         # First try ARP cache:
-        ip = get_ip_from_mac(mac)
+        ip = arp_get_ip_from_mac(mac)
 
         # If not available in ARP cache, look in key-value store
         if not ip:
             ip = kvs.get(f"env:net:mac:{mac}").get('ipv4')
             logger.debug(f"KVS cache: Obtained IP {ip} from MAC {mac}")
 
-            if ip:
-                # Check this to make sure it does not contradict the cache
-                mac_from_cache = get_mac_from_ip(ip)
-                if mac_from_cache and mac_from_cache != mac:
-                    logger.debug(f"MAC from cache ({mac_from_cache}) does not match requested MAC ({mac})")
-                    logger.debug(f"Triggering network scan")
-                    trigger_network_scan()
-                    return
-            else:
+            if not ip:
+                # Still no IP obtained
+                return
+
+            # Check IP from key-value store to make sure it does not contradict ARP cache
+            mac_from_arp = arp_get_mac_from_ip(ip)
+            if mac_from_arp and mac_from_arp != mac:
+                logger.debug(f"MAC from cache ({mac_from_arp}) does not match requested MAC ({mac})")
+                logger.debug(f"Triggering network scan")
+                trigger_network_scan()
                 return
 
         # Set the host IP
