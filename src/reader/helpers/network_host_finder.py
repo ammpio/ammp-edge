@@ -16,12 +16,14 @@ def get_mac_from_ip(ip: str) -> str:
         return None
 
     if len(arp_for_ip) == 1:
-        mac = arp_for_ip[0].get_attr('NDA_LLADDR').lower()
-        logger.debug(f"ARP table: Obtained MAC {mac} from IP {ip}")
-        return mac
-    else:
-        logger.debug(f"Cannot get MAC based on ARP table entries when looking for IP {ip}: {arp_for_ip}")
-        return None
+        mac = arp_for_ip[0].get_attr('NDA_LLADDR')
+        if isinstance(mac, str):
+            mac = mac.lower()
+            logger.debug(f"ARP table: Obtained MAC {mac} from IP {ip}")
+            return mac
+
+    logger.debug(f"Cannot get MAC based on ARP table entries when looking for IP {ip}: {arp_for_ip}")
+    return None
 
 
 def get_ip_from_mac(mac: str) -> str:
@@ -33,11 +35,12 @@ def get_ip_from_mac(mac: str) -> str:
 
     if len(arp_for_mac) == 1:
         ip = arp_for_mac[0].get_attr('NDA_DST')
-        logger.debug(f"ARP table: Obtained IP {ip} from MAC {mac}")
-        return ip
-    else:
-        logger.debug(f"Cannot get IP based on ARP table entries when looking for MAC {mac}: {arp_for_mac}")
-        return None
+        if isinstance(ip, str):
+            logger.debug(f"ARP table: Obtained IP {ip} from MAC {mac}")
+            return ip
+
+    logger.debug(f"Cannot get IP based on ARP table entries when looking for MAC {mac}: {arp_for_mac}")
+    return None
 
 
 def trigger_network_scan() -> None:
