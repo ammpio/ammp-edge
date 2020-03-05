@@ -12,7 +12,8 @@ with IPRoute() as ipr:
         logger.debug(f"ARP Table: {arp_table_by_ip}")
     except Exception:
         logger.exception(f"Could not get ARP table")
-        arp_table = {}
+        arp_table_by_mac = {}
+        arp_table_by_ip = {}
 
 
 def arp_get_mac_from_ip(ip: str) -> str:
@@ -24,7 +25,7 @@ def arp_get_mac_from_ip(ip: str) -> str:
 
 def arp_get_ip_from_mac(mac: str) -> str:
     global arp_table_by_mac
-    if mac in arp_table:
+    if mac in arp_table_by_mac:
         logger.debug(f"ARP table: MAC {mac} mapped")
         return arp_table_by_mac[mac]
 
