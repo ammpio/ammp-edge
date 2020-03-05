@@ -4,69 +4,31 @@ from kvstore import KVStore
 
 logger = logging.getLogger(__name__)
 
-kvs = KVStore()
-ipr = IPRoute()
-
-
-def arp_get_mac_from_ip(ip: str, retry_after_scan: bool = False) -> str:
-    if not isinstance(ip, str):
-        logger.error(f"IP address must be string. Provided: {ip}")
-        return None
-
+# Get ARP table. Note that this includes both mappings: for IP-to-MAC and MAC-to-IP
+with IPRoute() as ipr:
     try:
-        arp_for_ip = ipr.get_neighbours(family=2, dst=ip)
-    except KeyError as e:
-        if retry_after_scan:
-            # If we've just done a scan and it's still not working, bounce
-            return None
-        else:
-            logger.info(f"Error: {e}. ARP cache is likely stale. Triggering network scan")
-            trigger_network_scan()
-            # Mark the next attempt as a retry
-            return arp_get_mac_from_ip(ip, True)
+        neigh = ipr.get_neighbours(2)
+        arp_table = dict(
+            [(n.get_attr("NDA_DST"), n.get_attr("NDA_LLADDR")) for n in neigh] +
+            [(n.get_attr("NDA_LLADDR"), n.get_attr("NDA_DST")) for n in neigh]
+            )
     except Exception:
-        logger.exception(f"Exception while ipr.get_neighbours for IP {ip}")
-        return None
-
-    if len(arp_for_ip) == 1:
-        mac = arp_for_ip[0].get_attr('NDA_LLADDR')
-        if isinstance(mac, str):
-            mac = mac.lower()
-            logger.debug(f"ARP table: Obtained MAC {mac} from IP {ip}")
-            return mac
-
-    logger.debug(f"Cannot get MAC based on ARP table entries when looking for IP {ip}: {arp_for_ip}")
-    return None
+        logger.exception(f"Could not get ARP table")
+        arp_table = {}
 
 
-def arp_get_ip_from_mac(mac: str, retry_after_scan: bool = False) -> str:
-    if not isinstance(mac, str):
-        logger.error(f"MAC address must be string. Provided: {mac}")
-        return None
+def arp_get_mac_from_ip(ip: str) -> str:
+    global arp_table
+    if ip in arp_table:
+        logger.debug(f"ARP table: IP {ip} mapped")
+    return arp_table.get(ip)
 
-    try:
-        arp_for_mac = ipr.get_neighbours(family=2, lladdr=mac.lower())
-    except KeyError as e:
-        if retry_after_scan:
-            # If we've just done a scan and it's still not working, bounce
-            return None
-        else:
-            logger.info(f"Error: {e}. ARP cache is likely stale. Triggering network scan")
-            trigger_network_scan()
-            # Mark the next attempt as a retry
-            return arp_get_ip_from_mac(mac, True)
-    except Exception:
-        logger.exception(f"Exception while running ipr.get_neighbours for MAC {mac}")
-        return None
 
-    if len(arp_for_mac) == 1:
-        ip = arp_for_mac[0].get_attr('NDA_DST')
-        if isinstance(ip, str):
-            logger.debug(f"ARP table: Obtained IP {ip} from MAC {mac}")
-            return ip
-
-    logger.debug(f"Cannot get IP based on ARP table entries when looking for MAC {mac}: {arp_for_mac}")
-    return None
+def arp_get_ip_from_mac(mac: str) -> str:
+    global arp_table
+    if mac in arp_table:
+        logger.debug(f"ARP table: MAC {mac} mapped")
+    return arp_table.get(mac)
 
 
 def trigger_network_scan() -> None:
@@ -96,7 +58,8 @@ def set_host_from_mac(address: dict) -> None:
 
         # If not available in ARP cache, look in key-value store
         if not ip:
-            ip = kvs.get(f"env:net:mac:{mac}").get('ipv4')
+            with KVStore() as kvs:
+                ip = kvs.get(f"env:net:mac:{mac}").get('ipv4')
             logger.debug(f"KVS cache: Obtained IP {ip} from MAC {mac}")
 
             if not ip:
