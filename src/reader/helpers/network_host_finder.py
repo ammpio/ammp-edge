@@ -4,31 +4,29 @@ from kvstore import KVStore
 
 logger = logging.getLogger(__name__)
 
-# Get ARP table. Note that this includes both mappings: for IP-to-MAC and MAC-to-IP
 with IPRoute() as ipr:
     try:
         neigh = ipr.get_neighbours(2)
-        arp_table = dict(
-            [(n.get_attr("NDA_DST"), n.get_attr("NDA_LLADDR")) for n in neigh] +
-            [(n.get_attr("NDA_LLADDR"), n.get_attr("NDA_DST")) for n in neigh]
-            )
+        arp_table_by_mac = {n.get_attr("NDA_LLADDR"): n.get_attr("NDA_DST") for n in neigh}
+        arp_table_by_ip = {n.get_attr("NDA_DST"): n.get_attr("NDA_LLADDR") for n in neigh}
+        logger.debug(f"ARP Table: {arp_table_by_ip}")
     except Exception:
         logger.exception(f"Could not get ARP table")
         arp_table = {}
 
 
 def arp_get_mac_from_ip(ip: str) -> str:
-    global arp_table
-    if ip in arp_table:
+    global arp_table_by_ip
+    if ip in arp_table_by_ip:
         logger.debug(f"ARP table: IP {ip} mapped")
-    return arp_table.get(ip)
+        return arp_table_by_ip[ip]
 
 
 def arp_get_ip_from_mac(mac: str) -> str:
-    global arp_table
+    global arp_table_by_mac
     if mac in arp_table:
         logger.debug(f"ARP table: MAC {mac} mapped")
-    return arp_table.get(mac)
+        return arp_table_by_mac[mac]
 
 
 def trigger_network_scan() -> None:
