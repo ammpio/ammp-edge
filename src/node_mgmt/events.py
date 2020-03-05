@@ -1,7 +1,8 @@
 import logging
+import threading
+
 logger = logging.getLogger(__name__)
 
-import threading
 
 class NodeEvents(object):
     def __init__(self):

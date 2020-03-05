@@ -15,7 +15,7 @@ from data_mgmt import DataPusher, NonVolatileQProc
 from reader import get_readings
 
 # Set up logging
-logging.basicConfig(format='%(threadName)s:%(name)s [%(levelname)s] %(message)s', level='INFO')
+logging.basicConfig(format='%(threadName)s:%(name)s:%(lineno)d [%(levelname)s] %(message)s', level='INFO')
 logger = logging.getLogger(__name__)
 
 # Load additional environment variables from env file (set by snap configuration)

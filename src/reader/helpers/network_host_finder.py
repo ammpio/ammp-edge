@@ -8,13 +8,22 @@ kvs = KVStore()
 ipr = IPRoute()
 
 
-def arp_get_mac_from_ip(ip: str) -> str:
+def arp_get_mac_from_ip(ip: str, retry_after_scan: bool = False) -> str:
     if not isinstance(ip, str):
         logger.error(f"IP address must be string. Provided: {ip}")
         return None
 
     try:
         arp_for_ip = ipr.get_neighbours(family=2, dst=ip)
+    except KeyError as e:
+        if retry_after_scan:
+            # If we've just done a scan and it's still not working, bounce
+            return None
+        else:
+            logger.info(f"Error: {e}. ARP cache is likely stale. Triggering network scan")
+            trigger_network_scan()
+            # Mark the next attempt as a retry
+            return arp_get_mac_from_ip(ip, True)
     except Exception:
         logger.exception(f"Exception while ipr.get_neighbours for IP {ip}")
         return None
@@ -30,13 +39,22 @@ def arp_get_mac_from_ip(ip: str) -> str:
     return None
 
 
-def arp_get_ip_from_mac(mac: str) -> str:
+def arp_get_ip_from_mac(mac: str, retry_after_scan: bool = False) -> str:
     if not isinstance(mac, str):
         logger.error(f"MAC address must be string. Provided: {mac}")
         return None
 
     try:
         arp_for_mac = ipr.get_neighbours(family=2, lladdr=mac.lower())
+    except KeyError as e:
+        if retry_after_scan:
+            # If we've just done a scan and it's still not working, bounce
+            return None
+        else:
+            logger.info(f"Error: {e}. ARP cache is likely stale. Triggering network scan")
+            trigger_network_scan()
+            # Mark the next attempt as a retry
+            return arp_get_ip_from_mac(mac, True)
     except Exception:
         logger.exception(f"Exception while running ipr.get_neighbours for MAC {mac}")
         return None
