@@ -58,7 +58,7 @@ def set_host_from_mac(address: dict) -> None:
         # If not available in ARP cache, look in key-value store
         if not ip:
             with KVStore() as kvs:
-                ip = kvs.get(f"env:net:mac:{mac}").get('ipv4')
+                ip = kvs.get(f"env:net:mac:{mac}", {}).get('ipv4')
             logger.debug(f"KVS cache: Obtained IP {ip} from MAC {mac}")
 
             if not ip:
