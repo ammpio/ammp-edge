@@ -37,10 +37,10 @@ class KVStore(object):
     def __del__(self):
         self.r.close()
 
-    def get(self, key: str):
+    def get(self, key: str, default=None):
         value = self.r.get(key)
         if value is None:
-            return None
+            return default
         else:
             return json.loads(value.decode(STR_ENCODING))
 
