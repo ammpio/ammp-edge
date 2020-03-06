@@ -7,14 +7,13 @@ logger = logging.getLogger(__name__)
 with IPRoute() as ipr:
     try:
         neigh = ipr.get_neighbours(2)
-        arp_table_by_mac = {n.get_attr("NDA_LLADDR"): n.get_attr("NDA_DST") for n in neigh}
-        arp_table_by_ip = {n.get_attr("NDA_DST"): n.get_attr("NDA_LLADDR") for n in neigh}
+        arp_table_by_mac = {n.get_attr("NDA_LLADDR").lower(): n.get_attr("NDA_DST") for n in neigh}
+        arp_table_by_ip = {n.get_attr("NDA_DST"): n.get_attr("NDA_LLADDR").lower() for n in neigh}
         logger.debug(f"ARP Table: {arp_table_by_ip}")
     except Exception:
         logger.exception(f"Could not get ARP table")
         arp_table_by_mac = {}
         arp_table_by_ip = {}
-
 
 def arp_get_mac_from_ip(ip: str) -> str:
     global arp_table_by_ip
@@ -35,7 +34,7 @@ def trigger_network_scan() -> None:
     do_env_scan()
 
 
-def set_host_from_mac(address: dict) -> None:
+def set_host_from_mac(address: dict, retrying: bool = False) -> None:
     """
     Obtains the IP address of a host.
     The passed `address` dict should contain at least one of 'host' (an IP address)
@@ -72,6 +71,9 @@ def set_host_from_mac(address: dict) -> None:
                 logger.warn(f"MAC from ARP cache ({mac_from_arp}) for IP {ip} does not match requested MAC ({mac})")
                 logger.info(f"Triggering network scan")
                 trigger_network_scan()
+                # Following the scan, try to set the host again. But skip if this is already a retry.
+                if not retrying:
+                    set_host_from_mac(address, retrying=True)
                 return
 
         # Set the host IP

@@ -7,10 +7,10 @@ import threading
 import queue
 from copy import deepcopy
 
+logger = logging.getLogger(__name__)
+
 from processor import process_reading, get_output
 from .helpers import set_host_from_mac
-
-logger = logging.getLogger(__name__)
 
 DEVICE_DEFAULT_TIMEOUT = 5
 DEVICE_READ_MAXTIMEOUT = 600
