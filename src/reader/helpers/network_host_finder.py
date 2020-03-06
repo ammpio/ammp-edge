@@ -11,7 +11,7 @@ kvs = KVStore()
 def arp_get_mac_from_ip(ip: str) -> str:
     try:
         mac = ndb.neighbours[{'dst': ip}]['lladdr'].lower()
-        logger.debug(f"Mapped {mac} -> {ip} based on ARP table")
+        logger.debug(f"Mapped {ip} -> {mac} based on ARP table")
         return mac
     except KeyError:
         logger.info(f"IP {ip} not found in ARP table")
@@ -29,7 +29,7 @@ def arp_get_ip_from_mac(mac: str) -> str:
     try:
         ip = ndb.neighbours[{'lladdr': mac.lower()}]['dst']
         logger.debug(f"Mapped {mac} -> {ip} based on ARP table")
-        return mac
+        return ip
     except KeyError:
         logger.info(f"MAC {mac} not found in ARP table")
         return None
