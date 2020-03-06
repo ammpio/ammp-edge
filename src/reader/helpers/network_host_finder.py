@@ -1,32 +1,41 @@
 import logging
-from pyroute2 import IPRoute
+from pyroute2 import NDB
 from kvstore import KVStore
 
 logger = logging.getLogger(__name__)
 
-with IPRoute() as ipr:
-    try:
-        neigh = ipr.get_neighbours(2)
-        arp_table_by_mac = {n.get_attr("NDA_LLADDR").lower(): n.get_attr("NDA_DST") for n in neigh}
-        arp_table_by_ip = {n.get_attr("NDA_DST"): n.get_attr("NDA_LLADDR").lower() for n in neigh}
-        logger.debug(f"ARP Table: {arp_table_by_ip}")
-    except Exception:
-        logger.exception(f"Could not get ARP table")
-        arp_table_by_mac = {}
-        arp_table_by_ip = {}
+ndb = NDB()
+kvs = KVStore()
+
 
 def arp_get_mac_from_ip(ip: str) -> str:
-    global arp_table_by_ip
-    if ip in arp_table_by_ip:
-        logger.debug(f"ARP table: IP {ip} mapped")
-        return arp_table_by_ip[ip]
+    try:
+        mac = ndb.neighbours[{'dst': ip}]['lladdr'].lower()
+        logger.debug(f"Mapped {mac} -> {ip} based on ARP table")
+        return mac
+    except KeyError:
+        logger.info(f"IP {ip} not found in ARP table")
+        return None
+    except Exception:
+        logger.exception(f"Exception while looking for IP {ip} in ARP table")
+        return None
 
 
 def arp_get_ip_from_mac(mac: str) -> str:
-    global arp_table_by_mac
-    if mac in arp_table_by_mac:
-        logger.debug(f"ARP table: MAC {mac} mapped")
-        return arp_table_by_mac[mac]
+    if not isinstance(mac, str):
+        logger.warn(f"MAC must be string. Received {mac}")
+        return None
+
+    try:
+        ip = ndb.neighbours[{'lladdr': mac.lower()}]['dst']
+        logger.debug(f"Mapped {mac} -> {ip} based on ARP table")
+        return mac
+    except KeyError:
+        logger.info(f"MAC {mac} not found in ARP table")
+        return None
+    except Exception:
+        logger.exception(f"Exception while looking for MAC {mac} in ARP table")
+        return None
 
 
 def trigger_network_scan() -> None:
@@ -49,6 +58,7 @@ def set_host_from_mac(address: dict, retrying: bool = False) -> None:
     """
 
     if address.get('mac'):
+
         mac = address['mac'].lower()
 
         # First try ARP cache:
@@ -57,8 +67,7 @@ def set_host_from_mac(address: dict, retrying: bool = False) -> None:
         # If not available in ARP cache, look in key-value store
         if not ip:
             logger.info(f"MAC {mac} not found in ARP cache; looking in k-v store")
-            with KVStore() as kvs:
-                ip = kvs.get(f"env:net:mac:{mac}", {}).get('ipv4')
+            ip = kvs.get(f"env:net:mac:{mac}", {}).get('ipv4')
             logger.debug(f"KVS cache: Obtained IP {ip} from MAC {mac}")
 
             if not ip:
