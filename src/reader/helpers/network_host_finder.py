@@ -57,6 +57,7 @@ def set_host_from_mac(address: dict) -> None:
 
         # If not available in ARP cache, look in key-value store
         if not ip:
+            logger.info(f"MAC {mac} not found in ARP cache; looking in k-v store")
             with KVStore() as kvs:
                 ip = kvs.get(f"env:net:mac:{mac}", {}).get('ipv4')
             logger.debug(f"KVS cache: Obtained IP {ip} from MAC {mac}")
@@ -68,11 +69,11 @@ def set_host_from_mac(address: dict) -> None:
             # Check IP from key-value store to make sure it does not contradict ARP cache
             mac_from_arp = arp_get_mac_from_ip(ip)
             if mac_from_arp and mac_from_arp != mac:
-                logger.debug(f"MAC from cache ({mac_from_arp}) does not match requested MAC ({mac})")
-                logger.debug(f"Triggering network scan")
+                logger.warn(f"MAC from ARP cache ({mac_from_arp}) for IP {ip} does not match requested MAC ({mac})")
+                logger.info(f"Triggering network scan")
                 trigger_network_scan()
                 return
 
         # Set the host IP
-        logger.debug(f"Setting host IP of MAC {mac} to {ip}")
+        logger.info(f"Setting host IP of MAC {mac} to {ip}")
         address['host'] = ip
