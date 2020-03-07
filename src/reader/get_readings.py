@@ -106,11 +106,14 @@ def get_readings(node):
     for dev_id, dev in node.config['devices'].items():
         if 'address' in dev:
             # Get the device or host name if available
-            d = dev['address'].get('device') or dev['address'].get('host')
+            d = dev['address'].get('device') or dev['address'].get('host') or dev['address'].get('mac')
 
             # Create a lock for this device or host name if it doesn't already exist
             if d and d not in locks:
                 locks[d] = threading.Lock()
+
+            # Set hostname based on MAC, if required
+            set_host_from_mac(dev['address'])
 
     # Set up threads for reading each of the devices
     for dev_id in dev_rdg:
@@ -118,7 +121,7 @@ def get_readings(node):
         dev.update({'id': dev_id})
 
         try:
-            d = dev['address'].get('device') or dev['address'].get('host')
+            d = dev['address'].get('device') or dev['address'].get('host') or dev['address'].get('mac')
             dev_lock = locks[d]
         except KeyError:
             dev_lock = None
@@ -185,7 +188,6 @@ def read_device(dev, readings, readout_q, dev_lock=None):
 
     if dev['reading_type'] == 'modbustcp':
         reader_config = deepcopy(dev['address'])
-        set_host_from_mac(reader_config)
         reader_config['timeout'] = dev.get('timeout', DEVICE_DEFAULT_TIMEOUT)
         from reader.modbustcp_reader import Reader
 
@@ -201,13 +203,11 @@ def read_device(dev, readings, readout_q, dev_lock=None):
 
     elif dev['reading_type'] == 'rawtcp':
         reader_config = deepcopy(dev['address'])
-        set_host_from_mac(reader_config)
         reader_config['timeout'] = dev.get('timeout', DEVICE_DEFAULT_TIMEOUT)
         from reader.rawtcp_reader import Reader
 
     elif dev['reading_type'] == 'snmp':
         reader_config = deepcopy(dev['address'])
-        set_host_from_mac(reader_config)
         reader_config['timeout'] = dev.get('timeout', DEVICE_DEFAULT_TIMEOUT)
         from reader.snmp_reader import Reader
 
