@@ -13,8 +13,9 @@ def arp_get_mac_from_ip(ip: str) -> str:
         mac = ndb.neighbours[{'dst': ip}]['lladdr'].lower()
         logger.debug(f"Mapped {ip} -> {mac} based on ARP table")
         return mac
-    except KeyError:
+    except KeyError as e:
         logger.info(f"IP {ip} not found in ARP table")
+        logger.debug(f"Error: {e}", exc_info=True)
         return None
     except Exception:
         logger.exception(f"Exception while looking for IP {ip} in ARP table")
@@ -30,8 +31,9 @@ def arp_get_ip_from_mac(mac: str) -> str:
         ip = ndb.neighbours[{'lladdr': mac.lower()}]['dst']
         logger.debug(f"Mapped {mac} -> {ip} based on ARP table")
         return ip
-    except KeyError:
+    except KeyError as e:
         logger.info(f"MAC {mac} not found in ARP table")
+        logger.debug(f"Error: {e}", exc_info=True)
         return None
     except Exception:
         logger.exception(f"Exception while looking for MAC {mac} in ARP table")
