@@ -48,9 +48,11 @@ def arp_get_ip_from_mac(mac: str) -> str:
 
 def network_scan_thread() -> None:
     from env_scan_svc import main as do_env_scan
-    do_env_scan()
-    logger.info(f"Scan complete. Sleeping {WAIT_AFTER_SCAN}")
-    sleep(WAIT_AFTER_SCAN)
+
+    with scan_in_progress:
+        do_env_scan()
+        logger.info(f"Scan complete. Sleeping {WAIT_AFTER_SCAN}")
+        sleep(WAIT_AFTER_SCAN)
 
 
 def trigger_network_scan() -> None:
@@ -59,13 +61,12 @@ def trigger_network_scan() -> None:
         logger.info(f"Scan is in progress or completed within last {WAIT_AFTER_SCAN} seconds. Not scanning again.")
         return
 
-    with scan_in_progress:
-        scan_thread = Thread(
-                target=network_scan_thread,
-                name='network_scan',
-                daemon=True
-                )
-        scan_thread.start()
+    scan_thread = Thread(
+            target=network_scan_thread,
+            name='network_scan',
+            daemon=True
+            )
+    scan_thread.start()
 
 
 def set_host_from_mac(address: dict) -> None:
