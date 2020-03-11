@@ -1,4 +1,6 @@
 import logging
+from threading import Thread, Lock
+from time import sleep
 from pyroute2 import NDB
 from kvstore import KVStore
 
@@ -6,6 +8,10 @@ logger = logging.getLogger(__name__)
 
 ndb = NDB()
 kvs = KVStore()
+
+scan_in_progress = Lock
+# Time to pause after a scan, before the next scan can be triggered
+WAIT_AFTER_SCAN = 900
 
 
 def arp_get_mac_from_ip(ip: str) -> str:
@@ -40,12 +46,29 @@ def arp_get_ip_from_mac(mac: str) -> str:
         return None
 
 
-def trigger_network_scan() -> None:
+def network_scan_thread() -> None:
     from env_scan_svc import main as do_env_scan
     do_env_scan()
+    logger.info(f"Scan complete. Sleeping {WAIT_AFTER_SCAN}")
+    sleep(WAIT_AFTER_SCAN)
 
 
-def set_host_from_mac(address: dict, retrying: bool = False) -> None:
+def trigger_network_scan() -> None:
+    global scan_in_progress
+    if scan_in_progress.locked():
+        logger.info(f"Scan is in progress or completed within last {WAIT_AFTER_SCAN} seconds. Not scanning again.")
+        return
+
+    with scan_in_progress:
+        scan_thread = Thread(
+                target=network_scan_thread,
+                name='network_scan',
+                daemon=True
+                )
+        scan_thread.start()
+
+
+def set_host_from_mac(address: dict) -> None:
     """
     Obtains the IP address of a host.
     The passed `address` dict should contain at least one of 'host' (an IP address)
@@ -66,26 +89,10 @@ def set_host_from_mac(address: dict, retrying: bool = False) -> None:
         # First try ARP cache:
         ip = arp_get_ip_from_mac(mac)
 
-        # If not available in ARP cache, look in key-value store
         if not ip:
-            logger.info(f"MAC {mac} not found in ARP cache; looking in k-v store")
-            ip = kvs.get(f"env:net:mac:{mac}", {}).get('ipv4')
-            logger.debug(f"KVS cache: Obtained IP {ip} from MAC {mac}")
-
-            if not ip:
-                # Still no IP obtained
-                return
-
-            # Check IP from key-value store to make sure it does not contradict ARP cache
-            mac_from_arp = arp_get_mac_from_ip(ip)
-            if mac_from_arp and mac_from_arp != mac:
-                logger.warn(f"MAC from ARP cache ({mac_from_arp}) for IP {ip} does not match requested MAC ({mac})")
-                logger.info(f"Triggering network scan")
-                trigger_network_scan()
-                # Following the scan, try to set the host again. But skip if this is already a retry.
-                if not retrying:
-                    set_host_from_mac(address, retrying=True)
-                return
+            logger.info(f"Could not get IP for MAC {mac} from ARP cache. Triggering network scan and returning.")
+            trigger_network_scan()
+            return
 
         # Set the host IP
         logger.info(f"Setting host IP of MAC {mac} to {ip}")
