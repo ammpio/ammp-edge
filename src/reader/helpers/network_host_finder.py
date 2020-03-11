@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 ndb = NDB()
 kvs = KVStore()
 
-scan_in_progress = Lock
+scan_in_progress = Lock()
 # Time to pause after a scan, before the next scan can be triggered
 WAIT_AFTER_SCAN = 900
 
