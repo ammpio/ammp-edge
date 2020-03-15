@@ -32,7 +32,7 @@ def main() -> None:
         return
 
     # TODO: Scan all interfaces (within reason). The below will only scan the default interface.
-    res = net_env.network_scan(nmap_scan_opts=['-sn'])
+    res = net_env.network_scan(nmap_scan_opts=['-sn', '-n', '--send-ip'])
     logger.info(f"Scan result: {res}")
 
 
