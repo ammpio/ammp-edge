@@ -55,7 +55,7 @@ setup(
         'minimalmodbus',
         'pyserial',
         'easysnmp',
-        'pyroute2',
+        'pyroute2==0.5.9',
         'arrow',
         'peewee',
         'psutil',
