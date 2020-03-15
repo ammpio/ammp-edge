@@ -8,7 +8,7 @@ import queue
 from copy import deepcopy
 
 from processor import process_reading, get_output
-from .helpers import set_host_from_mac
+from .helpers import set_host_from_mac, check_host_vs_mac
 
 logger = logging.getLogger(__name__)
 
@@ -112,7 +112,7 @@ def get_readings(node):
             if d and d not in locks:
                 locks[d] = threading.Lock()
 
-            # Set hostname based on MAC, if required
+            # Set host IP based on MAC, if MAC is available
             set_host_from_mac(dev['address'])
 
     # Set up threads for reading each of the devices
@@ -246,8 +246,11 @@ def read_device(dev, readings, readout_q, dev_lock=None):
 
     logger.info('READ: Finished reading %s' % dev['id'])
 
-    # Append result to readings (alongside those from other devices)
-    readout_q.put(fields)
+    if check_host_vs_mac(dev['address']):
+        # Append result to readings (alongside those from other devices)
+        readout_q.put(fields)
+    else:
+        logger.warn(f"MAC mismatch for {dev['id']}. Not pushing obtained data to readout queue.")
 
     # If the device has a concurrency lock associated with it, release it
     # so that other threads can proceed with reading

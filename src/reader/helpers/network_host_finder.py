@@ -90,11 +90,50 @@ def set_host_from_mac(address: dict) -> None:
         # First try ARP cache:
         ip = arp_get_ip_from_mac(mac)
 
+        # If not available in ARP cache, look in key-value store
         if not ip:
-            logger.info(f"Could not get IP for MAC {mac} from ARP cache. Triggering network scan and returning.")
-            trigger_network_scan()
-            return
+            logger.info(f"MAC {mac} not found in ARP cache; looking in k-v store")
+            ip = kvs.get(f"env:net:mac:{mac}", {}).get('ipv4')
+            logger.debug(f"KVS cache: Obtained IP {ip} from MAC {mac}")
+
+            if not ip:
+                logger.info(f"Could not get IP for MAC {mac} from ARP cache or k-v store; triggering network scan")
+                trigger_network_scan()
+                return
 
         # Set the host IP
         logger.info(f"Setting host IP of MAC {mac} to {ip}")
         address['host'] = ip
+
+
+def check_host_vs_mac(address: dict) -> bool:
+    """
+    Checks if the IP and MAC address provided match up.
+    Idea is to carry out this check following a readout, which would have triggered an ARP update.
+    """
+
+    if address.get('mac') and address.get('host'):
+        # Only carry out check if both MAC and IP are set
+        set_mac = address['mac'].lower()
+        set_ip = address['host']
+
+        logger.debug(f"Checking {set_mac} vs {set_ip}")
+
+        # Get MAC from ARP cache. Worth having in mind that the readout operation would (if needed) have updated
+        # the MAC record corresponding to the IP being read, not vice versa - so we need to use the IP as key
+        mac_for_set_ip = arp_get_mac_from_ip(set_ip)
+
+        if mac_for_set_ip is None:
+            logger.warn(f"No MAC obtained for {set_ip} from ARP cache. ARP malfunction?")
+            # This is weird, but let's return True so we're not discarding data that's probably fine
+            return True
+
+        if set_mac == mac_for_set_ip:
+            logger.debug(f"Confirmed set MAC {set_mac} is correct for IP {set_ip}")
+            return True
+        else:
+            logger.warn(f"Mismatch between set MAC ({set_mac}) and actual MAC ({mac_for_set_ip}) for IP {set_ip}")
+            return False
+    else:
+        # Nothing to check
+        return True
