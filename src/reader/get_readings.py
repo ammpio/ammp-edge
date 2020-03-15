@@ -246,7 +246,7 @@ def read_device(dev, readings, readout_q, dev_lock=None):
 
     logger.info('READ: Finished reading %s' % dev['id'])
 
-    if check_host_vs_mac(dev['address']):
+    if 'address' not in dev or check_host_vs_mac(dev['address']):
         # Append result to readings (alongside those from other devices)
         readout_q.put(fields)
     else:
