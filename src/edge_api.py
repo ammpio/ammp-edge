@@ -135,6 +135,9 @@ class EdgeAPI(object):
 
     @staticmethod
     def __parse_response(r: requests.Response) -> (int, dict):
+        if r is None:
+            return None, None
+
         try:
             return r.status_code, r.json()
         except ValueError:
