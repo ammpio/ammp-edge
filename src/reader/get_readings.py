@@ -220,6 +220,9 @@ def read_device(dev, readings, readout_q, dev_lock=None):
             if not reader:
                 raise Exception(f"No reader object could be created for device {dev['id']}. Skipping")
 
+            if 'address' in dev and not check_host_vs_mac(dev['address']):
+                raise Exception(f"MAC mismatch for {dev['id']}. Not reading device.")
+
             for rdg in readings:
                 try:
                     val_b = reader.read(**rdg)
@@ -246,11 +249,8 @@ def read_device(dev, readings, readout_q, dev_lock=None):
 
     logger.info('READ: Finished reading %s' % dev['id'])
 
-    if 'address' not in dev or check_host_vs_mac(dev['address']):
-        # Append result to readings (alongside those from other devices)
-        readout_q.put(fields)
-    else:
-        logger.warn(f"MAC mismatch for {dev['id']}. Not pushing obtained data to readout queue.")
+    # Append result to readings (alongside those from other devices)
+    readout_q.put(fields)
 
     # If the device has a concurrency lock associated with it, release it
     # so that other threads can proceed with reading
