@@ -33,6 +33,7 @@
     "relay_status": {"register": 30875, "words": 2, "datatype": "uint32", "description": "Multifunction relay status"},
     "power_supply_status": {"register": 30877, "words": 2, "datatype": "uint32", "description": "Power supply status"},
     "utility_grid_status": {"register": 30883, "words": 2, "datatype": "uint32", "description": "Status of utility grid"},
+    "temp_internal": {"register": 30953, "words": 2, "datatype": "int32", "typecast": "float", "multiplier": 0.1, "unit": "C", "valuemap": {"0xffffffff": null}, "description": "Internal temperature"},
     "I_max_charge": {"register": 30989, "words": 2, "datatype": "uint32", "multiplier": 0.001, "unit": "A", "valuemap": {"0xffffffff": null}, "description": "Maximum battery current in charge direction"},
     "I_max_discharge": {"register": 30991, "words": 2, "datatype": "uint32", "multiplier": 0.001, "unit": "A", "valuemap": {"0xffffffff": null}, "description": "Maximum battery current in discharge direction"},
     "charge_factor": {"register": 30993, "words": 2, "datatype": "uint32", "multiplier": 0.001, "valuemap": {"0xffffffff": null}, "description": "Charge factor: ratio of battery charge/discharge"},
