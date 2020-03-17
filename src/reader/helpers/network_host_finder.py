@@ -133,6 +133,7 @@ def check_host_vs_mac(address: dict) -> bool:
             return True
         else:
             logger.warn(f"Mismatch between set MAC ({set_mac}) and actual MAC ({mac_for_set_ip}) for IP {set_ip}")
+            trigger_network_scan()
             return False
     else:
         # Nothing to check
