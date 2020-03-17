@@ -175,13 +175,6 @@
             "index": "pypi",
             "version": "==0.1.8"
         },
-        "pyroute2": {
-            "hashes": [
-                "sha256:240ed116fabef02c284cc40d27986e629f02aa788311a8059905b8988752d5b7"
-            ],
-            "index": "pypi",
-            "version": "==0.5.9"
-        },
         "pyserial": {
             "hashes": [
                 "sha256:6e2d401fdee0eab996cf734e67773a0143b932772ca8b42451440cfed942c627",

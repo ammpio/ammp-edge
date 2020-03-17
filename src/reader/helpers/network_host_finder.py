@@ -1,31 +1,44 @@
 import logging
 from threading import Thread, Lock
 from time import sleep
-from pyroute2 import NDB
 from kvstore import KVStore
 
 logger = logging.getLogger(__name__)
 
-ndb = NDB()
 kvs = KVStore()
 
 scan_in_progress = Lock()
 # Time to pause after a scan, before the next scan can be triggered
 WAIT_AFTER_SCAN = 900
+ARP_TABLE_FILE = '/proc/net/arp'
+
+# Note that we expect /proc/net/arp to look like this. 6 columns, with IP and MAC in 1st and 4th col:
+# IP address       HW type     Flags       HW address            Mask     Device
+# 192.168.12.31    0x1         0x2         00:09:6b:00:02:03     *        eth0
+# 192.168.12.70    0x1         0x2         00:01:02:38:4c:85     *        eth0
 
 
 def arp_get_mac_from_ip(ip: str) -> str:
     try:
-        mac = ndb.neighbours[{'dst': ip}]['lladdr'].lower()
-        logger.debug(f"Mapped {ip} -> {mac} based on ARP table")
-        return mac
-    except KeyError as e:
-        logger.info(f"IP {ip} not found in ARP table")
-        logger.debug(f"Error: {e}", exc_info=True)
-        return None
+        with open(ARP_TABLE_FILE, 'r') as arp_table:
+            # Skip header row
+            next(arp_table)
+            for l in arp_table:
+                try:
+                    this_ip, _, _, this_mac, _, _ = l.split()
+                except ValueError:
+                    logger.warn(f"Malformed ARP table entry: {l}. Skipping")
+                    continue
+                if this_ip == ip:
+                    logger.debug(f"Mapped {ip} -> {this_mac} based on ARP table")
+                    return this_mac
+            else:
+                logger.info(f"IP {ip} not found in ARP table")
+
+    except FileNotFoundError:
+        logger.warn(f"Unable to load ARP table from {ARP_TABLE_FILE}")
     except Exception:
         logger.exception(f"Exception while looking for IP {ip} in ARP table")
-        return None
 
 
 def arp_get_ip_from_mac(mac: str) -> str:
@@ -34,16 +47,25 @@ def arp_get_ip_from_mac(mac: str) -> str:
         return None
 
     try:
-        ip = ndb.neighbours[{'lladdr': mac.lower()}]['dst']
-        logger.debug(f"Mapped {mac} -> {ip} based on ARP table")
-        return ip
-    except KeyError as e:
-        logger.info(f"MAC {mac} not found in ARP table")
-        logger.debug(f"Error: {e}", exc_info=True)
-        return None
+        with open(ARP_TABLE_FILE, 'r') as arp_table:
+            # Skip header row
+            next(arp_table)
+            for l in arp_table:
+                try:
+                    this_ip, _, _, this_mac, _, _ = l.split()
+                except ValueError:
+                    logger.warn(f"Malformed ARP table entry: {l}. Skipping")
+                    continue
+                if this_mac == mac.lower():
+                    logger.debug(f"Mapped {mac} -> {this_ip} based on ARP table")
+                    return this_ip
+            else:
+                logger.info(f"MAC {mac.lower()} not found in ARP table")
+
+    except FileNotFoundError:
+        logger.warn(f"Unable to load ARP table from {ARP_TABLE_FILE}")
     except Exception:
-        logger.exception(f"Exception while looking for MAC {mac} in ARP table")
-        return None
+        logger.exception(f"Exception while looking for IP {mac} in ARP table")
 
 
 def network_scan_thread() -> None:
@@ -125,7 +147,8 @@ def check_host_vs_mac(address: dict) -> bool:
 
         if mac_for_set_ip is None:
             logger.warn(f"No MAC obtained for {set_ip} from ARP cache. ARP malfunction?")
-            # This is weird, but let's return True so we're not discarding data that's probably fine
+            # This is weird, but let's trigger a scan and return True so we're not discarding data that's probably fine
+            trigger_network_scan()
             return True
 
         if set_mac == mac_for_set_ip:

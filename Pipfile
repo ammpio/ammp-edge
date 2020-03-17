@@ -27,7 +27,6 @@ requests-unixsocket = "*"
 flask = "*"
 redis = "*"
 ammp-edge = {path = "./src"}
-pyroute2 = "*"
 
 [requires]
 python_version = "3.6"
