@@ -77,7 +77,6 @@ def get_readings(node):
 
     # 'readout' is a dict formatted for insertion into InfluxDB (with 'time' and 'fields' keys)
     readout = {
-        '_arrow_time': arrow.utcnow(),
         'time': arrow.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),
         'fields': {},
         'meta': {}
@@ -152,7 +151,7 @@ def get_readings(node):
             logger.warning('Not all devices returned readings')
 
     readout['fields']['reading_duration'] = \
-        (arrow.utcnow() - readout['_arrow_time']).total_seconds()
+        (arrow.utcnow() - arrow.get(readout['time'])).total_seconds()
 
     logger.debug(f"Device readings: {dev_rdg}")
     logger.debug(f"Readout: {readout}")
