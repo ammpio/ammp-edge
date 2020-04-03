@@ -95,15 +95,43 @@
       "multiplier": 1.0,
       "unit": "W",
       "valuemap": {"0x80000000": null, "0xffffffff": null}},
-    "Q_L2": {
+    "Q1": {
+      "register": 30807,
+      "words": 2,
+      "datatype": "int32",
+      "multiplier": 1.0,
+      "unit": "VAr",
+      "valuemap": {"0x80000000": null, "0xffffffff": null}},
+    "Q2": {
       "register": 30809,
       "words": 2,
       "datatype": "int32",
       "multiplier": 1.0,
       "unit": "VAr",
       "valuemap": {"0x80000000": null, "0xffffffff": null}},
-    "S_L2": {
+    "Q3": {
+      "register": 30811,
+      "words": 2,
+      "datatype": "int32",
+      "multiplier": 1.0,
+      "unit": "VAr",
+      "valuemap": {"0x80000000": null, "0xffffffff": null}},
+    "S1": {
+      "register": 30815,
+      "words": 2,
+      "datatype": "int32",
+      "multiplier": 1.0,
+      "unit": "VA",
+      "valuemap": {"0x80000000": null, "0xffffffff": null}},
+    "S2": {
       "register": 30817,
+      "words": 2,
+      "datatype": "int32",
+      "multiplier": 1.0,
+      "unit": "VA",
+      "valuemap": {"0x80000000": null, "0xffffffff": null}},
+    "S3": {
+      "register": 30819,
       "words": 2,
       "datatype": "int32",
       "multiplier": 1.0,
@@ -120,6 +148,7 @@
       "register": 30057,
       "words": 2,
       "datatype": "uint32"
-    }
+    },
+    "status": {"register": 40029, "words": 2, "datatype": "uint32", "typecast": "int", "description": "Operating status:; 295 = MPP; 1467 = Start; 381 = Stop; 2119 = Derating; 1469 = Shut down; 1392 = Fault; 1480 = Waiting for utilities company; 1393 = Waiting for PV voltage; 443 = Constant voltage; 1855 = Stand-alone operation"}
   }
 }
