@@ -194,3 +194,7 @@ def imt_sensor_address(node):
     logger.info(f"Result: {result}")
 
     return result
+
+
+def sys_reboot(node):
+    os.system('dbus-send --system --print-reply --dest=org.freedesktop.login1 /org/freedesktop/login1 "org.freedesktop.login1.Manager.Reboot" boolean:true')
