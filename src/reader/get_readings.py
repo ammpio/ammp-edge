@@ -224,6 +224,9 @@ def read_device(dev, readings, readout_q, dev_lock=None):
                 raise Exception(f"MAC mismatch for {dev['id']}. Not reading device.")
 
             for rdg in readings:
+                if 'read_delay' in dev and isinstance(dev['read_delay'], (float, int)):
+                    sleep(dev['read_delay'])
+
                 try:
                     val_b = reader.read(**rdg)
                     if val_b is None:
@@ -245,8 +248,6 @@ def read_device(dev, readings, readout_q, dev_lock=None):
 
                 logger.debug('READ: [%s] %s = %s %s' % (dev['id'], rdg['reading'], repr(val_b), rdg.get('unit', '')))
 
-                if 'read_delay' in dev and isinstance(dev['read_delay'], (float, int)):
-                    sleep(dev['read_delay'])
     except Exception:
         logger.exception('Exception while reading device %s' % dev['id'])
 
