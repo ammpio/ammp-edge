@@ -5,6 +5,7 @@ import arrow
 import time
 import threading
 import queue
+from time import sleep
 from copy import deepcopy
 
 from processor import process_reading, get_output
@@ -243,6 +244,9 @@ def read_device(dev, readings, readout_q, dev_lock=None):
                 rdg['value'] = value
 
                 logger.debug('READ: [%s] %s = %s %s' % (dev['id'], rdg['reading'], repr(val_b), rdg.get('unit', '')))
+
+                if 'read_delay' in dev and isinstance(dev['read_delay'], (float, int)):
+                    sleep(dev['read_delay'])
     except Exception:
         logger.exception('Exception while reading device %s' % dev['id'])
 
