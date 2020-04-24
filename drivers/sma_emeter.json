@@ -1,0 +1,16 @@
+{
+    "common": {
+        "words": 2,
+        "valuemap": {"0xffffffff": null}
+    },
+    "fields": { 
+        "dev_class": {"register": 30051, "datatype": "uint32", "typecast": "int", "description": "Device class"},
+        "dev_type": {"register": 30053, "datatype": "uint32", "typecast": "int", "description": "Device type"},       
+        "serial": {"register": 30057, "datatype": "uint32", "typecast": "int", "description": "Serial number"},
+        "E_in": {"register": 30581, "datatype": "uint32", "typecast": "float", "multiplier": 1, "unit": "Wh", "description": "Absorbed energy"},
+        "E_out": {"register": 30583, "datatype": "uint32", "typecast": "float", "multiplier": 1, "unit": "Wh", "description": "Total yield"},
+        "P_in": {"register": 30865, "datatype": "uint32", "typecast": "float", "multiplier": 1, "unit": "W", "description": "Power absorbed"},
+        "P_out": {"register": 30867, "datatype": "uint32", "typecast": "float", "multiplier": 1, "unit": "W", "description": "Supplied power"},
+        "S_out": {"register": 31233, "datatype": "int32", "typecast": "float", "multiplier": 1, "unit": "VAr", "description": "PV reactive power currently supplied from grid"},
+    }
+}
