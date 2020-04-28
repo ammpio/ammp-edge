@@ -10,7 +10,7 @@
         "pvinv_total_yield": {"register": 30587, "words": 2, "datatype": "int32", "typecast": "float", "multiplier": 1000, "unit": "Wh", "description": "Meter reading PV production meter ", "valuemap": {"0xffffffff": null}},
         "sum_batt_pv_P": {"register": 30775, "words": 2, "datatype": "int32", "typecast": "float", "unit": "W", "description": "Active power across all line conductors (Total current active power of all PV and battery inverters in the PV system).", "valuemap": {"0xffffffff": null}},
         "batt_soc": {"register": 30845, "words": 2, "datatype": "uint32", "typecast": "float", "unit": "%", "description": "Current battery state of charge", "valuemap": {"0xffffffff": null}},
-        "batt_temp_max": {"register": 30849, "words": 2, "datatype": "int32", "typecast": "float", "multiplier": 1, "unit": "°C", "description": "Battery max. temperature", "valuemap": {"0xffffffff": null}},
+        "batt_temp_max": {"register": 30849, "words": 2, "datatype": "int32", "typecast": "float", "multiplier": 1, "unit": "C", "description": "Battery max. temperature", "valuemap": {"0xffffffff": null}},
         "cons_meter_P": {"register": 30861, "words": 2, "datatype": "int32", "typecast": "float", "multiplier": 1, "unit": "W", "description": "Load power ", "valuemap": {"0xffffffff": null}},
         "genset_P": {"register": 30863, "words": 2, "datatype": "uint32", "typecast": "float", "multiplier": 1, "unit": "W", "description": "Current generator power ", "valuemap": {"0xffffffff": null}},
         "purch_meter_P": {"register": 30865, "words": 2, "datatype": "int32", "typecast": "float", "multiplier": 1, "unit": "W", "description": "Power purchased electricity", "valuemap": {"0xffffffff": null}},
