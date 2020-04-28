@@ -11,6 +11,6 @@
         "E_out": {"register": 30583, "datatype": "uint32", "typecast": "float", "multiplier": 1, "unit": "Wh", "description": "Total yield"},
         "P_in": {"register": 30865, "datatype": "uint32", "typecast": "float", "multiplier": 1, "unit": "W", "description": "Power absorbed"},
         "P_out": {"register": 30867, "datatype": "uint32", "typecast": "float", "multiplier": 1, "unit": "W", "description": "Supplied power"},
-        "S_out": {"register": 31233, "datatype": "int32", "typecast": "float", "multiplier": 1, "unit": "VAr", "description": "PV reactive power currently supplied from grid"},
+        "S_out": {"register": 31233, "datatype": "int32", "typecast": "float", "multiplier": 1, "unit": "VAr", "description": "PV reactive power currently supplied from grid"}
     }
 }
