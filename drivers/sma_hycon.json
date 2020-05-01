@@ -127,7 +127,7 @@
           "description":"Operating status: ; 381 = Stop ; 1392 = Error ; 1467 = Start (start-up) ; 1469 = Shut down (requires restart) ; 3129 = Manual mode"
        },
        "batt_temp_max":{
-          "unit":"°C",
+          "unit":"C",
           "words":2,
           "datatype":"int32",
           "register":30849,
