@@ -1,29 +1,295 @@
 {
-    "fields": { 
-        "hyco_state": {"register": 30201, "words": 2, "datatype": "uint32", "typecast": "int", "description": "Status of the device:; 35 = Error; 303 = Off; 307 = OK; 455 = Warning", "valuemap": {"0xffffffff": null}},
-        "key_switch_status": {"register": 30227, "words": 2, "datatype": "uint32", "typecast": "int", "description": "Status of key switch:; 381 = Switched off; 569 = Switched on", "valuemap": {"0xffffffff": null}},
-        "event_number": {"register": 30247, "words": 2, "datatype": "uint32", "typecast": "float", "multiplier": 0.001, "unit": "A", "description": "Current, comprehensive event number (a maximum of five decimal places)", "valuemap": {"0xffffffff": null}},
-        "cons_meter_E": {"register": 30571, "words": 2, "datatype": "uint32", "typecast": "float", "multiplier": 1000, "unit": "Wh", "description": "Meter reading consumption meter", "valuemap": {"0xffffffff": null}},
-        "genset_E": {"register": 30575, "words": 2, "datatype": "uint32", "typecast": "float", "multiplier": 1000, "unit": "Wh", "description": "Released energy from generator", "valuemap": {"0xffffffff": null}},
-        "purch_meter_E": {"register": 30581, "words": 2, "datatype": "uint32", "typecast": "float", "multiplier": 1000, "unit": "Wh", "description": "Meter reading purchased electricity meter ", "valuemap": {"0xffffffff": null}},
-        "feedin_meter_E": {"register": 30583, "words": 2, "datatype": "uint32", "typecast": "float", "multiplier": 1000, "unit": "Wh", "description": "Meter reading of grid feed-in meter ", "valuemap": {"0xffffffff": null}},
-        "pvinv_total_yield": {"register": 30587, "words": 2, "datatype": "int32", "typecast": "float", "multiplier": 1000, "unit": "Wh", "description": "Meter reading PV production meter ", "valuemap": {"0xffffffff": null}},
-        "sum_batt_pv_P": {"register": 30775, "words": 2, "datatype": "int32", "typecast": "float", "unit": "W", "description": "Active power across all line conductors (Total current active power of all PV and battery inverters in the PV system).", "valuemap": {"0xffffffff": null}},
-        "batt_soc": {"register": 30845, "words": 2, "datatype": "uint32", "typecast": "float", "unit": "%", "description": "Current battery state of charge", "valuemap": {"0xffffffff": null}},
-        "batt_temp_max": {"register": 30849, "words": 2, "datatype": "int32", "typecast": "float", "multiplier": 1, "unit": "C", "description": "Battery max. temperature", "valuemap": {"0xffffffff": null}},
-        "cons_meter_P": {"register": 30861, "words": 2, "datatype": "int32", "typecast": "float", "multiplier": 1, "unit": "W", "description": "Load power ", "valuemap": {"0xffffffff": null}},
-        "genset_P": {"register": 30863, "words": 2, "datatype": "uint32", "typecast": "float", "multiplier": 1, "unit": "W", "description": "Current generator power ", "valuemap": {"0xffffffff": null}},
-        "purch_meter_P": {"register": 30865, "words": 2, "datatype": "int32", "typecast": "float", "multiplier": 1, "unit": "W", "description": "Power purchased electricity", "valuemap": {"0xffffffff": null}},
-        "feedin_meter_P": {"register": 30867, "words": 2, "datatype": "int32", "typecast": "float", "multiplier": 1, "unit": "W", "description": "Power grid feed-in ", "valuemap": {"0xffffffff": null}},
-        "pvinv_total_P": {"register": 30869, "words": 2, "datatype": "int32", "typecast": "float", "multiplier": 1, "unit": "W", "description": "Power PV generation", "valuemap": {"0xffffffff": null}},
-        "grid_state": {"register": 30881, "words": 2, "datatype": "uint32", "typecast": "int", "description": "PV system utility grid connection:; 1779 = Disconnected; 1780 = Utility grid; 1781 = Stand-alone grid", "valuemap": {"0xffffffff": null}},
-        "pvinv_total_P_unused": {"register": 31129, "words": 2, "datatype": "int32", "typecast": "float", "unit": "W", "description": "Unused PV power", "valuemap": {"0xffffffff": null}},
-        "pvinv_total_P_available": {"register": 31131, "words": 2, "datatype": "uint32", "typecast": "float", "multiplier": 1, "unit": "W", "description": "Available PV power", "valuemap": {"0xffffffff": null}},
-        "binv_E_released": {"register": 31185, "words": 2, "datatype": "uint32", "typecast": "float", "multiplier": 1000, "unit": "Wh", "description": "Battery energy charged", "valuemap": {"0xffffffff": null}},
-        "binv_E_absorbed": {"register": 31187, "words": 2, "datatype": "uint32", "typecast": "float", "multiplier": 1000, "unit": "Wh", "description": "Battery energy discharged", "valuemap": {"0xffffffff": null}},
-        "batt_P_released": {"register": 31191, "words": 2, "datatype": "int32", "typecast": "float", "multiplier": 1, "unit": "W", "description": "Battery power discharged", "valuemap": {"0xffffffff": null}},
-        "batt_P_absorbed": {"register": 31193, "words": 2, "datatype": "int32", "typecast": "float", "multiplier": 1, "unit": "W", "description": "Battery power charged", "valuemap": {"0xffffffff": null}},
-        "genset_P_provided": {"register": 31207, "words": 2, "datatype": "uint32", "typecast": "float", "multiplier": 1, "unit": "W", "description": "Generator energy provided", "valuemap": {"0xffffffff": null}},
-        "genset_state": {"register": 40029, "words": 2, "datatype": "uint32", "typecast": "int", "description": "Operating status: ; 381 = Stop ; 1392 = Error ; 1467 = Start (start-up) ; 1469 = Shut down (requires restart) ; 3129 = Manual mode", "valuemap": {"0xffffffff": null}}
+      
+    "fields":{
+       "batt_soc":{
+          "unit":"%",
+          "words":2,
+          "datatype":"uint32",
+          "register":30845,
+          "typecast":"float",
+          "valuemap":{
+             "0xffffffff":null
+          },
+          "description":"Current battery state of charge"
+       },
+       "genset_E":{
+          "unit":"Wh",
+          "words":2,
+          "datatype":"uint32",
+          "register":30575,
+          "typecast":"float",
+          "valuemap":{
+             "0xffffffff":null
+          },
+          "multiplier":1000,
+          "description":"Released energy from generator"
+       },
+       "genset_P":{
+          "unit":"W",
+          "words":2,
+          "datatype":"uint32",
+          "register":30863,
+          "typecast":"float",
+          "valuemap":{
+             "0xffffffff":null
+          },
+          "multiplier":1,
+          "description":"Current generator power "
+       },
+       "grid_in_E":{
+          "unit":"Wh",
+          "words":2,
+          "datatype":"uint32",
+          "register":30583,
+          "typecast":"float",
+          "valuemap":{
+             "0xffffffff":null
+          },
+          "multiplier":1000,
+          "description":"Meter reading of grid feed-in meter "
+       },
+       "grid_in_P":{
+          "unit":"W",
+          "words":2,
+          "datatype":"int32",
+          "register":30867,
+          "typecast":"float",
+          "valuemap":{
+             "0xffffffff":null
+          },
+          "multiplier":-1,
+          "description":"Power grid feed-in "
+       },
+       "grid_out_E":{
+          "unit":"Wh",
+          "words":2,
+          "datatype":"uint32",
+          "register":30571,
+          "typecast":"float",
+          "valuemap":{
+             "0xffffffff":null
+          },
+          "multiplier":1000,
+          "description":"Meter reading consumption meter"
+       },
+       "grid_out_P":{
+          "unit":"W",
+          "words":2,
+          "datatype":"int32",
+          "register":30861,
+          "typecast":"float",
+          "valuemap":{
+             "0xffffffff":null
+          },
+          "multiplier":1,
+          "description":"Load power "
+       },
+       "grid_state":{
+          "words":2,
+          "datatype":"uint32",
+          "register":30881,
+          "typecast":"int",
+          "valuemap":{
+             "0xffffffff":null
+          },
+          "description":"PV system utility grid connection:; 1779 = Disconnected; 1780 = Utility grid; 1781 = Stand-alone grid"
+       },
+       "hyco_state":{
+          "words":2,
+          "datatype":"uint32",
+          "register":30201,
+          "typecast":"int",
+          "valuemap":{
+             "0xffffffff":null
+          },
+          "description":"Status of the device:; 35 = Error; 303 = Off; 307 = OK; 455 = Warning"
+       },
+       "event_number":{
+          "unit":"A",
+          "words":2,
+          "datatype":"uint32",
+          "register":30247,
+          "typecast":"float",
+          "valuemap":{
+             "0xffffffff":null
+          },
+          "multiplier":0.001,
+          "description":"Current, comprehensive event number (a maximum of five decimal places)"
+       },
+       "genset_state":{
+          "words":2,
+          "datatype":"uint32",
+          "register":40029,
+          "typecast":"int",
+          "valuemap":{
+             "0xffffffff":null
+          },
+          "description":"Operating status: ; 381 = Stop ; 1392 = Error ; 1467 = Start (start-up) ; 1469 = Shut down (requires restart) ; 3129 = Manual mode"
+       },
+       "batt_temp_max":{
+          "unit":"°C",
+          "words":2,
+          "datatype":"int32",
+          "register":30849,
+          "typecast":"float",
+          "valuemap":{
+             "0xffffffff":null
+          },
+          "multiplier":1,
+          "description":"Battery max. temperature"
+       },
+       "purch_meter_E":{
+          "unit":"Wh",
+          "words":2,
+          "datatype":"uint32",
+          "register":30581,
+          "typecast":"float",
+          "valuemap":{
+             "0xffffffff":null
+          },
+          "multiplier":1000,
+          "description":"Meter reading purchased electricity meter "
+       },
+       "purch_meter_P":{
+          "unit":"W",
+          "words":2,
+          "datatype":"int32",
+          "register":30865,
+          "typecast":"float",
+          "valuemap":{
+             "0xffffffff":null
+          },
+          "multiplier":1,
+          "description":"Power purchased electricity"
+       },
+       "pvinv_total_P":{
+          "unit":"W",
+          "words":2,
+          "datatype":"int32",
+          "register":30869,
+          "typecast":"float",
+          "valuemap":{
+             "0xffffffff":null
+          },
+          "multiplier":1,
+          "description":"Power PV generation"
+       },
+       "sum_batt_pv_P":{
+          "unit":"W",
+          "words":2,
+          "datatype":"int32",
+          "register":30775,
+          "typecast":"float",
+          "valuemap":{
+             "0xffffffff":null
+          },
+          "description":"Active power across all line conductors (Total current active power of all PV and battery inverters in the PV system)."
+       },
+       "batt_P_absorbed":{
+          "unit":"W",
+          "words":2,
+          "datatype":"int32",
+          "register":31193,
+          "typecast":"float",
+          "valuemap":{
+             "0xffffffff":null
+          },
+          "multiplier":1,
+          "description":"Battery power charged"
+       },
+       "batt_P_released":{
+          "unit":"W",
+          "words":2,
+          "datatype":"int32",
+          "register":31191,
+          "typecast":"float",
+          "valuemap":{
+             "0xffffffff":null
+          },
+          "multiplier":1,
+          "description":"Battery power discharged"
+       },
+       "binv_E_absorbed":{
+          "unit":"Wh",
+          "words":2,
+          "datatype":"uint32",
+          "register":31187,
+          "typecast":"float",
+          "valuemap":{
+             "0xffffffff":null
+          },
+          "multiplier":1000,
+          "description":"Battery energy discharged"
+       },
+       "binv_E_released":{
+          "unit":"Wh",
+          "words":2,
+          "datatype":"uint32",
+          "register":31185,
+          "typecast":"float",
+          "valuemap":{
+             "0xffffffff":null
+          },
+          "multiplier":1000,
+          "description":"Battery energy charged"
+       },
+       "genset_P_provided":{
+          "unit":"W",
+          "words":2,
+          "datatype":"uint32",
+          "register":31207,
+          "typecast":"float",
+          "valuemap":{
+             "0xffffffff":null
+          },
+          "multiplier":1,
+          "description":"Generator energy provided"
+       },
+       "key_switch_status":{
+          "words":2,
+          "datatype":"uint32",
+          "register":30227,
+          "typecast":"int",
+          "valuemap":{
+             "0xffffffff":null
+          },
+          "description":"Status of key switch:; 381 = Switched off; 569 = Switched on"
+       },
+       "pvinv_total_yield":{
+          "unit":"Wh",
+          "words":2,
+          "datatype":"int32",
+          "register":30587,
+          "typecast":"float",
+          "valuemap":{
+             "0xffffffff":null
+          },
+          "multiplier":1000,
+          "description":"Meter reading PV production meter "
+       },
+       "pvinv_total_P_unused":{
+          "unit":"W",
+          "words":2,
+          "datatype":"int32",
+          "register":31129,
+          "typecast":"float",
+          "valuemap":{
+             "0xffffffff":null
+          },
+          "description":"Unused PV power"
+       },
+       "pvinv_total_P_available":{
+          "unit":"W",
+          "words":2,
+          "datatype":"uint32",
+          "register":31131,
+          "typecast":"float",
+          "valuemap":{
+             "0xffffffff":null
+          },
+          "multiplier":1,
+          "description":"Available PV power"
+       }
     }
+ 
 }
