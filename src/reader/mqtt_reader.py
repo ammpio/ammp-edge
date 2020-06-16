@@ -45,28 +45,26 @@ class Reader(object):
         except Exception:
             logger.warning("Could not disconnect from MQTT broker", exc_info=True)
 
-    def read(self, topic, **rdg):
-        received_msg = None
+    def __on_message(self, client, userdata, msg):
+        self._last_msg = msg.payload
 
-        def on_message(client, userdata, msg):
-            global received_msg
-            received_msg = msg.payload
-            logger.debug(f"Received: {received_msg}")
+    def read(self, topic, **rdg):
+        self._last_msg = None
 
         res, _ = self._client.subscribe(topic)
         if res != mqtt.MQTT_ERR_SUCCESS:
             logger.error(f"Could not subscribe to topic '{topic}'. Result: {res}")
             return None
 
-        self._client.on_message = on_message
+        self._client.on_message = self.__on_message
         self._client.loop_start()
 
         num_iterations = round(self._timeout / READING_CHECK_INTERVAL)
         for i in range(num_iterations):
-            if received_msg is not None:
+            if self._last_msg is not None:
                 break
             sleep(READING_CHECK_INTERVAL)
 
-        logger.debug(f"Received: {received_msg}")
+        logger.debug(f"Received: {self._last_msg}")
 
-        return received_msg
+        return self._last_msg
