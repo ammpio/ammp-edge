@@ -31,6 +31,11 @@ class Reader(object):
 
         self._client.enable_logger(logger=logger)
 
+        # We store payloads from all topics in a dict. We need this since it's possible that
+        # a payload comes in for a topic that's different to the one we're currently looking
+        # to read, but we need to retain it so it can be returned as the result of another reading
+        self._current_payloads = {}
+
     def __enter__(self):
         try:
             self._client.connect(self._host, port=self._port)
@@ -47,11 +52,9 @@ class Reader(object):
             logger.warning("Could not disconnect from MQTT broker", exc_info=True)
 
     def __on_message(self, client, userdata, msg):
-        self._last_msg = msg.payload
+        self._current_payloads[msg.topic.decode('utf-8')] = msg.payload
 
     def read(self, topic, **rdg):
-        self._last_msg = None
-
         res, _ = self._client.subscribe(topic, qos=DEFAULT_QOS)
         if res != mqtt.MQTT_ERR_SUCCESS:
             logger.error(f"Could not subscribe to topic '{topic}'. Result: {res}")
@@ -62,10 +65,9 @@ class Reader(object):
 
         num_iterations = round(self._timeout / READING_CHECK_INTERVAL)
         for i in range(num_iterations):
-            if self._last_msg is not None:
-                break
-            sleep(READING_CHECK_INTERVAL)
+            if topic in self._current_payloads:
+                return self._current_payloads[topic]
+            else:
+                sleep(READING_CHECK_INTERVAL)
 
-        self._client.unsubscribe(topic)
-
-        return self._last_msg
+        return None
