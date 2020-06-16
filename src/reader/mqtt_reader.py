@@ -45,7 +45,7 @@ class Reader(object):
         except Exception:
             logger.warning("Could not disconnect from MQTT broker", exc_info=True)
 
-    def read(self, topic):
+    def read(self, topic, **rdg):
         received_msg = None
 
         def on_message(client, userdata, msg):
