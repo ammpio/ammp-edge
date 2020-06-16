@@ -14,7 +14,7 @@ class Reader(object):
             self,
             host: str = 'localhost',
             port: int = 1883,
-            timeout: int = 30,
+            timeout: int = 1,
             **kwargs
             ):
 
