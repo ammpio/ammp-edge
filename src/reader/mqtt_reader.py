@@ -52,9 +52,9 @@ class Reader(object):
             global received_msg
             received_msg = msg.payload
 
-        r = self._client.subscribe(topic)
-        if r != mqtt.MQTT_ERR_SUCCESS:
-            logger.error(f"Could not subscribe to topic '{topic}'. Result: {r}")
+        res, _ = self._client.subscribe(topic)
+        if res != mqtt.MQTT_ERR_SUCCESS:
+            logger.error(f"Could not subscribe to topic '{topic}'. Result: {res}")
             return None
 
         self._client.on_message = on_message
