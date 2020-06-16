@@ -52,7 +52,7 @@ class Reader(object):
             logger.warning("Could not disconnect from MQTT broker", exc_info=True)
 
     def __on_message(self, client, userdata, msg):
-        self._current_payloads[msg.topic.decode('utf-8')] = msg.payload
+        self._current_payloads[msg.topic] = msg.payload
 
     def read(self, topic, **rdg):
         res, _ = self._client.subscribe(topic, qos=DEFAULT_QOS)
