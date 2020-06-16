@@ -54,7 +54,7 @@ class Reader(object):
 
         r = self._client.subscribe(topic)
         if r != mqtt.MQTT_ERR_SUCCESS:
-            logger.error(f"Could not subscribe to topic '{topic}'")
+            logger.error(f"Could not subscribe to topic '{topic}'. Result: {r}")
             return None
 
         self._client.on_message = on_message
