@@ -27,6 +27,7 @@ requests-unixsocket = "*"
 flask = "*"
 redis = "*"
 ammp-edge = {path = "./src"}
+paho-mqtt = "*"
 
 [requires]
 python_version = "3.6"
