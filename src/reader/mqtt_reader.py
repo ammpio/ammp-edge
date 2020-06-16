@@ -66,6 +66,6 @@ class Reader(object):
                 break
             sleep(READING_CHECK_INTERVAL)
 
-        self._client.unsubscribe()
+        self._client.unsubscribe(topic)
 
         return self._last_msg
