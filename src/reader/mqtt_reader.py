@@ -60,7 +60,7 @@ class Reader(object):
         self._client.on_message = on_message
         self._client.loop_start()
 
-        num_iterations = self._timeout / READING_CHECK_INTERVAL
+        num_iterations = round(self._timeout / READING_CHECK_INTERVAL)
         for i in range(num_iterations):
             if received_msg is not None:
                 break
