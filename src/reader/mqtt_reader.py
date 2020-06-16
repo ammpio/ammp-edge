@@ -5,6 +5,7 @@ from time import sleep
 logger = logging.getLogger(__name__)
 
 DEFAULT_CLIENT_ID = 'ammp-edge'
+DEFAULT_QOS = 1
 READING_CHECK_INTERVAL = 0.01
 
 
@@ -51,7 +52,7 @@ class Reader(object):
     def read(self, topic, **rdg):
         self._last_msg = None
 
-        res, _ = self._client.subscribe(topic)
+        res, _ = self._client.subscribe(topic, qos=DEFAULT_QOS)
         if res != mqtt.MQTT_ERR_SUCCESS:
             logger.error(f"Could not subscribe to topic '{topic}'. Result: {res}")
             return None
