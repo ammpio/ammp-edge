@@ -66,6 +66,6 @@ class Reader(object):
                 break
             sleep(READING_CHECK_INTERVAL)
 
-        logger.debug(f"Received: {self._last_msg}")
+        self._client.unsubscribe()
 
         return self._last_msg
