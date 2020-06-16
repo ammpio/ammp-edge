@@ -51,6 +51,7 @@ class Reader(object):
         def on_message(client, userdata, msg):
             global received_msg
             received_msg = msg.payload
+            logger.debug(f"Received: {received_msg}")
 
         res, _ = self._client.subscribe(topic)
         if res != mqtt.MQTT_ERR_SUCCESS:
@@ -65,5 +66,7 @@ class Reader(object):
             if received_msg is not None:
                 break
             sleep(READING_CHECK_INTERVAL)
+
+        logger.debug(f"Received: {received_msg}")
 
         return received_msg
