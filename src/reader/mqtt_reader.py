@@ -1,12 +1,23 @@
 import logging
 import paho.mqtt.client as mqtt
 from time import sleep
+from kvstore import KVStore
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_CLIENT_ID = 'ammp-edge'
+CLIENT_ID_PREFIX = 'ammp-edge-'
 DEFAULT_QOS = 1
-READING_CHECK_INTERVAL = 0.01
+
+# A note on the reading logic; the approach implemented here does the following: 
+# 1. Upon initialization, it waits for `timeout` seconds for any payloads to come in
+#    on subscribed topics. I.e. it collects data.
+# 2. Upon carrying out a read(), it subscribes to the topic for that read, checks whether
+#    data for a desired topic is available, and if so it returns it
+#
+# This means that during the very first reading cycle, no data is likely to be returned. But
+# since the broker should remember this client ID and its subscriptions, any QoS 1 and QoS 2
+# messages that are received in-between reading cycles should subsequently be buffered,
+# and delivered upon the following reading cycle.
 
 
 class Reader(object):
@@ -14,18 +25,21 @@ class Reader(object):
             self,
             host: str = 'localhost',
             port: int = 1883,
-            timeout: int = 1,
+            timeout: int = 3,
             **kwargs
             ):
 
+        self._kvs = KVStore()
+        node_id = self.node_id = self._kvs.get('node:node_id', '')
+
         self._host = host
         self._port = port
-        # Note that the timeout is the time to wait for data, not for a connection
+        # Note that the timeout is the time to wait for data, not for establishing a connection
         # A timeout for connection is not supported by the Paho MQTT library
         self._timeout = timeout
 
         self._client = mqtt.Client(
-            client_id=DEFAULT_CLIENT_ID,
+            client_id=CLIENT_ID_PREFIX + node_id,
             clean_session=False,
             **kwargs)
 
@@ -42,6 +56,11 @@ class Reader(object):
         except Exception:
             logger.error('Exception while attempting to connect to MQTT broker:')
             raise
+
+        self._client.on_message = self.__on_message
+        self._client.loop_start()
+
+        sleep(self._timeout)
 
         return self
 
@@ -60,14 +79,4 @@ class Reader(object):
             logger.error(f"Could not subscribe to topic '{topic}'. Result: {res}")
             return None
 
-        self._client.on_message = self.__on_message
-        self._client.loop_start()
-
-        num_iterations = round(self._timeout / READING_CHECK_INTERVAL)
-        for i in range(num_iterations):
-            if topic in self._current_payloads:
-                return self._current_payloads[topic]
-            else:
-                sleep(READING_CHECK_INTERVAL)
-
-        return None
+        return self._current_payloads.get(topic)
