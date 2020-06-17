@@ -23,6 +23,7 @@ apps:
     after: [redis-server]
     plugs:
       - network
+      - network-bind
       - system-observe
       - hardware-observe
       - network-observe
