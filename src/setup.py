@@ -63,6 +63,7 @@ setup(
         'xmltodict',
         'requests-unixsocket',
         'flask',
-        'redis'
+        'redis',
+        'paho-mqtt'
     ]
 )

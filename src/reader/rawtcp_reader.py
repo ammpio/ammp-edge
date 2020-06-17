@@ -12,7 +12,7 @@ class Reader(object):
     def __init__(
                 self,
                 host: str = None,
-                port: str = 502,
+                port: int = 502,
                 recv_buffer_size: int = DEFAULT_RECV_BUFFER_SIZE,
                 timeout: int = 5,
                 **kwargs
