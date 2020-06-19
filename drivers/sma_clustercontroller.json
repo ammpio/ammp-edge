@@ -6,7 +6,7 @@
   "fields": { 
     "int_sol_irr": {"register": 34613, "datatype": "uint32", "typecast": "float", "unit": "W/m2", "description": "Total irradiation on sensor surface"},
     "ext_sol_irr": {"register": 34623, "datatype": "uint32", "typecast": "int", "unit": "W/m2", "description": "Total irradiation on the external irradiation sensor/pyranometer"},
-    "temp_amb": {"register": 34609, "datatype": "int32", "typecast": "float", "unit": "C", "description": "Ambient temperature"},       
-    "temp_module": {"register": 34621, "datatype": "int32", "typecast": "float", "unit": "C", "description": "PV module temperature"}
+    "temp_amb": {"register": 34609, "datatype": "int32", "typecast": "float", "unit": "C", "multiplier": 0.1, "description": "Ambient temperature"},       
+    "temp_module": {"register": 34621, "datatype": "int32", "typecast": "float", "unit": "C", "multiplier": 0.1, "description": "PV module temperature"}
   }
 }
