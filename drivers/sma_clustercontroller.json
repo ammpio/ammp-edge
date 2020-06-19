@@ -1,7 +1,7 @@
 {
   "common": {
     "words": 2,
-    "valuemap": {"0xffffffff": null}
+    "valuemap": {"0xffffffff": null, "0x80000000": null}
   },
   "fields": { 
     "int_sol_irr": {"register": 34613, "datatype": "uint32", "typecast": "float", "unit": "W/m2", "description": "Total irradiation on sensor surface"},
