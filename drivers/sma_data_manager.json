@@ -7,7 +7,7 @@
     "dev_type": {"register": 30003, "datatype": "uint32", "words": 2, "typecast": "int", "description": "Device type"},
     "serial": {"register": 30005, "datatype": "uint32", "words": 2, "typecast": "int", "description": "Serial number"},
     "P_total_in": {"register": 30233, "datatype": "uint32", "words": 2, "typecast": "float", "multiplier": 1, "unit": "W", "description": "Accumulated connected power of the PV inverter (W)"},
-    "E_total_in": {"register": 30513, "datatype": "uint32", "words": 2, "typecast": "float", "multiplier": 1, "unit": "Wh", "description": "Total energy fed in on all line conductors (Wh)"},
+    "E_total_in": {"register": 30513, "datatype": "uint64", "words": 4, "typecast": "float", "multiplier": 1, "unit": "Wh", "description": "Total energy fed in on all line conductors (Wh)"},
     "pv_total_P_available": {"register": 30775, "datatype": "uint32", "words": 2, "typecast": "float", "multiplier": 1, "unit": "W", "description": "Current PV feed-in active power on all line conductors (W)"}
     }
 }
