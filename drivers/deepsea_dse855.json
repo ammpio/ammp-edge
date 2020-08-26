@@ -24,7 +24,7 @@
         "module_time": {"description": "Module Time since 1/1/1970", "register": 4911, "words": 2, "datatype": "uint32", "multiplier": 1, "unit": "s", "typecast": "float", "valuemap": {"0xffffffff": null}},
         "alarm_status": {"description": "Alarm status", "register": 774, "words": 1, "datatype": "uint16", "typecast": "int"},
         "freq": {"description": "Generator frequency", "register": 1031, "words": 1, "datatype": "uint16", "typecast": "float", "multiplier": 0.1, "unit": "Hz", "valuemap": {"0x7fff": null, "0xffff": null}},
-        "temp_coolant": {"description": "Coolant temperature", "register": 1025, "words": 1, "datatype": "int16", "typecast": "float", "multiplier": 1, "unit": "C", "valuemap": {"0x7fff": null, "0xffff": null}},
+        "temp_coolant": {"description": "Coolant temperature", "register": 1025, "words": 1, "datatype": "int16", "typecast": "float", "multiplier": 1, "unit": "C", "valuemap": {"0x7fff": null, "0xffff": null, "0x7ffd": null}},
         "temp_oil": {"description": "Oil temperature", "register": 1026, "words": 1, "datatype": "int16", "typecast": "float", "multiplier": 1, "unit": "C", "valuemap": {"0x7fff": null, "0xffff": null}},
         "time_to_maintenance": {"register": 1794, "words": 2, "multiplier": 1, "datatype": "int32", "unit": "s", "description": "Time to next engine maintenance", "valuemap": {"0x7fffffff": null}}
     }
