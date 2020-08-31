@@ -76,6 +76,9 @@ def get_readings(node):
 
         dev_rdg[dev_id].append(rdict)
 
+    return dev_rdg
+
+def get_readout(node):
     # 'readout' is a dict formatted for insertion into InfluxDB (with 'time' and 'fields' keys)
     readout = {
         'time': arrow.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),
@@ -83,6 +86,8 @@ def get_readings(node):
         'meta': {}
     }
 
+    dev_rdg = get_readings(node)
+    
     try:
         readout['fields']['comms_lggr_snap_rev'] = int(os.getenv('SNAP_REVISION', 0))
     except Exception:
