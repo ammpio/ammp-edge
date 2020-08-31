@@ -39,11 +39,10 @@ class DataPusher(threading.Thread):
         while not self._node.events.do_shutdown.is_set():
 
             # queue.get() blocks the current thread until an item is retrieved
-            logger.debug(f"PUSH: [{self.dep_name}] Waiting to get readings from queue")
-            readings = self._queue.get()
-            logger.debug(f"Readings obtained: [{readings}]")
+            logger.debug(f"PUSH: [{self.dep_name}] Waiting to get readout from queue")
+            readout = self._queue.get()
             # If we get the "stop" signal (i.e. empty dict) we exit
-            if readings == {}:
+            if readout == {}:
                 logger.debug(f"PUSH: [{self.dep_name}] Shutting down (got empty dict from queue)")
                 return
 
