@@ -82,7 +82,8 @@ def get_readout(node):
     # 'readout' is a dict formatted for insertion into InfluxDB (with 'time' and 'fields' keys)
     readout = {
         'time': arrow.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),
-        'device_readings':[]
+        'device_readings':[],
+        'meta': {}
     }
     
     dev_rdg = get_readings(node)
