@@ -56,7 +56,7 @@ class DataPusher(threading.Thread):
 
                 if self.dep_name == 'default':
                     # get the actual readout
-                    readout = get_readout(self._node, readout)
+                    readout = get_readout(self._node, readings)
                     logger.debug(f"Actual readout: {readout}")
                     if self.__push_readout(readout):
                         logger.info(f"PUSH: [{self.dep_name}] Successfully pushed point at {readout['time']}")
