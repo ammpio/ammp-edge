@@ -89,7 +89,8 @@ def get_readout(node):
     dev_rdg = get_readings(node)
 
     try:
-        readout['device_readings'].append({'logger':{'comms_lggr_snap_rev': int(os.getenv('SNAP_REVISION', 0))}})
+        readout['device_readings'].append({'dev_id': 'logger',
+                                           'comms_lggr_snap_rev': int(os.getenv('SNAP_REVISION', 0))})
     except Exception:
         logger.warn('Could not get snap revision number, or could not parse as integer', exc_info=True)
 
