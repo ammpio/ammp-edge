@@ -91,9 +91,16 @@ class DataPusher(threading.Thread):
                 readout['meta'].update({'config_id': self._node.config.get('config_id', '')})
 
                 # Append offset between time that reading was taken and current time
-                readout['fields']['reading_offset'] = int(
-                    (arrow.utcnow() - arrow.get(readout['time'])).total_seconds() - readout['device_readings'].get('reading_duration', 0)
-                    )
+                reading_duration = 0
+                for dict in readout['device_readings']:
+                    for key in dict:
+                        if key == 'reading_duration':
+                            reading_duration = dict[key]
+
+                readout['device_readings'].append({'dev_id': 'logger',
+                                                   'reading_offset':int(
+                                                       (arrow.utcnow() - arrow.get(readout['time'])).total_seconds() -
+                                                       reading_duration)})
 
             except:
                 logger.exception('Could not construct final data payload to push')
@@ -136,7 +143,7 @@ class DataPusher(threading.Thread):
             try:
                 # Append offset between time that reading was taken and current time
                 readout['fields']['reading_offset'] = int(
-                    (arrow.utcnow() - arrow.get(readout['time'])).total_seconds() - readout['fields'].get('reading_duration', 0)
+                    (arrow.utcnow() - arrow.get(readout['time'])).total_seconds() - readout['fields'].['reading_duration']
                     )
 
                 # Set measurement where data should be written

@@ -158,7 +158,8 @@ def get_readout(node):
         except queue.Empty:
             logger.warning('Not all devices returned readings')
 
-    readout['device_readings'].append({'reading_duration':(arrow.utcnow() - arrow.get(readout['time'])).total_seconds()})
+    readout['device_readings'].append({'dev_id': 'logger',
+                                       'reading_duration':(arrow.utcnow() - arrow.get(readout['time'])).total_seconds()})
     logger.debug(f"Device readings: {dev_rdg}")
     logger.debug(f"Readout: {readout}")
 
