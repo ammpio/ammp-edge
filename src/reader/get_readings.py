@@ -82,13 +82,14 @@ def get_readout(node):
     # 'readout' is a dict formatted for insertion into InfluxDB (with 'time' and 'fields' keys)
     readout = {
         'time': arrow.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),
-        'fields': {},
+        'device_readings':[],
         'meta': {}
     }
+    
     dev_rdg = get_readings(node)
 
     try:
-        readout['fields']['comms_lggr_snap_rev'] = int(os.getenv('SNAP_REVISION', 0))
+        readout['device_readings']['logger']['comms_lggr_snap_rev'] = int(os.getenv('SNAP_REVISION', 0))
     except Exception:
         logger.warn('Could not get snap revision number, or could not parse as integer', exc_info=True)
 
@@ -250,6 +251,7 @@ def read_device(dev, readings, readout_q, dev_lock=None):
                 value = process_reading(val_b, **rdg)
 
                 # Append to key-value store
+                fields['dev_id'] = dev['id']
                 fields[rdg['reading']] = value
 
                 # Also save within readings structure
@@ -261,7 +263,7 @@ def read_device(dev, readings, readout_q, dev_lock=None):
         logger.exception('Exception while reading device %s' % dev['id'])
 
     logger.info('READ: Finished reading %s' % dev['id'])
-
+    logger.debug(f'saved fields: {fields}')
     # Append result to readings (alongside those from other devices)
     readout_q.put(fields)
 
