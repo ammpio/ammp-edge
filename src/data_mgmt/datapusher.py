@@ -8,6 +8,7 @@ from copy import deepcopy
 from influxdb import InfluxDBClient
 from influxdb.exceptions import InfluxDBClientError
 from influxdb.exceptions import InfluxDBServerError
+from reader.get_readings import get_readout
 
 logger = logging.getLogger(__name__)
 
@@ -39,10 +40,10 @@ class DataPusher(threading.Thread):
 
             # queue.get() blocks the current thread until an item is retrieved
             logger.debug(f"PUSH: [{self.dep_name}] Waiting to get readings from queue")
-            readout = self._queue.get()
-
+            readings = self._queue.get()
+            logger.debug(f"Readings obtained: [{readout}]")
             # If we get the "stop" signal (i.e. empty dict) we exit
-            if readout == {}:
+            if readings == {}:
                 logger.debug(f"PUSH: [{self.dep_name}] Shutting down (got empty dict from queue)")
                 return
 
@@ -51,11 +52,16 @@ class DataPusher(threading.Thread):
                 if self._is_default_endpoint:
                     self._node.events.push_in_progress.set()
 
-                logger.debug(f"PUSH: [{self.dep_name}] Got readout at {readout['time']} from queue; attempting to push")
-                if self.__push_readout(readout):
-                    logger.info(f"PUSH: [{self.dep_name}] Successfully pushed point at {readout['time']}")
-                    if self._is_default_endpoint:
-                        self._node.events.push_in_progress.clear()
+                logger.debug(f"PUSH: [{self.dep_name}] Got readings at from queue; attempting to translate to readout and push")
+
+                if self.dep_name == 'default':
+                    # get the actual readout
+                    readout = get_readout(self._node, readout)
+                    logger.debug(f"Actual readout: {readout}")
+                    if self.__push_readout(readout):
+                        logger.info(f"PUSH: [{self.dep_name}] Successfully pushed point at {readout['time']}")
+                        if self._is_default_endpoint:
+                            self._node.events.push_in_progress.clear()
 
                 else:
                     # For some reason the point wasn't pushed successfully, so we should put it back in the queue

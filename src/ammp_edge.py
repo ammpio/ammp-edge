@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 
 import node_mgmt
 from data_mgmt import DataPusher, NonVolatileQProc
-from reader.get_readings import get_readout
+from reader.get_readings import get_readings
 
 # Set up logging
 logging.basicConfig(format='%(threadName)s:%(name)s:%(lineno)d [%(levelname)s] %(message)s', level='INFO')
@@ -51,11 +51,11 @@ def reading_cycle(node, qs, sc=None):
             sc.enter(node.config['read_interval'], 1, reading_cycle, (node, qs, sc))
 
     try:
-        readout = get_readout(node)
+        readings = get_readings(node)
         # Put the readout in each of the data queues. We create individual copies
         # so that separate queues don't overwrite each other's copies if modifying
         for q in qs:
-            q.put(readout)
+            q.put(readings)
 
     except Exception:
         logger.exception('READ: Exception getting readings')
