@@ -143,8 +143,8 @@ class DataPusher(threading.Thread):
             try:
                 # Append offset between time that reading was taken and current time
                 readout['fields']['reading_offset'] = int(
-                    (arrow.utcnow() - arrow.get(readout['time'])).total_seconds() - readout['fields'].['reading_duration']
-                    )
+                    (arrow.utcnow() - arrow.get(readout['time'])).total_seconds() - readout['fields'].get('reading_duration', 0)
+                )
 
                 # Set measurement where data should be written
                 readout['measurement'] = self._dep['meta']['measurement']
