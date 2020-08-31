@@ -16,7 +16,7 @@ def make_api_payload(readout):
 		fields.update(rdg)
 
 	readout['device_readings'] = fields
-	readout[fields] = readout.pop('device_readings')
+	readout['fields'] = readout.pop('device_readings')
 	logger.debug(f"Readout to push: {readout}")
 
 	return readout
