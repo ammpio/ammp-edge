@@ -8,7 +8,7 @@ from copy import deepcopy
 from influxdb import InfluxDBClient
 from influxdb.exceptions import InfluxDBClientError
 from influxdb.exceptions import InfluxDBServerError
-from reader.get_readings import get_readout
+from reader.helpers.get_api_payload import make_api_payload
 
 logger = logging.getLogger(__name__)
 
@@ -100,6 +100,8 @@ class DataPusher(threading.Thread):
                                                    'reading_offset':int(
                                                        (arrow.utcnow() - arrow.get(readout['time'])).total_seconds() -
                                                        reading_duration)})
+
+                readout = make_api_payload(readout)
 
             except:
                 logger.exception('Could not construct final data payload to push')
