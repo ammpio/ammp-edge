@@ -92,7 +92,7 @@ class DataPusher(threading.Thread):
 
                 # Append offset between time that reading was taken and current time
                 readout['fields']['reading_offset'] = int(
-                    (arrow.utcnow() - arrow.get(readout['time'])).total_seconds() - readout['fields'].get('reading_duration', 0)
+                    (arrow.utcnow() - arrow.get(readout['time'])).total_seconds() - readout['device_readings'].get('reading_duration', 0)
                     )
 
             except:
