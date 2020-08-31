@@ -93,9 +93,8 @@ class DataPusher(threading.Thread):
                 # Append offset between time that reading was taken and current time
                 reading_duration = 0
                 for dict in readout['device_readings']:
-                    for key in dict:
-                        if key == 'reading_duration':
-                            reading_duration = dict[key]
+                    if dict['reading_duration']:
+                        reading_duration = dict['reading_duration']
 
                 readout['device_readings'].append({'dev_id': 'logger',
                                                    'reading_offset':int(
@@ -107,7 +106,6 @@ class DataPusher(threading.Thread):
                 return False
 
             try:
-                logger.debug(f"Readout to be pushed: {readout}")
                 r = self._session.post(f"https://{self._dep['config']['host']}/api/{self._dep['config']['apiver']}/nodes/{self._node.node_id}/data",
                     json=readout, timeout=self._node.config.get('push_timeout') or self._dep['config'].get('timeout') or 120)
             except requests.exceptions.ConnectionError:
