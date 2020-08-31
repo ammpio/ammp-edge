@@ -93,7 +93,7 @@ class DataPusher(threading.Thread):
                 # Append offset between time that reading was taken and current time
                 reading_duration = 0
                 for dict in readout['device_readings']:
-                    if dict['reading_duration']:
+                    if 'reading_duration' in dict:
                         reading_duration = dict['reading_duration']
 
                 readout['device_readings'].append({'dev_id': 'logger',
