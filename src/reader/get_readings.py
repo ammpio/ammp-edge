@@ -152,7 +152,10 @@ def get_readout(node):
     for j in jobs:
         try:
             fields = readout_q.get(block=False)
-            readout['device_readings'].update(fields)
+            device_readings = {
+                fields['dev_id']: fields.pop('dev_id')
+            }
+            readout['device_readings'].append(device_readings)
         except queue.Empty:
             logger.warning('Not all devices returned readings')
 
