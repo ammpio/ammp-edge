@@ -153,8 +153,9 @@ def get_readout(node):
         try:
             fields = readout_q.get(block=False)
             device_readings = {
-                fields['dev_id']: fields.pop('dev_id')
+                fields['dev_id']: fields
             }
+            device_readings['dev_id'].pop('dev_id')
             readout['device_readings'].append(device_readings)
         except queue.Empty:
             logger.warning('Not all devices returned readings')
