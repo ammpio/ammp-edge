@@ -11,7 +11,7 @@ def make_api_payload(readout):
 	readout = deepcopy(readout)
 	fields = {}
 	for rdg in readout['device_readings']:
-		# delete device name
+		# delete device names, maybe a more elegant way ?
 		dev_id = rdg.pop('dev_id', None)
 		fields.update(rdg)
 
@@ -20,3 +20,4 @@ def make_api_payload(readout):
 	logger.debug(f"Readout to push: {readout}")
 
 	return readout
+
