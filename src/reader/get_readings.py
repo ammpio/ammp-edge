@@ -152,11 +152,11 @@ def get_readout(node):
     for j in jobs:
         try:
             fields = readout_q.get(block=False)
-            readout['fields'].update(fields)
+            readout['device_readings'].update(fields)
         except queue.Empty:
             logger.warning('Not all devices returned readings')
 
-    readout['fields']['reading_duration'] = \
+    readout['device_readings']['reading_duration'] = \
         (arrow.utcnow() - arrow.get(readout['time'])).total_seconds()
 
     logger.debug(f"Device readings: {dev_rdg}")
