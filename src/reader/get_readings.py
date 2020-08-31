@@ -87,7 +87,7 @@ def get_readout(node):
     }
 
     dev_rdg = get_readings(node)
-    
+
     try:
         readout['fields']['comms_lggr_snap_rev'] = int(os.getenv('SNAP_REVISION', 0))
     except Exception:
