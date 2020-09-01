@@ -13,8 +13,8 @@ from reader.helpers.get_api_payload import make_api_payload
 logger = logging.getLogger(__name__)
 
 
-class DataPusher(threading.Thread): 
-    def __init__(self, node, queue, dep): 
+class DataPusher(threading.Thread):
+    def __init__(self, node, queue, dep):
         threading.Thread.__init__(self)
         self.name = 'data_pusher'
         self.dep_name = dep.get('name') or 'unnamed'
@@ -59,7 +59,8 @@ class DataPusher(threading.Thread):
 
                 else:
                     # For some reason the point wasn't pushed successfully, so we should put it back in the queue
-                    logger.warn(f"PUSH: [{self.dep_name}] Did not work. Putting readout at {readout['time']} back to queue")
+                    logger.warning(f"PUSH: [{self.dep_name}] Did not work."
+                                   f"Putting readout at {readout['time']} back to queue")
                     self._queue.put(readout)
 
                     if self._is_default_endpoint:
@@ -76,7 +77,6 @@ class DataPusher(threading.Thread):
 
         logger.info(f"PUSH: [{self.dep_name}] Shutting down")
 
-
     def __push_readout(self, readout_to_push):
         # TODO: Use API object/session
 
@@ -92,12 +92,12 @@ class DataPusher(threading.Thread):
 
                 # Append offset between time that reading was taken and current time
                 reading_duration = 0
-                for dict in readout['device_readings']:
-                    if 'reading_duration' in dict:
-                        reading_duration = dict['reading_duration']
+                for rdg in readout['device_readings']:
+                    if 'reading_duration' in rdg:
+                        reading_duration = rdg['reading_duration']
 
                 readout['device_readings'].append({'dev_id': 'logger',
-                                                   'reading_offset':int(
+                                                   'reading_offset': int(
                                                        (arrow.utcnow() - arrow.get(readout['time'])).total_seconds() -
                                                        reading_duration)})
 

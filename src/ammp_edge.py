@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 
 import node_mgmt
 from data_mgmt import DataPusher, NonVolatileQProc
-from reader.get_readings import get_readout
+from reader import get_readout
 
 # Set up logging
 logging.basicConfig(format='%(threadName)s:%(name)s:%(lineno)d [%(levelname)s] %(message)s', level='INFO')

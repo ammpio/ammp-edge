@@ -78,14 +78,15 @@ def get_readings(node):
 
     return dev_rdg
 
+
 def get_readout(node):
     # 'readout' is a dict formatted for insertion into InfluxDB (with 'time' and 'fields' keys)
     readout = {
         'time': arrow.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),
-        'device_readings':[],
+        'device_readings': [],
         'meta': {}
     }
-    
+
     dev_rdg = get_readings(node)
 
     try:
@@ -158,8 +159,11 @@ def get_readout(node):
         except queue.Empty:
             logger.warning('Not all devices returned readings')
 
-    readout['device_readings'].append({'dev_id': 'logger',
-                                       'reading_duration':(arrow.utcnow() - arrow.get(readout['time'])).total_seconds()})
+    readout['device_readings'].append({
+                                        'dev_id': 'logger',
+                                        'reading_duration': (arrow.utcnow() - arrow.get(readout['time'])).total_seconds()
+                                       })
+
     logger.debug(f"Device readings: {dev_rdg}")
     logger.debug(f"Readout: {readout}")
 
@@ -263,8 +267,8 @@ def read_device(dev, readings, readout_q, dev_lock=None):
     except Exception:
         logger.exception('Exception while reading device %s' % dev['id'])
 
-    logger.info('READ: Finished reading %s' % dev['id'])
-    logger.debug(f'saved fields: {fields}')
+    logger.info(f"READ: Finished reading {dev['id']}")
+    logger.debug(f"Saved fields: {fields}")
     # Append result to readings (alongside those from other devices)
     readout_q.put(fields)
 
