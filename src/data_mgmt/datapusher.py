@@ -83,7 +83,7 @@ class DataPusher(threading.Thread):
         # This ensures that any modifications are only local to this function, and do not affect the original (in case
         # it needs to be pushed back into the queue)
         readout = deepcopy(readout_to_push)
-
+        logger.debug(f"Raw readout to push: {readout}")
         if self._dep.get('type') == 'api':
             # Push to API endpoint
             try:
