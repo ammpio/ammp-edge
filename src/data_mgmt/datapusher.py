@@ -92,7 +92,7 @@ class DataPusher(threading.Thread):
 
                 # Append offset between time that reading was taken and current time
                 readout['reading_offset'] = int((arrow.utcnow() - arrow.get(readout['time']).total_seconds()
-                                                 - arrow.get(readout['reading_duration']).total_seconds()))
+                                                 - readout['reading_duration']))
 
                 readout = make_api_payload(readout)
 
