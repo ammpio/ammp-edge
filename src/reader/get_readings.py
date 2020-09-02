@@ -80,20 +80,15 @@ def get_readings(node):
 
 
 def get_readout(node):
-    # 'readout' is a dict formatted for insertion into InfluxDB (with 'time' and 'fields' keys)
+    # 'readout' is a dict formatted for device-based readings. It also contains a timestamp and snap_rev
     readout = {
         'time': arrow.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),
+        'snap_rev': int(os.getenv('SNAP_REVISION', 0)),
         'device_readings': [],
         'meta': {}
     }
 
     dev_rdg = get_readings(node)
-
-    try:
-        readout['device_readings'].append({'dev_id': 'logger',
-                                           'comms_lggr_snap_rev': int(os.getenv('SNAP_REVISION', 0))})
-    except Exception:
-        logger.warn('Could not get snap revision number, or could not parse as integer', exc_info=True)
 
     # Set up queue in which to save readouts from the multiple threads that are reading each device
     readout_q = queue.Queue()
@@ -121,7 +116,7 @@ def get_readout(node):
 
             # Set host IP based on MAC, if MAC is available
             set_host_from_mac(dev['address'])
-
+    logger.debug(f"Can we get the config_id here ?: {node.config.get('config_id', '')}")
     # Set up threads for reading each of the devices
     for dev_id in dev_rdg:
         dev = node.config['devices'][dev_id]
@@ -159,10 +154,8 @@ def get_readout(node):
         except queue.Empty:
             logger.warning('Not all devices returned readings')
 
-    readout['device_readings'].append({
-                                        'dev_id': 'logger',
-                                        'reading_duration': (arrow.utcnow() - arrow.get(readout['time'])).total_seconds()
-                                       })
+    # time that took to read all devices.
+    readout['reading_duration'] = (arrow.utcnow() - arrow.get(readout['time'])).total_seconds()
 
     logger.debug(f"Device readings: {dev_rdg}")
     logger.debug(f"Readout: {readout}")

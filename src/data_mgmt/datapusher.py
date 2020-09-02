@@ -91,15 +91,8 @@ class DataPusher(threading.Thread):
                 readout['meta'].update({'config_id': self._node.config.get('config_id', '')})
 
                 # Append offset between time that reading was taken and current time
-                reading_duration = 0
-                for rdg in readout['device_readings']:
-                    if 'reading_duration' in rdg:
-                        reading_duration = rdg['reading_duration']
-
-                readout['device_readings'].append({'dev_id': 'logger',
-                                                   'reading_offset': int(
-                                                       (arrow.utcnow() - arrow.get(readout['time'])).total_seconds() -
-                                                       reading_duration)})
+                readout['reading_offset'] = int((arrow.utcnow() - arrow.get(readout['time']).total_seconds()
+                                                 - arrow.get(readout['reading_duration']).total_seconds()))
 
                 readout = make_api_payload(readout)
 
