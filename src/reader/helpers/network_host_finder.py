@@ -30,7 +30,7 @@ def arp_get_mac_from_ip(ip: str) -> str:
                     logger.warning(f"Malformed ARP table entry: {l}. Skipping")
                     continue
                 if this_mac == '00:00:00:00:00:00':
-                    logger.warning(f"Ignoring MAC address with only zeros for ip: {this_ip}, consider flushing arp cache")
+                    logger.warning(f"Ignoring MAC address with only zeros for IP: {this_ip}, consider flushing ARP cache")
                     continue
                 if this_ip == ip:
                     logger.debug(f"Mapped {ip} -> {this_mac} based on ARP table")
@@ -60,7 +60,7 @@ def arp_get_ip_from_mac(mac: str) -> str:
                     logger.warning(f"Malformed ARP table entry: {l}. Skipping")
                     continue
                 if this_mac == '00:00:00:00:00:00':
-                    logger.warning(f"Ignoring MAC address with only zeros for ip: {this_ip}, consider flushing arp cache")
+                    logger.warning(f"Ignoring MAC address with only zeros for IP: {this_ip}, consider flushing ARP cache")
                     continue
                 if this_mac == mac.lower():
                     logger.debug(f"Mapped {mac} -> {this_ip} based on ARP table")
