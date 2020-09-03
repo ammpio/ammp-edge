@@ -87,9 +87,6 @@ class DataPusher(threading.Thread):
         if self._dep.get('type') == 'api':
             # Push to API endpoint
             try:
-                # Augment payload with current config ID (TODO: consider whether this should be done when data is generated)
-                readout['meta'].update({'config_id': self._node.config.get('config_id', '')})
-
                 # Append offset between time that reading was taken and current time
                 readout['reading_offset'] = int((arrow.utcnow() - arrow.get(readout['time'])).total_seconds() - readout['reading_duration'])
 

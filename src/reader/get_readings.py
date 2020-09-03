@@ -72,7 +72,7 @@ def get_readings(node):
                 node.drivers[drv_id]['fields'][var]
                 )
         except KeyError:
-            logger.warn(f"Variable {var} not found in driver {drv_id}, or driver definition malformed.")
+            logger.warning(f"Variable {var} not found in driver {drv_id}, or driver definition malformed.")
 
         dev_rdg[dev_id].append(rdict)
 
@@ -89,7 +89,7 @@ def get_readout(node):
     }
 
     dev_rdg = get_readings(node)
-
+    logger.debug(f"Device readings empty: {dev_rdg}")
     # Set up queue in which to save readouts from the multiple threads that are reading each device
     readout_q = queue.Queue()
     jobs = []
@@ -116,7 +116,6 @@ def get_readout(node):
 
             # Set host IP based on MAC, if MAC is available
             set_host_from_mac(dev['address'])
-    logger.debug(f"Can we get the config_id here ?: {node.config.get('config_id', '')}")
     # Set up threads for reading each of the devices
     for dev_id in dev_rdg:
         dev = node.config['devices'][dev_id]
@@ -154,6 +153,8 @@ def get_readout(node):
         except queue.Empty:
             logger.warning('Not all devices returned readings')
 
+    # Augment payload with current config ID
+    readout['meta'].update({'config_id': node.config.get('config_id', '')})
     # time that took to read all devices.
     readout['reading_duration'] = (arrow.utcnow() - arrow.get(readout['time'])).total_seconds()
 
