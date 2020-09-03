@@ -148,7 +148,7 @@ def get_readout(node):
     for j in jobs:
         try:
             fields = readout_q.get(block=False)
-            logger.debug(f"DEV-READINGS: {fields}")
+            # logger.debug(f"DEV-READINGS: {fields}")
             readout['device_readings'].append(fields)
         except queue.Empty:
             logger.warning('Not all devices returned readings')
@@ -251,12 +251,12 @@ def read_device(dev, readings, readout_q, dev_lock=None):
 
                 # Append to key-value store
                 fields['dev_id'] = dev['id']
-                fields[rdg['reading']] = value
+                fields[rdg['var']] = value
 
                 # Also save within readings structure
                 rdg['value'] = value
 
-                logger.debug('READ: [%s] %s = %s %s' % (dev['id'], rdg['reading'], repr(val_b), rdg.get('unit', '')))
+                logger.debug('READ: [%s] %s = %s %s' % (dev['id'], rdg['var'], repr(val_b), rdg.get('unit', '')))
 
     except Exception:
         logger.exception('Exception while reading device %s' % dev['id'])
