@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 This module is currently used by the datapusher
 """
 
-def make_api_payload(readout):
+def convert_to_api_payload(readout):
 	readout = deepcopy(readout)
 	fields = {}
 	for rdg in readout['device_readings']:

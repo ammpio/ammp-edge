@@ -89,7 +89,6 @@ def get_readout(node):
     }
 
     dev_rdg = get_readings(node)
-    logger.debug(f"Device readings empty: {dev_rdg}")
     # Set up queue in which to save readouts from the multiple threads that are reading each device
     readout_q = queue.Queue()
     jobs = []
@@ -148,7 +147,6 @@ def get_readout(node):
     for j in jobs:
         try:
             fields = readout_q.get(block=False)
-            # logger.debug(f"DEV-READINGS: {fields}")
             readout['device_readings'].append(fields)
         except queue.Empty:
             logger.warning('Not all devices returned readings')
