@@ -129,7 +129,7 @@ def get_readout(node):
         dev_thread = threading.Thread(
                 target=read_device,
                 name='Readout-' + dev_id,
-                args=(dev, dev_rdg[dev_id], readout_q, dev_lock),
+                args=(dev, dev_rdg[dev_id], readout_q, node.data_endpoints, dev_lock),
                 daemon=True
                 )
 
@@ -168,7 +168,7 @@ def get_readout(node):
     return readout
 
 
-def read_device(dev, readings, readout_q, dev_lock=None):
+def read_device(dev, readings, readout_q, data_endpoints, dev_lock=None):
 
     # If the device has a concurrency lock associated with it, make sure it's available
     if dev_lock:
@@ -248,6 +248,7 @@ def read_device(dev, readings, readout_q, dev_lock=None):
                 value = process_reading(val_b, **rdg)
 
                 # Append to key-value store
+                logger.debug(f"Do we have the data endpoints here? : {data_endpoints}")
                 fields['dev_id'] = dev['id']
                 fields[rdg['var']] = value
 
