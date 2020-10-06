@@ -16,11 +16,9 @@ def convert_to_api_payload(readout, readings_from_config):
 		rdg.pop('dev_id', None)
 		fields.update(rdg)
 	# get the old reading names for backwards compatibility
-
-	for key in fields:
-		for rdg in readings_from_config:
+	for rdg in readings_from_config:
+		for key in fields:
 			logger.debug(f"CONVERT TO API PAYLOAD. KEY: {key}, RDG: {readings_from_config[rdg]['var']}")
-			logger.debug(f"CONVERT TO API PAYLOAD. Fields: {fields}")
 			if readings_from_config[rdg]['var'] == key:
 				fields[rdg] = fields.pop(key)
 				break
