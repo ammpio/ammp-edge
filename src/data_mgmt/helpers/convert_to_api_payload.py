@@ -18,8 +18,8 @@ def convert_to_api_payload(readout, readings_from_config):
 	# get the old reading names for backwards compatibility
 	for key in fields:
 		for rdg in readings_from_config:
-			logger.debug(f"CONVERT TO API PAYLOAD. KEY: {key}, RDG: {rdg}")
-			if rdg['var'] == key:
+			logger.debug(f"CONVERT TO API PAYLOAD. KEY: {key}, RDG: {readings_from_config[rdg]['var']}")
+			if readings_from_config[rdg]['var'] == key:
 				key = rdg
 	readout['fields'] = fields
 	# move snap_rev, reading_duration , and reading_offset under fields
