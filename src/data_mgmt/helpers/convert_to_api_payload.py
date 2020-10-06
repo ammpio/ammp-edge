@@ -16,6 +16,7 @@ def convert_to_api_payload(readout, readings_from_config):
 		rdg.pop('dev_id', None)
 		fields.update(rdg)
 	# get the old reading names for backwards compatibility
+	logger.debug(f"CONVERT TO API PAYLOAD. Fields: {fields}")
 	for key in fields:
 		for rdg in readings_from_config:
 			logger.debug(f"CONVERT TO API PAYLOAD. KEY: {key}, RDG: {readings_from_config[rdg]['var']}")
