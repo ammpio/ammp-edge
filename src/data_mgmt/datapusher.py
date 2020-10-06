@@ -88,10 +88,6 @@ class DataPusher(threading.Thread):
             try:
                 # Append offset between time that reading was taken and current time
                 readout['reading_offset'] = int((arrow.utcnow() - arrow.get(readout['time'])).total_seconds() - readout['reading_duration'])
-                now_minus_start = (arrow.utcnow() - arrow.get(readout['time'])).total_seconds()
-                duration = readout['reading_duration']
-                offset = int(now_minus_start - duration)
-                logger.debug(f"PUSH. now minus start: {now_minus_start}, duration: {duration}, int offset: {offset}")
                 # Transform the device-based readout to the older API format
                 readout = convert_to_api_payload(readout, self._node.config['readings'])
                 logger.debug(f"PUSH API ENDPOINT. Readout to push: {readout}")
