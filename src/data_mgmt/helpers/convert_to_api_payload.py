@@ -16,8 +16,12 @@ def convert_to_api_payload(readout):
 		rdg.pop('dev_id', None)
 		fields.update(rdg)
 	readout['fields'] = fields
+	# move snap_rev, reading_duration , and reading_offset under fields
 	readout['fields'].update({"snap_rev": readout['snap_rev']})
-	readout.pop('device_readings')
+	readout['fields'].update({"reading_duration": readout['reading_duration']})
+	readout['fields'].update({"reading_offset": readout['reading_offset']})
+	for key in ['snap_rev', 'reading_duration', 'reading_offset']:
+		readout.pop(key)
 	logger.debug(f"CONVERT TO API PAYLOAD. READOUT: {readout}")
 	return readout
 
