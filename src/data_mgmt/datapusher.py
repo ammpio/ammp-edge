@@ -90,7 +90,7 @@ class DataPusher(threading.Thread):
                 readout['reading_offset'] = int((arrow.utcnow() - arrow.get(readout['time'])).total_seconds() - readout['reading_duration'])
                 # Transform the device-based readout to the older API format
                 readout = convert_to_api_payload(readout, self._node.config['readings'])
-                logger.debug(f"API ENDPOINT. Readout to Push: {readout}")
+                logger.debug(f"PUSH API ENDPOINT. Readout to push: {readout}")
             except:
                 logger.exception('Could not construct final data payload to push')
                 return False
