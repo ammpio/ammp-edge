@@ -20,7 +20,7 @@ def convert_to_api_payload(readout, readings_from_config):
 		for rdg in readings_from_config:
 			logger.debug(f"CONVERT TO API PAYLOAD. KEY: {key}, RDG: {readings_from_config[rdg]['var']}")
 			if readings_from_config[rdg]['var'] == key:
-				key = rdg
+				fields[rdg] = fields.pop(key)
 	readout['fields'] = fields
 	# move snap_rev, reading_duration , and reading_offset under fields
 	readout['fields'].update({"snap_rev": readout['snap_rev']})
