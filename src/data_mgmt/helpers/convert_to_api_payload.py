@@ -15,9 +15,8 @@ def convert_to_api_payload(readout):
 		# delete device names, maybe a more elegant way ?
 		rdg.pop('dev_id', None)
 		fields.update(rdg)
-	#readout['device_readings'] = fields
-	#readout['fields'] = readout.pop('device_readings')
 	readout['fields'] = fields
+	readout['fields'].update(readout['snap_rev'])
 	readout.pop('device_readings')
 	logger.debug(f"CONVERT TO API PAYLOAD. READOUT: {readout}")
 	return readout
