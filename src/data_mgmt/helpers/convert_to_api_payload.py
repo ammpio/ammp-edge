@@ -16,7 +16,7 @@ def convert_to_api_payload(readout):
 		rdg.pop('dev_id', None)
 		fields.update(rdg)
 	readout['fields'] = fields
-	readout['fields'].update(readout['snap_rev'])
+	readout['fields'].update({"snap_rev": readout['snap_rev']})
 	readout.pop('device_readings')
 	logger.debug(f"CONVERT TO API PAYLOAD. READOUT: {readout}")
 	return readout
