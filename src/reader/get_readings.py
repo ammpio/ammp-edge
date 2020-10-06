@@ -152,7 +152,7 @@ def get_readout(node):
             logger.warning('Not all devices returned readings')
 
     # Augment payload with current config ID
-    readout['meta'].update({'config_id': node.config.get('config_id', '')})
+    readout['meta']['config_id'] = node.config.get('config_id', '')
     # time that took to read all devices.
     readout['reading_duration'] = (arrow.utcnow() - arrow.get(readout['time'])).total_seconds()
 
