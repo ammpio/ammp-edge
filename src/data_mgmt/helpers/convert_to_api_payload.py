@@ -13,11 +13,12 @@ def convert_to_api_payload(readout):
 	fields = {}
 	for rdg in readout['device_readings']:
 		# delete device names, maybe a more elegant way ?
-		dev_id = rdg.pop('dev_id', None)
+		rdg.pop('dev_id', None)
 		fields.update(rdg)
-	readout['device_readings'] = fields
-	readout['fields'] = readout.pop('device_readings')
-	readout['fields'].update(readout['snap_rev'])
+	#readout['device_readings'] = fields
+	#readout['fields'] = readout.pop('device_readings')
+	readout['fields'] = fields
+	readout.pop('device_readings')
 	logger.debug(f"CONVERT TO API PAYLOAD. READOUT: {readout}")
 	return readout
 
