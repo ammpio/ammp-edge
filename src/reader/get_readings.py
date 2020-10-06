@@ -231,7 +231,6 @@ def read_device(dev, readings, readout_q, dev_lock=None):
                 raise Exception(f"MAC mismatch for {dev['id']}. Not reading device.")
 
             for rdg in readings:
-                logger.debug(f"rdg: {rdg}")
                 if 'read_delay' in dev and isinstance(dev['read_delay'], (float, int)):
                     sleep(dev['read_delay'])
 
@@ -261,7 +260,6 @@ def read_device(dev, readings, readout_q, dev_lock=None):
         logger.exception('Exception while reading device %s' % dev['id'])
 
     logger.info(f"READ: Finished reading {dev['id']}")
-    logger.debug(f"Saved fields: {fields}")
     # Append result to readings (alongside those from other devices)
     readout_q.put(fields)
 
