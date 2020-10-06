@@ -28,5 +28,6 @@ def convert_to_api_payload(readout, readings_from_config):
 	readout['fields'].update({"reading_offset": readout['reading_offset']})
 	for key in ['device_readings', 'snap_rev', 'reading_duration', 'reading_offset']:
 		readout.pop(key)
+	logger.debug(f"CONVERT TO API PAYLOAD. Converted payload: {readout}")
 	return readout
 
