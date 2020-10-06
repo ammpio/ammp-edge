@@ -83,14 +83,14 @@ class DataPusher(threading.Thread):
         # This ensures that any modifications are only local to this function, and do not affect the original (in case
         # it needs to be pushed back into the queue)
         readout = deepcopy(readout_to_push)
-        logger.debug(f"Raw readout to push: {readout}")
         if self._dep.get('type') == 'api':
             # Push to API endpoint
             try:
                 # Append offset between time that reading was taken and current time
                 readout['reading_offset'] = int((arrow.utcnow() - arrow.get(readout['time'])).total_seconds() - readout['reading_duration'])
+                # Transform the device-based readout to the older API format
                 readout = convert_to_api_payload(readout, self._node.config['readings'])
-
+                logger.debug(f"API ENDPOINT. Readout to Push: {readout}")
             except:
                 logger.exception('Could not construct final data payload to push')
                 return False
