@@ -8,7 +8,6 @@ This module is currently used by the datapusher
 """
 
 def convert_to_api_payload(readout, readings_from_config):
-	logger.debug(f"CONVERT TO API PAYLOAD: Readings from config: {readings_from_config}")
 	readout = deepcopy(readout)
 	# fields is a dict will all the readings of all devices -- without the device id. This is done for backwards compatibility
 	fields = {}
@@ -16,6 +15,12 @@ def convert_to_api_payload(readout, readings_from_config):
 		# delete device names, maybe a more elegant way ?
 		rdg.pop('dev_id', None)
 		fields.update(rdg)
+	# get the old reading names for backwards compatibility
+	for key in fields:
+		for rdg in readings_from_config:
+			logger.debug(f"CONVERT TO API PAYLOAD. KEY: {key}, RDG: {rdg}")
+			if rdg['var'] == key:
+				key = rdg
 	readout['fields'] = fields
 	# move snap_rev, reading_duration , and reading_offset under fields
 	readout['fields'].update({"snap_rev": readout['snap_rev']})
