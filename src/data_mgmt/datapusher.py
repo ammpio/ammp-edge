@@ -30,20 +30,26 @@ class DataPusher(threading.Thread):
         self.dep_name = dep.get('name') or 'unnamed'
         # Make sure this thread exits directly when the program exits; no clean-up should be required
         self.daemon = True
-
         self._node = node
         self._queue = queue
         self._dep = dep
         self._is_default_endpoint = dep.get('isdefault', False)
-        logger.debug(f"MQTT Level: {mqtt_cert_path}")
         if dep.get('type') == 'api':
             self._session = requests.Session()
             self._session.headers.update({'Authorization': self._node.access_key})
         elif dep.get('type') == 'influxdb':
             self._session = InfluxDBClient(**dep['client_config'])
+        elif dep.get('type') == 'mqtt':
+            try:
+                create_mqtt_connection()
+            except Exception:
+                logger.warning(f"MQTT connection could not be established")
         else:
             logger.warning(f"Data endpoint type '{dep.get('type')}' not recognized")
 
+    def create_mqtt_connection(self):
+        logger.debug(f"MQTT, creating connection..")
+        
     def run(self):
 
         while not self._node.events.do_shutdown.is_set():
