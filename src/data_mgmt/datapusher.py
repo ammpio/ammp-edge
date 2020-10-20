@@ -172,7 +172,7 @@ class DataPusher(threading.Thread):
 
         elif self._dep.get('type') == 'mqtt':
             logger.debug(f"MQTT Attempting to push device-based readout: {readout_to_push}")
-            pub = self._mqtt_session.publish(f"a/{self._node.node_id}/#", json.dumps(readout_to_push))
+            pub = self._mqtt_session.publish(f"a/{self._node.node_id}/data", json.dumps(readout_to_push))
             return True
 
         else:
