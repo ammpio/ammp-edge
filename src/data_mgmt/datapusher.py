@@ -41,7 +41,7 @@ class DataPusher(threading.Thread):
         elif dep.get('type') == 'influxdb':
             self._session = InfluxDBClient(**dep['client_config'])
         elif dep.get('type') == 'mqtt':
-            self._mqtt_session = mqtt.Client(client_id="ammp_internal", clean_session=False, transport="tcp")
+            self._mqtt_session = mqtt.Client(client_id="ammp", clean_session=False, transport="tcp")
         else:
             logger.warning(f"Data endpoint type '{dep.get('type')}' not recognized")
 
