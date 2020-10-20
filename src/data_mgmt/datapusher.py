@@ -42,7 +42,6 @@ class DataPusher(threading.Thread):
             self._session = InfluxDBClient(**dep['client_config'])
         elif dep.get('type') == 'mqtt':
             self._mqtt_session = mqtt.Client(client_id="ammp_internal", clean_session=False, transport="tcp")
-            self._mqtt_session.tls_set(ca_certs=mqtt_cert_path)
         else:
             logger.warning(f"Data endpoint type '{dep.get('type')}' not recognized")
 
@@ -171,7 +170,9 @@ class DataPusher(threading.Thread):
         elif self._dep.get('type') == 'mqtt':
             logger.debug(f"MQTT attempting to connect with user: {self._node.node_id}, and pass: {self._node.access_key}")
             logger.debug(f"MQTT attempting to connect to: {self._dep['config']['host']}, on port: {self._dep['config']['port']}")
+            logger.debug(f"MQTT attempting to connect with ca file: {mqtt_cert_path}")
             logger.debug(f"MQTT Attempting to push device-based readout: {readout_to_push}")
+            self._mqtt_session.tls_set(ca_certs=mqtt_cert_path)
             self._mqtt_session.username_pw_set(self._node.node_id, self._node.access_key)
             self._mqtt_session.connect(self._dep['config']['host'], port=self._dep['config']['port'])
             pub = self._mqtt_session.publish(f"a/{self._node.node_id}/data", json.dumps(readout_to_push))
