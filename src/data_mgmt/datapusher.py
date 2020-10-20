@@ -179,6 +179,16 @@ class DataPusher(threading.Thread):
         else:
             logger.warning(f"Data endpoint type '{self._dep.get('type')}' not recognized")
 
+    def __on_mqtt_connect(self, _client, flags, rc):
+        logger.info(f"Connected with result code {str(rc)}")
+
+    def __on_mqtt_disconnect(self, client, rc):
+        logger.info("Client disconnected")
+        pass
+
+    def __on_mqtt_publish(self, client, result):
+        logger.info(f"MQTT Data published: {result}")
+        pass
     def create_mqtt_connection(self):
         self._mqtt_session = mqtt.Client(client_id="ammp_internal", clean_session=False, transport="tcp")
         self._mqtt_session.tls_set(ca_certs=mqtt_cert_path)
@@ -188,13 +198,3 @@ class DataPusher(threading.Thread):
         self._mqtt_session.on_mqtt_publish = self.__on_mqtt_publish
         self._mqtt_session.connect(self._dep['config']['host'], port=self._dep['config']['port'])
 
-    def __on_mqtt_connect(self, _client, flags, rc):
-        logger.info(f"Connected with result code {str(rc)}")
-
-    def __on_mqtt_disconnect(self, client, rc):
-        logger.info("Client disconnected")
-        pass
-
-    def __on_mqtt_publish(self, client, mid):
-        logger.info(f"MQTT Data published: {mid}")
-        pass
