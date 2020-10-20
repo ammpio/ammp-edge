@@ -12,5 +12,5 @@ data-endpoints:
   - name: mqtt
     type: mqtt
     config:
-      host: mqtt.stage.ammp.io
+      host: mqtt.dev.ammp.io
       port: 8883

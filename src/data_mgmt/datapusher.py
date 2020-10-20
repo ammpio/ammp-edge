@@ -7,6 +7,7 @@ import requests
 from copy import deepcopy
 import os
 from dotenv import load_dotenv
+import paho.mqtt.client as mqtt
 from influxdb import InfluxDBClient
 from influxdb.exceptions import InfluxDBClientError
 from influxdb.exceptions import InfluxDBServerError
@@ -46,11 +47,6 @@ class DataPusher(threading.Thread):
                 logger.warning(f"MQTT connection could not be established")
         else:
             logger.warning(f"Data endpoint type '{dep.get('type')}' not recognized")
-
-    def create_mqtt_connection(self):
-        user = self._node.node_id
-        password = self._node.access_key
-        logger.debug(f"MQTT, creating connection with user {user}, and password {password}")
 
     def run(self):
 
@@ -175,7 +171,29 @@ class DataPusher(threading.Thread):
 
 
         elif self._dep.get('type') == 'mqtt':
-            logger.debug(f"MQTT, Do nothing for now..")
+            logger.debug(f"MQTT Attempting to push device-based readout: {readout_to_push}")
+            pub = self._mqtt_session.publish(f"a/{self._node.node_id}/#", json.dumps(readout_to_push))
+            return True
 
         else:
             logger.warning(f"Data endpoint type '{self._dep.get('type')}' not recognized")
+
+    def create_mqtt_connection(self):
+        self._mqtt_session = mqtt.Client(client_id="ammp_internal", clean_session=False, transport="tcp")
+        self._mqtt_session.tls_set(ca_certs=mqtt_cert_path)
+        self._mqtt_session.username_pw_set(self._node.node_id, self._node.access_key)
+        self._mqtt_session.on_mqtt_connect = self.__on_mqtt_connect
+        self._mqtt_session.on_mqtt_disconnect = self.__on_mqtt_disconnect
+        self._mqtt_session.on_mqtt_publish = self.__on_mqtt_publish
+        self._mqtt_session.connect(self._dep['config']['host'], port=self._dep['config']['port'])
+
+    def __on_mqtt_connect(self, _client, flags, rc):
+        logger.info(f"Connected with result code {str(rc)}")
+
+    def __on_mqtt_disconnect(self, client, rc):
+        logger.info("Client disconnected")
+        pass
+
+    def __on_mqtt_publish(self, client, result):
+        logger.info(f"MQTT Data published: {result}")
+        pass
