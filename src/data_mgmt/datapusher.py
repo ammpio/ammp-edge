@@ -173,9 +173,6 @@ class DataPusher(threading.Thread):
             logger.debug(f"MQTT attempting to connect to: {self._dep['config']['host']}, on port: {self._dep['config']['port']}")
             logger.debug(f"MQTT Attempting to push device-based readout: {readout_to_push}")
             self._mqtt_session.username_pw_set(self._node.node_id, self._node.access_key)
-            self._mqtt_session.on_mqtt_connect = self.__on_mqtt_connect
-            self._mqtt_session.on_mqtt_disconnect = self.__on_mqtt_disconnect
-            self._mqtt_session.on_mqtt_publish = self.__on_mqtt_publish
             self._mqtt_session.connect(self._dep['config']['host'], port=self._dep['config']['port'])
             pub = self._mqtt_session.publish(f"a/{self._node.node_id}/data", json.dumps(readout_to_push))
             logger.debug(f"MQTT result: {pub}")
@@ -184,16 +181,7 @@ class DataPusher(threading.Thread):
         else:
             logger.warning(f"Data endpoint type '{self._dep.get('type')}' not recognized")
 
-    def __on_mqtt_connect(self, client, flags, rc):
-        logger.info(f"Connected with result code {str(rc)}")
 
-    def __on_mqtt_disconnect(self, client, rc):
-        logger.info("Client disconnected")
-        pass
-
-    def __on_mqtt_publish(self, client, result):
-        logger.info(f"MQTT Data published: {result}")
-        pass
 
 
 
