@@ -169,7 +169,7 @@ class DataPusher(threading.Thread):
 
 
         elif self._dep.get('type') == 'mqtt':
-            logger.debug(f"MQTT attempting to connect with user: {self._node.node_id,}, and pass: {self._node.access_key}")
+            logger.debug(f"MQTT attempting to connect with user: {self._node.node_id}, and pass: {self._node.access_key}")
             logger.debug(f"MQTT attempting to connect to: {self._dep['config']['host']}, on port: {self._dep['config']['port']}")
             logger.debug(f"MQTT Attempting to push device-based readout: {readout_to_push}")
             self._mqtt_session.username_pw_set(self._node.node_id, self._node.access_key)
