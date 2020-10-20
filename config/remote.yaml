@@ -9,3 +9,8 @@ data-endpoints:
       apiver: v0
       timeout: 120
     isdefault: true
+  - name: stage-mqtt
+    type: mqtt
+    config:
+      host: mqtt.stage.ammp.io
+      port: 8883
