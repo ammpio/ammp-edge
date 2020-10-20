@@ -48,7 +48,9 @@ class DataPusher(threading.Thread):
             logger.warning(f"Data endpoint type '{dep.get('type')}' not recognized")
 
     def create_mqtt_connection(self):
-        logger.debug(f"MQTT, creating connection..")
+        user = self._node.node_id
+        password = self._node.access_key
+        logger.debug(f"MQTT, creating connection with user {user}, and password {password}")
 
     def run(self):
 
@@ -170,6 +172,10 @@ class DataPusher(threading.Thread):
                 logger.exception(f"Could not write to InfluxDB at {self._dep.get('client_config')}")
 
             return r
+
+
+        elif self._dep.get('type') == 'mqtt':
+            logger.debug(f"MQTT, Do nothing for now..")
 
         else:
             logger.warning(f"Data endpoint type '{self._dep.get('type')}' not recognized")

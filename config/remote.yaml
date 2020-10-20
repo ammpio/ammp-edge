@@ -9,7 +9,7 @@ data-endpoints:
       apiver: v0
       timeout: 120
     isdefault: true
-  - name: stage-mqtt
+  - name: mqtt
     type: mqtt
     config:
       host: mqtt.stage.ammp.io
