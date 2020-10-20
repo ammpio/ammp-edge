@@ -5,12 +5,22 @@ import json
 import threading
 import requests
 from copy import deepcopy
+import os
+from dotenv import load_dotenv
 from influxdb import InfluxDBClient
 from influxdb.exceptions import InfluxDBClientError
 from influxdb.exceptions import InfluxDBServerError
 from data_mgmt.helpers import convert_to_api_payload
 
 logger = logging.getLogger(__name__)
+dotenv_path = os.path.join(os.environ.get('SNAP_COMMON', '.'), '.env')
+load_dotenv(dotenv_path)
+
+if os.environ.get('MQTT_LEVEL'):
+    try:
+        mqtt_cert_path = os.path.join(os.getenv('SNAP_COMMON', './'), 'resources', 'ca-' + os.environ.get('MQTT_LEVEL') + '.crt')
+    except Exception:
+        logger.warning(f"Failed to set mqtt level to {os.environ['MQTT_LEVEL']}", exc_info=True)
 
 
 class DataPusher(threading.Thread):
@@ -25,7 +35,7 @@ class DataPusher(threading.Thread):
         self._queue = queue
         self._dep = dep
         self._is_default_endpoint = dep.get('isdefault', False)
-
+        logger.debug(f"MQTT Level: {mqtt_cert_path}")
         if dep.get('type') == 'api':
             self._session = requests.Session()
             self._session.headers.update({'Authorization': self._node.access_key})
