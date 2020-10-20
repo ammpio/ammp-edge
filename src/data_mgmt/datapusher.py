@@ -173,6 +173,7 @@ class DataPusher(threading.Thread):
         elif self._dep.get('type') == 'mqtt':
             logger.debug(f"MQTT Attempting to push device-based readout: {readout_to_push}")
             pub = self._mqtt_session.publish(f"a/{self._node.node_id}/data", json.dumps(readout_to_push))
+            logger.debug(f"MQTT result: {pub}")
             return True
 
         else:
@@ -194,6 +195,6 @@ class DataPusher(threading.Thread):
         logger.info("Client disconnected")
         pass
 
-    def __on_mqtt_publish(self, client, result):
-        logger.info(f"MQTT Data published: {result}")
+    def __on_mqtt_publish(self, client, mid):
+        logger.info(f"MQTT Data published: {mid}")
         pass
