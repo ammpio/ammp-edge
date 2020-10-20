@@ -41,7 +41,7 @@ class DataPusher(threading.Thread):
             self._session = InfluxDBClient(**dep['client_config'])
         elif dep.get('type') == 'mqtt':
             try:
-                create_mqtt_connection()
+                self.create_mqtt_connection()
             except Exception:
                 logger.warning(f"MQTT connection could not be established")
         else:
@@ -49,7 +49,7 @@ class DataPusher(threading.Thread):
 
     def create_mqtt_connection(self):
         logger.debug(f"MQTT, creating connection..")
-        
+
     def run(self):
 
         while not self._node.events.do_shutdown.is_set():
