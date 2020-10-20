@@ -169,14 +169,14 @@ class DataPusher(threading.Thread):
 
 
         elif self._dep.get('type') == 'mqtt':
+            logger.debug(f"MQTT attempting to connect with user: {self._node.node_id,}, and pass: {self._node.access_key}")
+            logger.debug(f"MQTT attempting to connect to: {self._dep['config']['host']}, on port: {self._dep['config']['port']}")
+            logger.debug(f"MQTT Attempting to push device-based readout: {readout_to_push}")
             self._mqtt_session.username_pw_set(self._node.node_id, self._node.access_key)
             self._mqtt_session.on_mqtt_connect = self.__on_mqtt_connect
             self._mqtt_session.on_mqtt_disconnect = self.__on_mqtt_disconnect
             self._mqtt_session.on_mqtt_publish = self.__on_mqtt_publish
             self._mqtt_session.connect(self._dep['config']['host'], port=self._dep['config']['port'])
-            logger.debug(f"MQTT attempting to connect with user: {self._node.node_id,}, and pass: {self._node.access_key}")
-            logger.debug(f"MQTT attempting to connect to: {self._dep['config']['host']}, on port: {self._dep['config']['port']}")
-            logger.debug(f"MQTT Attempting to push device-based readout: {readout_to_push}")
             pub = self._mqtt_session.publish(f"a/{self._node.node_id}/data", json.dumps(readout_to_push))
             logger.debug(f"MQTT result: {pub}")
             return True
