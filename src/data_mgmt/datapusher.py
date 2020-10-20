@@ -179,7 +179,7 @@ class DataPusher(threading.Thread):
         else:
             logger.warning(f"Data endpoint type '{self._dep.get('type')}' not recognized")
 
-    def __on_mqtt_connect(self, _client, flags, rc):
+    def __on_mqtt_connect(self, client, flags, rc):
         logger.info(f"Connected with result code {str(rc)}")
 
     def __on_mqtt_disconnect(self, client, rc):
@@ -197,4 +197,6 @@ class DataPusher(threading.Thread):
         self._mqtt_session.on_mqtt_disconnect = self.__on_mqtt_disconnect
         self._mqtt_session.on_mqtt_publish = self.__on_mqtt_publish
         self._mqtt_session.connect(self._dep['config']['host'], port=self._dep['config']['port'])
+        logger.debug(f"MQTT attempting to connect with user: {self._node.node_id,}, and pass: {self._node.access_key}")
+        logger.debug(f"MQTT attempting to connect to: {self._dep['config']['host']}, on port: {self._dep['config']['port']}")
 
