@@ -156,8 +156,8 @@ def get_readout(node):
     # time that took to read all devices.
     readout['reading_duration'] = (arrow.utcnow() - arrow.get(readout['time'])).total_seconds()
 
-    logger.debug(f"Device readings: {dev_rdg}")
-    logger.debug(f"Readout: {readout}")
+    logger.debug(f"Device-based readings: {dev_rdg}")
+    logger.debug(f"Device-based Readout: {readout}")
 
     if 'output' in node.config:
         # Get additional processed values (new model to be used for all readings in future)

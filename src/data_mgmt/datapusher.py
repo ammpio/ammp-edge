@@ -42,9 +42,6 @@ class DataPusher(threading.Thread):
                 except Exception:
                     logger.warning(f"Failed to set mqtt level to {os.environ['MQTT_LEVEL']}", exc_info=True)
             self._mqtt_session = mqtt.Client(client_id="ammp", clean_session=False, transport="tcp")
-            logger.debug(f"MQTT attempting to connect with user: {self._node.node_id}, and pass: {self._node.access_key}")
-            logger.debug(f"MQTT attempting to connect to: {self._dep['config']['host']}, on port: {self._dep['config']['port']}")
-            logger.debug(f"MQTT attempting to connect with ca file: {mqtt_cert_path}")
             self._mqtt_session.tls_set(ca_certs=mqtt_cert_path)
             self._mqtt_session.username_pw_set(self._node.node_id, self._node.access_key)
             self._mqtt_session.connect(self._dep['config']['host'], port=self._dep['config']['port'])
@@ -107,7 +104,7 @@ class DataPusher(threading.Thread):
                 readout['reading_offset'] = int((arrow.utcnow() - arrow.get(readout['time'])).total_seconds() - readout['reading_duration'])
                 # Transform the device-based readout to the older API format
                 readout = convert_to_api_payload(readout, self._node.config['readings'])
-                logger.debug(f"PUSH API ENDPOINT. Readout to push: {readout}")
+                logger.debug(f"PUSH [API]. API-Based Readout: {readout}")
             except:
                 logger.exception('Could not construct final data payload to push')
                 return False
@@ -174,9 +171,9 @@ class DataPusher(threading.Thread):
 
 
         elif self._dep.get('type') == 'mqtt':
-            logger.debug(f"MQTT Attempting to push device-based readout: {readout_to_push}")
+            logger.debug(f"PUSH [MQTT]. Device-based readout: {readout_to_push}")
             pub = self._mqtt_session.publish(f"a/{self._node.node_id}/data", json.dumps(readout_to_push))
-            logger.debug(f"MQTT result: {pub}")
+            logger.debug(f"PUSH [MQTT]. Publish result: {pub}")
             return True
 
         else:
