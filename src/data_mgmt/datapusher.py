@@ -46,7 +46,7 @@ class DataPusher(threading.Thread):
             logger.debug(f"MQTT attempting to connect to: {self._dep['config']['host']}, on port: {self._dep['config']['port']}")
             logger.debug(f"MQTT attempting to connect with ca file: {mqtt_cert_path}")
             self._mqtt_session.tls_set(ca_certs=mqtt_cert_path)
-            self._mqtt_session.username_pw_set(os.getenv("MQTT_USER"), os.getenv("MQTT_PWRD"))
+            self._mqtt_session.username_pw_set(self._node.node_id, self._node.access_key)
             self._mqtt_session.connect(self._dep['config']['host'], port=self._dep['config']['port'])
         else:
             logger.warning(f"Data endpoint type '{dep.get('type')}' not recognized")
