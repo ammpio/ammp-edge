@@ -16,10 +16,11 @@ from data_mgmt.helpers import convert_to_api_payload
 logger = logging.getLogger(__name__)
 dotenv_path = os.path.join(os.environ.get('SNAP_COMMON', '.'), '.env')
 load_dotenv(dotenv_path)
-logger.debug(f"MQTT level: {os.environ.get('MQTT_LEVEL')}")
+
 if os.environ.get('MQTT_LEVEL'):
     try:
         mqtt_cert_path = os.path.join(os.getenv('SNAP_COMMON', './'), 'resources', 'ca-' + os.environ.get('MQTT_LEVEL') + '.crt')
+        logger.debug(f"MQTT level: {os.environ.get('MQTT_LEVEL')}")
     except Exception:
         logger.warning(f"Failed to set mqtt level to {os.environ['MQTT_LEVEL']}", exc_info=True)
 
