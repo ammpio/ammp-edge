@@ -17,13 +17,6 @@ logger = logging.getLogger(__name__)
 dotenv_path = os.path.join(os.environ.get('SNAP_COMMON', '.'), '.env')
 load_dotenv(dotenv_path)
 
-if os.environ.get('MQTT_LEVEL'):
-    try:
-        mqtt_cert_path = os.path.join(os.getenv('SNAP_COMMON', './'), 'resources', 'ca-' + os.environ.get('MQTT_LEVEL') + '.crt')
-        logger.debug(f"MQTT level: {os.environ.get('MQTT_LEVEL')}")
-    except Exception:
-        logger.warning(f"Failed to set mqtt level to {os.environ['MQTT_LEVEL']}", exc_info=True)
-
 
 class DataPusher(threading.Thread):
     def __init__(self, node, queue, dep):
@@ -42,6 +35,12 @@ class DataPusher(threading.Thread):
         elif dep.get('type') == 'influxdb':
             self._session = InfluxDBClient(**dep['client_config'])
         elif dep.get('type') == 'mqtt':
+            if os.environ.get('MQTT_LEVEL'):
+                try:
+                    mqtt_cert_path = os.path.join(os.getenv('SNAP_COMMON', './'), 'resources', 'ca-' + os.environ.get('MQTT_LEVEL') + '.crt')
+                    logger.debug(f"MQTT level: {os.environ.get('MQTT_LEVEL')}")
+                except Exception:
+                    logger.warning(f"Failed to set mqtt level to {os.environ['MQTT_LEVEL']}", exc_info=True)
             self._mqtt_session = mqtt.Client(client_id="ammp", clean_session=False, transport="tcp")
             logger.debug(f"MQTT attempting to connect with user: {self._node.node_id}, and pass: {self._node.access_key}")
             logger.debug(f"MQTT attempting to connect to: {self._dep['config']['host']}, on port: {self._dep['config']['port']}")
