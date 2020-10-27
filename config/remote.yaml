@@ -13,5 +13,5 @@ data-endpoints:
     type: mqtt
     config:
       host: mqtt.stage.ammp.io
-      cert: resources/ca-stage.crt
+      cert: /resources/ca-stage.crt
       port: 8883
