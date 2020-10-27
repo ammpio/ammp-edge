@@ -14,8 +14,9 @@ from influxdb.exceptions import InfluxDBServerError
 from data_mgmt.helpers import convert_to_api_payload
 
 logger = logging.getLogger(__name__)
-dotenv_path = os.path.join(os.environ.get('SNAP_COMMON', '.'), '.env')
+dotenv_path = os.path.join(os.environ.get('SNAP_COMMON', default='.'), '.env')
 load_dotenv(dotenv_path)
+env = os.getenv('ENV', default='stage')
 
 
 class DataPusher(threading.Thread):
@@ -35,13 +36,10 @@ class DataPusher(threading.Thread):
         elif dep.get('type') == 'influxdb':
             self._session = InfluxDBClient(**dep['client_config'])
         elif dep.get('type') == 'mqtt':
-            if os.environ.get('MQTT_LEVEL'):
-                try:
-                    mqtt_cert_path = os.path.join(os.getenv('SNAP_COMMON', './'), 'resources', 'ca-' + os.environ.get('MQTT_LEVEL') + '.crt')
-                    logger.debug(f"MQTT level: {os.environ.get('MQTT_LEVEL')}")
-                except Exception:
-                    logger.warning(f"Failed to set mqtt level to {os.environ['MQTT_LEVEL']}", exc_info=True)
-            self._mqtt_session = mqtt.Client(client_id="ammp", clean_session=False, transport="tcp")
+            # setting env
+            mqtt_cert_path = os.path.join(os.getenv('SNAP_COMMON', './'), 'resources', 'ca-' + env + '.crt')
+            logger.debug(f"MQTT. ENV: {os.environ.get('ENV')}")
+            self._mqtt_session = mqtt.Client(client_id=self._node.node_id, clean_session=False, transport="tcp")
             self._mqtt_session.tls_set(ca_certs=mqtt_cert_path)
             self._mqtt_session.username_pw_set(self._node.node_id, self._node.access_key)
             self._mqtt_session.connect(self._dep['config']['host'], port=self._dep['config']['port'])
@@ -111,7 +109,8 @@ class DataPusher(threading.Thread):
 
             try:
                 r = self._session.post(f"https://{self._dep['config']['host']}/api/{self._dep['config']['apiver']}/nodes/{self._node.node_id}/data",
-                    json=readout, timeout=self._node.config.get('push_timeout') or self._dep['config'].get('timeout') or 120)
+                                       json=readout,
+                                       timeout=self._node.config.get('push_timeout') or self._dep['config'].get('timeout') or 120)
             except requests.exceptions.ConnectionError:
                 logger.warning('Connection error while trying to push data at %s to API.' % readout['time'])
                 return False
@@ -169,24 +168,23 @@ class DataPusher(threading.Thread):
 
             return r
 
-
         elif self._dep.get('type') == 'mqtt':
             # Append offset between time that reading was taken and current time
             readout['reading_offset'] = int((arrow.utcnow() - arrow.get(readout['time'])).total_seconds() - readout['reading_duration'])
+            MQTT_QOS = 1
+            MQTT_RETAIN = False
+            MQTT_PUB_SUCCESS = 0
             logger.debug(f"PUSH [MQTT]. Device-based readout: {readout_to_push}")
-            pub = self._mqtt_session.publish(f"a/{self._node.node_id}/data", json.dumps(readout), 1, False)
-            logger.debug(f"PUSH [MQTT]. Publish result: {pub}")
-            if pub[0] == 0:
-                logger.debug(f"PUSH [MQTT]. Message Successfully published to Broker")
+            pub = self._mqtt_session.publish(f"a/{self._node.node_id}/data",
+                                             json.dumps(readout, separators=(',', ':')),
+                                             qos=MQTT_QOS, retain=MQTT_RETAIN)
+            logger.debug(f"PUSH [MQTT]. Broker response: {pub}")
+            if pub[0] == MQTT_PUB_SUCCESS:
+                logger.debug("PUSH [MQTT]. Successful broker response")
                 return True
             else:
-                logger.debug(f"PUSH [MQTT]. Error - Message not published")
+                logger.debug("PUSH [MQTT]. Error - Message not published")
                 return False
 
         else:
             logger.warning(f"Data endpoint type '{self._dep.get('type')}' not recognized")
-
-
-
-
-

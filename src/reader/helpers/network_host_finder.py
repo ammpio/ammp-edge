@@ -49,6 +49,8 @@ def arp_get_ip_from_mac(mac: str) -> str:
         logger.warning(f"MAC must be string. Received {mac}")
         return None
 
+    INVALID_MAC = '00:00:00:00:00:00'
+
     try:
         with open(ARP_TABLE_FILE, 'r') as arp_table:
             # Skip header row
@@ -59,7 +61,7 @@ def arp_get_ip_from_mac(mac: str) -> str:
                 except ValueError:
                     logger.warning(f"Malformed ARP table entry: {l}. Skipping")
                     continue
-                if this_mac == '00:00:00:00:00:00':
+                if this_mac == INVALID_MAC:
                     logger.warning(f"Ignoring MAC address with only zeros for IP: {this_ip}, consider flushing ARP cache")
                     continue
                 if this_mac == mac.lower():
