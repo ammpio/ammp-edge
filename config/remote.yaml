@@ -5,12 +5,12 @@ data-endpoints:
   - name: default
     type: api
     config:
-      host: edge.ammp.io
+      host: edge.env.ammp.io
       apiver: v0
       timeout: 120
     isdefault: true
   - name: mqtt
     type: mqtt
     config:
-      host: mqtt.stage.ammp.io
+      host: mqtt.env.ammp.io
       port: 8883
