@@ -16,7 +16,6 @@ from data_mgmt.helpers import convert_to_api_payload
 logger = logging.getLogger(__name__)
 dotenv_path = os.path.join(os.environ.get('SNAP_COMMON', default='.'), '.env')
 load_dotenv(dotenv_path)
-ENV = os.getenv('ENV', default='stage')
 
 
 class DataPusher(threading.Thread):
@@ -36,14 +35,11 @@ class DataPusher(threading.Thread):
         elif dep.get('type') == 'influxdb':
             self._session = InfluxDBClient(**dep['client_config'])
         elif dep.get('type') == 'mqtt':
-            # setting env
-            mqtt_cert_path = os.path.join(os.getenv('SNAP_COMMON', './'), 'resources', 'ca-' + ENV + '.crt')
-            logger.debug(f"MQTT. ENV: {os.getenv('ENV'), 'stage-default'}")
+            mqtt_cert_path = self._dep['config']['cert']
             self._mqtt_session = mqtt.Client(client_id=self._node.node_id, clean_session=False, transport="tcp")
             self._mqtt_session.tls_set(ca_certs=mqtt_cert_path)
             self._mqtt_session.username_pw_set(self._node.node_id, self._node.access_key)
-            # set the right endpoint according to ENV variable
-            MQTT_BROKER_URL = self._dep['config']['host'].replace('env', ENV)
+            MQTT_BROKER_URL = self._dep['config']['host']
             MQTT_BROKER_PORT = self._dep['config']['port']
             self._mqtt_session.connect(MQTT_BROKER_URL, port=MQTT_BROKER_PORT)
         else:
@@ -111,7 +107,7 @@ class DataPusher(threading.Thread):
                 return False
 
             try:
-                API_URL = self._dep['config']['host'].replace('env', ENV)
+                API_URL = self._dep['config']['host']
                 r = self._session.post(f"https://{API_URL}/api/{self._dep['config']['apiver']}/nodes/{self._node.node_id}/data",
                                        json=readout,
                                        timeout=self._node.config.get('push_timeout') or self._dep['config'].get('timeout') or 120)
