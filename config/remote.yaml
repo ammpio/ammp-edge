@@ -5,7 +5,7 @@ data-endpoints:
   - name: default
     type: api
     config:
-      host: edge.stage.ammp.io
+      host: edge.ammp.io
       apiver: v0
       timeout: 120
     isdefault: true
