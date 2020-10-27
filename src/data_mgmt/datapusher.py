@@ -38,7 +38,7 @@ class DataPusher(threading.Thread):
         elif dep.get('type') == 'mqtt':
             # setting env
             mqtt_cert_path = os.path.join(os.getenv('SNAP_COMMON', './'), 'resources', 'ca-' + env + '.crt')
-            logger.debug(f"MQTT. ENV: {os.environ.get('ENV')}")
+            logger.debug(f"MQTT. ENV: {os.getenv('ENV'), 'stage-default'}")
             self._mqtt_session = mqtt.Client(client_id=self._node.node_id, clean_session=False, transport="tcp")
             self._mqtt_session.tls_set(ca_certs=mqtt_cert_path)
             self._mqtt_session.username_pw_set(self._node.node_id, self._node.access_key)
