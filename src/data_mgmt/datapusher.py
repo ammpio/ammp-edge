@@ -35,8 +35,7 @@ class DataPusher(threading.Thread):
         elif dep.get('type') == 'influxdb':
             self._session = InfluxDBClient(**dep['client_config'])
         elif dep.get('type') == 'mqtt':
-            mqtt_cert_path = os.getenv('SNAP_COMMON', default='./') + self._dep['config']['cert']
-            logger.debug(f"MQTT Cert path: {mqtt_cert_path}")
+            mqtt_cert_path = os.getenv('SNAP_COMMON', default='.') + self._dep['config']['cert']
             self._mqtt_session = mqtt.Client(client_id=self._node.node_id, clean_session=False, transport="tcp")
             self._mqtt_session.tls_set(ca_certs=mqtt_cert_path)
             self._mqtt_session.username_pw_set(self._node.node_id, self._node.access_key)
