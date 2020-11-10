@@ -17,6 +17,10 @@ logger = logging.getLogger(__name__)
 dotenv_path = os.path.join(os.environ.get('SNAP_COMMON', default='.'), '.env')
 load_dotenv(dotenv_path)
 
+MQTT_QOS = 1
+MQTT_RETAIN = False
+MQTT_PUB_SUCCESS = 0
+
 
 class DataPusher(threading.Thread):
     def __init__(self, node, queue, dep):
@@ -172,9 +176,6 @@ class DataPusher(threading.Thread):
         elif self._dep.get('type') == 'mqtt':
             # Append offset between time that reading was taken and current time
             readout['reading_offset'] = int((arrow.utcnow() - arrow.get(readout['time'])).total_seconds() - readout['reading_duration'])
-            MQTT_QOS = 1
-            MQTT_RETAIN = False
-            MQTT_PUB_SUCCESS = 0
             logger.debug(f"PUSH [MQTT]. Device-based readout: {readout_to_push}")
             pub = self._mqtt_session.publish(f"a/{self._node.node_id}/data",
                                              json.dumps(readout, separators=(',', ':')),
