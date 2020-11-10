@@ -5,31 +5,43 @@ import json
 import threading
 import requests
 from copy import deepcopy
+import os
+from dotenv import load_dotenv
+import paho.mqtt.client as mqtt
 from influxdb import InfluxDBClient
 from influxdb.exceptions import InfluxDBClientError
 from influxdb.exceptions import InfluxDBServerError
+from data_mgmt.helpers import convert_to_api_payload
 
 logger = logging.getLogger(__name__)
+dotenv_path = os.path.join(os.environ.get('SNAP_COMMON', default='.'), '.env')
+load_dotenv(dotenv_path)
 
 
-class DataPusher(threading.Thread): 
-    def __init__(self, node, queue, dep): 
+class DataPusher(threading.Thread):
+    def __init__(self, node, queue, dep):
         threading.Thread.__init__(self)
         self.name = 'data_pusher'
         self.dep_name = dep.get('name') or 'unnamed'
         # Make sure this thread exits directly when the program exits; no clean-up should be required
         self.daemon = True
-
         self._node = node
         self._queue = queue
         self._dep = dep
         self._is_default_endpoint = dep.get('isdefault', False)
-
         if dep.get('type') == 'api':
             self._session = requests.Session()
             self._session.headers.update({'Authorization': self._node.access_key})
         elif dep.get('type') == 'influxdb':
             self._session = InfluxDBClient(**dep['client_config'])
+        elif dep.get('type') == 'mqtt':
+            mqtt_cert_path = os.getenv('SNAP_COMMON', default='.') + self._dep['config']['cert']
+            self._mqtt_session = mqtt.Client(client_id=self._node.node_id, clean_session=False, transport="tcp")
+            self._mqtt_session.tls_set(ca_certs=mqtt_cert_path)
+            self._mqtt_session.username_pw_set(self._node.node_id, self._node.access_key)
+            MQTT_BROKER_URL = self._dep['config']['host']
+            MQTT_BROKER_PORT = self._dep['config']['port']
+            self._mqtt_session.connect(MQTT_BROKER_URL, port=MQTT_BROKER_PORT)
         else:
             logger.warning(f"Data endpoint type '{dep.get('type')}' not recognized")
 
@@ -38,9 +50,8 @@ class DataPusher(threading.Thread):
         while not self._node.events.do_shutdown.is_set():
 
             # queue.get() blocks the current thread until an item is retrieved
-            logger.debug(f"PUSH: [{self.dep_name}] Waiting to get readings from queue")
+            logger.debug(f"PUSH: [{self.dep_name}] Waiting to get readout from queue")
             readout = self._queue.get()
-
             # If we get the "stop" signal (i.e. empty dict) we exit
             if readout == {}:
                 logger.debug(f"PUSH: [{self.dep_name}] Shutting down (got empty dict from queue)")
@@ -59,7 +70,8 @@ class DataPusher(threading.Thread):
 
                 else:
                     # For some reason the point wasn't pushed successfully, so we should put it back in the queue
-                    logger.warn(f"PUSH: [{self.dep_name}] Did not work. Putting readout at {readout['time']} back to queue")
+                    logger.warning(f"PUSH: [{self.dep_name}] Did not work."
+                                   f"Putting readout at {readout['time']} back to queue")
                     self._queue.put(readout)
 
                     if self._is_default_endpoint:
@@ -76,32 +88,29 @@ class DataPusher(threading.Thread):
 
         logger.info(f"PUSH: [{self.dep_name}] Shutting down")
 
-
     def __push_readout(self, readout_to_push):
         # TODO: Use API object/session
 
         # This ensures that any modifications are only local to this function, and do not affect the original (in case
         # it needs to be pushed back into the queue)
         readout = deepcopy(readout_to_push)
-
         if self._dep.get('type') == 'api':
             # Push to API endpoint
             try:
-                # Augment payload with current config ID (TODO: consider whether this should be done when data is generated)
-                readout['meta'].update({'config_id': self._node.config.get('config_id', '')})
-
                 # Append offset between time that reading was taken and current time
-                readout['fields']['reading_offset'] = int(
-                    (arrow.utcnow() - arrow.get(readout['time'])).total_seconds() - readout['fields'].get('reading_duration', 0)
-                    )
-
+                readout['reading_offset'] = int((arrow.utcnow() - arrow.get(readout['time'])).total_seconds() - readout['reading_duration'])
+                # Transform the device-based readout to the older API format
+                readout = convert_to_api_payload(readout, self._node.config['readings'])
+                logger.debug(f"PUSH [API]. API-Based Readout: {readout}")
             except:
                 logger.exception('Could not construct final data payload to push')
                 return False
 
             try:
-                r = self._session.post(f"https://{self._dep['config']['host']}/api/{self._dep['config']['apiver']}/nodes/{self._node.node_id}/data",
-                    json=readout, timeout=self._node.config.get('push_timeout') or self._dep['config'].get('timeout') or 120)
+                API_URL = self._dep['config']['host']
+                r = self._session.post(f"https://{API_URL}/api/{self._dep['config']['apiver']}/nodes/{self._node.node_id}/data",
+                                       json=readout,
+                                       timeout=self._node.config.get('push_timeout') or self._dep['config'].get('timeout') or 120)
             except requests.exceptions.ConnectionError:
                 logger.warning('Connection error while trying to push data at %s to API.' % readout['time'])
                 return False
@@ -137,7 +146,7 @@ class DataPusher(threading.Thread):
                 # Append offset between time that reading was taken and current time
                 readout['fields']['reading_offset'] = int(
                     (arrow.utcnow() - arrow.get(readout['time'])).total_seconds() - readout['fields'].get('reading_duration', 0)
-                    )
+                )
 
                 # Set measurement where data should be written
                 readout['measurement'] = self._dep['meta']['measurement']
@@ -158,6 +167,24 @@ class DataPusher(threading.Thread):
                 logger.exception(f"Could not write to InfluxDB at {self._dep.get('client_config')}")
 
             return r
+
+        elif self._dep.get('type') == 'mqtt':
+            # Append offset between time that reading was taken and current time
+            readout['reading_offset'] = int((arrow.utcnow() - arrow.get(readout['time'])).total_seconds() - readout['reading_duration'])
+            MQTT_QOS = 1
+            MQTT_RETAIN = False
+            MQTT_PUB_SUCCESS = 0
+            logger.debug(f"PUSH [MQTT]. Device-based readout: {readout_to_push}")
+            pub = self._mqtt_session.publish(f"a/{self._node.node_id}/data",
+                                             json.dumps(readout, separators=(',', ':')),
+                                             qos=MQTT_QOS, retain=MQTT_RETAIN)
+            logger.debug(f"PUSH [MQTT]. Broker response: {pub}")
+            if pub[0] == MQTT_PUB_SUCCESS:
+                logger.debug("PUSH [MQTT]. Successful broker response")
+                return True
+            else:
+                logger.debug("PUSH [MQTT]. Error - Message not published")
+                return False
 
         else:
             logger.warning(f"Data endpoint type '{self._dep.get('type')}' not recognized")

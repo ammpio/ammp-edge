@@ -9,3 +9,9 @@ data-endpoints:
       apiver: v0
       timeout: 120
     isdefault: true
+  - name: mqtt
+    type: mqtt
+    config:
+      host: mqtt.stage.ammp.io
+      cert: /resources/ca-stage.crt
+      port: 8883
