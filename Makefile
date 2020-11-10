@@ -25,6 +25,7 @@ local-prepare:
 	cp config/remote.yaml .local/
 	cp -a provisioning .local/
 	ln -sf ../drivers .local/
+	ln -sf ../resources .local/
 	mkdir -p .local/data
 
 local-run:
