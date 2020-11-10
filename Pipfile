@@ -31,3 +31,7 @@ paho-mqtt = "*"
 
 [requires]
 python_version = "3.6"
+
+
+[scripts]
+emmp_edge = "python3 src/ammp_edge.py"
