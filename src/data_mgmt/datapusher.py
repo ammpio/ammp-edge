@@ -176,16 +176,16 @@ class DataPusher(threading.Thread):
         elif self._dep.get('type') == 'mqtt':
             # Append offset between time that reading was taken and current time
             readout['reading_offset'] = int((arrow.utcnow() - arrow.get(readout['time'])).total_seconds() - readout['reading_duration'])
-            logger.debug(f"PUSH [MQTT]. Device-based readout: {readout_to_push}")
+            logger.debug(f"PUSH [mqtt] Device-based readout: {readout_to_push}")
             pub = self._mqtt_session.publish(f"a/{self._node.node_id}/data",
                                              json.dumps(readout, separators=(',', ':')),
                                              qos=MQTT_QOS, retain=MQTT_RETAIN)
-            logger.debug(f"PUSH [MQTT]. Broker response: {pub}")
+            logger.debug(f"PUSH [mqtt] Broker response: {pub}")
             if pub[0] == MQTT_PUB_SUCCESS:
-                logger.debug("PUSH [MQTT]. Successful broker response")
+                logger.debug("PUSH [mqtt] Successful broker response")
                 return True
             else:
-                logger.debug("PUSH [MQTT]. Error - Message not published")
+                logger.debug("PUSH [mqtt] Error - Message not published")
                 return False
 
         else:
