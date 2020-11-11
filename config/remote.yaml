@@ -1,17 +1,17 @@
 api:
-  host: edge.ammp.io
+  host: edge.dev.ammp.io
   apiver: v0
 data-endpoints:
   - name: default
     type: api
     config:
-      host: edge.ammp.io
+      host: edge.dev.ammp.io
       apiver: v0
       timeout: 120
     isdefault: true
   - name: mqtt
     type: mqtt
     config:
-      host: mqtt.stage.ammp.io
-      cert: /resources/ca-stage.crt
+      host: mqtt.dev.ammp.io
+      cert: ca-dev.crt
       port: 8883

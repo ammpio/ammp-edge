@@ -17,6 +17,10 @@ logger = logging.getLogger(__name__)
 dotenv_path = os.path.join(os.environ.get('SNAP_COMMON', default='.'), '.env')
 load_dotenv(dotenv_path)
 
+MQTT_QOS = 1
+MQTT_RETAIN = False
+MQTT_PUB_SUCCESS = 0
+
 
 class DataPusher(threading.Thread):
     def __init__(self, node, queue, dep):
@@ -35,13 +39,13 @@ class DataPusher(threading.Thread):
         elif dep.get('type') == 'influxdb':
             self._session = InfluxDBClient(**dep['client_config'])
         elif dep.get('type') == 'mqtt':
-            mqtt_cert_path = os.getenv('SNAP_COMMON', default='.') + self._dep['config']['cert']
-            self._mqtt_session = mqtt.Client(client_id=self._node.node_id, clean_session=False, transport="tcp")
-            self._mqtt_session.tls_set(ca_certs=mqtt_cert_path)
+            self._mqtt_session = mqtt.Client(client_id=self._node.node_id, clean_session=False)
+            MQTT_CERT_PATH = os.path.join(os.getenv('SNAP', '.'), 'resources', 'certs', dep['config']['cert'])
+            self._mqtt_session.tls_set(ca_certs=MQTT_CERT_PATH)
             self._mqtt_session.username_pw_set(self._node.node_id, self._node.access_key)
-            MQTT_BROKER_URL = self._dep['config']['host']
-            MQTT_BROKER_PORT = self._dep['config']['port']
-            self._mqtt_session.connect(MQTT_BROKER_URL, port=MQTT_BROKER_PORT)
+            MQTT_BROKER_HOST = dep['config']['host']
+            MQTT_BROKER_PORT = dep['config']['port']
+            self._mqtt_session.connect(MQTT_BROKER_HOST, port=MQTT_BROKER_PORT)
         else:
             logger.warning(f"Data endpoint type '{dep.get('type')}' not recognized")
 
@@ -88,11 +92,12 @@ class DataPusher(threading.Thread):
 
         logger.info(f"PUSH: [{self.dep_name}] Shutting down")
 
-    def __push_readout(self, readout_to_push):
+    def __push_readout(self, readout_to_push) -> None:
         # TODO: Use API object/session
 
         # This ensures that any modifications are only local to this function, and do not affect the original (in case
         # it needs to be pushed back into the queue)
+
         readout = deepcopy(readout_to_push)
         if self._dep.get('type') == 'api':
             # Push to API endpoint
@@ -171,9 +176,6 @@ class DataPusher(threading.Thread):
         elif self._dep.get('type') == 'mqtt':
             # Append offset between time that reading was taken and current time
             readout['reading_offset'] = int((arrow.utcnow() - arrow.get(readout['time'])).total_seconds() - readout['reading_duration'])
-            MQTT_QOS = 1
-            MQTT_RETAIN = False
-            MQTT_PUB_SUCCESS = 0
             logger.debug(f"PUSH [MQTT]. Device-based readout: {readout_to_push}")
             pub = self._mqtt_session.publish(f"a/{self._node.node_id}/data",
                                              json.dumps(readout, separators=(',', ':')),
