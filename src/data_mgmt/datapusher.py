@@ -46,6 +46,7 @@ class DataPusher(threading.Thread):
             MQTT_BROKER_HOST = dep['config']['host']
             MQTT_BROKER_PORT = dep['config']['port']
             self._mqtt_session.connect(MQTT_BROKER_HOST, port=MQTT_BROKER_PORT)
+            self._mqtt_session.enable_logger(logger)
         else:
             logger.warning(f"Data endpoint type '{dep.get('type')}' not recognized")
 
