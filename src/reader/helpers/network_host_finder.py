@@ -11,6 +11,7 @@ scan_in_progress = Lock()
 # Time to pause after a scan, before the next scan can be triggered
 WAIT_AFTER_SCAN = 900
 ARP_TABLE_FILE = '/proc/net/arp'
+INVALID_MAC = '00:00:00:00:00:00'
 
 # Note that we expect /proc/net/arp to look like this. 6 columns, with IP and MAC in 1st and 4th col:
 # IP address       HW type     Flags       HW address            Mask     Device
@@ -29,7 +30,7 @@ def arp_get_mac_from_ip(ip: str) -> str:
                 except ValueError:
                     logger.warning(f"Malformed ARP table entry: {l}. Skipping")
                     continue
-                if this_mac == '00:00:00:00:00:00':
+                if this_mac == INVALID_MAC:
                     logger.warning(f"Ignoring MAC address with only zeros for IP: {this_ip}, consider flushing ARP cache")
                     continue
                 if this_ip == ip:
@@ -48,8 +49,6 @@ def arp_get_ip_from_mac(mac: str) -> str:
     if not isinstance(mac, str):
         logger.warning(f"MAC must be string. Received {mac}")
         return None
-
-    INVALID_MAC = '00:00:00:00:00:00'
 
     try:
         with open(ARP_TABLE_FILE, 'r') as arp_table:
