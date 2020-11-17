@@ -12,6 +12,12 @@ MQTT_RETAIN = False
 MQTT_CONN_SUCCESS = 0
 MQTT_PUB_SUCCESS = 0
 
+# Attempt to send (including waiting for PUBACK) at most 2 message at a time
+MAX_INFLIGHT_MESSAGES = 2
+# Only use the internal MQTT queue minimally
+# (note that 0 = unlimited queue size, so 1 is the minimum)
+MAX_QUEUED_MESSAGES = 2
+
 
 class MQTTPublisher():
     def __init__(self, node_id: str, access_key: str, config: Dict) -> None:
@@ -20,6 +26,8 @@ class MQTTPublisher():
         client.tls_set(
             ca_certs=path.join(getenv('SNAP', '.'), 'resources', 'certs', config['cert']))
         client.username_pw_set(node_id, access_key)
+        client.max_inflight_messages_set(MAX_INFLIGHT_MESSAGES)
+        client.max_queued_messages_set(MAX_QUEUED_MESSAGES)
 
         client.on_connect = self.__on_connect
         client.on_disconnect = self.__on_disconnect
@@ -38,7 +46,7 @@ class MQTTPublisher():
             return False
 
         rc = self._client.publish(
-            self._topic, 
+            self._topic,
             self.__get_mqtt_payload(payload),
             qos=MQTT_QOS, retain=MQTT_RETAIN
         )
