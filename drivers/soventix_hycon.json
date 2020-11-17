@@ -1,0 +1,98 @@
+{
+  "common": {
+    "fncode": 4,
+    "words": 1
+  },
+  "fields": {
+    "genset_P_total": {
+      "description": "Generator total net active power [W]",
+      "register": 144,
+      "words": 2,
+      "datatype": "int16",
+      "multiplier": 1,
+      "unit": "W",
+      "typecast": "float"
+    },
+    "genset_E_total": {
+      "description": "Generator total net energy [kWh]",
+      "register": 33,
+      "words": 2,
+      "datatype": "int32",
+      "multiplier": 1,
+      "unit": "kWh",
+      "typecast": "float"
+    },
+    "pv_E_total": {
+      "description": "PV inverters total energy yield since startup [kWh]",
+      "register": 33,
+      "words": 2,
+      "datatype": "int32",
+      "multiplier": 1,
+      "unit": "kWh",
+      "typecast": "float"
+    },
+    "pv_E_daily": {
+      "description": "PV inverters total energy yield for current day [kWh]",
+      "register": 33,
+      "words": 2,
+      "datatype": "int32",
+      "multiplier": 1,
+      "unit": "kWh",
+      "typecast": "float"
+    },
+    "pv_P_total": {
+      "description": "PV inverters total active power [W]",
+      "register": 33,
+      "words": 2,
+      "datatype": "int32",
+      "multiplier": 1,
+      "unit": "kWh",
+      "typecast": "float"
+    },
+    "pv_P_setpoint": {
+      "description": "Set point for active power control - P as a percentage of the nominal power",
+      "register": 33,
+      "words": 2,
+      "datatype": "int32",
+      "multiplier": 1,
+      "unit": "%",
+      "typecast": "float"
+    },
+    "oil_level_alarm": {
+      "description": "Protection Relais - Oil level alarm ",
+      "register": 30,
+      "words": 1,
+      "datatype": "int16",
+      "multiplier": 1,
+      "unit": "%",
+      "typecast": "float"
+    },
+    "gas_pressure_alarm": {
+      "description": "Protection relais - Gas pressure alarm",
+      "register": 28,
+      "words": 1,
+      "datatype": "int16",
+      "typecast": "float",
+      "multiplier": 1,
+      "unit": "bar"
+    },
+    "temperature_alert": {
+      "description": "Protection relais - Temperature alert",
+      "register": 28,
+      "words": 1,
+      "datatype": "int16",
+      "typecast": "float",
+      "multiplier": 1,
+      "unit": "bar"
+    },
+    "temperature_alarm": {
+      "description": "Protection relais - Temperature alarm",
+      "register": 28,
+      "words": 1,
+      "datatype": "int16",
+      "typecast": "float",
+      "multiplier": 1,
+      "unit": "bar"
+    }
+  }
+}
