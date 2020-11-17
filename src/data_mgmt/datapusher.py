@@ -68,7 +68,7 @@ class DataPusher(threading.Thread):
 
                 else:
                     # For some reason the point wasn't pushed successfully, so we should put it back in the queue
-                    logger.warning(f"PUSH: [{self.dep_name}] Did not work."
+                    logger.warning(f"PUSH: [{self.dep_name}] Did not work. "
                                    f"Putting readout at {readout['time']} back to queue")
                     self._queue.put(readout)
 
@@ -78,7 +78,7 @@ class DataPusher(threading.Thread):
                     # Slow this down to avoid generating a high rate of errors if no connection is available
                     time.sleep(self._node.config.get('push_throttle_delay', 10))
 
-            except:
+            except Exception:
                 logger.exception(f"PUSH: [{self.dep_name}] Unexpected exception while trying to push data")
 
                 if self._is_default_endpoint:
@@ -171,6 +171,6 @@ class DataPusher(threading.Thread):
             # Append offset between time that reading was taken and current time
             readout['reading_offset'] = int((arrow.utcnow() - arrow.get(readout['time'])).total_seconds() - readout['reading_duration'])
             logger.debug(f"PUSH [mqtt] Device-based readout: {readout_to_push}")
-            self._session.publish(readout_to_push)
+            return self._session.publish(readout_to_push)
         else:
             logger.warning(f"Data endpoint type '{self._dep.get('type')}' not recognized")
