@@ -6,20 +6,16 @@ import threading
 import requests
 from copy import deepcopy
 import os
-from dotenv import load_dotenv
-import paho.mqtt.client as mqtt
+
 from influxdb import InfluxDBClient
 from influxdb.exceptions import InfluxDBClientError
 from influxdb.exceptions import InfluxDBServerError
+
 from data_mgmt.helpers import convert_to_api_payload
 
-logger = logging.getLogger(__name__)
-dotenv_path = os.path.join(os.environ.get('SNAP_COMMON', default='.'), '.env')
-load_dotenv(dotenv_path)
+from data_mgmt.helpers.mqtt_pub import MQTTPublisher
 
-MQTT_QOS = 1
-MQTT_RETAIN = False
-MQTT_PUB_SUCCESS = 0
+logger = logging.getLogger(__name__)
 
 
 class DataPusher(threading.Thread):
@@ -39,13 +35,11 @@ class DataPusher(threading.Thread):
         elif dep.get('type') == 'influxdb':
             self._session = InfluxDBClient(**dep['client_config'])
         elif dep.get('type') == 'mqtt':
-            self._mqtt_session = mqtt.Client(client_id=self._node.node_id, clean_session=False)
-            MQTT_CERT_PATH = os.path.join(os.getenv('SNAP', '.'), 'resources', 'certs', dep['config']['cert'])
-            self._mqtt_session.tls_set(ca_certs=MQTT_CERT_PATH)
-            self._mqtt_session.username_pw_set(self._node.node_id, self._node.access_key)
-            MQTT_BROKER_HOST = dep['config']['host']
-            MQTT_BROKER_PORT = dep['config']['port']
-            self._mqtt_session.connect(MQTT_BROKER_HOST, port=MQTT_BROKER_PORT)
+            self._session = MQTTPublisher(
+                node_id=self._node.node_id,
+                access_key=self._node.access_key,
+                config=dep['config']
+            )
         else:
             logger.warning(f"Data endpoint type '{dep.get('type')}' not recognized")
 
@@ -74,7 +68,7 @@ class DataPusher(threading.Thread):
 
                 else:
                     # For some reason the point wasn't pushed successfully, so we should put it back in the queue
-                    logger.warning(f"PUSH: [{self.dep_name}] Did not work."
+                    logger.warning(f"PUSH: [{self.dep_name}] Did not work. "
                                    f"Putting readout at {readout['time']} back to queue")
                     self._queue.put(readout)
 
@@ -84,7 +78,7 @@ class DataPusher(threading.Thread):
                     # Slow this down to avoid generating a high rate of errors if no connection is available
                     time.sleep(self._node.config.get('push_throttle_delay', 10))
 
-            except:
+            except Exception:
                 logger.exception(f"PUSH: [{self.dep_name}] Unexpected exception while trying to push data")
 
                 if self._is_default_endpoint:
@@ -176,17 +170,7 @@ class DataPusher(threading.Thread):
         elif self._dep.get('type') == 'mqtt':
             # Append offset between time that reading was taken and current time
             readout['reading_offset'] = int((arrow.utcnow() - arrow.get(readout['time'])).total_seconds() - readout['reading_duration'])
-            logger.debug(f"PUSH [MQTT]. Device-based readout: {readout_to_push}")
-            pub = self._mqtt_session.publish(f"a/{self._node.node_id}/data",
-                                             json.dumps(readout, separators=(',', ':')),
-                                             qos=MQTT_QOS, retain=MQTT_RETAIN)
-            logger.debug(f"PUSH [MQTT]. Broker response: {pub}")
-            if pub[0] == MQTT_PUB_SUCCESS:
-                logger.debug("PUSH [MQTT]. Successful broker response")
-                return True
-            else:
-                logger.debug("PUSH [MQTT]. Error - Message not published")
-                return False
-
+            logger.debug(f"PUSH [mqtt] Device-based readout: {readout_to_push}")
+            return self._session.publish(readout_to_push)
         else:
             logger.warning(f"Data endpoint type '{self._dep.get('type')}' not recognized")
