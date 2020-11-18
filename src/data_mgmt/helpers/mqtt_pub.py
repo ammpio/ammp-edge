@@ -50,10 +50,15 @@ class MQTTPublisher():
             self.__get_mqtt_payload(payload),
             qos=MQTT_QOS, retain=MQTT_RETAIN
         )
-        logger.debug(f"PUSH [mqtt] Broker response: {rc}")
+        logger.debug(f"PUSH [mqtt] Published with response code: {rc}")
+
+        # TODO: Use an onpublish callback to ascertain whether the message
+        # was actually published, rather than the "fire and forget" approach.
+        # The latter only results in an error if the MQTT module's internal
+        # queue is full (this is parameterized above)
 
         if rc[0] == MQTT_PUB_SUCCESS:
-            logger.debug("PUSH [mqtt] Successful broker response")
+            logger.debug("PUSH [mqtt] Successfully published")
             return True
         else:
             logger.debug("PUSH [mqtt] Error - Message not published")
