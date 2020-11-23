@@ -16,7 +16,7 @@ MQTT_PUB_SUCCESS = 0
 MAX_INFLIGHT_MESSAGES = 2
 # Only use the internal MQTT queue minimally
 # (note that 0 = unlimited queue size, so 1 is the minimum)
-MAX_QUEUED_MESSAGES = 2
+MAX_QUEUED_MESSAGES = 5
 
 
 class MQTTPublisher():
