@@ -39,7 +39,7 @@ class MQTTPublisher():
 
         client.on_connect = self.__on_connect
         client.on_disconnect = self.__on_disconnect
-        client.connect(host=config['host'], port=config['port'])
+        client.connect_async(host=config['host'], port=config['port'])
         client.loop_start()
 
         self._client = client
