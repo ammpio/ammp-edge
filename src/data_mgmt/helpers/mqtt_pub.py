@@ -17,6 +17,12 @@ MAX_INFLIGHT_MESSAGES = 2
 # Only use the internal MQTT queue minimally
 # (note that 0 = unlimited queue size, so 1 is the minimum)
 MAX_QUEUED_MESSAGES = 2
+# Minimum delay before retrying a CONNECT
+RECONNECT_MIN_DELAY = 1
+# MAximum delay before retrying a CONNECT
+RECONNECT_MAX_DELAY = 120
+# Time period between retrying a PUBLISH that hasn't been acknowledged
+MESSAGE_RETRY = 30
 
 
 class MQTTPublisher():
@@ -28,6 +34,8 @@ class MQTTPublisher():
         client.username_pw_set(node_id, access_key)
         client.max_inflight_messages_set(MAX_INFLIGHT_MESSAGES)
         client.max_queued_messages_set(MAX_QUEUED_MESSAGES)
+        client.reconnect_delay_set(min_delay=RECONNECT_MIN_DELAY, max_delay=RECONNECT_MAX_DELAY)
+        client.message_retry_set(MESSAGE_RETRY)
 
         client.on_connect = self.__on_connect
         client.on_disconnect = self.__on_disconnect
