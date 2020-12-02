@@ -173,7 +173,7 @@ class DataPusher(threading.Thread):
             # Append offset between time that reading was taken and current time
             readout['m']['reading_offset'] = int((arrow.utcnow() - arrow.get(readout['t'])).total_seconds() -
                                                     readout['m']['reading_duration'])
-            logger.debug(f"PUSH [MQTT] Device-based readout: {readout}")
+            logger.debug(f"PUSH [mqtt] Device-based readout: {readout}")
             return self._session.publish(readout)
         else:
             logger.warning(f"Data endpoint type '{self._dep.get('type')}' not recognized")
