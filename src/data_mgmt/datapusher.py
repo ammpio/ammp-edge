@@ -60,16 +60,17 @@ class DataPusher(threading.Thread):
                 if self._is_default_endpoint:
                     self._node.events.push_in_progress.set()
 
-                logger.debug(f"PUSH: [{self.dep_name}] Got readout at {readout['time']} from queue; attempting to push")
+                logger.debug(f"PUSH: [{self.dep_name}] Got readout at {arrow.Arrow.fromtimestamp(readout['t'])}"
+                             f"from queue; attempting to push")
                 if self.__push_readout(readout):
-                    logger.info(f"PUSH: [{self.dep_name}] Successfully pushed point at {readout['time']}")
+                    logger.info(f"PUSH: [{self.dep_name}] Successfully pushed point at {arrow.Arrow.fromtimestamp(readout['t'])}")
                     if self._is_default_endpoint:
                         self._node.events.push_in_progress.clear()
 
                 else:
                     # For some reason the point wasn't pushed successfully, so we should put it back in the queue
                     logger.warning(f"PUSH: [{self.dep_name}] Did not work. "
-                                   f"Putting readout at {readout['time']} back to queue")
+                                   f"Putting readout at {readout['t']} back to queue")
                     self._queue.put(readout)
 
                     if self._is_default_endpoint:
@@ -97,7 +98,7 @@ class DataPusher(threading.Thread):
             # Push to API endpoint
             try:
                 # Append offset between time that reading was taken and current time
-                readout['reading_offset'] = int((arrow.utcnow() - arrow.get(readout['time'])).total_seconds() - readout['reading_duration'])
+                readout['reading_offset'] = int((arrow.utcnow() - arrow.get(readout['t'])).total_seconds() - readout['m']['reading_duration'])
                 # Transform the device-based readout to the older API format
                 readout = convert_to_api_payload(readout, self._node.config['readings'])
                 logger.debug(f"PUSH [API]. API-Based Readout: {readout}")
@@ -111,17 +112,17 @@ class DataPusher(threading.Thread):
                                        json=readout,
                                        timeout=self._node.config.get('push_timeout') or self._dep['config'].get('timeout') or 120)
             except requests.exceptions.ConnectionError:
-                logger.warning('Connection error while trying to push data at %s to API.' % readout['time'])
+                logger.warning('Connection error while trying to push data at %s to API.' % readout['t'])
                 return False
             except requests.exceptions.Timeout:
-                logger.warning('Timeout error while trying to push data at %s to API.' % readout['time'])
+                logger.warning('Timeout error while trying to push data at %s to API.' % readout['t'])
                 return False
             except:
-                logger.warning('Exception while trying to push data at %s to API.' % readout['time'], exc_info=True)
+                logger.warning('Exception while trying to push data at %s to API.' % readout['t'], exc_info=True)
                 return False
 
             if r.status_code != 200:
-                logger.warning('Error code %d while trying to push data point at %s.' % (r.status_code, readout['time']))
+                logger.warning('Error code %d while trying to push data point at %s.' % (r.status_code, readout['t']))
                 return False
 
             try:
@@ -144,11 +145,11 @@ class DataPusher(threading.Thread):
             try:
                 # Append offset between time that reading was taken and current time
                 readout['fields']['reading_offset'] = int(
-                    (arrow.utcnow() - arrow.get(readout['time'])).total_seconds() - readout['fields'].get('reading_duration', 0)
+                    (arrow.utcnow() - arrow.get(readout['t'])).total_seconds() - readout['fields'].get('reading_duration', 0)
                 )
 
                 # Set measurement where data should be written
-                readout['measurement'] = self._dep['meta']['measurement']
+                readout['measurement'] = self._dep['m']['measurement']
             except:
                 logger.exception('Could not construct final data payload to push')
                 return False
@@ -169,8 +170,9 @@ class DataPusher(threading.Thread):
 
         elif self._dep.get('type') == 'mqtt':
             # Append offset between time that reading was taken and current time
-            readout['reading_offset'] = int((arrow.utcnow() - arrow.get(readout['time'])).total_seconds() - readout['reading_duration'])
-            logger.debug(f"PUSH [mqtt] Device-based readout: {readout_to_push}")
-            return self._session.publish(readout_to_push)
+            readout['m']['reading_offset'] = int((arrow.utcnow() - arrow.get(readout['t'])).total_seconds() -
+                                                    readout['m']['reading_duration'])
+            logger.debug(f"PUSH [mqtt] Device-based readout: {readout}")
+            return self._session.publish(readout)
         else:
             logger.warning(f"Data endpoint type '{self._dep.get('type')}' not recognized")

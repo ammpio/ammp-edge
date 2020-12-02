@@ -80,13 +80,15 @@ def get_readings(node):
 
 
 def get_readout(node):
-    # 'readout' is a dict formatted for device-based readings. It also contains a timestamp and snap_rev
+    # 'readout' is a dict formatted for device-based readings. It also contains a timestamp, snap_rev and config_id
     readout = {
-        'time': arrow.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),
-        'snap_rev': int(os.getenv('SNAP_REVISION', 0)),
-        'device_readings': [],
-        'meta': {}
-    }
+        't': arrow.utcnow().timestamp,
+        'r': [],
+        'm': {
+                'snap_rev': int(os.getenv('SNAP_REVISION', 0)),
+                'config_id': node.config.get('config_id', '0')
+                }
+            }
 
     dev_rdg = get_readings(node)
     # Set up queue in which to save readouts from the multiple threads that are reading each device
@@ -147,16 +149,14 @@ def get_readout(node):
     for j in jobs:
         try:
             fields = readout_q.get(block=False)
-            readout['device_readings'].append(fields)
+            readout['r'].append(fields)
         except queue.Empty:
             logger.warning('Not all devices returned readings')
 
-    # Augment payload with current config ID
-    readout['meta']['config_id'] = node.config.get('config_id', '')
     # time that took to read all devices.
-    readout['reading_duration'] = (arrow.utcnow() - arrow.get(readout['time'])).total_seconds()
+    readout['m']['reading_duration'] = (arrow.utcnow() - arrow.get(readout['t'])).total_seconds()
 
-    logger.debug(f"Device-based readings: {dev_rdg}")
+    logger.debug(f"Device-based Readings: {dev_rdg}")
     logger.debug(f"Device-based Readout: {readout}")
 
     if 'output' in node.config:
@@ -248,7 +248,8 @@ def read_device(dev, readings, readout_q, dev_lock=None):
                 value = process_reading(val_b, **rdg)
 
                 # Append to key-value store
-                fields['dev_id'] = dev['id']
+                fields['_d'] = dev['id']
+                fields['_vid'] = dev['vendor_id']
                 fields[rdg['var']] = value
 
                 # Also save within readings structure
