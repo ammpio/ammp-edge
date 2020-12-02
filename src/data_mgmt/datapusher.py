@@ -70,7 +70,7 @@ class DataPusher(threading.Thread):
                 else:
                     # For some reason the point wasn't pushed successfully, so we should put it back in the queue
                     logger.warning(f"PUSH: [{self.dep_name}] Did not work. "
-                                   f"Putting readout at {readout['t']} back to queue")
+                                   f"Putting readout at {arrow.Arrow.fromtimestamp(readout['t'])} back to queue")
                     self._queue.put(readout)
 
                     if self._is_default_endpoint:
@@ -173,7 +173,7 @@ class DataPusher(threading.Thread):
             # Append offset between time that reading was taken and current time
             readout['m']['reading_offset'] = int((arrow.utcnow() - arrow.get(readout['t'])).total_seconds() -
                                                     readout['m']['reading_duration'])
-            logger.debug(f"PUSH [mqtt] Device-based readout: {readout}")
+            logger.debug(f"PUSH [MQTT] Device-based readout: {readout}")
             return self._session.publish(readout)
         else:
             logger.warning(f"Data endpoint type '{self._dep.get('type')}' not recognized")
