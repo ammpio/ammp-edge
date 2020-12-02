@@ -26,7 +26,6 @@ def convert_to_api_payload(readout, readings_from_config):
 				break
 	readout['fields'] = fields
 	# move snap_rev, reading_duration , and reading_offset under fields
-	logger.debug(f"[CONVERTING TO API, Readout: {readout}]")
 	for key in ['snap_rev', 'config_id', 'reading_duration']:
 		readout['fields'][key] = readout['m'][key]
 	readout.pop('m')
