@@ -13,6 +13,7 @@ def convert_to_api_payload(readout, readings_from_config):
 	readout = deepcopy(readout)
 	# fields is a dict will all the readings of all devices -- without the device id. This is done for backwards compatibility
 	fields = {}
+	# convert time from unix timestamp to date
 	readout['time'] = arrow.Arrow.fromtimestamp(readout['t']).strftime('%Y-%m-%dT%H:%M:%SZ')
 	for rdg in readout['r']:
 		# delete device names and vendor ids, maybe a more elegant way ?
@@ -28,8 +29,12 @@ def convert_to_api_payload(readout, readings_from_config):
 	# move snap_rev, reading_duration , and reading_offset under fields
 	for key in ['snap_rev', 'config_id', 'reading_duration']:
 		readout['fields'][key] = readout['m'][key]
+
+	# moving reading offset under fields
+	readout['fields']['reading_offset'] = readout['reading_offset']
 	# removing sections from the devices-based dict
 	readout.pop('m')
 	readout.pop('r')
 	readout.pop('t')
+	readout.pop('reading_offset')
 	return readout
