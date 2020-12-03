@@ -154,7 +154,7 @@ def get_readout(node):
             logger.warning('Not all devices returned readings')
 
     # time that took to read all devices.
-    readout['m']['reading_duration'] = (arrow.utcnow() - arrow.get(readout['t'])).total_seconds()
+    readout['m']['reading_duration'] = arrow.utcnow().timestamp - readout['t']
 
     if 'output' in node.config:
         # Get additional processed values (new model to be used for all readings in future)
