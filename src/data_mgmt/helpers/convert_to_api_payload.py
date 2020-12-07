@@ -26,13 +26,11 @@ def convert_to_api_payload(readout, readings_from_config):
                 fields[rdg] = fields.pop(key)
                 break
     readout['fields'] = fields
-    # move snap_rev, reading_duration , and reading_offset under fields
-    for key in ['snap_rev', 'config_id', 'reading_duration']:
+    # move snap_rev, config_id, reading_duration, and reading_offset under fields
+    for key in ['snap_rev', 'config_id', 'reading_duration', 'reading_offset']:
         readout['fields'][key] = readout['m'][key]
 
-    # moving reading offset under fields
-    readout['fields']['reading_offset'] = readout['reading_offset']
     # removing sections from the devices-based dict
-    for k in ['m', 'r', 't', 'reading_offset']:
+    for k in ['m', 'r', 't']:
         readout.pop(k)
     return readout

@@ -94,7 +94,7 @@ class DataPusher(threading.Thread):
             # Push to API endpoint
             try:
                 # Append offset between time that reading was taken and current time
-                readout['reading_offset'] = int(
+                readout['m']['reading_offset'] = int(
                     arrow.utcnow().timestamp - readout['t'] - readout['m']['reading_duration']
                 )
                 # Transform the device-based readout to the older API format
@@ -143,7 +143,7 @@ class DataPusher(threading.Thread):
         elif self._dep.get('type') == 'influxdb':
             try:
                 # Append offset between time that reading was taken and current time
-                readout['reading_offset'] = int(
+                readout['m']['reading_offset'] = int(
                     arrow.utcnow().timestamp - readout['t'] - readout['m']['reading_duration']
                 )
                 # Transform the device-based readout to the older API format
