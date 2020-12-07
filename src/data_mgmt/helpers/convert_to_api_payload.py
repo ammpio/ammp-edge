@@ -1,36 +1,43 @@
 import logging
 import arrow
-from copy import deepcopy
 
 logger = logging.getLogger(__name__)
 
-"""
-This module is currently used by the datapusher
-"""
+# This module is currently used by the datapusher, for payloads sent to the API endpoint
+# or an Influx instance
+
+METADATA_FIELDS = ['snap_rev', 'config_id', 'reading_duration', 'reading_offset']
+DEVICE_ID_KEY = '_d'
 
 
-def convert_to_api_payload(readout, readings_from_config):
-    readout = deepcopy(readout)
-    # fields is a dict will all the readings of all devices -- without the device id. This is done for backwards compatibility
-    fields = {}
+def convert_to_api_payload(readout, config_readings):
     # convert time from unix timestamp to date
-    readout['time'] = arrow.get(readout['t']).strftime('%Y-%m-%dT%H:%M:%SZ')
-    for rdg in readout['r']:
-        # delete device names and vendor ids
-        [rdg.pop(k, None) for k in ['_d', '_vid']]
-        fields.update(rdg)
-    # get the old reading names from the config for backwards compatibility
-    for rdg in readings_from_config:
-        for key in fields:
-            if readings_from_config[rdg]['var'] == key:
-                fields[rdg] = fields.pop(key)
-                break
-    readout['fields'] = fields
-    # move snap_rev, config_id, reading_duration, and reading_offset under fields
-    for key in ['snap_rev', 'config_id', 'reading_duration', 'reading_offset']:
-        readout['fields'][key] = readout['m'][key]
+    api_payload = {
+        'time': arrow.get(readout['t']).strftime('%Y-%m-%dT%H:%M:%SZ'),
+        'fields': {}
+    }
 
-    # removing sections from the devices-based dict
-    for k in ['m', 'r', 't']:
-        readout.pop(k)
+    # get the old readings from the config for backwards compatibility
+    for rdg, r in config_readings.items():
+        value = get_value_from_dev_readings(
+            readout['r'], r['device'], r['var']
+        )
+        if value is None:
+            logger.warning(f"No readings for reading {rdg}: {r}")
+            continue
+        api_payload['fields'][rdg] = value
+
+    # copy metadata under fields
+    for key in METADATA_FIELDS:
+        api_payload['fields'][key] = readout['m'][key]
+
     return readout
+
+
+def get_value_from_dev_readings(dev_readings, device, var):
+    try:
+        dev_rdg = next(r for r in dev_readings if r[DEVICE_ID_KEY] == device)
+    except StopIteration:
+        return None
+    value = dev_rdg.get(var)
+    return value
