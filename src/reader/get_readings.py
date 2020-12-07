@@ -246,7 +246,8 @@ def read_device(dev, readings, readout_q, dev_lock=None):
 
                 # Append to key-value store
                 fields['_d'] = dev['id']
-                fields['_vid'] = dev['vendor_id']
+                if 'vendor_id' in dev:
+                    fields['_vid'] = dev['vendor_id']
                 fields[rdg['var']] = value
 
                 # Also save within readings structure
