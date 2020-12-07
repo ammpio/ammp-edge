@@ -89,6 +89,8 @@ class DataPusher(threading.Thread):
         # This ensures that any modifications are only local to this function, and do not affect the original (in case
         # it needs to be pushed back into the queue)
 
+        timestamp_iso = arrow.get(readout_to_push['t']).isoformat()
+
         readout = deepcopy(readout_to_push)
         if self._dep.get('type') == 'api':
             # Push to API endpoint
@@ -111,17 +113,17 @@ class DataPusher(threading.Thread):
                     timeout=self._node.config.get('push_timeout') or self._dep['config'].get('timeout') or 120
                 )
             except requests.exceptions.ConnectionError:
-                logger.warning(f"Connection error while trying to push data at {readout['time']} to API.")
+                logger.warning(f"Connection error while trying to push data at {timestamp_iso} to API.")
                 return False
             except requests.exceptions.Timeout:
-                logger.warning(f"Timeout error while trying to push data at {readout['time']} to API.")
+                logger.warning(f"Timeout error while trying to push data at {timestamp_iso} to API.")
                 return False
             except:
-                logger.warning(f"Exception while trying to push data at {readout['time']} to API.", exc_info=True)
+                logger.warning(f"Exception while trying to push data at {timestamp_iso} to API.", exc_info=True)
                 return False
 
             if r.status_code != 200:
-                logger.warning(f"Error code {r.status_code} while trying to push data point at {readout['time']}.")
+                logger.warning(f"Error code {r.status_code} while trying to push data point at {timestamp_iso}.")
                 return False
 
             try:
