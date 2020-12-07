@@ -40,9 +40,7 @@ class DataPusher(threading.Thread):
         else:
             logger.warning(f"Data endpoint type '{dep.get('type')}' not recognized")
 
-
     def run(self):
-
         while not self._node.events.do_shutdown.is_set():
 
             # queue.get() blocks the current thread until an item is retrieved
@@ -96,7 +94,9 @@ class DataPusher(threading.Thread):
             # Push to API endpoint
             try:
                 # Append offset between time that reading was taken and current time
-                readout['reading_offset'] = int(arrow.utcnow().timestamp - readout['t'] - readout['m']['reading_duration'])
+                readout['reading_offset'] = int(
+                    arrow.utcnow().timestamp - readout['t'] - readout['m']['reading_duration']
+                )
                 # Transform the device-based readout to the older API format
                 readout = convert_to_api_payload(readout, self._node.config['readings'])
                 logger.debug(f"PUSH [API]. API-Based Readout: {readout}")
@@ -105,10 +105,11 @@ class DataPusher(threading.Thread):
                 return False
 
             try:
-                API_URL = self._dep['config']['host']
-                r = self._session.post(f"https://{API_URL}/api/{self._dep['config']['apiver']}/nodes/{self._node.node_id}/data",
-                                       json=readout,
-                                       timeout=self._node.config.get('push_timeout') or self._dep['config'].get('timeout') or 120)
+                r = self._session.post(
+                    f"https://{self._dep['config']['host']}/api/{self._dep['config']['apiver']}/nodes/{self._node.node_id}/data",
+                    json=readout,
+                    timeout=self._node.config.get('push_timeout') or self._dep['config'].get('timeout') or 120
+                )
             except requests.exceptions.ConnectionError:
                 logger.warning(f"Connection error while trying to push data at {readout['time']} to API.")
                 return False
@@ -142,7 +143,9 @@ class DataPusher(threading.Thread):
         elif self._dep.get('type') == 'influxdb':
             try:
                 # Append offset between time that reading was taken and current time
-                readout['reading_offset'] = int(arrow.utcnow().timestamp - readout['t'] - readout['m']['reading_duration'])
+                readout['reading_offset'] = int(
+                    arrow.utcnow().timestamp - readout['t'] - readout['m']['reading_duration']
+                )
                 # Transform the device-based readout to the older API format
                 readout = convert_to_api_payload(readout, self._node.config['readings'])
                 # Set measurement where data should be written
@@ -167,7 +170,9 @@ class DataPusher(threading.Thread):
 
         elif self._dep.get('type') == 'mqtt':
             # Append offset between time that reading was taken and current time
-            readout['m']['reading_offset'] = int(arrow.utcnow().timestamp - readout['t'] - readout['m']['reading_duration'])
+            readout['m']['reading_offset'] = int(
+                arrow.utcnow().timestamp - readout['t'] - readout['m']['reading_duration']
+            )
             logger.debug(f"PUSH [mqtt] Device-based readout: {readout}")
             return self._session.publish(readout)
         else:
