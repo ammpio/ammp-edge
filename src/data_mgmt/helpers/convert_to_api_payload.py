@@ -11,7 +11,7 @@ DEVICE_ID_KEY = '_d'
 
 
 def convert_to_api_payload(readout, config_readings):
-    # convert time from unix timestamp to date
+    # Create API payload and convert time from unix timestamp to date
     api_payload = {
         'time': arrow.get(readout['t']).strftime('%Y-%m-%dT%H:%M:%SZ'),
         'fields': {}
@@ -23,7 +23,7 @@ def convert_to_api_payload(readout, config_readings):
             readout['r'], r['device'], r['var']
         )
         if value is None:
-            logger.warning(f"No readings for reading {rdg}: {r}")
+            logger.debug(f"No value for reading {rdg}: {r}")
             continue
         api_payload['fields'][rdg] = value
 
@@ -31,7 +31,7 @@ def convert_to_api_payload(readout, config_readings):
     for key in METADATA_FIELDS:
         api_payload['fields'][key] = readout['m'][key]
 
-    return readout
+    return api_payload
 
 
 def get_value_from_dev_readings(dev_readings, device, var):
