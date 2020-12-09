@@ -72,22 +72,25 @@ def get_readings(node):
                 node.drivers[drv_id]['fields'][var]
                 )
         except KeyError:
-            logger.warn(f"Variable {var} not found in driver {drv_id}, or driver definition malformed.")
+            logger.warning(f"Variable {var} not found in driver {drv_id}, or driver definition malformed.")
 
         dev_rdg[dev_id].append(rdict)
 
-    # 'readout' is a dict formatted for insertion into InfluxDB (with 'time' and 'fields' keys)
+    return dev_rdg
+
+
+def get_readout(node):
+    # 'readout' is a dict formatted for device-based readings. It also contains a timestamp, snap_rev and config_id
     readout = {
-        'time': arrow.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),
-        'fields': {},
-        'meta': {}
-    }
+        't': arrow.utcnow().timestamp,
+        'r': [],
+        'm': {
+                'snap_rev': int(os.getenv('SNAP_REVISION', 0)),
+                'config_id': node.config.get('config_id', '0')
+                }
+            }
 
-    try:
-        readout['fields']['comms_lggr_snap_rev'] = int(os.getenv('SNAP_REVISION', 0))
-    except Exception:
-        logger.warn('Could not get snap revision number, or could not parse as integer', exc_info=True)
-
+    dev_rdg = get_readings(node)
     # Set up queue in which to save readouts from the multiple threads that are reading each device
     readout_q = queue.Queue()
     jobs = []
@@ -114,7 +117,6 @@ def get_readings(node):
 
             # Set host IP based on MAC, if MAC is available
             set_host_from_mac(dev['address'])
-
     # Set up threads for reading each of the devices
     for dev_id in dev_rdg:
         dev = node.config['devices'][dev_id]
@@ -147,15 +149,12 @@ def get_readings(node):
     for j in jobs:
         try:
             fields = readout_q.get(block=False)
-            readout['fields'].update(fields)
+            readout['r'].append(fields)
         except queue.Empty:
             logger.warning('Not all devices returned readings')
 
-    readout['fields']['reading_duration'] = \
-        (arrow.utcnow() - arrow.get(readout['time'])).total_seconds()
-
-    logger.debug(f"Device readings: {dev_rdg}")
-    logger.debug(f"Readout: {readout}")
+    # time that took to read all devices.
+    readout['m']['reading_duration'] = arrow.utcnow().timestamp - readout['t']
 
     if 'output' in node.config:
         # Get additional processed values (new model to be used for all readings in future)
@@ -246,18 +245,20 @@ def read_device(dev, readings, readout_q, dev_lock=None):
                 value = process_reading(val_b, **rdg)
 
                 # Append to key-value store
-                fields[rdg['reading']] = value
+                fields['_d'] = dev['id']
+                if 'vendor_id' in dev:
+                    fields['_vid'] = dev['vendor_id']
+                fields[rdg['var']] = value
 
                 # Also save within readings structure
                 rdg['value'] = value
 
-                logger.debug('READ: [%s] %s = %s %s' % (dev['id'], rdg['reading'], repr(val_b), rdg.get('unit', '')))
+                logger.debug('READ: [%s] %s = %s %s' % (dev['id'], rdg['var'], repr(val_b), rdg.get('unit', '')))
 
     except Exception:
         logger.exception('Exception while reading device %s' % dev['id'])
 
-    logger.info('READ: Finished reading %s' % dev['id'])
-
+    logger.info(f"READ: Finished reading {dev['id']}")
     # Append result to readings (alongside those from other devices)
     readout_q.put(fields)
 

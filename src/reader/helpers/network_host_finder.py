@@ -11,6 +11,7 @@ scan_in_progress = Lock()
 # Time to pause after a scan, before the next scan can be triggered
 WAIT_AFTER_SCAN = 900
 ARP_TABLE_FILE = '/proc/net/arp'
+INVALID_MAC = '00:00:00:00:00:00'
 
 # Note that we expect /proc/net/arp to look like this. 6 columns, with IP and MAC in 1st and 4th col:
 # IP address       HW type     Flags       HW address            Mask     Device
@@ -27,7 +28,10 @@ def arp_get_mac_from_ip(ip: str) -> str:
                 try:
                     this_ip, _, _, this_mac, _, _ = l.split()
                 except ValueError:
-                    logger.warn(f"Malformed ARP table entry: {l}. Skipping")
+                    logger.warning(f"Malformed ARP table entry: {l}. Skipping")
+                    continue
+                if this_mac == INVALID_MAC:
+                    logger.warning(f"Ignoring MAC address with only zeros for IP: {this_ip}, consider flushing ARP cache")
                     continue
                 if this_ip == ip:
                     logger.debug(f"Mapped {ip} -> {this_mac} based on ARP table")
@@ -36,14 +40,14 @@ def arp_get_mac_from_ip(ip: str) -> str:
                 logger.info(f"IP {ip} not found in ARP table")
 
     except FileNotFoundError:
-        logger.warn(f"Unable to load ARP table from {ARP_TABLE_FILE}")
+        logger.warning(f"Unable to load ARP table from {ARP_TABLE_FILE}")
     except Exception:
         logger.exception(f"Exception while looking for IP {ip} in ARP table")
 
 
 def arp_get_ip_from_mac(mac: str) -> str:
     if not isinstance(mac, str):
-        logger.warn(f"MAC must be string. Received {mac}")
+        logger.warning(f"MAC must be string. Received {mac}")
         return None
 
     try:
@@ -54,7 +58,10 @@ def arp_get_ip_from_mac(mac: str) -> str:
                 try:
                     this_ip, _, _, this_mac, _, _ = l.split()
                 except ValueError:
-                    logger.warn(f"Malformed ARP table entry: {l}. Skipping")
+                    logger.warning(f"Malformed ARP table entry: {l}. Skipping")
+                    continue
+                if this_mac == INVALID_MAC:
+                    logger.warning(f"Ignoring MAC address with only zeros for IP: {this_ip}, consider flushing ARP cache")
                     continue
                 if this_mac == mac.lower():
                     logger.debug(f"Mapped {mac} -> {this_ip} based on ARP table")
@@ -63,7 +70,7 @@ def arp_get_ip_from_mac(mac: str) -> str:
                 logger.info(f"MAC {mac.lower()} not found in ARP table")
 
     except FileNotFoundError:
-        logger.warn(f"Unable to load ARP table from {ARP_TABLE_FILE}")
+        logger.warning(f"Unable to load ARP table from {ARP_TABLE_FILE}")
     except Exception:
         logger.exception(f"Exception while looking for IP {mac} in ARP table")
 

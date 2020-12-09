@@ -26,8 +26,10 @@ xmltodict = "*"
 requests-unixsocket = "*"
 flask = "*"
 redis = "*"
-ammp-edge = {path = "./src"}
 paho-mqtt = "*"
 
 [requires]
 python_version = "3.6"
+
+[scripts]
+ammp_edge = "python3 src/ammp_edge.py"
