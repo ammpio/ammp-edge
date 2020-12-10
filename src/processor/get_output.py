@@ -1,8 +1,9 @@
 import logging
-logger = logging.getLogger(__name__)
-
 from processor.jsonata import evaluate_jsonata
 from processor.process_reading import typecast
+
+logger = logging.getLogger(__name__)
+
 
 def get_output(dev_rdg, output_config):
     """
@@ -21,12 +22,13 @@ def get_output(dev_rdg, output_config):
       expression that's applied to dev_rdg. The output of that is saved as a value under a key
       named after 'field' in the output dict
     """
-    
+
     output = {}
 
     for oc in output_config:
         evaluated_value = evaluate_jsonata(dev_rdg, oc['source'])
-        if evaluated_value == None: continue
+        if evaluated_value is None:
+            continue
         output[oc['field']] = typecast(evaluated_value, **oc)
 
     return output
