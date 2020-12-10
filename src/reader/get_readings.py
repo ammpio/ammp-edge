@@ -157,10 +157,16 @@ def get_readout(node):
     readout['m']['reading_duration'] = arrow.utcnow().timestamp - readout['t']
 
     if 'output' in node.config:
-        # Get additional processed values (new model to be used for all readings in future)
+        # Get additional processed values
         output_fields = get_output(dev_rdg, node.config['output'])
         logger.debug(f"Output fields: {output_fields}")
-        readout['fields'].update(output_fields)
+        output_fields.updata(
+            {
+                '_d': '_output',
+                '_vid': '0',
+            }
+        )
+        readout['r'].append(output_fields)
 
     return readout
 
