@@ -153,6 +153,8 @@ def get_readout(node):
         except queue.Empty:
             logger.warning('Not all devices returned readings')
 
+    logger.debug(f"Populated readings for all devices: {dev_rdg}")
+
     # time that took to read all devices.
     readout['m']['reading_duration'] = arrow.utcnow().timestamp - readout['t']
 
@@ -160,13 +162,15 @@ def get_readout(node):
         # Get additional processed values
         output_fields = get_output(dev_rdg, node.config['output'])
         logger.debug(f"Output fields: {output_fields}")
-        output_fields.updata(
+        output_fields.update(
             {
                 '_d': '_output',
                 '_vid': '0',
             }
         )
         readout['r'].append(output_fields)
+
+    logger.debug(f"Readout: {readout}")
 
     return readout
 
