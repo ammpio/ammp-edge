@@ -38,8 +38,9 @@ setup(
         package_name,
         'db_model',
         'kvstore',
-        'edge_api'
-        ],
+        'edge_api',
+        'constants',
+    ],
     include_package_data=True,
     entry_points={
         'console_scripts': [
