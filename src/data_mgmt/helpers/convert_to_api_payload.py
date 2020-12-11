@@ -1,5 +1,6 @@
 import logging
 import arrow
+from constants import DEVICE_ID_KEY, OUTPUT_READINGS_DEV_ID
 
 logger = logging.getLogger(__name__)
 
@@ -8,8 +9,6 @@ logger = logging.getLogger(__name__)
 
 META_TO_FIELDS = ['snap_rev', 'reading_duration', 'reading_offset']
 META_TO_META = ['config_id']
-DEVICE_ID_KEY = '_d'
-DEVICE_ID_OUTPUT_READINGS = '_output'
 
 
 def convert_to_api_payload(readout, config_readings):
@@ -32,7 +31,7 @@ def convert_to_api_payload(readout, config_readings):
 
     # Copy any calculated output fields
     api_payload['fields'].update(
-        get_all_readings_for_device(readout['r'], DEVICE_ID_OUTPUT_READINGS)
+        get_all_readings_for_device(readout['r'], OUTPUT_READINGS_DEV_ID)
     )
 
     # Copy some metadata to 'meta' object

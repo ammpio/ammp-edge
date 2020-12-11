@@ -11,6 +11,9 @@ from copy import deepcopy
 from processor import process_reading, get_output
 from .helpers import set_host_from_mac, check_host_vs_mac
 
+from constants import DEVICE_ID_KEY, VENDOR_ID_KEY, \
+    OUTPUT_READINGS_DEV_ID, OUTPUT_READINGS_VENDOR_ID
+
 logger = logging.getLogger(__name__)
 
 DEVICE_DEFAULT_TIMEOUT = 5
@@ -164,8 +167,8 @@ def get_readout(node):
         logger.debug(f"Output fields: {output_fields}")
         output_fields.update(
             {
-                '_d': '_output',
-                '_vid': '0',
+                DEVICE_ID_KEY: OUTPUT_READINGS_DEV_ID,
+                VENDOR_ID_KEY: OUTPUT_READINGS_VENDOR_ID,
             }
         )
         readout['r'].append(output_fields)
@@ -255,9 +258,9 @@ def read_device(dev, readings, readout_q, dev_lock=None):
                 value = process_reading(val_b, **rdg)
 
                 # Append to key-value store
-                fields['_d'] = dev['id']
+                fields[DEVICE_ID_KEY] = dev['id']
                 if 'vendor_id' in dev:
-                    fields['_vid'] = dev['vendor_id']
+                    fields[VENDOR_ID_KEY] = dev['vendor_id']
                 fields[rdg['var']] = value
 
                 # Also save within readings structure
