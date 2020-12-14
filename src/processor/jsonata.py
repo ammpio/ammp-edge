@@ -2,31 +2,35 @@ import logging
 import os
 import subprocess
 import json
+from json import JSONDecodeError
+from pyjsonata import jsonata, PyjsonataError
 
 logger = logging.getLogger(__name__)
 
+JSON_UNDEFINED = 'undefined'
+
 
 def evaluate_jsonata(data_dict, expr):
-    if os.getenv('SNAP'):
-        jfq = os.path.join(os.getenv('SNAP'), 'bin', 'jfq')
-    else:
-        jfq = 'jfq'
-    cmd = [jfq, '-j', expr]
 
-    inp = json.dumps(data_dict).encode('utf-8')
+    inp = json.dumps(data_dict)
+
     try:
-        res = subprocess.run(cmd, stdout=subprocess.PIPE, input=inp)
-    except FileNotFoundError:
-        logger.error(f"Executable {cmd[0]} not found. Ensure that jfq is installed")
+        res_str = jsonata(expr, inp)
+    except PyjsonataError as e:
+        logger.error(f"Error while processing JSONata: {e}"
+            f"Input dictionary: {data_dict}"
+            f"Expression: {expr}"
+        )
         return None
 
-    res_str = res.stdout.decode('utf-8').rstrip()
-
-    if not res_str:
+    logger.debug(f"JSONata output string: {res_str}")
+    if not res_str or res_str == JSON_UNDEFINED:
         return None
-    else:
-        try:
-            return json.loads(res_str)
-        except Exception:
-            logger.error(f"JSONata parser did not return valid JSON: {res_str}")
-            return None
+
+    try:
+        res = json.loads(res_str)
+    except JSONDecodeError:
+        logger.error(f"Cannot decode response as JSON: {res_str}")
+        return None
+
+    return res
