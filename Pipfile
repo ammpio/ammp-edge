@@ -1,4 +1,9 @@
 [[source]]
+name = "ammplipy"
+url = "https://ammplipy.ammp.io"
+verify_ssl = true
+
+[[source]]
 name = "pypi"
 url = "https://pypi.org/simple"
 verify_ssl = true
@@ -27,6 +32,7 @@ requests-unixsocket = "*"
 flask = "*"
 redis = "*"
 paho-mqtt = "*"
+ammp-pyjsonata = ">=0.0.1a9"
 
 [requires]
 python_version = "3.6"
