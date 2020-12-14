@@ -97,6 +97,12 @@ parts:
     prime:
       - remote.yaml
       - redis.conf
+  resources:
+    plugin: dump
+    source: resources
+    organize:
+      '*': resources/
+    prime: [resources]
   drivers:
     plugin: dump
     source: drivers
@@ -106,7 +112,7 @@ parts:
   redis-server:
     plugin: make
     source: https://github.com/antirez/redis.git
-    source-tag: 5.0.7
+    source-tag: 6.0.9
     source-depth: 1
     make-install-var: PREFIX
   bin:
