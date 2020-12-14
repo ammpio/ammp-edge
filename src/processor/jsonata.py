@@ -17,8 +17,8 @@ def evaluate_jsonata(data_dict, expr):
     try:
         res_str = jsonata(expr, inp)
     except PyjsonataError as e:
-        logger.error(f"Error while processing JSONata: {e}"
-            f"Input dictionary: {data_dict}"
+        logger.error(f"Error while processing JSONata: {e}\n"
+            f"Input dictionary: {data_dict}\n"
             f"Expression: {expr}"
         )
         return None
