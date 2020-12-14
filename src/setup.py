@@ -49,9 +49,6 @@ setup(
             'env_scan_svc = env_scan_svc:main'
         ]
     },
-    dependency_links=[
-        'https://ammplipy.ammp.io/ammp-pyjsonata/',
-    ],
     python_requires='~=3.6',
     install_requires=[
         'pyyaml',
@@ -70,6 +67,6 @@ setup(
         'flask',
         'redis',
         'paho-mqtt',
-        'ammp-pyjsonata>=0.0.1a9',
+        'pyjsonata>=0.0.1a9',
     ]
 )
