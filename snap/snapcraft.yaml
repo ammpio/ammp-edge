@@ -103,6 +103,12 @@ parts:
     organize:
       '*': drivers/
     prime: [drivers]
+  resources:
+    plugin: dump
+    source: resources
+    organize:
+      '*': resources/
+    prime: [resources]
   jfq:
     plugin: nodejs
     nodejs-package-manager: npm

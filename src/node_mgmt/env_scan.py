@@ -250,11 +250,21 @@ class SerialEnv():
                         'fncode': 4
                     }
                 ]
+            },
+            {
+                'name': 'APM303 genset controller',
+                'readings': [
+                    {
+                        'register': 39,
+                        'words': 1,
+                        'fncode': 4
+                    }
+                ]
             }
         ]
 
         BAUD_RATES = [9600, 2400]
-        SLAVE_IDS = [1, 2]
+        SLAVE_IDS = [1, 2, 5]
 
         result = []
 
