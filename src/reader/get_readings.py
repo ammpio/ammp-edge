@@ -168,7 +168,6 @@ def get_readout(node):
         output_fields.update(
             {
                 DEVICE_ID_KEY: OUTPUT_READINGS_DEV_ID,
-                VENDOR_ID_KEY: OUTPUT_READINGS_VENDOR_ID,
             }
         )
         readout['r'].append(output_fields)

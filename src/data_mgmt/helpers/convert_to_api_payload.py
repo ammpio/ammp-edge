@@ -9,6 +9,7 @@ logger = logging.getLogger(__name__)
 
 META_TO_FIELDS = ['snap_rev', 'reading_duration', 'reading_offset']
 META_TO_META = ['config_id']
+PROTECTED_KEY_PREFIX = '_'
 
 
 def convert_to_api_payload(readout, config_readings):
@@ -50,9 +51,14 @@ def get_all_readings_for_device(dev_readings, device):
         dev_rdg = next(r for r in dev_readings if r[DEVICE_ID_KEY] == device)
     except StopIteration:
         return {}
-    return dev_rdg
+            
+    return {k: v for k, v in dev_rdg.items() if not is_protected_key(k)}
 
 
 def get_value_from_dev_readings(dev_readings, device, var):
     dev_rdg = get_all_readings_for_device(dev_readings, device)
     return dev_rdg.get(var)
+
+
+def is_protected_key(key: str) -> bool:
+    return key.startswith(PROTECTED_KEY_PREFIX)
