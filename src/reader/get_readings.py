@@ -185,7 +185,11 @@ def read_device(dev, readings, readout_q, dev_lock=None):
         # If we've just finished reading another device on this port, let it breathe
         time.sleep(0.5)
 
-    fields = {}
+    fields = {
+        DEVICE_ID_KEY: dev['id'],
+    }
+    if 'vendor_id' in dev:
+        fields[VENDOR_ID_KEY] = dev['vendor_id']
 
     logger.info('READ: Start reading %s' % dev['id'])
 
@@ -257,9 +261,6 @@ def read_device(dev, readings, readout_q, dev_lock=None):
                 value = process_reading(val_b, **rdg)
 
                 # Append to key-value store
-                fields[DEVICE_ID_KEY] = dev['id']
-                if 'vendor_id' in dev:
-                    fields[VENDOR_ID_KEY] = dev['vendor_id']
                 fields[rdg['var']] = value
 
                 # Also save within readings structure
