@@ -12,36 +12,42 @@ from collections import defaultdict
 from kvstore import KVStore
 from reader.modbusrtu_reader import Reader as ModbusRTUReader
 from reader.modbustcp_reader import Reader as ModbusTCPReader
+from processor import process_reading
 
 logger = logging.getLogger(__name__)
 
 DEFAULT_NMAP_SCAN_OPTS = ['-p', '22,80,443,502']
 DEFAULT_SERIAL_DEV = '/dev/ttyAMA0'
 
-MODBUS_PORT = 502
-MODBUS_SCAN = [
+MODTCP_PORT = 502
+MODTCP_UNIT_IDS = [3]
+MODTCP_TIMEOUT = 1
+MODTCP_UNIT_ID_KEY = 'unit_id'
+MODTCP_FIELD_KEY = 'field'
+MODTCP_REGISTER_KEY = 'register'
+MODTCP_WORDS_KEY = 'words'
+MODTCP_DATATYPE_KEY = 'uint32'
+MODTCP_SCAN_ITEMS = [
     {
-        'name': 'sma_device_class',
-        'unit_id': 3,
-        'register': 30051,
-        'words': 2,
-        'datatype': 'uint32'
+        MODTCP_FIELD_KEY: 'sma_device_class',
+        MODTCP_REGISTER_KEY: 30051,
+        MODTCP_WORDS_KEY: 2,
+        MODTCP_DATATYPE_KEY: 'uint32'
     },
     {
-        'name': 'sma_device_type',
-        'unit_id': 3,
-        'register': 30053,
-        'words': 2,
-        'datatype': 'uint32'
+        MODTCP_FIELD_KEY: 'sma_device_type',
+        MODTCP_REGISTER_KEY: 30053,
+        MODTCP_WORDS_KEY: 2,
+        MODTCP_DATATYPE_KEY: 'uint32'
     },
     {
-        'name': 'sma_serial',
-        'unit_id': 3,
-        'register': 30057,
-        'words': 2,
-        'datatype': 'uint32'
+        MODTCP_FIELD_KEY: 'sma_serial',
+        MODTCP_REGISTER_KEY: 30057,
+        MODTCP_WORDS_KEY: 2,
+        MODTCP_DATATYPE_KEY: 'uint32'
     },
 ]
+MODTCP_RESULT_KEY = 'modbustcp'
 
 SERIAL_SCAN_SIGNATURES = [
     {
@@ -78,6 +84,23 @@ SERIAL_SCAN_SIGNATURES = [
 
 SERIAL_SCAN_BAUD_RATES = [9600, 2400]
 SERIAL_SCAN_SLAVE_IDS = [1, 2, 5]
+
+NMAP_ADDR_KEY = 'addr'
+NMAP_ADDR_TYPE_KEY = 'addrtype'
+NMAP_IP_ADDR_TYPE = 'ipv4'
+NMAP_MAC_ADDR_TYPE = 'mac'
+NMAP_VENDOR_KEY = 'vendor'
+NMAP_PORTS_KEY = 'ports'
+NMAP_PORT_KEY = 'port'
+NMAP_PORT_STATE_KEY = 'state'
+NMAP_PORT_OPEN = 'open'
+NMAP_PORTID_KEY = 'portid'
+
+HOST_IP_KEY = 'ipv4'
+HOST_MAC_KEY = 'mac'
+HOST_VENDOR_KEY = 'vendor'
+HOST_PORTS_KEY = 'ports'
+
 
 class NetworkEnv():
 
@@ -192,21 +215,21 @@ class NetworkEnv():
                 this_host = {}
 
                 for a in h['address']:
-                    if a.get('addrtype') == 'ipv4':
-                        this_host['ipv4'] = a.get('addr')
-                    elif a.get('addrtype') == 'mac':
-                        this_host['mac'] = a.get('addr')
-                        if 'vendor' in a:
-                            this_host['vendor'] = a['vendor']
+                    if a.get(NMAP_ADDR_TYPE_KEY) == NMAP_IP_ADDR_TYPE:
+                        this_host[HOST_IP_KEY] = a.get(NMAP_ADDR_KEY)
+                    elif a.get(NMAP_ADDR_TYPE_KEY) == NMAP_MAC_ADDR_TYPE:
+                        this_host[HOST_MAC_KEY] = a.get(NMAP_ADDR_KEY)
+                        if NMAP_VENDOR_KEY in a:
+                            this_host[HOST_VENDOR_KEY] = a[NMAP_VENDOR_KEY]
 
                 if h['hostnames']:
                     this_host['hostname'] = h['hostnames']['hostname'][0].get('name')
 
-                if 'ports' in h:
-                    this_host['ports'] = []
-                    for p in h['ports'].get('port', []):
-                        if p['state']['state'] == 'open':
-                            this_host['ports'].append(p['portid'])
+                if NMAP_PORTS_KEY in h:
+                    this_host[HOST_PORTS_KEY] = []
+                    for p in h[NMAP_PORTS_KEY].get(NMAP_PORT_KEY, []):
+                        if p[NMAP_PORT_STATE_KEY][NMAP_PORT_STATE_KEY] == NMAP_PORT_OPEN:
+                            this_host[HOST_PORTS_KEY].append(p[NMAP_PORTID_KEY])
 
                 hosts.append(this_host)
 
@@ -260,8 +283,33 @@ class NetworkEnv():
     @staticmethod
     def modbus_scan(hosts: list) -> list:
         for h in hosts:
-            for s in MODBUS_SCAN:
-                pass
+            if not HOST_IP_KEY in h or not MODTCP_PORT in h[HOST_]:
+                continue
+            host_ip = h[HOST_IP_KEY]
+            h[MODTCP_RESULT_KEY] = []
+            for unit_id in MODTCP_UNIT_IDS:
+                try:
+                    with ModbusTCPReader(
+                        host=host_ip,
+                        port=MODTCP_PORT,
+                        unit_id=unit_id,
+                        timeout=MODTCP_TIMEOUT,
+                    ) as r:
+                        for rdg in MODTCP_SCAN_ITEMS:
+                            val_b = r.read(**rdg)
+                            if val_b is None:
+                                continue
+                            try:
+                                value = process_reading(val_b, **rdg)
+                            except Exception as e:
+                                logger.error(f"Could not process reading: {e}\nval_b={val_b}\nrdg={rdg}")
+                                continue
+                            h[MODTCP_RESULT_KEY].append({
+                                MODTCP_UNIT_ID_KEY: unit_id,
+                                rdg[MODTCP_FIELD_KEY]: value,
+                            })
+                except Exception as e:
+                    logger.info(f"Error: {e}")
 
 
 class SerialEnv():
@@ -330,6 +378,7 @@ class EnvScanner(object):
 
     def do_scan(self):
         network_hosts = self.net_env.network_scan()
+        self.net_env.modbus_scan(network_hosts)
         serial_devices = self.serial_env.serial_scan()
 
         scan_result = {
@@ -337,7 +386,7 @@ class EnvScanner(object):
             'network_scan': [
                 {
                     'ifname': self.net_env.default_ifname,
-                    'ipv4': self.net_env.default_ip,
+                    HOST_IP_KEY: self.net_env.default_ip,
                     'netmask': self.net_env.default_netmask_bits,
                     'hosts': network_hosts
                 }
