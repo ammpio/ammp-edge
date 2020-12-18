@@ -10,11 +10,96 @@ import xmltodict
 from collections import defaultdict
 
 from kvstore import KVStore
+from reader.modbusrtu_reader import Reader as ModbusRTUReader
+from reader.modbustcp_reader import Reader as ModbusTCPReader
+from processor import process_reading
 
 logger = logging.getLogger(__name__)
 
 DEFAULT_NMAP_SCAN_OPTS = ['-p', '22,80,443,502']
 DEFAULT_SERIAL_DEV = '/dev/ttyAMA0'
+
+MODTCP_PORT = 502
+MODTCP_UNIT_IDS = [3]
+MODTCP_TIMEOUT = 1
+MODTCP_UNIT_ID_KEY = 'unit_id'
+MODTCP_FIELD_KEY = 'field'
+MODTCP_REGISTER_KEY = 'register'
+MODTCP_WORDS_KEY = 'words'
+MODTCP_DATATYPE_KEY = 'uint32'
+MODTCP_SCAN_ITEMS = [
+    {
+        MODTCP_FIELD_KEY: 'sma_device_class',
+        MODTCP_REGISTER_KEY: 30051,
+        MODTCP_WORDS_KEY: 2,
+        MODTCP_DATATYPE_KEY: 'uint32'
+    },
+    {
+        MODTCP_FIELD_KEY: 'sma_device_type',
+        MODTCP_REGISTER_KEY: 30053,
+        MODTCP_WORDS_KEY: 2,
+        MODTCP_DATATYPE_KEY: 'uint32'
+    },
+    {
+        MODTCP_FIELD_KEY: 'sma_serial',
+        MODTCP_REGISTER_KEY: 30057,
+        MODTCP_WORDS_KEY: 2,
+        MODTCP_DATATYPE_KEY: 'uint32'
+    },
+]
+MODTCP_RESULT_KEY = 'modbustcp'
+
+SERIAL_SCAN_SIGNATURES = [
+    {
+        'name': 'Gamicos ultrasonic sensor',
+        'readings': [
+            {
+                'register': 1,
+                'words': 2,
+                'fncode': 3
+            }
+        ]
+    },
+    {
+        'name': 'IMT irradiation sensor',
+        'readings': [
+            {
+                'register': 0,
+                'words': 1,
+                'fncode': 4
+            }
+        ]
+    },
+    {
+        'name': 'APM303 genset controller',
+        'readings': [
+            {
+                'register': 39,
+                'words': 1,
+                'fncode': 4
+            }
+        ]
+    }
+]
+
+SERIAL_SCAN_BAUD_RATES = [9600, 2400]
+SERIAL_SCAN_SLAVE_IDS = [1, 2, 5]
+
+NMAP_ADDR_KEY = 'addr'
+NMAP_ADDR_TYPE_KEY = 'addrtype'
+NMAP_IP_ADDR_TYPE = 'ipv4'
+NMAP_MAC_ADDR_TYPE = 'mac'
+NMAP_VENDOR_KEY = 'vendor'
+NMAP_PORTS_KEY = 'ports'
+NMAP_PORT_KEY = 'port'
+NMAP_PORT_STATE_KEY = 'state'
+NMAP_PORT_OPEN = 'open'
+NMAP_PORTID_KEY = 'portid'
+
+HOST_IP_KEY = 'ipv4'
+HOST_MAC_KEY = 'mac'
+HOST_VENDOR_KEY = 'vendor'
+HOST_PORTS_KEY = 'ports'
 
 
 class NetworkEnv():
@@ -48,7 +133,7 @@ class NetworkEnv():
         self.default_netmask_bits = self.interfaces[self.default_ifname].get('netmask_bits')
         logger.info(
             f"Initialized network env on {self.default_ifname} with IP {self.default_ip}/{self.default_netmask_bits}"
-            )
+        )
 
     def get_interfaces(self):
 
@@ -130,21 +215,21 @@ class NetworkEnv():
                 this_host = {}
 
                 for a in h['address']:
-                    if a.get('addrtype') == 'ipv4':
-                        this_host['ipv4'] = a.get('addr')
-                    elif a.get('addrtype') == 'mac':
-                        this_host['mac'] = a.get('addr')
-                        if 'vendor' in a:
-                            this_host['vendor'] = a['vendor']
+                    if a.get(NMAP_ADDR_TYPE_KEY) == NMAP_IP_ADDR_TYPE:
+                        this_host[HOST_IP_KEY] = a.get(NMAP_ADDR_KEY)
+                    elif a.get(NMAP_ADDR_TYPE_KEY) == NMAP_MAC_ADDR_TYPE:
+                        this_host[HOST_MAC_KEY] = a.get(NMAP_ADDR_KEY)
+                        if NMAP_VENDOR_KEY in a:
+                            this_host[HOST_VENDOR_KEY] = a[NMAP_VENDOR_KEY]
 
                 if h['hostnames']:
                     this_host['hostname'] = h['hostnames']['hostname'][0].get('name')
 
-                if 'ports' in h:
-                    this_host['ports'] = []
-                    for p in h['ports'].get('port', []):
-                        if p['state']['state'] == 'open':
-                            this_host['ports'].append(p['portid'])
+                if NMAP_PORTS_KEY in h:
+                    this_host[HOST_PORTS_KEY] = []
+                    for p in h[NMAP_PORTS_KEY].get(NMAP_PORT_KEY, []):
+                        if p[NMAP_PORT_STATE_KEY][NMAP_PORT_STATE_KEY] == NMAP_PORT_OPEN:
+                            this_host[HOST_PORTS_KEY].append(p[NMAP_PORTID_KEY])
 
                 hosts.append(this_host)
 
@@ -195,6 +280,42 @@ class NetworkEnv():
                 logger.error(f"Nmap did not return valid XML: {res_str}")
                 return None
 
+    @staticmethod
+    def modbus_scan(hosts: list) -> None:
+        if hosts is None:
+            return
+
+        for h in hosts:
+            if HOST_IP_KEY not in h \
+                or MODTCP_PORT not in \
+                    [int(p) for p in h.get(HOST_PORTS_KEY, [])]:
+                continue
+            host_ip = h[HOST_IP_KEY]
+            h[MODTCP_RESULT_KEY] = []
+            for unit_id in MODTCP_UNIT_IDS:
+                try:
+                    with ModbusTCPReader(
+                        host=host_ip,
+                        port=MODTCP_PORT,
+                        unit_id=unit_id,
+                        timeout=MODTCP_TIMEOUT,
+                    ) as r:
+                        for rdg in MODTCP_SCAN_ITEMS:
+                            val_b = r.read(**rdg)
+                            if val_b is None:
+                                continue
+                            try:
+                                value = process_reading(val_b, **rdg)
+                            except Exception as e:
+                                logger.error(f"Could not process reading: {e}\nval_b={val_b}\nrdg={rdg}")
+                                continue
+                            h[MODTCP_RESULT_KEY].append({
+                                MODTCP_UNIT_ID_KEY: unit_id,
+                                rdg[MODTCP_FIELD_KEY]: value,
+                            })
+                except Exception as e:
+                    logger.info(f"Error: {e}")
+
 
 class SerialEnv():
 
@@ -203,14 +324,9 @@ class SerialEnv():
 
         if default_serial_dev is not None:
             self.default_serial_dev = default_serial_dev
-        elif self.serial_devices:
-            # Only do this if devices are actually present
-            if DEFAULT_SERIAL_DEV in self.serial_devices:
-                # If the global default device is present, use that
-                self.default_serial_dev = DEFAULT_SERIAL_DEV
-            else:
-                # Otherwise use the first available device
-                self.default_serial_dev = self.serial_devices[0]
+        elif self.serial_devices and DEFAULT_SERIAL_DEV in self.serial_devices:
+            # If the global default device is present, use that
+            self.default_serial_dev = DEFAULT_SERIAL_DEV
         else:
             self.default_serial_dev = None
 
@@ -221,58 +337,19 @@ class SerialEnv():
         return devices
 
     def serial_scan(self, device=None):
-
         if not device:
             if self.default_serial_dev:
                 device = self.default_serial_dev
             else:
                 return []
 
-        from reader.modbusrtu_reader import Reader
-
-        SIGNATURES = [
-            {
-                'name': 'Gamicos ultrasonic sensor',
-                'readings': [
-                    {
-                        'register': 1,
-                        'words': 2,
-                        'fncode': 3
-                    }
-                ]
-            },
-            {
-                'name': 'IMT irradiation sensor',
-                'readings': [
-                    {
-                        'register': 0,
-                        'words': 1,
-                        'fncode': 4
-                    }
-                ]
-            },
-            {
-                'name': 'APM303 genset controller',
-                'readings': [
-                    {
-                        'register': 39,
-                        'words': 1,
-                        'fncode': 4
-                    }
-                ]
-            }
-        ]
-
-        BAUD_RATES = [9600, 2400]
-        SLAVE_IDS = [1, 2, 5]
-
         result = []
 
-        for br in BAUD_RATES:
-            for slave in SLAVE_IDS:
-                for sig in SIGNATURES:
+        for br in SERIAL_SCAN_BAUD_RATES:
+            for slave in SERIAL_SCAN_SLAVE_IDS:
+                for sig in SERIAL_SCAN_SIGNATURES:
                     test = f"Testing slave ID {slave} for '{sig['name']}' at baud rate {br}"
-                    with Reader(device, slave, br, timeout=1, debug=True) as r:
+                    with ModbusRTUReader(device, slave, br, timeout=1, debug=True) as r:
                         success = True
                         for rdg in sig['readings']:
                             try:
@@ -300,6 +377,10 @@ class EnvScanner(object):
 
     def do_scan(self):
         network_hosts = self.net_env.network_scan()
+        try:
+            self.net_env.modbus_scan(network_hosts)
+        except Exception:
+            logger.exception("Exception while running ModbusTCP scan")
         serial_devices = self.serial_env.serial_scan()
 
         scan_result = {
@@ -307,7 +388,7 @@ class EnvScanner(object):
             'network_scan': [
                 {
                     'ifname': self.net_env.default_ifname,
-                    'ipv4': self.net_env.default_ip,
+                    HOST_IP_KEY: self.net_env.default_ip,
                     'netmask': self.net_env.default_netmask_bits,
                     'hosts': network_hosts
                 }
