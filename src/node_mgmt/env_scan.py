@@ -10,12 +10,74 @@ import xmltodict
 from collections import defaultdict
 
 from kvstore import KVStore
+from reader.modbusrtu_reader import Reader as ModbusRTUReader
+from reader.modbustcp_reader import Reader as ModbusTCPReader
 
 logger = logging.getLogger(__name__)
 
 DEFAULT_NMAP_SCAN_OPTS = ['-p', '22,80,443,502']
 DEFAULT_SERIAL_DEV = '/dev/ttyAMA0'
 
+MODBUS_PORT = 502
+MODBUS_SCAN = [
+    {
+        'name': 'sma_device_class',
+        'unit_id': 3,
+        'register': 30051,
+        'words': 2,
+        'datatype': 'uint32'
+    },
+    {
+        'name': 'sma_device_type',
+        'unit_id': 3,
+        'register': 30053,
+        'words': 2,
+        'datatype': 'uint32'
+    },
+    {
+        'name': 'sma_serial',
+        'unit_id': 3,
+        'register': 30057,
+        'words': 2,
+        'datatype': 'uint32'
+    },
+]
+
+SERIAL_SCAN_SIGNATURES = [
+    {
+        'name': 'Gamicos ultrasonic sensor',
+        'readings': [
+            {
+                'register': 1,
+                'words': 2,
+                'fncode': 3
+            }
+        ]
+    },
+    {
+        'name': 'IMT irradiation sensor',
+        'readings': [
+            {
+                'register': 0,
+                'words': 1,
+                'fncode': 4
+            }
+        ]
+    },
+    {
+        'name': 'APM303 genset controller',
+        'readings': [
+            {
+                'register': 39,
+                'words': 1,
+                'fncode': 4
+            }
+        ]
+    }
+]
+
+SERIAL_SCAN_BAUD_RATES = [9600, 2400]
+SERIAL_SCAN_SLAVE_IDS = [1, 2, 5]
 
 class NetworkEnv():
 
@@ -195,6 +257,12 @@ class NetworkEnv():
                 logger.error(f"Nmap did not return valid XML: {res_str}")
                 return None
 
+    @staticmethod
+    def modbus_scan(hosts: list) -> list:
+        for h in hosts:
+            for s in MODBUS_SCAN:
+                pass
+
 
 class SerialEnv():
 
@@ -228,51 +296,13 @@ class SerialEnv():
             else:
                 return []
 
-        from reader.modbusrtu_reader import Reader
-
-        SIGNATURES = [
-            {
-                'name': 'Gamicos ultrasonic sensor',
-                'readings': [
-                    {
-                        'register': 1,
-                        'words': 2,
-                        'fncode': 3
-                    }
-                ]
-            },
-            {
-                'name': 'IMT irradiation sensor',
-                'readings': [
-                    {
-                        'register': 0,
-                        'words': 1,
-                        'fncode': 4
-                    }
-                ]
-            },
-            {
-                'name': 'APM303 genset controller',
-                'readings': [
-                    {
-                        'register': 39,
-                        'words': 1,
-                        'fncode': 4
-                    }
-                ]
-            }
-        ]
-
-        BAUD_RATES = [9600, 2400]
-        SLAVE_IDS = [1, 2, 5]
-
         result = []
 
-        for br in BAUD_RATES:
-            for slave in SLAVE_IDS:
-                for sig in SIGNATURES:
+        for br in SERIAL_SCAN_BAUD_RATES:
+            for slave in SERIAL_SCAN_SLAVE_IDS:
+                for sig in SERIAL_SCAN_SIGNATURES:
                     test = f"Testing slave ID {slave} for '{sig['name']}' at baud rate {br}"
-                    with Reader(device, slave, br, timeout=1, debug=True) as r:
+                    with ModbusRTUReader(device, slave, br, timeout=1, debug=True) as r:
                         success = True
                         for rdg in sig['readings']:
                             try:
