@@ -281,7 +281,10 @@ class NetworkEnv():
                 return None
 
     @staticmethod
-    def modbus_scan(hosts: list) -> list:
+    def modbus_scan(hosts: list) -> None:
+        if hosts is None:
+            return
+
         for h in hosts:
             if HOST_IP_KEY not in h \
                 or MODTCP_PORT not in \
