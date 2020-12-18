@@ -1,6 +1,11 @@
 version: '3.3'
 
 services:
+  # ammp_edge:
+  #   image: python:3.6
+  #   volumes:
+  #     - ./src:/src
+  #   command: bash -c "apt-get update && apt-get install -y libsnmp-dev nmap && pip install ./src && ammp_edge"
   redis:
     image: redis:6.0.9
     command: redis-server /usr/local/etc/redis/redis.conf --bind 0.0.0.0
@@ -9,3 +14,11 @@ services:
     volumes:
       - $PWD/.local/data:/var/lib/redis
       - $PWD/config/redis.conf:/usr/local/etc/redis/redis.conf
+  mock_sma_stp:
+    container_name: mock_sma_stp
+    image: python:slim
+    volumes:
+      - ./tests/mock_devices/sma_stp:/srv/mockdev
+    ports:
+      - "0.0.0.0:502:502"
+    command: bash -c "pip install umodbus && python -u /srv/mockdev/modtcp_server.py -b 0.0.0.0:502"
