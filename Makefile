@@ -27,6 +27,9 @@ local-prepare:
 	ln -sf ../drivers .local/
 	ln -sf ../resources .local/
 	mkdir -p .local/data
+	mkdir -p .local/usr
+	mkdir -p .local/usr/bin
+	ln -sf /usr/local/bin/nmap .local/usr/bin/
 
 local-run:
 	$(MAKE) docker-run
