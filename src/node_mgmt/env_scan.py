@@ -321,14 +321,9 @@ class SerialEnv():
 
         if default_serial_dev is not None:
             self.default_serial_dev = default_serial_dev
-        elif self.serial_devices:
-            # Only do this if devices are actually present
-            if DEFAULT_SERIAL_DEV in self.serial_devices:
-                # If the global default device is present, use that
-                self.default_serial_dev = DEFAULT_SERIAL_DEV
-            else:
-                # Otherwise use the first available device
-                self.default_serial_dev = self.serial_devices[0]
+        elif self.serial_devices and DEFAULT_SERIAL_DEV in self.serial_devices:
+            # If the global default device is present, use that
+            self.default_serial_dev = DEFAULT_SERIAL_DEV
         else:
             self.default_serial_dev = None
 
