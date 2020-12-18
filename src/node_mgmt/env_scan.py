@@ -293,6 +293,9 @@ class NetworkEnv():
             host_ip = h[HOST_IP_KEY]
             h[MODTCP_RESULT_KEY] = []
             for unit_id in MODTCP_UNIT_IDS:
+                result_for_unit = {
+                    MODTCP_UNIT_ID_KEY: unit_id,
+                }
                 try:
                     with ModbusTCPReader(
                         host=host_ip,
@@ -309,12 +312,10 @@ class NetworkEnv():
                             except Exception as e:
                                 logger.error(f"Could not process reading: {e}\nval_b={val_b}\nrdg={rdg}")
                                 continue
-                            h[MODTCP_RESULT_KEY].append({
-                                MODTCP_UNIT_ID_KEY: unit_id,
-                                rdg[MODTCP_FIELD_KEY]: value,
-                            })
+                            result_for_unit[rdg[MODTCP_FIELD_KEY]] = value
                 except Exception as e:
                     logger.info(f"Error: {e}")
+                h[MODTCP_RESULT_KEY].append(result_for_unit)
 
 
 class SerialEnv():
