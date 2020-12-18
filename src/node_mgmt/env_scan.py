@@ -133,7 +133,7 @@ class NetworkEnv():
         self.default_netmask_bits = self.interfaces[self.default_ifname].get('netmask_bits')
         logger.info(
             f"Initialized network env on {self.default_ifname} with IP {self.default_ip}/{self.default_netmask_bits}"
-            )
+        )
 
     def get_interfaces(self):
 
@@ -283,7 +283,9 @@ class NetworkEnv():
     @staticmethod
     def modbus_scan(hosts: list) -> list:
         for h in hosts:
-            if not HOST_IP_KEY in h or not MODTCP_PORT in h[HOST_]:
+            if HOST_IP_KEY not in h \
+                or MODTCP_PORT not in \
+                    [int(p) for p in h.get(HOST_PORTS_KEY, [])]:
                 continue
             host_ip = h[HOST_IP_KEY]
             h[MODTCP_RESULT_KEY] = []
@@ -337,7 +339,6 @@ class SerialEnv():
         return devices
 
     def serial_scan(self, device=None):
-
         if not device:
             if self.default_serial_dev:
                 device = self.default_serial_dev
@@ -378,7 +379,10 @@ class EnvScanner(object):
 
     def do_scan(self):
         network_hosts = self.net_env.network_scan()
-        self.net_env.modbus_scan(network_hosts)
+        try:
+            self.net_env.modbus_scan(network_hosts)
+        except Exception:
+            logger.exception("Exception while running ModbusTCP scan")
         serial_devices = self.serial_env.serial_scan()
 
         scan_result = {
