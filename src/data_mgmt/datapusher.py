@@ -96,9 +96,7 @@ class DataPusher(threading.Thread):
             # Push to API endpoint
             try:
                 # Append offset between time that reading was taken and current time
-                readout['m']['reading_offset'] = int(
-                    arrow.utcnow().timestamp - readout['t'] - readout['m']['reading_duration']
-                )
+                readout['m']['reading_offset'] = self.__get_reading_offset(readout)
                 # Transform the device-based readout to the older API format
                 readout = convert_to_api_payload(readout, self._node.config['readings'])
                 logger.debug(f"PUSH [API]. API-Based Readout: {readout}")
@@ -145,9 +143,7 @@ class DataPusher(threading.Thread):
         elif self._dep.get('type') == 'influxdb':
             try:
                 # Append offset between time that reading was taken and current time
-                readout['m']['reading_offset'] = int(
-                    arrow.utcnow().timestamp - readout['t'] - readout['m']['reading_duration']
-                )
+                readout['m']['reading_offset'] = self.__get_reading_offset(readout)
                 # Transform the device-based readout to the older API format
                 readout = convert_to_api_payload(readout, self._node.config['readings'])
                 # Set measurement where data should be written
@@ -172,10 +168,14 @@ class DataPusher(threading.Thread):
 
         elif self._dep.get('type') == 'mqtt':
             # Append offset between time that reading was taken and current time
-            readout['m']['reading_offset'] = int(
-                arrow.utcnow().timestamp - readout['t'] - readout['m']['reading_duration']
-            )
+            readout['m']['reading_offset'] = self.__get_reading_offset(readout)
             logger.debug(f"PUSH [mqtt] Device-based readout: {readout}")
             return self._session.publish(readout)
         else:
             logger.warning(f"Data endpoint type '{self._dep.get('type')}' not recognized")
+
+    @staticmethod
+    def __get_reading_offset(readout: dict) -> int:
+        return int(
+            time.time() - readout['t'] - readout['m']['reading_duration']
+        )

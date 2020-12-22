@@ -159,7 +159,7 @@ def get_readout(node):
     logger.debug(f"Populated readings for all devices: {dev_rdg}")
 
     # time that took to read all devices.
-    readout['m']['reading_duration'] = arrow.utcnow().timestamp - readout['t']
+    readout['m']['reading_duration'] = time.time() - readout['t']
 
     if 'output' in node.config:
         # Get additional processed values
