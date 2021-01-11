@@ -168,6 +168,7 @@ def get_readout(node):
         output_fields.update(
             {
                 DEVICE_ID_KEY: OUTPUT_READINGS_DEV_ID,
+                VENDOR_ID_KEY: node.config['calc_vendor_id']
             }
         )
         readout['r'].append(output_fields)
