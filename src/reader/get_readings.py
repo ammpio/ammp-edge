@@ -9,10 +9,10 @@ from time import sleep
 from copy import deepcopy
 
 from processor import process_reading, get_output
-from .helpers import set_host_from_mac, check_host_vs_mac, output_fields_updater
+from .helpers import set_host_from_mac, check_host_vs_mac
 
 from constants import DEVICE_ID_KEY, VENDOR_ID_KEY, \
-    OUTPUT_READINGS_DEV_ID, OUTPUT_READINGS_VENDOR_ID, CALC_VENDOR_ID
+    OUTPUT_READINGS_DEV_ID, CONFIG_CALC_VENDOR_ID
 
 logger = logging.getLogger(__name__)
 
@@ -66,14 +66,10 @@ def get_readings(node):
         # Start by setting reading name
         rdict = {'reading': rdg, 'var': var}
         # If applicable, add common reading parameters from driver file (e.g. function code)
-        rdict.update(
-            node.drivers[drv_id].get('common', {})
-            )
+        rdict.update(node.drivers[drv_id].get('common', {}))
 
         try:
-            rdict.update(
-                node.drivers[drv_id]['fields'][var]
-                )
+            rdict.update(node.drivers[drv_id]['fields'][var])
         except KeyError:
             logger.warning(f"Variable {var} not found in driver {drv_id}, or driver definition malformed.")
 
@@ -88,10 +84,10 @@ def get_readout(node):
         't': arrow.utcnow().timestamp,
         'r': [],
         'm': {
-                'snap_rev': int(os.getenv('SNAP_REVISION', 0)),
-                'config_id': node.config.get('config_id', '0')
-                }
-            }
+            'snap_rev': int(os.getenv('SNAP_REVISION', 0)),
+            'config_id': node.config.get('config_id', '0')
+        }
+    }
 
     dev_rdg = get_readings(node)
     # Set up queue in which to save readouts from the multiple threads that are reading each device
@@ -131,12 +127,10 @@ def get_readout(node):
         except KeyError:
             dev_lock = None
 
-        dev_thread = threading.Thread(
-                target=read_device,
-                name='Readout-' + dev_id,
-                args=(dev, dev_rdg[dev_id], readout_q, dev_lock),
-                daemon=True
-                )
+        dev_thread = threading.Thread(target=read_device,
+                                      name='Readout-' + dev_id,
+                                      args=(dev, dev_rdg[dev_id], readout_q, dev_lock),
+                                      daemon=True)
 
         jobs.append(dev_thread)
 
@@ -164,19 +158,10 @@ def get_readout(node):
     if 'output' in node.config:
         # Get additional processed values
         output_fields = get_output(dev_rdg, node.config['output'])
+        output_fields[DEVICE_ID_KEY] = OUTPUT_READINGS_DEV_ID
+        if CONFIG_CALC_VENDOR_ID in node.config:
+            output_fields[VENDOR_ID_KEY] = node.config[CONFIG_CALC_VENDOR_ID]
         logger.debug(f"Output fields: {output_fields}")
-
-        if CALC_VENDOR_ID in node.config:
-            # if a calc_vendor_id on the top level of the config is present,
-            # augment the calculated values (i.e. output_fields) with it
-            output_fields = output_fields_updater(output_fields, node.config[CALC_VENDOR_ID])
-
-        else:
-            output_fields.update(
-                {
-                    DEVICE_ID_KEY: OUTPUT_READINGS_DEV_ID
-                }
-            )
 
         readout['r'].append(output_fields)
 
