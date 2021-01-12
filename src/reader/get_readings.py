@@ -9,10 +9,10 @@ from time import sleep
 from copy import deepcopy
 
 from processor import process_reading, get_output
-from .helpers import set_host_from_mac, check_host_vs_mac
+from .helpers import set_host_from_mac, check_host_vs_mac, output_fields_updater
 
 from constants import DEVICE_ID_KEY, VENDOR_ID_KEY, \
-    OUTPUT_READINGS_DEV_ID, OUTPUT_READINGS_VENDOR_ID
+    OUTPUT_READINGS_DEV_ID, OUTPUT_READINGS_VENDOR_ID, CALC_VENDOR_ID
 
 logger = logging.getLogger(__name__)
 
@@ -165,12 +165,19 @@ def get_readout(node):
         # Get additional processed values
         output_fields = get_output(dev_rdg, node.config['output'])
         logger.debug(f"Output fields: {output_fields}")
-        output_fields.update(
-            {
-                DEVICE_ID_KEY: OUTPUT_READINGS_DEV_ID,
-                VENDOR_ID_KEY: node.config['calc_vendor_id']
-            }
-        )
+
+        if CALC_VENDOR_ID in node.config:
+            # if a calc_vendor_id on the top level of the config is present,
+            # augment the calculated values (i.e. output_fields) with it
+            output_fields = output_fields_updater(output_fields, node.config[CALC_VENDOR_ID])
+
+        else:
+            output_fields.update(
+                {
+                    DEVICE_ID_KEY: OUTPUT_READINGS_DEV_ID
+                }
+            )
+
         readout['r'].append(output_fields)
 
     logger.debug(f"Readout: {readout}")
