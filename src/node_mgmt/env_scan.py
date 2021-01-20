@@ -16,7 +16,7 @@ from processor import process_reading
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_NMAP_SCAN_OPTS = ['-p', '22,80,443,502']
+DEFAULT_NMAP_SCAN_OPTS = ['--disable-arp-ping', '-p', '22,80,443,502']
 DEFAULT_SERIAL_DEV = '/dev/ttyAMA0'
 
 MODTCP_PORT = 502
