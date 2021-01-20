@@ -19,7 +19,7 @@ def initialize_network(retries_left: int = INIT_MAX_RETRIES) -> NetworkEnv:
         if retries_left > 0:
             logger.info(f"Will retry scan in {INIT_RETRY_HOLDOFF} seconds ({retries_left} retries left)")
             sleep(INIT_RETRY_HOLDOFF)
-            return initialize_network(retries_left-1)
+            return initialize_network(retries_left - 1)
         else:
             logger.error("No more retries left")
             return None
@@ -32,7 +32,7 @@ def main() -> None:
         return
 
     # TODO: Scan all interfaces (within reason). The below will only scan the default interface.
-    res = net_env.network_scan(nmap_scan_opts=['-sn', '-n'])
+    res = net_env.network_scan(nmap_scan_opts=['-sn', '-n', '--disable-arp-ping'])
     logger.info(f"Scan result: {res}")
 
 
