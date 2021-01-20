@@ -49,38 +49,28 @@ MODTCP_SCAN_ITEMS = [
 ]
 MODTCP_RESULT_KEY = 'modbustcp'
 
-SERIAL_SCAN_SIGNATURES = [
-    {
-        'name': 'Gamicos ultrasonic sensor',
-        'readings': [
-            {
-                'register': 1,
-                'words': 2,
-                'fncode': 3
-            }
-        ]
-    },
-    {
-        'name': 'IMT irradiation sensor',
-        'readings': [
-            {
-                'register': 0,
-                'words': 1,
-                'fncode': 4
-            }
-        ]
-    },
-    {
-        'name': 'APM303 genset controller',
-        'readings': [
-            {
-                'register': 39,
-                'words': 1,
-                'fncode': 4
-            }
-        ]
-    }
-]
+SERIAL_SCAN_SIGNATURES = [{
+    'name': 'Gamicos ultrasonic sensor',
+    'readings': [{
+        'register': 1,
+        'words': 2,
+        'fncode': 3
+    }]
+}, {
+    'name': 'IMT irradiation sensor',
+    'readings': [{
+        'register': 0,
+        'words': 1,
+        'fncode': 4
+    }]
+}, {
+    'name': 'APM303 genset controller',
+    'readings': [{
+        'register': 39,
+        'words': 1,
+        'fncode': 4
+    }]
+}]
 
 SERIAL_SCAN_BAUD_RATES = [9600, 2400]
 SERIAL_SCAN_SLAVE_IDS = [1, 2, 5]
@@ -103,7 +93,6 @@ HOST_PORTS_KEY = 'ports'
 
 
 class NetworkEnv():
-
     def __init__(self, default_ifname=None, default_ip=None, default_netmask_bits=None):
 
         # Define the socket address families that may contain MAC addresses
@@ -132,8 +121,7 @@ class NetworkEnv():
         self.default_ifname = self.get_interface_from_ip(self.default_ip)
         self.default_netmask_bits = self.interfaces[self.default_ifname].get('netmask_bits')
         logger.info(
-            f"Initialized network env on {self.default_ifname} with IP {self.default_ip}/{self.default_netmask_bits}"
-        )
+            f"Initialized network env on {self.default_ifname} with IP {self.default_ip}/{self.default_netmask_bits}")
 
     def get_interfaces(self):
 
@@ -192,8 +180,7 @@ class NetworkEnv():
                      this_ip_addr: str = None,
                      netmask_bits: int = None,
                      nmap_scan_opts: list = DEFAULT_NMAP_SCAN_OPTS,
-                     save_to_kvs: bool = True
-                     ) -> dict:
+                     save_to_kvs: bool = True) -> dict:
         if not this_ip_addr:
             this_ip_addr = self.default_ip
         if not netmask_bits:
@@ -257,7 +244,7 @@ class NetworkEnv():
             args = [args]
 
         if os.getenv('SNAP'):
-            nmap_path = os.path.join(os.getenv('SNAP'), 'usr', 'bin', 'nmap')
+            nmap_path = os.path.join(os.getenv('SNAP'), 'bin', 'nmap')
         else:
             nmap_path = 'nmap'
 
@@ -298,10 +285,10 @@ class NetworkEnv():
                 }
                 try:
                     with ModbusTCPReader(
-                        host=host_ip,
-                        port=MODTCP_PORT,
-                        unit_id=unit_id,
-                        timeout=MODTCP_TIMEOUT,
+                            host=host_ip,
+                            port=MODTCP_PORT,
+                            unit_id=unit_id,
+                            timeout=MODTCP_TIMEOUT,
                     ) as r:
                         for rdg in MODTCP_SCAN_ITEMS:
                             val_b = r.read(**rdg)
@@ -319,7 +306,6 @@ class NetworkEnv():
 
 
 class SerialEnv():
-
     def __init__(self, default_serial_dev=None):
         self.serial_devices = self.get_serial_devices()
 
@@ -370,7 +356,6 @@ class SerialEnv():
 
 
 class EnvScanner(object):
-
     def __init__(self, ifname=None, serial_dev=None):
 
         self.net_env = NetworkEnv(default_ifname=ifname)
@@ -385,16 +370,16 @@ class EnvScanner(object):
         serial_devices = self.serial_env.serial_scan()
 
         scan_result = {
-            'time': arrow.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),
-            'network_scan': [
-                {
-                    'ifname': self.net_env.default_ifname,
-                    HOST_IP_KEY: self.net_env.default_ip,
-                    'netmask': self.net_env.default_netmask_bits,
-                    'hosts': network_hosts
-                }
-            ],
-            'serial_scan': serial_devices
+            'time':
+            arrow.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),
+            'network_scan': [{
+                'ifname': self.net_env.default_ifname,
+                HOST_IP_KEY: self.net_env.default_ip,
+                'netmask': self.net_env.default_netmask_bits,
+                'hosts': network_hosts
+            }],
+            'serial_scan':
+            serial_devices
         }
 
         return scan_result
