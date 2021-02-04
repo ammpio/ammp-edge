@@ -34,11 +34,7 @@ def send_log(node):
         return
 
     try:
-        r = requests.put(
-            upload_url,
-            data=fh.read(),
-            headers={'Content-Disposition': os.path.basename(zipped_logs)}
-                )
+        r = requests.put(upload_url, data=fh.read(), headers={'Content-Disposition': os.path.basename(zipped_logs)})
 
         if r.status_code == 200:
             logger.info('Upload successful')
@@ -197,4 +193,29 @@ def imt_sensor_address(node):
 
 
 def sys_reboot(node):
-    os.system('dbus-send --system --print-reply --dest=org.freedesktop.login1 /org/freedesktop/login1 "org.freedesktop.login1.Manager.Reboot" boolean:true')
+    os.system(
+        'busctl call org.freedesktop.login1 /org/freedesktop/login1 org.freedesktop.login1.Manager Reboot b "false"')
+
+
+def sys_start_snapd(node):
+    os.system(
+        'busctl call org.freedesktop.systemd1 /org/freedesktop/systemd1 org.freedesktop.systemd1.Manager StartUnit ss "snapd.service" "replace"'
+    )
+
+
+def sys_stop_snapd(node):
+    os.system(
+        'busctl call org.freedesktop.systemd1 /org/freedesktop/systemd1 org.freedesktop.systemd1.Manager StopUnit ss "snapd.service" "replace"'
+    )
+
+
+def sys_remount_rw(node):
+    os.system(
+        'busctl call org.freedesktop.systemd1 /org/freedesktop/systemd1 org.freedesktop.systemd1.Manager StartUnit ss "remount-rw.service" "replace"'
+    )
+
+
+def sys_remount_ro(node):
+    os.system(
+        'busctl call org.freedesktop.systemd1 /org/freedesktop/systemd1 org.freedesktop.systemd1.Manager StopUnit ss "remount-rw.service" "replace"'
+    )
