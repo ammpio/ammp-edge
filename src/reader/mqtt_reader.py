@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 CLIENT_ID_PREFIX = 'ammp-edge-'
 DEFAULT_QOS = 1
 
-# A note on the reading logic; the approach implemented here does the following: 
+# A note on the reading logic; the approach implemented here does the following:
 # 1. Upon initialization, it waits for `timeout` seconds for any payloads to come in
 #    on subscribed topics. I.e. it collects data.
 # 2. Upon carrying out a read(), it subscribes to the topic for that read, checks whether
@@ -21,13 +21,7 @@ DEFAULT_QOS = 1
 
 
 class Reader(object):
-    def __init__(
-            self,
-            host: str = 'localhost',
-            port: int = 1883,
-            timeout: int = 3,
-            **kwargs
-            ):
+    def __init__(self, host: str = 'localhost', port: int = 1883, timeout: int = 3, **kwargs):
 
         self._kvs = KVStore()
         node_id = self.node_id = self._kvs.get('node:node_id', '')
@@ -38,10 +32,7 @@ class Reader(object):
         # A timeout for connection is not supported by the Paho MQTT library
         self._timeout = timeout
 
-        self._client = mqtt.Client(
-            client_id=CLIENT_ID_PREFIX + node_id,
-            clean_session=False,
-            **kwargs)
+        self._client = mqtt.Client(client_id=CLIENT_ID_PREFIX + node_id, clean_session=False, **kwargs)
 
         self._client.enable_logger(logger=logger)
 
