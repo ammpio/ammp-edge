@@ -1,4 +1,3 @@
-
 import logging
 from playhouse.sqlite_ext import Model, SqliteExtDatabase, PrimaryKeyField, TextField, DateTimeField, JSONField
 import os
@@ -9,10 +8,18 @@ logger = logging.getLogger(__name__)
 # Naively, it seems that doing it this way will reduce the fact that the config file
 # might get corrupted due to issues with writing to the queue file (in case of e.g. power outage)
 
-cdb = SqliteExtDatabase(os.path.join(os.getenv('SNAP_COMMON', './'), 'config.db'))
+cdb = SqliteExtDatabase(os.path.join(os.getenv('SNAP_COMMON', './'), 'config.db'),
+                        pragmas={
+                            'journal_mode': 'wal',
+                            'synchronous': 2
+                        })
 cdb.connect()
 
-qdb = SqliteExtDatabase(os.path.join(os.getenv('SNAP_COMMON', './'), 'queue.db'))
+qdb = SqliteExtDatabase(os.path.join(os.getenv('SNAP_COMMON', './'), 'queue.db'),
+                        pragmas={
+                            'journal_mode': 'wal',
+                            'synchronous': 2
+                        })
 qdb.connect()
 
 
