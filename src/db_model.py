@@ -26,7 +26,7 @@ qdb.connect()
 class NodeConfig(Model):
     node_id = TextField(primary_key=True)
     config = JSONField(null=True)
-    access_key = DateTimeField(null=True)
+    access_key = TextField(null=True)
 
     class Meta:
         database = cdb
