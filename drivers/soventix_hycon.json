@@ -1,75 +1,158 @@
 {
   "common": {
-    "datatype": "float",
+    "order": "lsr",
     "fncode": 4,
-    "multiplier": 1,
-    "order": "lsr"
+    "datatype": "float",
+    "multiplier": 1
   },
   "fields": {
-    "genset_P_total": {
-      "description": "Generator total net active power [W]",
-      "register": 144,
+    "pv_E_daily": {
+      "unit": "kWh",
       "words": 2,
-      "unit": "W"
-    },
-    "genset_E_total": {
-      "description": "Generator total net energy [kWh]",
-      "register": 146,
-      "words": 2,
-      "unit": "kWh"
+      "register": 142,
+      "description": "PV inverters total energy yield for current day [kWh]"
     },
     "pv_E_total": {
-      "description": "PV inverters total energy yield since startup [kWh]",
+      "unit": "kWh",
+      "words": 2,
       "register": 140,
-      "words": 2,
-      "unit": "kWh"
-    },
-    "pv_E_daily": {
-      "description": "PV inverters total energy yield for current day [kWh]",
-      "register": 142,
-      "words": 2,
-      "unit": "kWh"
+      "description": "PV inverters total energy yield since startup [kWh]"
     },
     "pv_P_total": {
-      "description": "PV inverters total active power [W]",
-      "register": 138,
+      "unit": "W",
       "words": 2,
-      "unit": "kWh"
+      "register": 138,
+      "description": "PV inverters total active power [W]"
     },
     "pv_P_setpoint": {
-      "description": "Set point for active power control - P as a percentage of the nominal power",
-      "register": 136,
+      "unit": "%",
       "words": 2,
-      "unit": "%"
+      "register": 136,
+      "description": "Set point for active power control - P as a percentage of the nominal power"
+    },
+    "genset_E_total": {
+      "unit": "kWh",
+      "words": 2,
+      "register": 146,
+      "description": "Generator total net energy [kWh]"
+    },
+    "genset_P_total": {
+      "unit": "W",
+      "words": 2,
+      "register": 144,
+      "description": "Generator total net active power [W]"
     },
     "oil_level_alarm": {
-      "description": "Protection relais - Oil level alarm. 0=Ok, 1=alert",
+      "words": 1,
+      "datatype": "uint16",
       "register": 135,
-      "words": 1,
-      "datatype": "uint16",
-      "typecast": "int"
-    },
-    "gas_pressure_alarm": {
-      "description": "Protection relais - Gas pressure alarm. 0=Ok, 1=alert",
-      "register": 134,
-      "words": 1,
-      "datatype": "uint16",
-      "typecast": "int"
-
-    },
-    "temperature_alert": {
-      "description": "Protection relais - Temperature alert. 0=Ok, 1=alert",
-      "register": 132,
-      "words": 1,
-      "datatype": "uint16",
-      "typecast": "int"
+      "typecast": "int",
+      "description": "Protection relais - Oil level alarm. 0=Ok, 1=alert"
     },
     "temperature_alarm": {
-      "description": "Protection relais - Temperature alarm. 0=Ok, 1=alert",
-      "register": 133,
       "words": 1,
       "datatype": "uint16",
-      "typecast": "int"
+      "register": 133,
+      "typecast": "int",
+      "description": "Protection relais - Temperature alarm. 0=Ok, 1=alert"
+    },
+    "temperature_alert": {
+      "words": 1,
+      "datatype": "uint16",
+      "register": 132,
+      "typecast": "int",
+      "description": "Protection relais - Temperature alert. 0=Ok, 1=alert"
+    },
+    "gas_pressure_alarm": {
+      "words": 1,
+      "datatype": "uint16",
+      "register": 134,
+      "typecast": "int",
+      "description": "Protection relais - Gas pressure alarm. 0=Ok, 1=alert"
+    },
+    "gas_genset_1_E_total": {
+      "unit": "kWh",
+      "words": 2,
+      "register": 106,
+      "description": "Gas Generator 1 total net energy [kWh]"
+    },
+    "gas_genset_1_P_total": {
+      "unit": "W",
+      "words": 2,
+      "register": 104,
+      "description": "Gas generator 1 set total active power [W]"
+    },
+    "gas_genset_2_E_total": {
+      "unit": "kWh",
+      "words": 2,
+      "register": 110,
+      "description": "Gas Generator 2 total net energy [kWh]"
+    },
+    "gas_genset_2_P_total": {
+      "unit": "W",
+      "words": 2,
+      "register": 108,
+      "description": "Gas generator 2 set total active power [W]"
+    },
+    "gas_genset_3_E_total": {
+      "unit": "kWh",
+      "words": 2,
+      "register": 114,
+      "description": "Gas Generator 3 total net energy [kWh]"
+    },
+    "gas_genset_3_P_total": {
+      "unit": "W",
+      "words": 2,
+      "register": 112,
+      "description": "Gas generator 3 set total active power [W]"
+    },
+    "diesel_genset_1_E_total": {
+      "unit": "kWh",
+      "words": 2,
+      "register": 118,
+      "description": "Diesel Generator 1 total net energy [kWh]"
+    },
+    "diesel_genset_1_P_total": {
+      "unit": "W",
+      "words": 2,
+      "register": 116,
+      "description": "Diesel generator 1 set total active power [W]"
+    },
+    "diesel_genset_2_E_total": {
+      "unit": "kWh",
+      "words": 2,
+      "register": 122,
+      "description": "Diesel Generator 2 total net energy [kWh]"
+    },
+    "diesel_genset_2_P_total": {
+      "unit": "W",
+      "words": 2,
+      "register": 120,
+      "description": "Diesel generator 2 set total active power [W]"
+    },
+    "diesel_genset_3_E_total": {
+      "unit": "kWh",
+      "words": 2,
+      "register": 126,
+      "description": "Diesel Generator 3 total net energy [kWh]"
+    },
+    "diesel_genset_3_P_total": {
+      "unit": "W",
+      "words": 2,
+      "register": 124,
+      "description": "Diesel generator 3 set total active power [W]"
+    },
+    "diesel_genset_4_E_total": {
+      "unit": "kWh",
+      "words": 2,
+      "register": 130,
+      "description": "Diesel Generator 4 total net energy [kWh]"
+    },
+    "diesel_genset_4_P_total": {
+      "unit": "W",
+      "words": 2,
+      "register": 128,
+      "description": "Diesel generator 4 set total active power [W]"
     }
   }
 }
