@@ -6,6 +6,6 @@
   },
   "fields": {
     "disk_usage": {"method": "disk_usage", "args": {"path": "/root"}, "keypath": [3], "unit": "%"},
-    "cpu_temp": {"method": "sensors_temperatures", "keypath": ["cpu-thermal", 0, 1], "unit": "C"}
+    "cpu_temp": {"method": "sensors_temperatures", "keypath": ["cpu_thermal", 0, 1], "unit": "C"}
   }
 }
