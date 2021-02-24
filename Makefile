@@ -29,7 +29,7 @@ local-prepare:
 	mkdir -p .local/data
 	mkdir -p .local/usr
 	mkdir -p .local/usr/bin
-	ln -sf /usr/local/bin/nmap .local/usr/bin/
+	ln -sf `which nmap` .local/usr/bin/
 
 local-run:
 	$(MAKE) docker-run
