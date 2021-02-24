@@ -6,13 +6,15 @@ from .helpers import generate_request, parse_response
 logger = logging.getLogger(__name__)
 
 DEFAULT_RECV_BUFFER_SIZE = 1024
+MULTICAST_IP = "239.12.255.254"
+MULTICAST_PORT = 9522
 
 
 class Reader(object):
     def __init__(
                 self,
                 host: str = None,
-                port: int = 502,
+                port: int = MULTICAST_PORT,
                 recv_buffer_size: int = DEFAULT_RECV_BUFFER_SIZE,
                 timeout: int = 5,
                 **kwargs
@@ -28,12 +30,13 @@ class Reader(object):
 
     def __enter__(self):
 
-        self._conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self._conn = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+        self._conn.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self._conn.settimeout(self._timeout)
         try:
-            self._conn.connect((self._host, self._port))
+            self._conn.bind(("", MULTICAST_PORT))
         except Exception:
-            logger.error('Exception while attempting to create TCP connection:')
+            logger.error('Exception while attempting to create UDP connection:')
             raise
 
         return self
@@ -45,7 +48,7 @@ class Reader(object):
         try:
             self._conn.close()
         except Exception:
-            logger.warning("Could not close TCP connection", exc_info=True)
+            logger.warning("Could not close UDP connection", exc_info=True)
 
     def read(self, schema, **rdg):
 
@@ -55,7 +58,7 @@ class Reader(object):
             response = self._stored_responses[request]
         else:
             try:
-                logger.debug(f"Writing {repr(request)} to TCP port")
+                logger.debug(f"Writing {repr(request)} to UDP port")
                 self._conn.send(request)
                 # TODO: We may need to do something more intelligent here in cases where the full response
                 # doesn't get sent in one go
