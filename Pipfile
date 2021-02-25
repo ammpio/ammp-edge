@@ -14,7 +14,7 @@ bandit = "*"
 flake8-annotations = "*"
 mypy = "*"
 flake8-mypy = "*"
-yapf = "*"
+autopep8 = "*"
 
 [packages]
 pyyaml = "*"
@@ -34,6 +34,7 @@ flask = "*"
 redis = "*"
 paho-mqtt = "*"
 ammp-pyjsonata = ">=0.0.1a9"
+cbor2 = "*"
 
 [requires]
 python_version = "3.6"

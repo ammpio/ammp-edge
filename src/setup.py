@@ -66,6 +66,7 @@ setup(
         'requests-unixsocket',
         'flask',
         'redis',
+        'cbor2',
         'paho-mqtt',
         'pyjsonata>=0.0.1a9',
     ]

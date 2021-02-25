@@ -1,5 +1,5 @@
 import logging
-from playhouse.sqlite_ext import Model, SqliteExtDatabase, PrimaryKeyField, TextField, DateTimeField, JSONField
+from playhouse.sqlite_ext import Model, SqliteExtDatabase, PrimaryKeyField, TextField, JSONField
 import os
 
 logger = logging.getLogger(__name__)
@@ -12,14 +12,14 @@ cdb = SqliteExtDatabase(os.path.join(os.getenv('SNAP_COMMON', './'), 'config.db'
                         pragmas={
                             'journal_mode': 'wal',
                             'synchronous': 2
-                        })
+})
 cdb.connect()
 
 qdb = SqliteExtDatabase(os.path.join(os.getenv('SNAP_COMMON', './'), 'queue.db'),
                         pragmas={
                             'journal_mode': 'wal',
                             'synchronous': 2
-                        })
+})
 qdb.connect()
 
 
