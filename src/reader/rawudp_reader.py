@@ -1,32 +1,30 @@
 import logging
 import socket
+import struct
 
-from .helpers import generate_request, parse_response
+from .helpers import parse_datagram_response
 
 logger = logging.getLogger(__name__)
 
 DEFAULT_RECV_BUFFER_SIZE = 1024
-MULTICAST_IP = "239.12.255.254"
+MULTICAST_GRP = "239.12.255.254"
 MULTICAST_PORT = 9522
 
 
 class Reader(object):
     def __init__(
                 self,
-                host: str = None,
+                group: str = MULTICAST_GRP,
                 port: int = MULTICAST_PORT,
                 recv_buffer_size: int = DEFAULT_RECV_BUFFER_SIZE,
                 timeout: int = 5,
                 **kwargs
                 ):
 
-        self._host = host
+        self._group= group
         self._port = port
         self._recv_buffer_size = recv_buffer_size
         self._timeout = timeout
-        self._device_args = {'host': host, 'port': port, **kwargs}
-
-        self._stored_responses = {}
 
     def __enter__(self):
 
@@ -52,37 +50,27 @@ class Reader(object):
 
     def read(self, schema, **rdg):
 
-        request = generate_request(schema['request'], self._device_args, **rdg)
-
-        if request in self._stored_responses:
-            response = self._stored_responses[request]
-        else:
-            try:
-                logger.debug(f"Writing {repr(request)} to UDP port")
-                self._conn.send(request)
-                # TODO: We may need to do something more intelligent here in cases where the full response
-                # doesn't get sent in one go
-                response = self._conn.recv(self._recv_buffer_size)
-                logger.debug(f"Received {repr(response)} from serial port")
-
-                if response == b'':
-                    logger.warn("No response received from device")
-                    return
-
-            except Exception:
-                logger.error(f"Exception while reading response to query {repr(request)}")
-                raise
-
-        # Save response in case other readings rely on the same query
-        self._stored_responses[request] = response
+        request = struct.pack("4sl", socket.inet_aton(MULTICAST_GRP), socket.INADDR_ANY)
 
         try:
-            # Parse the response to obtain the actual value
-            val_b = parse_response(response, schema['response'], self._device_args, **rdg)
+            logger.debug(f"Writing {repr(request)} to UDP port")
+            self._conn.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, request)
+            response = self._conn.recv(self._recv_buffer_size)
+            logger.debug(f"Received {repr(response)} from serial port")
+
+            if response == b'':
+                logger.warning("No response received from device")
+                return
+
         except Exception:
-            logger.error(
-                f"Exception while processing value from response {repr(response)}"
-                )
+            logger.error(f"Exception while reading response to query {repr(request)}")
             raise
 
-        return val_b
+        try:
+            # Parse the response to obtain the actual values
+            em_data = parse_datagram_response(response)
+        except Exception:
+            logger.error(f"Exception while processing value from response {repr(response)}")
+            raise
+
+        return em_data
