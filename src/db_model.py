@@ -4,32 +4,14 @@ import os
 
 logger = logging.getLogger(__name__)
 
-# Create separate database files for configuration storage and for non-volatile queue storage
-# Naively, it seems that doing it this way will reduce the fact that the config file
-# might get corrupted due to issues with writing to the queue file (in case of e.g. power outage)
-
-cdb = SqliteExtDatabase(os.path.join(os.getenv('SNAP_COMMON', './'), 'config.db'),
+# Create a database files for non-volatile queue storage, and load the model
+QUEUE_DB_PATH = os.path.join(os.getenv('SNAP_COMMON', './'), 'queue.db')
+qdb = SqliteExtDatabase(QUEUE_DB_PATH,
                         pragmas={
                             'journal_mode': 'wal',
                             'synchronous': 2
-})
-cdb.connect()
-
-qdb = SqliteExtDatabase(os.path.join(os.getenv('SNAP_COMMON', './'), 'queue.db'),
-                        pragmas={
-                            'journal_mode': 'wal',
-                            'synchronous': 2
-})
+                        })
 qdb.connect()
-
-
-class NodeConfig(Model):
-    node_id = TextField(primary_key=True)
-    config = JSONField(null=True)
-    access_key = TextField(null=True)
-
-    class Meta:
-        database = cdb
 
 
 class NVQueue(Model):
@@ -41,6 +23,26 @@ class NVQueue(Model):
         database = qdb
 
 
-# Create tables if they don't already exist
-cdb.create_tables([NodeConfig], safe=True)
 qdb.create_tables([NVQueue], safe=True)
+
+
+# If the (legacy) config.db file exists, also load it here
+CONFIG_DB_PATH = os.path.join(os.getenv('SNAP_COMMON', './'), 'config.db')
+if os.path.exists(CONFIG_DB_PATH):
+    cdb = SqliteExtDatabase(CONFIG_DB_PATH,
+                            pragmas={
+                                'journal_mode': 'wal',
+                                'synchronous': 2
+                            })
+    cdb.connect()
+else:
+    cdb = None
+
+
+class NodeConfig(Model):
+    node_id = TextField(primary_key=True)
+    config = JSONField(null=True)
+    access_key = TextField(null=True)
+
+    class Meta:
+        database = cdb
