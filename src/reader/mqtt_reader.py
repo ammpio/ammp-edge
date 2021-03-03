@@ -1,7 +1,7 @@
 import logging
 import paho.mqtt.client as mqtt
 from time import sleep
-from kvstore import KVStore
+from kvstore import KVStore, keys
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +24,7 @@ class Reader(object):
     def __init__(self, host: str = 'localhost', port: int = 1883, timeout: int = 3, **kwargs):
 
         self._kvs = KVStore()
-        node_id = self.node_id = self._kvs.get('node:node_id', '')
+        node_id = self._kvs.get(keys.NODE_ID, '')
 
         self._host = host
         self._port = port
@@ -32,7 +32,8 @@ class Reader(object):
         # A timeout for connection is not supported by the Paho MQTT library
         self._timeout = timeout
 
-        self._client = mqtt.Client(client_id=CLIENT_ID_PREFIX + node_id, clean_session=False, **kwargs)
+        self._client = mqtt.Client(
+            client_id=CLIENT_ID_PREFIX + node_id, clean_session=False, **kwargs)
 
         self._client.enable_logger(logger=logger)
 
@@ -45,7 +46,8 @@ class Reader(object):
         try:
             self._client.connect(self._host, port=self._port)
         except Exception:
-            logger.error('Exception while attempting to connect to MQTT broker:')
+            logger.error(
+                'Exception while attempting to connect to MQTT broker:')
             raise
 
         self._client.on_message = self.__on_message
@@ -59,7 +61,8 @@ class Reader(object):
         try:
             self._client.disconnect()
         except Exception:
-            logger.warning("Could not disconnect from MQTT broker", exc_info=True)
+            logger.warning(
+                "Could not disconnect from MQTT broker", exc_info=True)
 
     def __on_message(self, client, userdata, msg):
         self._current_payloads[msg.topic] = msg.payload
@@ -67,7 +70,8 @@ class Reader(object):
     def read(self, topic, **rdg):
         res, _ = self._client.subscribe(topic, qos=DEFAULT_QOS)
         if res != mqtt.MQTT_ERR_SUCCESS:
-            logger.error(f"Could not subscribe to topic '{topic}'. Result: {res}")
+            logger.error(
+                f"Could not subscribe to topic '{topic}'. Result: {res}")
             return None
 
         return self._current_payloads.get(topic)
