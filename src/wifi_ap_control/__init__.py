@@ -23,19 +23,15 @@ if os.environ.get('LOGGING_LEVEL'):
             f"Failed to set log level to {os.environ['LOGGING_LEVEL']}", exc_info=True)
 
 
-KVS_CONFIG_KEY = 'node:wifi_ap_config'
-KVS_AVAILABLE_KEY = 'node:wifi_ap_available'
-
-
 def initialize(wifi_ap: WifiAPSnapCtl, kvs: KVStore) -> bool:
-    wifi_ap_cfg = kvs.get(KVS_CONFIG_KEY)
+    wifi_ap_cfg = kvs.get(keys.WIFI_AP_CONFIG)
     return wifi_ap.configure(wifi_ap_cfg)
 
 
 def monitor_and_update(wifi_ap: WifiAPSnapCtl, kvs: KVStore) -> None:
     while True:
         try:
-            wifi_ap_cfg = kvs.waitfor(KVS_CONFIG_KEY)
+            wifi_ap_cfg = kvs.waitfor(keys.WIFI_AP_CONFIG)
             wifi_ap.configure(wifi_ap_cfg)
         except Exception as e:
             logger.info(
@@ -48,11 +44,11 @@ def main() -> None:
 
     try:
         wifi_ap = WifiAPSnapCtl()
-        kvs.set(KVS_AVAILABLE_KEY, True)
+        kvs.set(keys.WIFI_AP_AVAILABLE, True)
     except Exception as e:
         logger.warn(
             f"Exception while setting up Wifi access point control: {type(e).__name__}: {e}")
-        kvs.set(KVS_AVAILABLE_KEY, False)
+        kvs.set(keys.WIFI_AP_AVAILABLE, False)
         sys.exit(1)
 
     initialize(wifi_ap, kvs)
