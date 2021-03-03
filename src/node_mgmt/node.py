@@ -7,8 +7,7 @@ import os
 import time
 
 from db_model import NodeConfig as LegacyNodeConfig
-from kvstore import KVStore
-import kvstore.keys as keys
+from kvstore import KVStore, keys
 from edge_api import EdgeAPI
 from node_mgmt.events import NodeEvents
 from node_mgmt.config_watch import ConfigWatch
