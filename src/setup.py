@@ -37,7 +37,6 @@ setup(
     py_modules=[
         package_name,
         'db_model',
-        'kvstore',
         'edge_api',
         'constants',
     ],
