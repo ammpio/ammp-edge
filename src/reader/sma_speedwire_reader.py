@@ -2,19 +2,20 @@ import logging
 import socket
 import struct
 
-from .helpers import parse_datagram_response
+from .helpers.sma_speedwire_parser import parse_datagram_response
 
 logger = logging.getLogger(__name__)
 
 DEFAULT_RECV_BUFFER_SIZE = 1024
-MULTICAST_GRP = "239.12.255.254"
+MULTICAST_GROUP = '239.12.255.254'
 MULTICAST_PORT = 9522
+DATA_REQUEST_STR = '4sl'
 
 
 class Reader(object):
     def __init__(
         self,
-        group: str = MULTICAST_GRP,
+        group: str = MULTICAST_GROUP,
         port: int = MULTICAST_PORT,
         recv_buffer_size: int = DEFAULT_RECV_BUFFER_SIZE,
         timeout: int = 5,
@@ -33,7 +34,7 @@ class Reader(object):
         self._conn.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self._conn.settimeout(self._timeout)
         try:
-            self._conn.bind(("", MULTICAST_PORT))
+            self._conn.bind(('', self._group))
         except Exception:
             logger.error(
                 'Exception while attempting to create UDP connection:')
@@ -52,15 +53,17 @@ class Reader(object):
 
     def read(self, schema, **rdg):
 
-        request = struct.pack("4sl", socket.inet_aton(
-            MULTICAST_GRP), socket.INADDR_ANY)
+        request = struct.pack(DATA_REQUEST_STR,
+                              socket.inet_aton(self._group),
+                              socket.INADDR_ANY
+                              )
 
         try:
-            logger.debug(f"Writing {repr(request)} to UDP port")
+            logger.debug(f"Writing {repr(request)} to multicast")
             self._conn.setsockopt(
                 socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, request)
             response = self._conn.recv(self._recv_buffer_size)
-            logger.debug(f"Received {repr(response)} from serial port")
+            logger.debug(f"Received {repr(response)} from multicast")
 
             if response == b'':
                 logger.warning("No response received from device")
