@@ -84,7 +84,7 @@ def get_readings(node):
 def get_readout(node):
     # 'readout' is a dict formatted for device-based readings. It also contains a timestamp, snap_rev and config_id
     readout = {
-        't': arrow.utcnow().timestamp,
+        't': arrow.utcnow().int_timestamp,
         'r': [],
         'm': {
             'snap_rev': int(os.getenv('SNAP_REVISION', 0)),
@@ -159,7 +159,8 @@ def get_readout(node):
     logger.debug(f"Populated readings for all devices: {dev_rdg}")
 
     # time that took to read all devices.
-    readout['m']['reading_duration'] = time.time() - readout['t']
+    readout['m']['reading_duration'] = arrow.utcnow().float_timestamp - \
+        readout['t']
 
     if 'output' in node.config:
         # Get additional processed values
