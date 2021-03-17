@@ -9,7 +9,6 @@ logger = logging.getLogger(__name__)
 DEFAULT_RECV_BUFFER_SIZE = 10240
 MULTICAST_GROUP = '239.12.255.254'
 MULTICAST_PORT = 9522
-DATA_REQUEST_STR = '4sl'
 MAX_RESPONSES = 5
 
 
@@ -57,13 +56,13 @@ class Reader(object):
             logger.warning("Could not close UDP connection", exc_info=True)
 
     def __broadcast_request(self):
-        request = struct.pack(DATA_REQUEST_STR,
-                              socket.inet_aton(self._group),
-                              socket.INADDR_ANY
-                              )
-        logger.debug(f"Writing {repr(request)} to multicast")
+        mreq = struct.pack('4sl',
+                           socket.inet_aton(self._group),
+                           socket.INADDR_ANY
+                           )
+        logger.debug(f"Joining multicast group {self._group}")
         self._conn.setsockopt(
-            socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, request)
+            socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
 
     def __get_response(self):
         try:
