@@ -18,7 +18,7 @@ def decode_obis(obis: bytes) -> Tuple[int, int]:
     return obis_channel, obis_type
 
 
-def parse_datagram_response(response: bytes) -> Tuple[int, dict]:
+def parse_datagram(response: bytes) -> Tuple[int, dict]:
     data_length = int.from_bytes(response[12:14], byteorder=BYTEORDER_BIG) + 16
     serial_number = int.from_bytes(response[20:24], byteorder=BYTEORDER_BIG)
 

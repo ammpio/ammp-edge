@@ -2,7 +2,7 @@ import logging
 import socket
 import struct
 
-from .helpers.sma_speedwire_parser import parse_datagram_response
+from .helpers.sma_speedwire_parser import parse_datagram
 
 logger = logging.getLogger(__name__)
 
@@ -30,19 +30,21 @@ class Reader(object):
         self._timeout = timeout
 
         self._serial = serial
-        self._stored_response = None
+        self._stored_values = None
 
     def __enter__(self):
         self._conn = socket.socket(
             socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
         self._conn.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self._conn.settimeout(self._timeout)
-        try:
-            self._conn.bind(('', self._port))
-        except Exception:
-            logger.error(
-                'Exception while attempting to create UDP connection:')
-            raise
+        self._conn.bind(('', self._port))
+        mreq = struct.pack('4sl',
+                           socket.inet_aton(self._group),
+                           socket.INADDR_ANY
+                           )
+        logger.debug(f"Joining multicast group {self._group}")
+        self._conn.setsockopt(
+            socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
 
         return self
 
@@ -55,44 +57,33 @@ class Reader(object):
         except Exception:
             logger.warning("Could not close UDP connection", exc_info=True)
 
-    def __broadcast_request(self):
-        mreq = struct.pack('4sl',
-                           socket.inet_aton(self._group),
-                           socket.INADDR_ANY
-                           )
-        logger.debug(f"Joining multicast group {self._group}")
-        self._conn.setsockopt(
-            socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
-
-    def __get_response(self):
+    def __get_datagram(self):
         try:
-            response = self._conn.recv(self._recv_buffer_size)
+            datagram = self._conn.recv(self._recv_buffer_size)
         except socket.timeout:
-            logger.warning("Timed out while waiting for multicast response")
+            logger.warning("Timed out while waiting for multicast datagram")
             return None
 
-        logger.debug(f"Received {repr(response)} from multicast")
-        if response == b'':
-            logger.warning("No response received from multicast")
+        logger.debug(f"Received {repr(datagram)} from multicast")
+        if datagram == b'':
+            logger.warning("Empty datagram received from multicast")
             return None
-        return response
+        return datagram
 
     def read(self, obis_channel: int, obis_type: int, **rdg) -> bytes:
-        if self._stored_response is None:
-            # If there is no stored response, put out a request
-            self.__broadcast_request()
-
-            # Collect responses and try to match them to the desired serial
+        if self._stored_values is None:
+            # If there is no stored response, collect responses and try to
+            # find the one that matched the desired serial
             for _ in range(self._max_responses):
-                response = self.__get_response()
-                if response is None:
+                datagram = self.__get_datagram()
+                if datagram is None:
                     break
-                serial_number, values = parse_datagram_response(response)
+                serial_number, values = parse_datagram(datagram)
                 if serial_number == self._serial:
-                    self._stored_response = response
+                    self._stored_values = values
                     break
 
-        return self.__get_value(self._stored_response, obis_channel, obis_type)
+        return self.__get_value(self._stored_values, obis_channel, obis_type)
 
     @staticmethod
     def __get_value(values: dict, obis_channel: int, obis_type: int) -> bytes:
