@@ -231,6 +231,11 @@ def read_device(dev, readings, readout_q, dev_lock=None):
         reader_config['timeout'] = dev.get('timeout', DEVICE_DEFAULT_TIMEOUT)
         from reader.mqtt_reader import Reader
 
+    elif dev['reading_type'] == 'sma_speedwire':
+        reader_config = deepcopy(dev['address'])
+        reader_config['timeout'] = dev.get('timeout', DEVICE_DEFAULT_TIMEOUT)
+        from reader.sma_speedwire_reader import Reader
+
     elif dev['reading_type'] == 'sys':
         reader_config = {}
         from reader.sys_reader import Reader
