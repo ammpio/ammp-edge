@@ -8,16 +8,16 @@ data-endpoints:
       host: edge.ammp.io
       apiver: v0
       timeout: 120
-    isdefault: true
   - name: mqtt-prod
     type: mqtt
+    isdefault: true
     config:
       host: mqtt.ammp.io
       cert: ca.crt
       port: 8883
-  - name: mqtt-stage
-    type: mqtt
-    config:
-      host: mqtt.stage.ammp.io
-      cert: ca-stage.crt
-      port: 8883
+  # - name: mqtt-stage
+  #   type: mqtt
+  #   config:
+  #     host: mqtt.stage.ammp.io
+  #     cert: ca-stage.crt
+  #     port: 8883
