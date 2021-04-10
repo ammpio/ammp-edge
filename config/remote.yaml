@@ -2,13 +2,13 @@ api:
   host: edge.ammp.io
   apiver: v0
 data-endpoints:
-  - name: default
+  - name: api
     type: api
     config:
       host: edge.ammp.io
       apiver: v0
       timeout: 120
-  - name: mqtt-prod
+  - name: mqtt
     type: mqtt
     isdefault: true
     config:
