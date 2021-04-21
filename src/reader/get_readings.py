@@ -76,6 +76,9 @@ def get_readings(node):
             logger.warning(
                 f"Variable {var} not found in driver {drv_id}, or driver definition malformed.")
 
+        if rdict.get('deprecated'):
+            logger.warning(f"Use of deprecated variable {var} from driver {drv_id}")
+
         dev_rdg[dev_id].append(rdict)
 
     return dev_rdg
