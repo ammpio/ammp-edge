@@ -2,7 +2,7 @@ import logging
 from typing import Dict, List
 from processor.jsonata import evaluate_jsonata
 from processor.process_reading import typecast
-from copy import copy
+from copy import deepcopy
 
 logger = logging.getLogger(__name__)
 
@@ -25,12 +25,12 @@ def get_output(dev_rdg: Dict, output_config: List) -> List:
       the same list.
     """
 
-    output = copy(output_config)
+    output = deepcopy(output_config)
 
-    for oc in output_config:
+    for oc in output:
         evaluated_value = evaluate_jsonata(dev_rdg, oc['source'])
         if evaluated_value is None:
             continue
-        output['value'] = typecast(evaluated_value, **oc)
+        oc['value'] = typecast(evaluated_value, **oc)
 
     return output
