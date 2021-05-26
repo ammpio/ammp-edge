@@ -9,7 +9,7 @@ from time import sleep
 from copy import deepcopy
 
 from processor import process_reading, get_output
-from .helpers import set_host_from_mac, check_host_vs_mac
+from .helpers import set_host_from_mac, check_host_vs_mac, add_to_device_readings
 
 from constants import DEVICE_ID_KEY, VENDOR_ID_KEY, \
     OUTPUT_READINGS_DEV_ID, CONFIG_CALC_VENDOR_ID
@@ -167,13 +167,28 @@ def get_readout(node):
 
     if 'output' in node.config:
         # Get additional processed values
-        output_fields = get_output(dev_rdg, node.config['output'])
-        output_fields[DEVICE_ID_KEY] = OUTPUT_READINGS_DEV_ID
-        if CONFIG_CALC_VENDOR_ID in node.config:
-            output_fields[VENDOR_ID_KEY] = node.config[CONFIG_CALC_VENDOR_ID]
-        logger.debug(f"Output fields: {output_fields}")
-
-        readout['r'].append(output_fields)
+        output = get_output(dev_rdg, node.config['output'])
+        logger.debug(f"Calculated outputs: {output}")
+        for output_field in output:
+            if output_field.get('device') in node.config['devices']:
+                # The field needs to be added for a known device
+                add_to_device_readings(
+                    readout['r'],
+                    output_field['device'],
+                    {
+                        output_field['field']: output_field['value']
+                    }
+                )
+            else:
+                # There is no known device associated; use default device and vendor ID
+                add_to_device_readings(
+                    readout['r'],
+                    OUTPUT_READINGS_DEV_ID,
+                    {
+                        VENDOR_ID_KEY: node.config.get(CONFIG_CALC_VENDOR_ID),
+                        output_field['field']: output_field['value']
+                    }
+                )
 
     logger.debug(f"Readout: {readout}")
 
