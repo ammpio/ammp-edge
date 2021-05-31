@@ -176,7 +176,7 @@ def get_readout(node):
                     readout['r'],
                     output_field['device'],
                     {
-                        output_field['field']: output_field['value']
+                        output_field['field']: output_field.get('value')
                     }
                 )
             else:
