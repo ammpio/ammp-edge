@@ -1,4 +1,7 @@
 {
+  "common": {
+    "fncode": 3
+  },
   "fields": {
     "runtime": {"description": "Engine runtime", "register": 69, "words": 2, "datatype": "uint32", "multiplier": 18000, "unit": "s", "typecast": "float"},
     "P": {"description": "Generator total watts", "register": 33, "words": 1, "datatype": "int16", "multiplier": 1000, "unit": "W", "typecast": "float"},
