@@ -19,7 +19,7 @@
     "power_factor_L1": {"description": "Generator power factor L1", "register": 18, "words": 1, "datatype": "int16", "multiplier": 0.01, "typecast": "float"},
     "power_factor_L2": {"description": "Generator power factor L2", "register": 19, "words": 1, "datatype": "int16", "multiplier": 0.01, "typecast": "float"},
     "power_factor_L3": {"description": "Generator power factor L3", "register": 20, "words": 1, "datatype": "int16", "multiplier": 0.01, "typecast": "float"},
-    "E": {"description": "Generator positive energy", "register": 33, "words": 2, "datatype": "int32", "multiplier": 1, "unit": "kWh", "typecast": "float"},
+    "E": {"description": "Generator positive energy", "register": 33, "words": 2, "datatype": "int32", "multiplier": 100, "unit": "Wh", "typecast": "float"},
     "fuel_level": {"description": "Fuel level", "register": 30, "words": 1, "datatype": "int16", "multiplier": 1, "unit": "%", "typecast": "float"},
     "freq": {"description": "Generator frequency", "register": 23, "words": 1, "datatype": "uint16", "typecast": "float", "multiplier": 0.1, "unit": "Hz"},
     "temp_coolant": {"description": "Coolant temperature", "register": 29, "words": 1, "datatype": "int16", "typecast": "float", "multiplier": 1, "unit": "C"},
