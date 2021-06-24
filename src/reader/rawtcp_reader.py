@@ -57,7 +57,7 @@ class Reader(object):
             try:
                 logger.debug(f"Writing {repr(request)} to TCP port")
                 self._conn.send(request)
-                # TODO: We may need to do something more intelligent here in cases where the full reponse
+                # TODO: We may need to do something more intelligent here in cases where the full response
                 # doesn't get sent in one go
                 response = self._conn.recv(self._recv_buffer_size)
                 logger.debug(f"Received {repr(response)} from serial port")
