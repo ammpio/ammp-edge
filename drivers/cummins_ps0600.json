@@ -3,7 +3,7 @@
     "fncode": 3
   },
   "fields": {
-    "runtime": {"description": "Engine runtime", "register": 69, "words": 2, "datatype": "uint32", "multiplier": 18000, "unit": "s", "typecast": "float"},
+    "runtime": {"description": "Engine runtime", "register": 69, "words": 2, "datatype": "uint32", "multiplier": 180, "unit": "s", "typecast": "float"},
     "P": {"description": "Generator total watts", "register": 33, "words": 1, "datatype": "int16", "multiplier": 1000, "unit": "W", "typecast": "float"},
     "P_L1": {"description": "Generator L1 watts", "register": 30, "words": 1, "datatype": "int16", "multiplier": 1000, "unit": "W", "typecast": "float"},
     "P_L2": {"description": "Generator L2 watts", "register": 31, "words": 1, "datatype": "int16", "multiplier": 1000, "unit": "W", "typecast": "float"},
