@@ -1,0 +1,19 @@
+{
+  "common": {
+    "fncode": 3,
+    "words": 2,
+    "datatype": "float",
+    "order": "lsr"
+  },
+  "fields": {
+    "I_L1": {"register": 2, "unit": "A", "description": "Phase 1 current"},
+    "I_L2": {"register": 4, "unit": "A", "description": "Phase 2 current"},
+    "I_L3": {"register": 6, "unit": "A", "description": "Phase 3 current"},
+    "dc_in_I": {"register": 8, "unit": "A", "description": "DC current"},
+    "dc_in_P": {"register": 28, "unit": "W", "description": "DC Power"},
+    "P_total": {"register": 106, "unit": "W", "description": "AC total active power"},
+    "pf": {"register": 48, "description": "Power factor"},
+    "E_daily": {"register": 110, "unit": "Wh", "description": "Daily energy"},
+    "E_total": {"register": 114, "unit": "Wh", "description": "Total positive energy since commissioning"}
+  }
+}
