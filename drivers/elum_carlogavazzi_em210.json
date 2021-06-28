@@ -2,7 +2,8 @@
   "common": {
     "fncode": 3,
     "words": 2,
-    "datatype": "float"
+    "datatype": "float",
+    "order": "lsr"
   },
   "fields": {
     "V_L1": {"register":  56, "unit": "V", "description": "Phase 1 line to neutral volts"},
@@ -24,7 +25,7 @@
     "pf_L2": {"register": 52, "description": "Phase 2 power factor"},
     "pf_L3": {"register": 54, "description": "Phase 3 power factor"},
     "freq": {"register": 38, "unit": "Hz", "description": "Frequency of supply voltages"},
-    "E_imported": {"register": 112, "multiplier": 1000, "unit": "Wh", "description": "Total import energy"},
-    "E_exported": {"register": 114, "multiplier": 1000, "unit": "Wh", "description": "Total export energy"}
+    "E_imported": {"register": 112, "multiplier": 1, "unit": "Wh", "description": "Total import energy"},
+    "E_exported": {"register": 114, "multiplier": 1, "unit": "Wh", "description": "Total export energy"}
   }
 }
