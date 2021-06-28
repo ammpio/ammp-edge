@@ -28,7 +28,8 @@ class DataPusher(threading.Thread):
 
         if dep.get('type') == 'api':
             self._session = requests.Session()
-            self._session.headers.update({'Authorization': self._node.access_key})
+            self._session.headers.update(
+                {'Authorization': self._node.access_key})
         elif dep.get('type') == 'influxdb':
             self._session = InfluxDBClient(**dep['client_config'])
         elif dep.get('type') == 'mqtt':
@@ -38,17 +39,20 @@ class DataPusher(threading.Thread):
                 config=dep['config']
             )
         else:
-            logger.warning(f"Data endpoint type '{dep.get('type')}' not recognized")
+            logger.warning(
+                f"Data endpoint type '{dep.get('type')}' not recognized")
 
     def run(self):
         while not self._node.events.do_shutdown.is_set():
 
             # queue.get() blocks the current thread until an item is retrieved
-            logger.debug(f"PUSH: [{self.dep_name}] Waiting to get readout from queue")
+            logger.debug(
+                f"PUSH: [{self.dep_name}] Waiting to get readout from queue")
             readout = self._queue.get()
             # If we get the "stop" signal (i.e. empty dict) we exit
             if readout == {}:
-                logger.debug(f"PUSH: [{self.dep_name}] Shutting down (got empty dict from queue)")
+                logger.debug(
+                    f"PUSH: [{self.dep_name}] Shutting down (got empty dict from queue)")
                 return
 
             # Try pushing the readout to the remote endpoint
@@ -59,7 +63,8 @@ class DataPusher(threading.Thread):
                 logger.debug(f"PUSH: [{self.dep_name}] Got readout at {timestamp_iso} "
                              f"from queue; attempting to push")
                 if self.__push_readout(readout):
-                    logger.info(f"PUSH: [{self.dep_name}] Successfully pushed point at {timestamp_iso}")
+                    logger.info(
+                        f"PUSH: [{self.dep_name}] Successfully pushed point at {timestamp_iso}")
                     if self._is_default_endpoint:
                         self._node.events.push_in_progress.clear()
 
@@ -73,10 +78,12 @@ class DataPusher(threading.Thread):
                         self._node.events.push_in_progress.clear()
 
                     # Slow this down to avoid generating a high rate of errors if no connection is available
-                    time.sleep(self._node.config.get('push_throttle_delay', 10))
+                    time.sleep(self._node.config.get(
+                        'push_throttle_delay', 10))
 
             except Exception:
-                logger.exception(f"PUSH: [{self.dep_name}] Unexpected exception while trying to push data")
+                logger.exception(
+                    f"PUSH: [{self.dep_name}] Unexpected exception while trying to push data")
 
                 if self._is_default_endpoint:
                     self._node.events.push_in_progress.clear()
@@ -96,46 +103,57 @@ class DataPusher(threading.Thread):
             # Push to API endpoint
             try:
                 # Append offset between time that reading was taken and current time
-                readout['m']['reading_offset'] = self.__get_reading_offset(readout)
+                readout['m']['reading_offset'] = self.__get_reading_offset(
+                    readout)
                 # Transform the device-based readout to the older API format
-                readout = convert_to_api_payload(readout, self._node.config['readings'])
+                readout = convert_to_api_payload(
+                    readout, self._node.config['readings'])
                 logger.debug(f"PUSH [API]. API-Based Readout: {readout}")
             except:
-                logger.exception('Could not construct final data payload to push')
+                logger.exception(
+                    'Could not construct final data payload to push')
                 return False
 
             try:
                 r = self._session.post(
                     f"https://{self._dep['config']['host']}/api/{self._dep['config']['apiver']}/nodes/{self._node.node_id}/data",
                     json=readout,
-                    timeout=self._node.config.get('push_timeout') or self._dep['config'].get('timeout') or 120
+                    timeout=self._node.config.get(
+                        'push_timeout') or self._dep['config'].get('timeout') or 120
                 )
             except requests.exceptions.ConnectionError:
-                logger.warning(f"Connection error while trying to push data at {timestamp_iso} to API.")
+                logger.warning(
+                    f"Connection error while trying to push data at {timestamp_iso} to API.")
                 return False
             except requests.exceptions.Timeout:
-                logger.warning(f"Timeout error while trying to push data at {timestamp_iso} to API.")
+                logger.warning(
+                    f"Timeout error while trying to push data at {timestamp_iso} to API.")
                 return False
             except:
-                logger.warning(f"Exception while trying to push data at {timestamp_iso} to API.", exc_info=True)
+                logger.warning(
+                    f"Exception while trying to push data at {timestamp_iso} to API.", exc_info=True)
                 return False
 
             if r.status_code != 200:
-                logger.warning(f"Error code {r.status_code} while trying to push data point at {timestamp_iso}.")
+                logger.warning(
+                    f"Error code {r.status_code} while trying to push data point at {timestamp_iso}.")
                 return False
 
             try:
                 rtn = json.loads(r.text)
             except:
-                logger.warning(f"API response {r.text} could not be parsed as JSON", exc_info=True)
+                logger.warning(
+                    f"API response {r.text} could not be parsed as JSON", exc_info=True)
                 rtn = {}
 
             if rtn.get('newconfig'):
-                logger.info("API response indicates new configuration is available. Requesting pull")
+                logger.info(
+                    "API response indicates new configuration is available. Requesting pull")
                 self._node.events.check_new_config.set()
 
             if rtn.get('newcommand'):
-                logger.info("API response indicates command is available. Triggering check")
+                logger.info(
+                    "API response indicates command is available. Triggering check")
                 self._node.events.get_command.set()
 
             return True
@@ -143,13 +161,16 @@ class DataPusher(threading.Thread):
         elif self._dep.get('type') == 'influxdb':
             try:
                 # Append offset between time that reading was taken and current time
-                readout['m']['reading_offset'] = self.__get_reading_offset(readout)
+                readout['m']['reading_offset'] = self.__get_reading_offset(
+                    readout)
                 # Transform the device-based readout to the older API format
-                readout = convert_to_api_payload(readout, self._node.config['readings'])
+                readout = convert_to_api_payload(
+                    readout, self._node.config['readings'])
                 # Set measurement where data should be written
                 readout['measurement'] = self._dep['meta']['measurement']
             except:
-                logger.exception('Could not construct final data payload to push')
+                logger.exception(
+                    'Could not construct final data payload to push')
                 return False
 
             r = None
@@ -158,11 +179,14 @@ class DataPusher(threading.Thread):
             except InfluxDBClientError as e:
                 logger.error(f"InfluxDB client error: {e}")
             except InfluxDBServerError as e:
-                logger.error(f"InfluxDB server error for {self._dep.get('client_config')}: {e}")
+                logger.error(
+                    f"InfluxDB server error for {self._dep.get('client_config')}: {e}")
             except ConnectionRefusedError as e:
-                logger.error(f"InfluxDB server at {self._dep.get('client_config')} not available: {e}")
+                logger.error(
+                    f"InfluxDB server at {self._dep.get('client_config')} not available: {e}")
             except:
-                logger.exception(f"Could not write to InfluxDB at {self._dep.get('client_config')}")
+                logger.exception(
+                    f"Could not write to InfluxDB at {self._dep.get('client_config')}")
 
             return r
 
@@ -172,10 +196,12 @@ class DataPusher(threading.Thread):
             logger.debug(f"PUSH [mqtt] Device-based readout: {readout}")
             return self._session.publish(readout)
         else:
-            logger.warning(f"Data endpoint type '{self._dep.get('type')}' not recognized")
+            logger.warning(
+                f"Data endpoint type '{self._dep.get('type')}' not recognized")
 
     @staticmethod
     def __get_reading_offset(readout: dict) -> int:
         return int(
-            time.time() - readout['t'] - readout['m']['reading_duration']
+            arrow.utcnow().float_timestamp -
+            readout['t'] - readout['m']['reading_duration']
         )

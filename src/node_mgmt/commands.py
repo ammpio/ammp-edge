@@ -34,11 +34,7 @@ def send_log(node):
         return
 
     try:
-        r = requests.put(
-            upload_url,
-            data=fh.read(),
-            headers={'Content-Disposition': os.path.basename(zipped_logs)}
-                )
+        r = requests.put(upload_url, data=fh.read(), headers={'Content-Disposition': os.path.basename(zipped_logs)})
 
         if r.status_code == 200:
             logger.info('Upload successful')
@@ -137,7 +133,6 @@ def snap_switch_edge(node):
 
 
 def __snapd_socket_post(payload):
-
     try:
         with requests_unixsocket.Session() as s:
             res = s.post('http+unix://%2Frun%2Fsnapd.socket/v2/snaps/ammp-edge', json=payload)
@@ -174,17 +169,17 @@ def imt_sensor_address(node):
     ser = serial.Serial('/dev/ttyAMA0', baudrate=9600, timeout=5)
     result = {}
 
-    logger.info(f"Changing address of IMT sensor from 1 to 2 (command 0x01460402630c")
+    logger.info("Changing address of IMT sensor from 1 to 2 (command 0x01460402630c")
     req = bytes.fromhex('01460402630c')
     ser.write(req)
     result['Address change response (expect 01460402630c'] = readall(ser).hex()
 
-    logger.info(f"Restarting IMT sensor communications (command 0x010800010000b1cb")
+    logger.info("Restarting IMT sensor communications (command 0x010800010000b1cb")
     req = bytes.fromhex('010800010000b1cb')
     ser.write(req)
     result['Comms restart response (expect 010800010000b1cb'] = readall(ser).hex()
 
-    logger.info(f"Testing sensor reading")
+    logger.info("Testing sensor reading")
     try:
         with Reader('/dev/ttyAMA0', 2, baudrate=9600, debug=True) as r:
             result['Data read test from address 2'] = r.read(0, 1, 4)
@@ -197,4 +192,29 @@ def imt_sensor_address(node):
 
 
 def sys_reboot(node):
-    os.system('dbus-send --system --print-reply --dest=org.freedesktop.login1 /org/freedesktop/login1 "org.freedesktop.login1.Manager.Reboot" boolean:true')
+    os.system(
+        'busctl call org.freedesktop.login1 /org/freedesktop/login1 org.freedesktop.login1.Manager Reboot b "false"')
+
+
+def sys_start_snapd(node):
+    os.system(
+        'busctl call org.freedesktop.systemd1 /org/freedesktop/systemd1 org.freedesktop.systemd1.Manager StartUnit ss "snapd.service" "replace"'
+    )
+
+
+def sys_stop_snapd(node):
+    os.system(
+        'busctl call org.freedesktop.systemd1 /org/freedesktop/systemd1 org.freedesktop.systemd1.Manager StopUnit ss "snapd.service" "replace"'
+    )
+
+
+def sys_remount_rw(node):
+    os.system(
+        'busctl call org.freedesktop.systemd1 /org/freedesktop/systemd1 org.freedesktop.systemd1.Manager StartUnit ss "remount-rw.service" "replace"'
+    )
+
+
+def sys_remount_ro(node):
+    os.system(
+        'busctl call org.freedesktop.systemd1 /org/freedesktop/systemd1 org.freedesktop.systemd1.Manager StopUnit ss "remount-rw.service" "replace"'
+    )

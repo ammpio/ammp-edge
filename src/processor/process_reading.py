@@ -15,7 +15,7 @@ def process_reading(val_b: bytes, **rdg):
         'str' is used when numerical value is represented as a string (e.g. b'12.3' -> 12.3)
         'hex' is used when a bytes values is represented as a hex string (e.g. b'0a12' -> 2578)
       - datatype: used when processing bytes or hex values; one of
-        'int16', 'uint16', 'int32', 'uint32', 'float', 'single', 'double'
+        'int16', 'uint16', 'int32', 'uint32', 'uint64', 'float', 'single', 'double'
       - typecast: used when obtaining value from string; one of
         'int', 'float', 'str', 'bool'
       - valuemap:
@@ -83,6 +83,8 @@ def value_from_bytes(val_b: bytes, **rdg):
         'uint16': 'H',
         'int32':  'i',
         'uint32': 'I',
+        'int64':  'q',
+        'uint64': 'Q',
         'float':  'f',
         'single': 'f',
         'double': 'd'
@@ -144,7 +146,8 @@ def apply_mult_offset(value, **rdg):
         return value
 
     except Exception:
-        logger.exception(f"Exception while applying multiplier and offset to {value}. Parameters: {rdg}")
+        logger.exception(
+            f"Exception while applying multiplier and offset to {value}. Parameters: {rdg}")
         return None
 
 
@@ -155,11 +158,12 @@ def typecast(value, **rdg):
 
     if 'typecast' in rdg:
         if rdg['typecast'] in ['int', 'float', 'str', 'bool']:
-            typecast_fn = {'int': int, 'float': float, 'str': str, 'bool': bool}[rdg['typecast']]
+            typecast_fn = {'int': int, 'float': float,
+                           'str': str, 'bool': bool}[rdg['typecast']]
         else:
             logger.warn(
                 f"Not applying invalid typecast value {rdg['typecast']}. Must be one of 'int', 'float', 'str', 'bool'."
-                )
+            )
             return value
     else:
         return value
@@ -167,7 +171,8 @@ def typecast(value, **rdg):
     try:
         value = typecast_fn(value)
     except ValueError:
-        logger.error(f"Could not parse {value} as value of type {rdg['typecast']}")
+        logger.error(
+            f"Could not parse {value} as value of type {rdg['typecast']}")
         return
 
     return value

@@ -43,7 +43,8 @@ def get_readings(node):
         if dev_id in node.config['devices']:
             dev = node.config['devices'][dev_id]
         else:
-            logger.error('Reading from device %s requested, but device not defined. Skipping' % dev_id)
+            logger.error(
+                'Reading from device %s requested, but device not defined. Skipping' % dev_id)
             continue
 
         if not dev.get('enabled', True):
@@ -52,7 +53,8 @@ def get_readings(node):
         # Get the driver name
         drv_id = dev['driver']
         if drv_id not in node.drivers:
-            logger.error(f"Reading using driver {drv_id} requested, but driver not found. Skipping device {dev_id}")
+            logger.error(
+                f"Reading using driver {drv_id} requested, but driver not found. Skipping device {dev_id}")
             continue
 
         # Save all necessary reading parameters in dev_rdg
@@ -71,7 +73,11 @@ def get_readings(node):
         try:
             rdict.update(node.drivers[drv_id]['fields'][var])
         except KeyError:
-            logger.warning(f"Variable {var} not found in driver {drv_id}, or driver definition malformed.")
+            logger.warning(
+                f"Variable {var} not found in driver {drv_id}, or driver definition malformed.")
+
+        if rdict.get('deprecated'):
+            logger.warning(f"Use of deprecated variable {var} from driver {drv_id}")
 
         dev_rdg[dev_id].append(rdict)
 
@@ -81,7 +87,7 @@ def get_readings(node):
 def get_readout(node):
     # 'readout' is a dict formatted for device-based readings. It also contains a timestamp, snap_rev and config_id
     readout = {
-        't': arrow.utcnow().timestamp,
+        't': arrow.utcnow().int_timestamp,
         'r': [],
         'm': {
             'snap_rev': int(os.getenv('SNAP_REVISION', 0)),
@@ -108,7 +114,8 @@ def get_readout(node):
     for dev_id, dev in node.config['devices'].items():
         if 'address' in dev:
             # Get the device or host name if available
-            d = dev['address'].get('device') or dev['address'].get('host') or dev['address'].get('mac')
+            d = dev['address'].get('device') or dev['address'].get(
+                'host') or dev['address'].get('mac')
 
             # Create a lock for this device or host name if it doesn't already exist
             if d and d not in locks:
@@ -122,14 +129,16 @@ def get_readout(node):
         dev.update({'id': dev_id})
 
         try:
-            d = dev['address'].get('device') or dev['address'].get('host') or dev['address'].get('mac')
+            d = dev['address'].get('device') or dev['address'].get(
+                'host') or dev['address'].get('mac')
             dev_lock = locks[d]
         except KeyError:
             dev_lock = None
 
         dev_thread = threading.Thread(target=read_device,
                                       name='Readout-' + dev_id,
-                                      args=(dev, dev_rdg[dev_id], readout_q, dev_lock),
+                                      args=(dev, dev_rdg[dev_id],
+                                            readout_q, dev_lock),
                                       daemon=True)
 
         jobs.append(dev_thread)
@@ -153,7 +162,8 @@ def get_readout(node):
     logger.debug(f"Populated readings for all devices: {dev_rdg}")
 
     # time that took to read all devices.
-    readout['m']['reading_duration'] = time.time() - readout['t']
+    readout['m']['reading_duration'] = arrow.utcnow().float_timestamp - \
+        readout['t']
 
     if 'output' in node.config:
         # Get additional processed values
@@ -224,6 +234,11 @@ def read_device(dev, readings, readout_q, dev_lock=None):
         reader_config['timeout'] = dev.get('timeout', DEVICE_DEFAULT_TIMEOUT)
         from reader.mqtt_reader import Reader
 
+    elif dev['reading_type'] == 'sma_speedwire':
+        reader_config = deepcopy(dev['address'])
+        reader_config['timeout'] = dev.get('timeout', DEVICE_DEFAULT_TIMEOUT)
+        from reader.sma_speedwire_reader import Reader
+
     elif dev['reading_type'] == 'sys':
         reader_config = {}
         from reader.sys_reader import Reader
@@ -231,10 +246,12 @@ def read_device(dev, readings, readout_q, dev_lock=None):
     try:
         with Reader(**reader_config) as reader:
             if not reader:
-                raise Exception(f"No reader object could be created for device {dev['id']}. Skipping")
+                raise Exception(
+                    f"No reader object could be created for device {dev['id']}. Skipping")
 
             if 'address' in dev and not check_host_vs_mac(dev['address']):
-                raise Exception(f"MAC mismatch for {dev['id']}. Not reading device.")
+                raise Exception(
+                    f"MAC mismatch for {dev['id']}. Not reading device.")
 
             for rdg in readings:
                 if 'read_delay' in dev and isinstance(dev['read_delay'], (float, int)):
@@ -243,11 +260,13 @@ def read_device(dev, readings, readout_q, dev_lock=None):
                 try:
                     val_b = reader.read(**rdg)
                     if val_b is None:
-                        logger.warning('READ: [%s] Returned None for reading %s' % (dev['id'], rdg['reading']))
+                        logger.warning('READ: [%s] Returned None for reading %s' % (
+                            dev['id'], rdg['reading']))
                         continue
 
                 except Exception:
-                    logger.exception('READ: [%s] Could not obtain reading %s. Exception' % (dev['id'], rdg['reading']))
+                    logger.exception('READ: [%s] Could not obtain reading %s. Exception' % (
+                        dev['id'], rdg['reading']))
                     continue
 
                 # Get processed value
@@ -259,7 +278,8 @@ def read_device(dev, readings, readout_q, dev_lock=None):
                 # Also save within readings structure
                 rdg['value'] = value
 
-                logger.debug('READ: [%s] %s = %s %s' % (dev['id'], rdg['var'], repr(val_b), rdg.get('unit', '')))
+                logger.debug('READ: [%s] %s = %s %s' % (
+                    dev['id'], rdg['var'], repr(val_b), rdg.get('unit', '')))
 
     except Exception:
         logger.exception('Exception while reading device %s' % dev['id'])
