@@ -70,10 +70,17 @@ SERIAL_SCAN_SIGNATURES = [{
         'words': 1,
         'fncode': 4
     }]
+}, {
+    'name': 'Cummins PS0600',
+    'readings': [{
+        'register': 69,
+        'words': 2,
+        'fncode': 3
+    }]
 }]
 
 SERIAL_SCAN_BAUD_RATES = [9600, 2400]
-SERIAL_SCAN_SLAVE_IDS = [1, 2, 5]
+SERIAL_SCAN_SLAVE_IDS = [1, 2, 4, 5]
 
 NMAP_ADDR_KEY = 'addr'
 NMAP_ADDR_TYPE_KEY = 'addrtype'
