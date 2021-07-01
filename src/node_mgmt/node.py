@@ -106,6 +106,8 @@ class Node(object):
         # Load drivers from files, and also add any from the config
         self.drivers = self.__get_drivers()
         self.update_drv_from_config()
+        # Updates data endpoints if present in the remote config
+        self.update_endpoints_from_config()
 
     @property
     def node_id(self) -> str:
@@ -316,3 +318,13 @@ class Node(object):
                 self.drivers.update(self.config['drivers'])
             except AttributeError:
                 self.drivers = self.config['drivers']
+
+    def update_endpoints_from_config(self) -> None:
+        """
+        Check whether there are custom endpoints in the config definition, and if so update the data_endpoints
+        """
+        if 'data_endpoints' in self.config:
+            try:
+                self.data_endpoints = self.config['data_endpoints']
+            except Exception:
+                logger.exception('Exception raised while updating data-endpoints from config')

@@ -22,6 +22,6 @@
     "genset_state": {"description": "Genset state", "register": 10, "words": 1, "datatype": "uint16", "typecast": "int"},
     "freq": {"description": "Generator frequency", "register": 43, "words": 1, "datatype": "uint16", "typecast": "float", "multiplier": 0.01, "unit": "Hz"},
     "temp_coolant": {"description": "Coolant temperature", "register": 63, "words": 1, "datatype": "uint16", "typecast": "float", "multiplier": 0.1, "unit": "F"},
-    "oil_pressure": {"description": "Oil pressure", "register": 61, "words": 1, "datatype": "uint16", "typecast": "float", "multiplier": 0.1, "unit": "psi"},
+    "oil_pressure": {"description": "Oil pressure", "register": 61, "words": 1, "datatype": "uint16", "typecast": "float", "multiplier": 0.1, "unit": "psi"}
   }
 }
