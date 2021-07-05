@@ -370,7 +370,8 @@ class EnvScanner(object):
         except Exception:
             logger.exception("Exception while running ModbusTCP scan")
         serial_devices = self.serial_env.serial_scan()
-        speedwire_serials = self.speedwire_env.scan_serials()
+        with self.speedwire_env:
+            speedwire_serials = self.speedwire_env.scan_serials()
 
         scan_result = {
             'time':
