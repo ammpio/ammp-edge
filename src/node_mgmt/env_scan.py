@@ -12,6 +12,7 @@ from collections import defaultdict
 from kvstore import KVStore
 from reader.modbusrtu_reader import Reader as ModbusRTUReader
 from reader.modbustcp_reader import Reader as ModbusTCPReader
+from reader.sma_speedwire_reader import Reader as SpeedWireReader
 from processor import process_reading
 
 logger = logging.getLogger(__name__)
@@ -360,6 +361,11 @@ class EnvScanner(object):
 
         self.net_env = NetworkEnv(default_ifname=ifname)
         self.serial_env = SerialEnv(default_serial_dev=serial_dev)
+        self.speedwire_env = SpeedWireReader()
+
+    def speedwire_scan(self):
+        serial_numbers = self.speedwire_env.scan_serials()
+        return serial_numbers
 
     def do_scan(self):
         network_hosts = self.net_env.network_scan()
@@ -368,6 +374,7 @@ class EnvScanner(object):
         except Exception:
             logger.exception("Exception while running ModbusTCP scan")
         serial_devices = self.serial_env.serial_scan()
+        speedwire_serials = self.speedwire_scan()
 
         scan_result = {
             'time':
@@ -379,7 +386,9 @@ class EnvScanner(object):
                 'hosts': network_hosts
             }],
             'serial_scan':
-            serial_devices
+            serial_devices,
+            'speedwire_serials':
+            speedwire_serials
         }
 
         return scan_result

@@ -15,7 +15,7 @@ MAX_RESPONSES = 5
 class Reader(object):
     def __init__(
         self,
-        serial: int,
+        serial: int = None,
         group: str = MULTICAST_GROUP,
         port: int = MULTICAST_PORT,
         recv_buffer_size: int = DEFAULT_RECV_BUFFER_SIZE,
@@ -84,6 +84,17 @@ class Reader(object):
                     break
 
         return self.__get_value(self._stored_values, obis_channel, obis_type)
+
+    def scan_serials(self) -> list:
+        serials = []
+        for _ in range(self._max_responses):
+            datagram = self.__get_datagram()
+            if datagram is None:
+                break
+            serial_number, _ = parse_datagram(datagram)
+            if serial_number not in serials:
+                serials.append(serial_number)
+        return serials
 
     @staticmethod
     def __get_value(values: dict, obis_channel: int, obis_type: int) -> bytes:
