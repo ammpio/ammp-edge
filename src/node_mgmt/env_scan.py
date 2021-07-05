@@ -363,10 +363,6 @@ class EnvScanner(object):
         self.serial_env = SerialEnv(default_serial_dev=serial_dev)
         self.speedwire_env = SpeedWireReader()
 
-    def speedwire_scan(self):
-        serial_numbers = self.speedwire_env.scan_serials()
-        return serial_numbers
-
     def do_scan(self):
         network_hosts = self.net_env.network_scan()
         try:
@@ -374,7 +370,7 @@ class EnvScanner(object):
         except Exception:
             logger.exception("Exception while running ModbusTCP scan")
         serial_devices = self.serial_env.serial_scan()
-        speedwire_serials = self.speedwire_scan()
+        speedwire_serials = self.speedwire_env.scan_serials()
 
         scan_result = {
             'time':
@@ -385,10 +381,8 @@ class EnvScanner(object):
                 'netmask': self.net_env.default_netmask_bits,
                 'hosts': network_hosts
             }],
-            'serial_scan':
-            serial_devices,
-            'speedwire_serials':
-            speedwire_serials
+            'serial_scan': serial_devices,
+            'speedwire_serials': speedwire_serials
         }
 
         return scan_result
