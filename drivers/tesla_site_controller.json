@@ -1,0 +1,125 @@
+{
+  "common": {
+    "fncode": 3
+  },
+  "fields": {
+    "batt_P_total": {
+      "register": 300,
+      "unit": "W",
+      "words": 2,
+      "datatype":"int32",
+      "description": "Total 3 phase real power"
+    },
+    "batt_Q_total": {
+      "register": 302,
+      "unit": "VAr",
+      "words": 2,
+      "datatype":"int32",
+      "description": "Total 3 phase reactive power"
+    },
+    "batt_S_total": {
+      "register": 304,
+      "unit": "VA",
+      "words": 2,
+      "datatype":"int32",
+      "description": "Total 3 phase apparent power"
+    },
+    "batt_V": {
+      "register": 306,
+      "unit": "V",
+      "words": 2,
+      "multiplier": 0.1,
+      "datatype":"int32",
+      "description": "3 phase average AC voltage"
+    },
+    "batt_I": {
+      "register": 308,
+      "unit": "A",
+      "words": 2,
+      "multiplier": 0.1,
+      "datatype":"int32",
+      "description": "3 phase total AC current"
+    },
+    "batt_freq": {
+      "register": 310,
+      "unit": "Hz",
+      "words": 1,
+      "multiplier": 0.01,
+      "datatype":"uint16",
+      "description": "AC frequency"
+    },
+    "batt_E_exported": {
+      "register": 311,
+      "unit": "Wh",
+      "words": 4,
+      "datatype":"uint64",
+      "description": "AC frequency"
+    },
+    "batt_E_imported": {
+      "register": 315,
+      "unit": "Wh",
+      "words": 4,
+      "datatype":"uint64",
+      "description": "AC frequency"
+    },
+    "pvinv_P_total": {
+      "register": 600,
+      "unit": "W",
+      "words": 2,
+      "datatype":"int32",
+      "description": "PV power"
+    },
+    "pvinv_Q_total": {
+      "register": 602,
+      "unit": "VAr",
+      "words": 2,
+      "datatype":"int32",
+      "description": "PV reactive power"
+    },
+    "pvinv_S_total": {
+      "register": 604,
+      "unit": "VA",
+      "words": 2,
+      "datatype":"int32",
+      "description": "PV apparent power"
+    },
+    "pvinv_V": {
+      "register": 606,
+      "unit": "V",
+      "words": 2,
+      "datatype":"int32",
+      "multiplier": 0.1,
+      "description": "PV AC voltage"
+    },
+    "pvinv_I": {
+      "register": 608,
+      "unit": "A",
+      "words": 2,
+      "datatype":"int32",
+      "multiplier": 0.1,
+      "description": "PV AC current"
+    },
+    "pvinv_freq": {
+      "register": 610,
+      "unit": "Hz",
+      "words": 1,
+      "datatype":"uint16",
+      "multiplier": 0.001,
+      "description": "PV AC frequency"
+    },
+    "pvinv_E_exported": {
+      "register": 611,
+      "unit": "Wh",
+      "words": 4,
+      "datatype":"uint64",
+      "description": "Exported energy (accumulator)"
+    },
+    "pvinv_E_imported": {
+      "register": 615,
+      "unit": "Wh",
+      "words": 4,
+      "datatype":"uint64",
+      "description": "Imported energy (accumulator)"
+    }
+  }
+}
