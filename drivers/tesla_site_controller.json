@@ -120,6 +120,65 @@
       "words": 4,
       "datatype":"uint64",
       "description": "Imported energy (accumulator)"
+    },
+    "genset_P_total": {
+      "register": 900,
+      "unit": "W",
+      "words": 2,
+      "datatype":"int32",
+      "description": "Power"
+    },
+    "genset_Q_total": {
+      "register": 902,
+      "unit": "VAr",
+      "words": 2,
+      "datatype":"int32",
+      "description": "Reactive power"
+    },
+    "genset_S_total": {
+      "register": 904,
+      "unit": "VA",
+      "words": 2,
+      "datatype":"int32",
+      "description": "Apparent Power"
+    },
+    "genset_V": {
+      "register": 906,
+      "unit": "V",
+      "words": 2,
+      "datatype":"int32",
+      "multiplier": 0.1,
+      "description": "AC voltage"
+    },
+    "genset_I": {
+      "register": 908,
+      "unit": "A",
+      "words": 2,
+      "datatype":"int32",
+      "multiplier": 0.1,
+      "description": "AC current"
+    },
+    "genset_freq": {
+      "register": 910,
+      "unit": "Hz",
+      "words": 1,
+      "datatype":"uint16",
+      "multiplier": 0.001,
+      "description": "AC frequency"
+    },
+    "genset_E_exported": {
+      "register": 911,
+      "unit": "Wh",
+      "words": 4,
+      "datatype":"uint64",
+      "description": "Exported energy (accumulator)"
+    },
+    "genset_E_imported": {
+      "register": 915,
+      "unit": "Wh",
+      "words": 4,
+      "datatype":"uint64",
+      "description": "Imported energy (accumulator)"
     }
   }
 }
