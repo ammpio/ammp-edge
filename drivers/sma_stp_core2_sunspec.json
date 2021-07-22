@@ -1,0 +1,129 @@
+{
+  "common": {
+    "fncode": 3,
+    "datatype": "uint16"
+  },
+  "fields": {
+    "I_total": {
+      "unit": "A",
+      "words": 1,
+      "register": 40072,
+      "multiplier": 0.1,
+      "description": "AC current. Sum of all active phases"
+    },
+    "I_L1": {
+      "unit": "A",
+      "words": 1,
+      "register": 40073,
+      "multiplier": 0.1,
+      "description": "AC current. Phase A current"
+    },
+    "I_L2": {
+      "unit": "A",
+      "words": 1,
+      "register": 40074,
+      "multiplier": 0.1,
+      "description": "AC current. Phase B current"
+    },
+    "I_L3": {
+      "unit": "A",
+      "words": 1,
+      "register": 40075,
+      "multiplier": 0.1,
+      "description": "AC current. Phase C current"
+    },
+    "V_L1": {
+      "unit": "V",
+      "words": 1,
+      "register": 40080,
+      "multiplier": 0.1,
+      "description": "Phase voltage A-N"
+    },
+    "V_L2": {
+      "unit": "V",
+      "words": 1,
+      "register": 40081,
+      "multiplier": 0.1,
+      "description": "Phase voltage B-N"
+    },
+    "V_L3": {
+      "unit": "V",
+      "words": 1,
+      "register": 40082,
+      "multiplier": 0.1,
+      "description": "Phase voltage C-N"
+    },
+    "P_total": {
+      "unit": "W",
+      "words": 1,
+      "register": 40084,
+      "multiplier": 10,
+      "description": "AC Power"
+    },
+    "freq": {
+      "unit": "Hz",
+      "words": 1,
+      "register": 40086,
+      "multiplier": 0.01,
+      "description": "Line frequency"
+    },
+    "S_total": {
+      "unit": "VA",
+      "words": 1,
+      "register": 40088,
+      "multiplier": 10,
+      "datatype": "int16",
+      "description": "AC Apparent Power"
+    },
+    "Q_total": {
+      "unit": "VAr",
+      "words": 1,
+      "register": 40090,
+      "multiplier": 10,
+      "datatype": "int16",
+      "description": "AC Reactive Power"
+    },
+    "total_yield": {
+      "unit": "Wh",
+      "words": 2,
+      "register": 40094,
+      "multiplier": 100,
+      "datatype": "uint32",
+      "description": "AC Energy. Total yield"
+    },
+    "dc_in_I": {
+      "unit": "A",
+      "words": 1,
+      "register": 40097,
+      "multiplier": 1,
+      "description": "DC Current. All phases"
+    },
+    "dc_in_V": {
+      "unit": "V",
+      "words": 1,
+      "register": 40099,
+      "multiplier": 1,
+      "description": "DC Voltage. All phases"
+    },
+    "dc_in_P": {
+      "unit": "W",
+      "words": 1,
+      "register": 40101,
+      "multiplier": 100,
+      "description": "DC Power. All phases"
+    },
+    "temp_internal": {
+      "unit": "C",
+      "words": 1,
+      "register": 40103,
+      "multiplier": 0.1,
+      "description": "Cabinet temperature"
+    },
+    "status": {
+      "words": 1,
+      "register": 40108,
+      "multiplier": 1,
+      "description": "Operating state. 1 = off, 2 = sleeping, 3 = starting, 4 = MPPT, 5 = throttled, 6 = shutting down, 7= fault, 8= standby",
+    }
+  }
+}
