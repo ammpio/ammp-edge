@@ -123,7 +123,7 @@
       "words": 1,
       "register": 40108,
       "multiplier": 1,
-      "description": "Operating state. 1 = off, 2 = sleeping, 3 = starting, 4 = MPPT, 5 = throttled, 6 = shutting down, 7= fault, 8= standby",
+      "description": "Operating state. 1 = off, 2 = sleeping, 3 = starting, 4 = MPPT, 5 = throttled, 6 = shutting down, 7= fault, 8= standby"
     }
   }
 }
