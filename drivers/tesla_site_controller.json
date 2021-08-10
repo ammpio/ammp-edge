@@ -72,7 +72,7 @@
       "register": 310,
       "unit": "Hz",
       "words": 1,
-      "multiplier": 0.01,
+      "multiplier": 0.001,
       "datatype":"uint16",
       "description": "AC frequency"
     },
@@ -131,7 +131,7 @@
       "register": 410,
       "unit": "Hz",
       "words": 1,
-      "multiplier": 0.01,
+      "multiplier": 0.001,
       "datatype":"uint16",
       "description": "AC frequency"
     },
@@ -190,7 +190,7 @@
       "register": 510,
       "unit": "Hz",
       "words": 1,
-      "multiplier": 0.01,
+      "multiplier": 0.001,
       "datatype":"uint16",
       "description": "AC frequency"
     },
