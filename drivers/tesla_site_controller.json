@@ -3,6 +3,34 @@
     "fncode": 3
   },
   "fields": {
+    "status_batt_E_full": {
+      "register": 205,
+      "unit": "Wh",
+      "words": 2,
+      "datatype":"int32",
+      "description": "Available full charge energy at nominal temperature"
+    },
+    "status_batt_E_remaining": {
+      "register": 207,
+      "unit": "Wh",
+      "words": 2,
+      "datatype":"int32",
+      "description": "Energy remaining at nominal temp (25°C)"
+    },
+    "status_batt_P_max_charge": {
+      "register": 211,
+      "unit": "W",
+      "words": 2,
+      "datatype":"int32",
+      "description": "Maximum charge power"
+    },
+    "status_batt_P_max_discharge": {
+      "register": 213,
+      "unit": "W",
+      "words": 2,
+      "datatype":"int32",
+      "description": "Maximum discharge power"
+    },
     "batt_P_total": {
       "register": 300,
       "unit": "W",
@@ -53,14 +81,132 @@
       "unit": "Wh",
       "words": 4,
       "datatype":"uint64",
-      "description": "AC frequency"
+      "description": "Real exported energy (accumulator)"
     },
     "batt_E_imported": {
       "register": 315,
       "unit": "Wh",
       "words": 4,
       "datatype":"uint64",
+      "description": "Real imported energy (accumulator)"
+    },
+    "grid_P_total": {
+      "register": 400,
+      "unit": "W",
+      "words": 2,
+      "datatype":"int32",
+      "description": "Total 3 phase real power"
+    },
+    "grid_Q_total": {
+      "register": 402,
+      "unit": "VAr",
+      "words": 2,
+      "datatype":"int32",
+      "description": "Total 3 phase reactive power"
+    },
+    "grid_S_total": {
+      "register": 404,
+      "unit": "VA",
+      "words": 2,
+      "datatype":"int32",
+      "description": "Total 3 phase apparent power"
+    },
+    "grid_V": {
+      "register": 406,
+      "unit": "V",
+      "words": 2,
+      "multiplier": 0.1,
+      "datatype":"int32",
+      "description": "AC voltage"
+    },
+    "grid_I": {
+      "register": 408,
+      "unit": "A",
+      "words": 2,
+      "multiplier": 0.1,
+      "datatype":"int32",
+      "description": "AC current"
+    },
+    "grid_freq": {
+      "register": 410,
+      "unit": "Hz",
+      "words": 1,
+      "multiplier": 0.01,
+      "datatype":"uint16",
       "description": "AC frequency"
+    },
+    "grid_E_exported": {
+      "register": 411,
+      "unit": "Wh",
+      "words": 4,
+      "datatype":"uint64",
+      "description": "Real exported energy (accumulator)"
+    },
+    "grid_E_imported": {
+      "register": 415,
+      "unit": "Wh",
+      "words": 4,
+      "datatype":"uint64",
+      "description": "Real imported energy (accumulator)"
+    },
+    "load_P_total": {
+      "register": 500,
+      "unit": "W",
+      "words": 2,
+      "datatype":"int32",
+      "description": "Power"
+    },
+    "load_Q_total": {
+      "register": 502,
+      "unit": "VAr",
+      "words": 2,
+      "datatype":"int32",
+      "description": "Reactive power"
+    },
+    "load_S_total": {
+      "register": 504,
+      "unit": "VA",
+      "words": 2,
+      "datatype":"int32",
+      "description": "Apparent power"
+    },
+    "load_V": {
+      "register": 506,
+      "unit": "V",
+      "words": 2,
+      "multiplier": 0.1,
+      "datatype":"int32",
+      "description": "AC voltage"
+    },
+    "load_I": {
+      "register": 508,
+      "unit": "A",
+      "words": 2,
+      "multiplier": 0.1,
+      "datatype":"int32",
+      "description": "AC current"
+    },
+    "load_freq": {
+      "register": 510,
+      "unit": "Hz",
+      "words": 1,
+      "multiplier": 0.01,
+      "datatype":"uint16",
+      "description": "AC frequency"
+    },
+    "load_E_exported": {
+      "register": 511,
+      "unit": "Wh",
+      "words": 4,
+      "datatype":"uint64",
+      "description": "Exported energy (accumulator)"
+    },
+    "load_E_imported": {
+      "register": 515,
+      "unit": "Wh",
+      "words": 4,
+      "datatype":"uint64",
+      "description": "Imported energy (accumulator)"
     },
     "pvinv_P_total": {
       "register": 600,
@@ -179,6 +325,34 @@
       "words": 4,
       "datatype":"uint64",
       "description": "Imported energy (accumulator)"
+    },
+    "alert_meter_comms": {
+      "register": 2500,
+      "unit": "",
+      "words": 1,
+      "datatype":"uint16",
+      "description": "Loss of meter communications"
+    },
+    "alert_batt_comms": {
+      "register": 2501,
+      "unit": "",
+      "words": 1,
+      "datatype":"uint16",
+      "description": "Fault or inverter block communication issue"
+    },
+    "alert_limits_reached": {
+      "register": 2502,
+      "unit": "",
+      "words": 1,
+      "datatype":"uint16",
+      "description": "Indication system limits have been reached"
+    },
+    "alert_command_timeout": {
+      "register": 2504,
+      "unit": "",
+      "words": 1,
+      "datatype":"uint16",
+      "description": "Direct command timeout"
     }
   }
 }
