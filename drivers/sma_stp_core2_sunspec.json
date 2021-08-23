@@ -102,7 +102,7 @@
       "unit": "V",
       "words": 1,
       "register": 40099,
-      "multiplier": 1,
+      "multiplier": 0.1,
       "description": "DC Voltage. All phases"
     },
     "dc_in_P": {
