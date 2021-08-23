@@ -3,6 +3,12 @@
     "fncode": 3
   },
   "fields": {
+    "status_island": {
+      "register": 217,
+      "words": 1,
+      "datatype":"int16",
+      "description": "1 = Auto Active, 2 = Island Ready (standby state)"
+    },
     "status_batt_E_full": {
       "register": 205,
       "unit": "Wh",
