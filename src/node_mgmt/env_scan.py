@@ -52,32 +52,40 @@ MODTCP_RESULT_KEY = 'modbustcp'
 
 SERIAL_SCAN_SIGNATURES = [{
     'name': 'Gamicos ultrasonic sensor',
-    'readings': [{
+    'slave_id': 1,
+    'readings': {
+        'reading': 'fuel level (distance from sensor (m)',
         'register': 1,
         'words': 2,
         'fncode': 3
-    }]
+    }
 }, {
     'name': 'IMT irradiation sensor',
-    'readings': [{
+    'slave_id': 2,
+    'readings': {
+        'reading': 'irradiance (W/m2)',
         'register': 0,
         'words': 1,
         'fncode': 4
-    }]
+    }
 }, {
     'name': 'APM303 genset controller',
-    'readings': [{
-        'register': 39,
+    'slave_id': 4,
+    'readings': {
+        'reading': 'oil pressure (bar)',
+        'register': 28,
         'words': 1,
         'fncode': 4
-    }]
+    }
 }, {
     'name': 'Cummins PS0600',
-    'readings': [{
-        'register': 69,
-        'words': 2,
+    'slave_id': 5,
+    'readings': {
+        'reading': 'genset state (bar)',
+        'register': 10,
+        'words': 1,
         'fncode': 3
-    }]
+    }
 }]
 
 SERIAL_SCAN_BAUD_RATES = [9600, 2400]
@@ -340,26 +348,21 @@ class SerialEnv():
 
         result = []
 
-        for br in SERIAL_SCAN_BAUD_RATES:
-            for slave in SERIAL_SCAN_SLAVE_IDS:
-                for sig in SERIAL_SCAN_SIGNATURES:
-                    test = f"Testing slave ID {slave} for '{sig['name']}' at baud rate {br}"
-                    with ModbusRTUReader(device, slave, br, timeout=1, debug=True) as r:
-                        success = True
-                        for rdg in sig['readings']:
-                            try:
-                                response = r.read(**rdg)
-                                res = f"Got response {response}"
-                                if response is None:
-                                    success = False
-                            except Exception as e:
-                                res = f"Error: {e}"
-                                success = False
-                        if success:
-                            res = res + f"==> SUCCESS: Device '{sig['name']}' present as ID {slave} at baud rate {br}"
-
-                    result.append([test, res])
-
+        for sig in SERIAL_SCAN_SIGNATURES:
+            test = f"Testing slave ID {sig['slave_id']} for {sig['name']} at baud rate 9600"
+            with ModbusRTUReader(device, sig['slave_id'], 9600, timeout=1, debug=True) as r:
+                try:
+                    response = int.from_bytes(r.read(register=sig['readings']['register'],
+                                                     words=sig['readings']['words'],
+                                                     fncode=sig['readings']['fncode']), "big")
+                    res = f"Got test response for {sig['readings']['reading']} = {response}"
+                    if response is not None:
+                        res += f"==> SUCCESS: Device {sig['name']} present as ID {sig['slave_id']} at baud rate 9600"
+                except Exception as e:
+                    res = f"Error: {e}"
+                    res += f". {sig['name']} doesn't show up, make sure the configuration is correct:" \
+                           f" slave id = {sig['slave_id']}, baud rate = 9600"
+            result.append([test, res])
         return result
 
 
