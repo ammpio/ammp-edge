@@ -53,43 +53,34 @@ MODTCP_RESULT_KEY = 'modbustcp'
 SERIAL_SCAN_SIGNATURES = [{
     'name': 'Gamicos ultrasonic sensor',
     'slave_id': 1,
-    'readings': {
-        'reading': 'fuel level (distance from sensor (m)',
-        'register': 1,
-        'words': 2,
-        'fncode': 3
-    }
+    'reading': 'fuel level (distance from sensor (m)',
+    'register': 1,
+    'words': 2,
+    'fncode': 3
 }, {
     'name': 'IMT irradiation sensor',
     'slave_id': 2,
-    'readings': {
-        'reading': 'irradiance (W/m2)',
-        'register': 0,
-        'words': 1,
-        'fncode': 4
-    }
+    'reading': 'irradiance (W/m2)',
+    'register': 0,
+    'words': 1,
+    'fncode': 4
 }, {
     'name': 'APM303 genset controller',
     'slave_id': 4,
-    'readings': {
-        'reading': 'oil pressure (bar)',
-        'register': 28,
-        'words': 1,
-        'fncode': 4
-    }
+    'reading': 'oil pressure (bar)',
+    'register': 28,
+    'words': 1,
+    'fncode': 4
 }, {
     'name': 'Cummins PS0600',
     'slave_id': 5,
-    'readings': {
-        'reading': 'genset state (bar)',
-        'register': 10,
-        'words': 1,
-        'fncode': 3
-    }
+    'reading': 'genset state (bar)',
+    'register': 10,
+    'words': 1,
+    'fncode': 3
 }]
 
-SERIAL_SCAN_BAUD_RATES = [9600, 2400]
-SERIAL_SCAN_SLAVE_IDS = [1, 2, 4, 5]
+SERIAL_SCAN_BAUD_RATE = 9600
 
 NMAP_ADDR_KEY = 'addr'
 NMAP_ADDR_TYPE_KEY = 'addrtype'
@@ -350,14 +341,15 @@ class SerialEnv():
 
         for sig in SERIAL_SCAN_SIGNATURES:
             test = f"Testing slave ID {sig['slave_id']} for {sig['name']} at baud rate 9600"
-            with ModbusRTUReader(device, sig['slave_id'], 9600, timeout=1, debug=True) as r:
+            with ModbusRTUReader(device, sig['slave_id'], SERIAL_SCAN_BAUD_RATE, timeout=1, debug=True) as r:
                 try:
-                    response = int.from_bytes(r.read(register=sig['readings']['register'],
-                                                     words=sig['readings']['words'],
-                                                     fncode=sig['readings']['fncode']), "big")
-                    res = f"Got test response for {sig['readings']['reading']} = {response}"
+                    response = int.from_bytes(r.read(register=sig['register'],
+                                                     words=sig['words'],
+                                                     fncode=sig['fncode']), "big")
+                    res = f"Got test response for {sig['reading']} = {response}"
                     if response is not None:
-                        res += f"==> SUCCESS: Device {sig['name']} present as ID {sig['slave_id']} at baud rate 9600"
+                        res += f"==> SUCCESS: Device {sig['name']} present as ID {sig['slave_id']} " \
+                               f"at baud rate {SERIAL_SCAN_BAUD_RATE}"
                 except Exception as e:
                     res = f"Error: {e}"
                     res += f". {sig['name']} doesn't show up, make sure the configuration is correct:" \
