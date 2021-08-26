@@ -56,6 +56,7 @@ SERIAL_SCAN_SIGNATURES = [{
     'reading': 'fuel level (distance from sensor (m))',
     'register': 1,
     'words': 2,
+    'datatype': 'float',
     'fncode': 3
 }, {
     'name': 'IMT irradiation sensor',
@@ -63,6 +64,7 @@ SERIAL_SCAN_SIGNATURES = [{
     'reading': 'irradiance (W/m2)',
     'register': 0,
     'words': 1,
+    'datatype': 'uint16',
     'fncode': 4
 }, {
     'name': 'APM303 genset controller',
@@ -70,6 +72,7 @@ SERIAL_SCAN_SIGNATURES = [{
     'reading': 'oil pressure (bar)',
     'register': 28,
     'words': 1,
+    'datatype': 'int16',
     'fncode': 4
 }, {
     'name': 'Cummins PS0600',
@@ -77,6 +80,7 @@ SERIAL_SCAN_SIGNATURES = [{
     'reading': 'genset state',
     'register': 10,
     'words': 1,
+    'datatype': 'uint16',
     'fncode': 3
 }]
 
@@ -343,12 +347,11 @@ class SerialEnv():
             test = f"Testing slave ID {sig['slave_id']} for {sig['name']} at baud rate {SERIAL_SCAN_BAUD_RATE}"
             with ModbusRTUReader(device, sig['slave_id'], SERIAL_SCAN_BAUD_RATE, timeout=1, debug=True) as r:
                 try:
-                    response = int.from_bytes(r.read(register=sig['register'],
-                                                     words=sig['words'],
-                                                     fncode=sig['fncode']), "big")
+                    response = process_reading(r.read(register=sig['register'], words=sig['words'],
+                                                      fncode=sig['fncode']), datatype=sig['datatype'])
                     res = f"Got test response for {sig['reading']} = {response}"
                     if response is not None:
-                        res += f"==> SUCCESS: Device {sig['name']} present as ID {sig['slave_id']} " \
+                        res += f" ==> SUCCESS: Device {sig['name']} present as ID {sig['slave_id']} " \
                                f"at baud rate = {SERIAL_SCAN_BAUD_RATE}"
                 except Exception as e:
                     res = f"Error: {e}"
