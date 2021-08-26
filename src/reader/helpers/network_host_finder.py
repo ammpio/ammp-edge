@@ -61,7 +61,7 @@ def arp_get_ip_from_mac(mac: str) -> str:
                     logger.warning(f"Malformed ARP table entry: {l}. Skipping")
                     continue
                 if this_mac == INVALID_MAC:
-                    logger.warning(f"Ignoring MAC address with only zeros for IP: {this_ip}, consider flushing ARP cache")
+                    logger.debug(f"Ignoring MAC address with only zeros for IP: {this_ip}, consider flushing ARP cache")
                     continue
                 if this_mac == mac.lower():
                     logger.debug(f"Mapped {mac} -> {this_ip} based on ARP table")
