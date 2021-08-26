@@ -53,7 +53,7 @@ MODTCP_RESULT_KEY = 'modbustcp'
 SERIAL_SCAN_SIGNATURES = [{
     'name': 'Gamicos ultrasonic sensor',
     'slave_id': 1,
-    'reading': 'fuel level (distance from sensor (m)',
+    'reading': 'fuel level (distance from sensor (m))',
     'register': 1,
     'words': 2,
     'fncode': 3
@@ -340,7 +340,7 @@ class SerialEnv():
         result = []
 
         for sig in SERIAL_SCAN_SIGNATURES:
-            test = f"Testing slave ID {sig['slave_id']} for {sig['name']} at baud rate 9600"
+            test = f"Testing slave ID {sig['slave_id']} for {sig['name']} at baud rate {SERIAL_SCAN_BAUD_RATE}"
             with ModbusRTUReader(device, sig['slave_id'], SERIAL_SCAN_BAUD_RATE, timeout=1, debug=True) as r:
                 try:
                     response = int.from_bytes(r.read(register=sig['register'],
@@ -349,11 +349,11 @@ class SerialEnv():
                     res = f"Got test response for {sig['reading']} = {response}"
                     if response is not None:
                         res += f"==> SUCCESS: Device {sig['name']} present as ID {sig['slave_id']} " \
-                               f"at baud rate {SERIAL_SCAN_BAUD_RATE}"
+                               f"at baud rate = {SERIAL_SCAN_BAUD_RATE}"
                 except Exception as e:
                     res = f"Error: {e}"
                     res += f". {sig['name']} doesn't show up, make sure the configuration is correct:" \
-                           f" slave id = {sig['slave_id']}, baud rate = 9600"
+                           f" slave id = {sig['slave_id']}, baud rate = {SERIAL_SCAN_BAUD_RATE}"
             result.append([test, res])
         return result
 
