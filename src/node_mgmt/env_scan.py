@@ -66,15 +66,15 @@ SERIAL_SCAN_SIGNATURES = [{
     'fncode': 4
 }, {
     'name': 'APM303 genset controller',
-    'slave_id': 4,
+    'slave_id': 5,
     'reading': 'oil pressure (bar)',
     'register': 28,
     'words': 1,
     'fncode': 4
 }, {
     'name': 'Cummins PS0600',
-    'slave_id': 5,
-    'reading': 'genset state (bar)',
+    'slave_id': 4,
+    'reading': 'genset state',
     'register': 10,
     'words': 1,
     'fncode': 3
