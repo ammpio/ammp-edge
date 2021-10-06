@@ -21,7 +21,8 @@ DEFAULT_NMAP_SCAN_OPTS = ['--disable-arp-ping', '-p', '22,80,443,502']
 DEFAULT_SERIAL_DEV = '/dev/ttyAMA0'
 
 MODTCP_PORT = 502
-MODTCP_UNIT_IDS = [3]
+SMA_MODTCP_UNIT_IDS = [1, 3]
+DSE_MODTCP_UNIT_IDS = [1]
 MODTCP_TIMEOUT = 1
 MODTCP_UNIT_ID_KEY = 'unit_id'
 MODTCP_FIELD_KEY = 'field'
@@ -279,7 +280,38 @@ class NetworkEnv():
                 return None
 
     @staticmethod
-    def modbus_scan(hosts: list) -> None:
+    def modbus_read(host_vendor, host_ip):
+        if 'SMA' in host_vendor:
+            unit_id = SMA_MODTCP_UNIT_IDS
+        elif 'Deep Sea Electronics' in host_vendor:
+            unit_id = DSE_MODTCP_UNIT_IDS
+        else:
+            return None
+        result_for_unit = {
+            MODTCP_UNIT_ID_KEY: unit_id,
+        }
+        try:
+            with ModbusTCPReader(
+                    host=host_ip,
+                    port=MODTCP_PORT,
+                    unit_id=unit_id,
+                    timeout=MODTCP_TIMEOUT,
+            ) as r:
+                for rdg in MODTCP_SCAN_ITEMS:
+                    val_b = r.read(**rdg)
+                    if val_b is None:
+                        continue
+                    try:
+                        value = process_reading(val_b, **rdg)
+                    except Exception as e:
+                        logger.error(f"Could not process reading: {e}\nval_b={val_b}\nrdg={rdg}")
+                        continue
+                    result_for_unit[rdg[MODTCP_FIELD_KEY]] = value
+                return result_for_unit
+        except Exception as e:
+            logger.info(f"Error: {e}")
+
+    def modbus_scan(self, hosts: list) -> None:
         if hosts is None:
             return
 
@@ -288,32 +320,11 @@ class NetworkEnv():
                 or MODTCP_PORT not in \
                     [int(p) for p in h.get(HOST_PORTS_KEY, [])]:
                 continue
+            host_vendor = h[HOST_VENDOR_KEY]
             host_ip = h[HOST_IP_KEY]
             h[MODTCP_RESULT_KEY] = []
-            for unit_id in MODTCP_UNIT_IDS:
-                result_for_unit = {
-                    MODTCP_UNIT_ID_KEY: unit_id,
-                }
-                try:
-                    with ModbusTCPReader(
-                            host=host_ip,
-                            port=MODTCP_PORT,
-                            unit_id=unit_id,
-                            timeout=MODTCP_TIMEOUT,
-                    ) as r:
-                        for rdg in MODTCP_SCAN_ITEMS:
-                            val_b = r.read(**rdg)
-                            if val_b is None:
-                                continue
-                            try:
-                                value = process_reading(val_b, **rdg)
-                            except Exception as e:
-                                logger.error(f"Could not process reading: {e}\nval_b={val_b}\nrdg={rdg}")
-                                continue
-                            result_for_unit[rdg[MODTCP_FIELD_KEY]] = value
-                except Exception as e:
-                    logger.info(f"Error: {e}")
-                h[MODTCP_RESULT_KEY].append(result_for_unit)
+            result_for_unit = self.modbus_read(host_vendor, host_ip)
+            h[MODTCP_RESULT_KEY].append(result_for_unit)
 
 
 class SerialEnv():
