@@ -43,13 +43,13 @@ SMA_MODTCP_SCAN_ITEMS = [
         MODTCP_DATATYPE_KEY: 'uint32'
     },
     {
-        MODTCP_FIELD_KEY: 'sma_serial',
+        MODTCP_FIELD_KEY: 'sma_inverter_serial',
         MODTCP_REGISTER_KEY: 30057,
         MODTCP_WORDS_KEY: 2,
         MODTCP_DATATYPE_KEY: 'uint32'
     },
     {
-        MODTCP_FIELD_KEY: 'sma_datamanager_serial',
+        MODTCP_FIELD_KEY: 'sma_communication_device_serial',
         MODTCP_REGISTER_KEY: 30005,
         MODTCP_WORDS_KEY: 2,
         MODTCP_DATATYPE_KEY: 'uint32'
