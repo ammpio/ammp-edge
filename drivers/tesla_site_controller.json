@@ -21,7 +21,7 @@
       "unit": "Wh",
       "words": 2,
       "datatype":"int32",
-      "description": "Energy remaining at nominal temp (25°C)"
+      "description": "Energy remaining at nominal temp (25 C)"
     },
     "status_batt_P_max_charge": {
       "register": 211,

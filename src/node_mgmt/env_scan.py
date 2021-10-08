@@ -1,5 +1,4 @@
 import logging
-
 import socket
 import arrow
 import subprocess
@@ -309,10 +308,10 @@ class NetworkEnv():
     def modbus_read(host_vendor, host_ip):
         if 'SMA' in host_vendor:
             unit_ids = SMA_MODTCP_UNIT_IDS
-            modtcp_scan_items = SMA_MODTCP_UNIT_IDS
+            modtcp_scan_items = SMA_MODTCP_SCAN_ITEMS
         elif 'Deep Sea Electronics' in host_vendor:
             unit_ids = DSE_MODTCP_UNIT_IDS
-            modtcp_scan_items = DSE_MODTCP_UNIT_IDS
+            modtcp_scan_items = DSE_MODTCP_SCAN_ITEMS
         else:
             return None
         for u_id in unit_ids:
@@ -336,9 +335,10 @@ class NetworkEnv():
                             logger.error(f"Could not process reading: {e}\nval_b={val_b}\nrdg={rdg}")
                             continue
                         result_for_unit[rdg[MODTCP_FIELD_KEY]] = value
-                    return result_for_unit
             except Exception as e:
                 logger.info(f"Error: {e}")
+
+            return result_for_unit
 
     def modbus_scan(self, hosts: list) -> None:
         if hosts is None:
