@@ -20,7 +20,7 @@ DEFAULT_NMAP_SCAN_OPTS = ['--disable-arp-ping', '-p', '22,80,443,502']
 DEFAULT_SERIAL_DEV = '/dev/ttyAMA0'
 
 MODTCP_PORT = 502
-SMA_MODTCP_UNIT_IDS = [1, 3]
+SMA_MODTCP_UNIT_IDS = [3]
 DSE_MODTCP_UNIT_IDS = [1]
 MODTCP_TIMEOUT = 1
 MODTCP_UNIT_ID_KEY = 'unit_id'
@@ -46,13 +46,7 @@ SMA_MODTCP_SCAN_ITEMS = [
         MODTCP_REGISTER_KEY: 30057,
         MODTCP_WORDS_KEY: 2,
         MODTCP_DATATYPE_KEY: 'uint32'
-    },
-    {
-        MODTCP_FIELD_KEY: 'sma_communication_device_serial',
-        MODTCP_REGISTER_KEY: 30005,
-        MODTCP_WORDS_KEY: 2,
-        MODTCP_DATATYPE_KEY: 'uint32'
-    },
+    }
 ]
 DSE_MODTCP_SCAN_ITEMS = [
     {
