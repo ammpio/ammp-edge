@@ -33,11 +33,7 @@ class DataPusher(threading.Thread):
         elif dep.get('type') == 'influxdb':
             self._session = InfluxDBClient(**dep['client_config'])
         elif dep.get('type') == 'mqtt':
-            self._session = MQTTPublisher(
-                node_id=self._node.node_id,
-                access_key=self._node.access_key,
-                config=dep['config']
-            )
+            self._session = self._node.mqtt_client
         else:
             logger.warning(
                 f"Data endpoint type '{dep.get('type')}' not recognized")
@@ -194,7 +190,7 @@ class DataPusher(threading.Thread):
             # Append offset between time that reading was taken and current time
             readout['m']['reading_offset'] = self.__get_reading_offset(readout)
             logger.debug(f"PUSH [mqtt] Device-based readout: {readout}")
-            return self._session.publish(readout)
+            return self._session.publish(readout, topic='data')
         else:
             logger.warning(
                 f"Data endpoint type '{self._dep.get('type')}' not recognized")

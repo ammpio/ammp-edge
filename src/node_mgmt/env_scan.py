@@ -396,11 +396,12 @@ class SerialEnv():
 
 
 class EnvScanner(object):
-    def __init__(self, ifname=None, serial_dev=None):
+    def __init__(self, ifname=None, serial_dev=None, generate_config_flag=False):
 
         self.net_env = NetworkEnv(default_ifname=ifname)
         self.serial_env = SerialEnv(default_serial_dev=serial_dev)
         self.speedwire_env = SpeedWireReader()
+        self.generate_config_flag = generate_config_flag
 
     def do_scan(self):
         network_hosts = self.net_env.network_scan()
@@ -422,7 +423,8 @@ class EnvScanner(object):
                 'hosts': network_hosts
             }],
             'serial_scan': serial_devices,
-            'speedwire_serials': speedwire_serials
+            'speedwire_serials': speedwire_serials,
+            'generate_new_config': self.generate_config_flag
         }
 
         return scan_result

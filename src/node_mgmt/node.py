@@ -12,6 +12,7 @@ from edge_api import EdgeAPI
 from .events import NodeEvents
 from .config_watch import ConfigWatch
 from .command_watch import CommandWatch
+from data_mgmt.helpers.mqtt_pub import MQTTPublisher
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +32,12 @@ class Node(object):
                 remote = yaml.safe_load(remote_yaml)
                 self.remote_api = remote['api']
                 self.data_endpoints = remote.get('data-endpoints', [])
+                for dep in self.data_endpoints:
+                    if dep.get('isdefault') and dep.get('type') == 'mqtt':
+                        self.remote_mqtt_broker_config = dep['config']
+                    else:
+                        logger.warning(f"No remote MQTT Broker found in remote.yaml")
+                        continue
         except Exception:
             logger.exception('Base configuration file remote.yaml cannot be loaded. Quitting')
             sys.exit('Base configuration file remote.yaml cannot be loaded. Quitting')
@@ -68,6 +75,13 @@ class Node(object):
 
         self.api = EdgeAPI()
         logger.info("Instantiated API")
+
+        self.mqtt_client = MQTTPublisher(
+            node_id=self.node_id,
+            access_key=self.access_key,
+            config=self.remote_mqtt_broker_config
+        )
+        logger.info("Instantiated MQTT")
 
         self.events = NodeEvents()
         config_watch = ConfigWatch(self)

@@ -147,6 +147,24 @@ def env_scan(node):
     scan_result = scanner.do_scan()
     logger.info('Completed environment scan. Submitting results to API.')
     node.api.post_env_scan(scan_result)
+    logger.info('Completed environment scan. Submitting results to MQTT Broker.')
+    if node.mqtt_client.publish(scan_result, topic='state'):
+        logger.info(f"Scan results: Successfully pushed to mqtt")
+    else:
+        # For some reason the env_state wasn't pushed successfully,
+        logger.warning(f"NEW CONFIG TRIGGER: Push failed")
+
+
+def trigger_config_generation(node):
+    logger.info('Starting environment scan')
+    scanner = EnvScanner(generate_config_flag=True)
+    scan_result = scanner.do_scan()
+    logger.info('Completed environment scan. Submitting results to MQTT Broker.')
+    if node.mqtt_client.publish(scan_result, topic='state'):
+        logger.info(f"NEW CONFIG TRIGGERED: Successfully pushed to mqtt")
+    else:
+        # For some reason the env_state wasn't pushed successfully,
+        logger.warning(f"NEW CONFIG TRIGGER: Push failed")
 
 
 def imt_sensor_address(node):
