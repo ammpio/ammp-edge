@@ -157,7 +157,7 @@ def env_scan(node):
 
 def trigger_config_generation(node):
     logger.info('Starting environment scan')
-    scanner = EnvScanner(generate_config_flag=True)
+    scanner = EnvScanner(generate_new_config=True)
     scan_result = scanner.do_scan()
     logger.info('Completed environment scan. Submitting results to MQTT Broker.')
     if node.mqtt_client.publish(scan_result, topic='state'):

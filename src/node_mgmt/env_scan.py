@@ -396,12 +396,12 @@ class SerialEnv():
 
 
 class EnvScanner(object):
-    def __init__(self, ifname=None, serial_dev=None, generate_config_flag=False):
+    def __init__(self, ifname=None, serial_dev=None, generate_new_config=False):
 
         self.net_env = NetworkEnv(default_ifname=ifname)
         self.serial_env = SerialEnv(default_serial_dev=serial_dev)
         self.speedwire_env = SpeedWireReader()
-        self.generate_config_flag = generate_config_flag
+        self.generate_config_flag = generate_new_config
 
     def do_scan(self):
         network_hosts = self.net_env.network_scan()
