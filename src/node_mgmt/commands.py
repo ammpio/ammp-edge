@@ -10,6 +10,8 @@ from node_mgmt import EnvScanner
 
 logger = logging.getLogger(__name__)
 
+MQTT_STATE_SUBTOPIC = 'state/env_scan'
+GENERATE_NEW_CONFIG_FLAG = 'generate_new_config'
 
 def send_log(node):
     """ Upload system logs to S3 """
@@ -145,26 +147,26 @@ def env_scan(node):
     logger.info('Starting environment scan')
     scanner = EnvScanner()
     scan_result = scanner.do_scan()
-    logger.info('Completed environment scan. Submitting results to API.')
+    logger.info('Completed environment scan. Submitting results to API and MQTT')
     node.api.post_env_scan(scan_result)
-    logger.info('Completed environment scan. Submitting results to MQTT Broker.')
-    if node.mqtt_client.publish(scan_result, topic='state'):
-        logger.info(f"Scan results: Successfully pushed to mqtt")
+    if node.mqtt_client.publish(scan_result, subtopic=MQTT_STATE_SUBTOPIC):
+        logger.info(f"ENV_SCAN [mqtt]: Successfully pushed")
     else:
-        # For some reason the env_state wasn't pushed successfully,
-        logger.warning(f"NEW CONFIG TRIGGER: Push failed")
+        # For some reason the env_state wasn't pushed successfully
+        logger.warning(f"ENV_SCAN [mqtt]: Push failed")
 
 
 def trigger_config_generation(node):
     logger.info('Starting environment scan')
-    scanner = EnvScanner(generate_new_config=True)
+    scanner = EnvScanner()
     scan_result = scanner.do_scan()
+    scan_result[GENERATE_NEW_CONFIG_FLAG] = True
     logger.info('Completed environment scan. Submitting results to MQTT Broker.')
-    if node.mqtt_client.publish(scan_result, topic='state'):
-        logger.info(f"NEW CONFIG TRIGGERED: Successfully pushed to mqtt")
+    if node.mqtt_client.publish(scan_result, subtopic=MQTT_STATE_SUBTOPIC):
+        logger.info(f"ENV_SCAN [mqtt]: Successfully pushed")
     else:
-        # For some reason the env_state wasn't pushed successfully,
-        logger.warning(f"NEW CONFIG TRIGGER: Push failed")
+        # For some reason the env_state wasn't pushed successfully
+        logger.warning(f"ENV_SCAN [mqtt]: Push failed")
 
 
 def imt_sensor_address(node):

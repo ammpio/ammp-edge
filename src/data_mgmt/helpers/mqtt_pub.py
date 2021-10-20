@@ -50,11 +50,11 @@ class MQTTPublisher():
         self._node_id = node_id
         self._connected = False
 
-    def publish(self, payload: Dict, topic: str = None) -> None:
+    def publish(self, payload: Dict, subtopic: str = None) -> None:
         if not self._connected:
             logger.warning("MQTT client not yet connected; not publishing")
             return False
-        mqtt_topic = self.__get_topic(topic)
+        mqtt_topic = self.__get_topic(subtopic)
         rc = self._client.publish(
             mqtt_topic,
             self.__get_mqtt_payload(payload),
@@ -74,8 +74,8 @@ class MQTTPublisher():
             logger.debug("PUSH [mqtt] Error - Message not published")
             return False
 
-    def __get_topic(self, topic: str) -> str:
-        mqtt_topic = f"a/{self._node_id}/{topic}"
+    def __get_topic(self, subtopic: str) -> str:
+        mqtt_topic = f"a/{self._node_id}/{subtopic}"
         return mqtt_topic
 
     @staticmethod

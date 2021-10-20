@@ -34,9 +34,9 @@ class Node(object):
                 self.data_endpoints = remote.get('data-endpoints', [])
                 for dep in self.data_endpoints:
                     if dep.get('isdefault') and dep.get('type') == 'mqtt':
-                        self.remote_mqtt_broker_config = dep['config']
+                        self._remote_mqtt_broker_config = dep['config']
                     else:
-                        logger.warning(f"No remote MQTT Broker found in remote.yaml")
+                        logger.warning(f"No remote MQTT Broker found for endpoint: [{dep.get('name')}]")
                         continue
         except Exception:
             logger.exception('Base configuration file remote.yaml cannot be loaded. Quitting')
@@ -76,12 +76,15 @@ class Node(object):
         self.api = EdgeAPI()
         logger.info("Instantiated API")
 
-        self.mqtt_client = MQTTPublisher(
-            node_id=self.node_id,
-            access_key=self.access_key,
-            config=self.remote_mqtt_broker_config
-        )
-        logger.info("Instantiated MQTT")
+        if self._remote_mqtt_broker_config:
+            self.mqtt_client = MQTTPublisher(
+                node_id=self.node_id,
+                access_key=self.access_key,
+                config=self._remote_mqtt_broker_config
+            )
+            logger.info("Instantiated MQTT")
+        else:
+            logger.warning("No MQTT Connection initialized. Missing MQTT endpoint in remote.yaml")
 
         self.events = NodeEvents()
         config_watch = ConfigWatch(self)
