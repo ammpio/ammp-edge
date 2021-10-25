@@ -9,10 +9,10 @@ from influxdb import InfluxDBClient
 from influxdb.exceptions import InfluxDBClientError
 from influxdb.exceptions import InfluxDBServerError
 from data_mgmt.helpers import convert_to_api_payload
-from data_mgmt.helpers.mqtt_pub import MQTTPublisher
 
 logger = logging.getLogger(__name__)
 
+MQTT_DATA_SUBTOPIC = 'data'
 
 class DataPusher(threading.Thread):
     def __init__(self, node, queue, dep):
@@ -33,11 +33,7 @@ class DataPusher(threading.Thread):
         elif dep.get('type') == 'influxdb':
             self._session = InfluxDBClient(**dep['client_config'])
         elif dep.get('type') == 'mqtt':
-            self._session = MQTTPublisher(
-                node_id=self._node.node_id,
-                access_key=self._node.access_key,
-                config=dep['config']
-            )
+            self._session = self._node.mqtt_client
         else:
             logger.warning(
                 f"Data endpoint type '{dep.get('type')}' not recognized")
@@ -194,7 +190,7 @@ class DataPusher(threading.Thread):
             # Append offset between time that reading was taken and current time
             readout['m']['reading_offset'] = self.__get_reading_offset(readout)
             logger.debug(f"PUSH [mqtt] Device-based readout: {readout}")
-            return self._session.publish(readout)
+            return self._session.publish(readout, subtopic=MQTT_DATA_SUBTOPIC)
         else:
             logger.warning(
                 f"Data endpoint type '{self._dep.get('type')}' not recognized")
