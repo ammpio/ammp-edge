@@ -76,14 +76,14 @@ class Node(object):
         self.api = EdgeAPI()
         logger.info("Instantiated API")
 
-        if self._remote_mqtt_broker_config:
+        try:
             self.mqtt_client = MQTTPublisher(
                 node_id=self.node_id,
                 access_key=self.access_key,
                 config=self._remote_mqtt_broker_config
             )
             logger.info("Instantiated MQTT")
-        else:
+        except AttributeError:
             logger.warning("No MQTT Connection initialized. Missing MQTT endpoint in remote.yaml")
 
         self.events = NodeEvents()
