@@ -1,0 +1,10 @@
+{
+    "common": {
+        "words": 1,
+        "datatype": "uint16",
+        "fncode": 3
+    },
+    "fields": {
+      "level": {"register": 2, "description": "Fuel level", "unit": "m", "multiplier": 0.001}
+    }
+}
