@@ -1,7 +1,7 @@
 {
     "common": {
         "words": 1,
-        "datatype": "uint",
+        "datatype": "uint16",
         "fncode": 3
     },
     "fields": {
