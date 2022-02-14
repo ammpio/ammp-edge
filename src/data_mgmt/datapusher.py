@@ -14,6 +14,7 @@ from influxdb.exceptions import InfluxDBServerError
 logger = logging.getLogger(__name__)
 
 MQTT_DATA_SUBTOPIC = 'data'
+MQTT_CLIENT_ID_SUFFIX = 'data'
 
 class DataPusher(threading.Thread):
     def __init__(self, node, queue, dep):
@@ -37,7 +38,8 @@ class DataPusher(threading.Thread):
             self._session = MQTTPublisher(
                 node_id=self._node.node_id,
                 access_key=self._node.access_key,
-                config=dep['config']
+                config=dep['config'],
+                client_id_suffix=MQTT_CLIENT_ID_SUFFIX,
             )
         else:
             logger.warning(
