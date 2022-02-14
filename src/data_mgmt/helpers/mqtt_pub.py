@@ -2,7 +2,7 @@ import logging
 from os import getenv, path
 import json
 import paho.mqtt.client as mqtt
-from typing import Dict, List
+from typing import Dict, List, Optional
 import ssl
 
 logger = logging.getLogger(__name__)
@@ -27,8 +27,12 @@ MESSAGE_RETRY = 30
 
 
 class MQTTPublisher():
-    def __init__(self, node_id: str, access_key: str, config: Dict) -> None:
-        client = mqtt.Client(client_id=node_id, clean_session=MQTT_CLEAN_SESSION)
+    def __init__(self, node_id: str, access_key: str, config: Dict, client_id_suffix: Optional[str] = None) -> None:
+        if client_id_suffix is None:
+            client_id = node_id
+        else:
+            client_id = f'{node_id}-{client_id_suffix}'
+        client = mqtt.Client(client_id=client_id, clean_session=MQTT_CLEAN_SESSION)
         client.enable_logger(logger)
         client.tls_set(
             ca_certs=path.join(getenv('SNAP', '.'), 'resources', 'certs', config['cert']),

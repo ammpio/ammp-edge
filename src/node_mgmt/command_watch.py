@@ -8,7 +8,7 @@ import os
 logger = logging.getLogger(__name__)
 
 # Even if this is not explicitly requested, carry out a command check every COMMAND_CHECK_DELAY seconds
-COMMAND_CHECK_DELAY = 900.0
+COMMAND_CHECK_DELAY = 60.0
 SHELL_COMMAND_PREFIX = '#'
 
 
