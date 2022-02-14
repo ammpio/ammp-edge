@@ -5,6 +5,7 @@ import json
 import threading
 import requests
 from copy import deepcopy
+from helpers.mqtt_pub import MQTTPublisher
 from influxdb import InfluxDBClient
 from influxdb.exceptions import InfluxDBClientError
 from influxdb.exceptions import InfluxDBServerError
@@ -33,7 +34,11 @@ class DataPusher(threading.Thread):
         elif dep.get('type') == 'influxdb':
             self._session = InfluxDBClient(**dep['client_config'])
         elif dep.get('type') == 'mqtt':
-            self._session = self._node.mqtt_client
+            self._session = MQTTPublisher(
+                node_id=self._node.node_id,
+                access_key=self._node.access_key,
+                config=dep['config']
+            )
         else:
             logger.warning(
                 f"Data endpoint type '{dep.get('type')}' not recognized")
