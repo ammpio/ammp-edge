@@ -95,10 +95,42 @@ SERIAL_SCAN_SIGNATURES = [{
     'datatype': 'int16',
     'fncode': 4
 }, {
+    'name': 'APM303 genset controller',
+    'slave_id': 6,
+    'reading': 'oil pressure (bar)',
+    'register': 28,
+    'words': 1,
+    'datatype': 'int16',
+    'fncode': 4
+}, {
     'name': 'Cummins PS0600',
     'slave_id': 4,
     'reading': 'genset state',
     'register': 10,
+    'words': 1,
+    'datatype': 'uint16',
+    'fncode': 3
+}, {
+    'name': 'Cummins PS0600',
+    'slave_id': 3,
+    'reading': 'genset state',
+    'register': 10,
+    'words': 1,
+    'datatype': 'uint16',
+    'fncode': 3
+}, {
+    'name': 'Holykell HPT604',
+    'slave_id': 7,
+    'reading': 'fuel level (distance from sensor (mm))',
+    'register': 2,
+    'words': 1,
+    'datatype': 'uint16',
+    'fncode': 3
+}, {
+    'name': 'Holykell HPT604',
+    'slave_id': 8,
+    'reading': 'fuel level (distance from sensor (mm))',
+    'register': 2,
     'words': 1,
     'datatype': 'uint16',
     'fncode': 3
