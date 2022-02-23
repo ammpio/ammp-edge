@@ -3,10 +3,19 @@ import requests
 import os
 import zipfile
 import datetime
+from time import sleep
+import serial
+import minimalmodbus
 
 import requests_unixsocket
 
 from node_mgmt import EnvScanner
+from node_mgmt.constants import (
+    SLAVE_IDS_FOR_HOLYKELL,
+    DEFAULT_SERIAL_DEV,
+    DEFAULT_SERIAL_BAUD_RATE
+)
+from reader.modbusrtu_reader import Reader
 
 logger = logging.getLogger(__name__)
 
@@ -174,8 +183,6 @@ def imt_sensor_address(node):
     # Note: unlike the other commands here, this one is normally triggered from the Web UI
     # Ideally this will be placed elsewhere in future, within a more systematic
     # action/command framework
-    import serial
-    from reader.modbusrtu_reader import Reader
 
     def readall(s):
         resp = b''
@@ -212,52 +219,30 @@ def imt_sensor_address(node):
     return result
 
 
-def holykell_sensor_address(node):
-    from time import sleep
-    import minimalmodbus
-
-    mod = minimalmodbus.Instrument('/dev/ttyAMA0', 1, debug=True)
-    mod.serial.baudrate = 9600
+def holykell_sensor_address(node) -> dict:
+    mod = minimalmodbus.Instrument(port=DEFAULT_SERIAL_DEV, slaveaddress=1, debug=True)
+    mod.serial.baudrate = DEFAULT_SERIAL_BAUD_RATE
     mod.serial.timeout = 3
-    SLAVE_IDS_FOR_HOLYKELL = [7, 8]
     result = {}
-
     # confirm that Holykell is accessible on slave id 1
     logger.info('Checking if communication with holykell is up')
     try:
-        mod.read_registers(0, 40, 3)
+        _ = _read_holykell(mod, slave_id=1)
     except Exception as e:
         result['Error'] = f'No HPT604 detected on slave 1. Exception: {e}'
         return result
-
     # go through targeted slave_ids
     for slave_id in SLAVE_IDS_FOR_HOLYKELL:
         try:
             # check that no device already on slave address
-            mod.address = slave_id
-            mod.read_registers(0, 40, 3)
+            _ = _read_holykell(mod, slave_id=slave_id)
         except minimalmodbus.NoResponseError:
-            logger.info(f'Slave ID {slave_id} available, setting the holykell to it')
-            result[f'Check on slave {slave_id}'] = 'Slave ID available, setting the holykell to it'
-            mod.address = 1
-            try:
-                # command to change slave ID
-                mod.write_register(80, slave_id, 0, 6)
-                mod.address = slave_id
-                sleep(1)
-                # command to save changes
-                mod.write_register(64, 49087, 0, 6)
-                sleep(1)
-                # confirmation that data can be read after change
-                result[f'Success, fuel level read from slave {slave_id} (mm)'] = mod.read_registers(2, 1, 3)
-                logger.info(f'Holykell successfully assigned to slave ID {slave_id}')
-                return result
-            except Exception as e:
-                result['Error'] = f'Unable to assign slave ID to {slave_id}. Exception {e}'
-                return result
+            return _set_address_holykell(mod, result, target_slave_id=slave_id)
         except Exception as e:
             # if any other exception than NoResponseError is caught, the command must fail
+            logger.warning(f'Failed to check if slave {slave_id} available. Exception {e}')
             result['Error'] = f'Failed to check if slave {slave_id} available. Exception {e}'
+            return result
         else:
             logger.info(f'Slave ID {slave_id} already in use')
             result[f'Check on slave {slave_id}'] = 'Other device already detected on slave ID'
@@ -265,6 +250,33 @@ def holykell_sensor_address(node):
     logger.warning('All slave IDs are already assigned')
     result['Error'] = f'Slave IDs {SLAVE_IDS_FOR_HOLYKELL} already assigned'
     return result
+
+
+def _set_address_holykell(mod, result: dict, target_slave_id: int) -> dict:
+    logger.info(f'Slave {target_slave_id} free, assigning the device to it')
+    result[f'Check on slave {target_slave_id}'] = 'Slave available, assigning the device to it'
+    try:
+        # command to change slave ID
+        mod.address = 1
+        mod.write_register(80, target_slave_id, 0, 6)
+        sleep(1)
+        # command to save changes
+        mod.address = target_slave_id
+        mod.write_register(64, 49087, 0, 6)
+        sleep(1)
+        # confirmation that data can be read after change
+        result[f'Success, fuel level read from slave {target_slave_id} (mm)'] = mod.read_registers(2, 1, 3)
+        logger.info(f'Holykell successfully assigned to slave ID {target_slave_id}')
+        return result
+    except Exception as e:
+        result['Error'] = f'Unable to assign slave ID to {target_slave_id}. Exception {e}'
+        logger.warning(f'Unable to assign slave ID to {target_slave_id}. Exception {e}')
+        return result
+
+
+def _read_holykell(mod, slave_id: int):
+    mod.address = slave_id
+    return mod.read_registers(registeraddress=0, number_of_registers=40, functioncode=3)
 
 
 def sys_reboot(node):
