@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 MQTT_STATE_SUBTOPIC = 'state/env_scan'
 GENERATE_NEW_CONFIG_FLAG = 'generate_new_config'
 
+
 def send_log(node):
     """ Upload system logs to S3 """
 
@@ -208,6 +209,61 @@ def imt_sensor_address(node):
 
     logger.info(f"Result: {result}")
 
+    return result
+
+
+def holykell_sensor_address(node):
+    from time import sleep
+    import minimalmodbus
+
+    mod = minimalmodbus.Instrument('/dev/ttyAMA0', 1, debug=True)
+    mod.serial.baudrate = 9600
+    mod.serial.timeout = 3
+    SLAVE_IDS_FOR_HOLYKELL = [7, 8]
+    result = {}
+
+    # confirm that Holykell is accessible on slave id 1
+    logger.info('Checking if communication with holykell is up')
+    try:
+        mod.read_registers(0, 40, 3)
+    except Exception as e:
+        result['Error'] = f'No HPT604 detected on slave 1. Exception: {e}'
+        return result
+
+    # go through targeted slave_ids
+    for slave_id in SLAVE_IDS_FOR_HOLYKELL:
+        try:
+            # check that no device already on slave address
+            mod.address = slave_id
+            mod.read_registers(0, 40, 3)
+        except minimalmodbus.NoResponseError:
+            logger.info(f'Slave ID {slave_id} available, setting the holykell to it')
+            result[f'Check on slave {slave_id}'] = 'Slave ID available, setting the holykell to it'
+            mod.address = 1
+            try:
+                # command to change slave ID
+                mod.write_register(80, slave_id, 0, 6)
+                mod.address = slave_id
+                sleep(1)
+                # command to save changes
+                mod.write_register(64, 49087, 0, 6)
+                sleep(1)
+                # confirmation that data can be read after change
+                result[f'Success, fuel level read from slave {slave_id} (mm)'] = mod.read_registers(2, 1, 3)
+                logger.info(f'Holykell successfully assigned to slave ID {slave_id}')
+                return result
+            except Exception as e:
+                result['Error'] = f'Unable to assign slave ID to {slave_id}. Exception {e}'
+                return result
+        except Exception as e:
+            # if any other exception than NoResponseError is caught, the command must fail
+            result['Error'] = f'Failed to check if slave {slave_id} available. Exception {e}'
+        else:
+            logger.info(f'Slave ID {slave_id} already in use')
+            result[f'Check on slave {slave_id}'] = 'Other device already detected on slave ID'
+    # both slave_id 7 and 8 are already used by other devices
+    logger.warning('All slave IDs are already assigned')
+    result['Error'] = f'Slave IDs {SLAVE_IDS_FOR_HOLYKELL} already assigned'
     return result
 
 
