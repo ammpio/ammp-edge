@@ -11,7 +11,6 @@ import requests_unixsocket
 
 from node_mgmt import EnvScanner
 from node_mgmt.constants import (
-    SLAVE_IDS_FOR_HOLYKELL,
     DEFAULT_SERIAL_DEV,
     DEFAULT_SERIAL_BAUD_RATE
 )
@@ -219,36 +218,42 @@ def imt_sensor_address(node):
     return result
 
 
-def holykell_sensor_address(node) -> dict:
+def holykell_sensor_address_7(node):
+    return _change_address_holykell(target_slave_id=7)
+
+
+def holykell_sensor_address_8(node):
+    return _change_address_holykell(target_slave_id=8)
+
+
+def _change_address_holykell(target_slave_id: int) -> dict:
     mod = minimalmodbus.Instrument(port=DEFAULT_SERIAL_DEV, slaveaddress=1, debug=True)
     mod.serial.baudrate = DEFAULT_SERIAL_BAUD_RATE
     mod.serial.timeout = 3
     result = {}
-    # confirm that Holykell is accessible on slave id 1
+
+    # confirm first that Holykell is accessible on slave id 1
     logger.info('Checking if communication with holykell is up')
     try:
-        _ = _read_holykell(mod, slave_id=1)
+        _read_holykell(mod, slave_id=1)
     except Exception as e:
-        result['Error'] = f'No HPT604 detected on slave 1. Exception: {e}'
+        result['Error'] = f'No HPT604 detected on default slave 1. Exception: {e}'
         return result
-    # go through targeted slave_ids
-    for slave_id in SLAVE_IDS_FOR_HOLYKELL:
-        try:
-            # check that no device already on slave address
-            _ = _read_holykell(mod, slave_id=slave_id)
-        except minimalmodbus.NoResponseError:
-            return _set_address_holykell(mod, result, target_slave_id=slave_id)
-        except Exception as e:
-            # if any other exception than NoResponseError is caught, the command must fail
-            logger.warning(f'Failed to check if slave {slave_id} available. Exception {e}')
-            result['Error'] = f'Failed to check if slave {slave_id} available. Exception {e}'
-            return result
-        else:
-            logger.info(f'Slave ID {slave_id} already in use')
-            result[f'Check on slave {slave_id}'] = 'Other device already detected on slave ID'
-    # both slave_id 7 and 8 are already used by other devices
-    logger.warning('All slave IDs are already assigned')
-    result['Error'] = f'Slave IDs {SLAVE_IDS_FOR_HOLYKELL} already assigned'
+
+    try:
+        # check that no device is already on slave address
+        _read_holykell(mod, slave_id=target_slave_id)
+    except minimalmodbus.NoResponseError:
+        # no device detected on target slave, go ahead and set address
+        result = _set_address_holykell(mod, result, target_slave_id=target_slave_id)
+    except Exception as e:
+        # if any other exception than NoResponseError is caught, the command must fail
+        logger.warning(f'Failed to check if slave {target_slave_id} available. Exception {e}')
+        result['Error'] = f'Failed to check if slave {target_slave_id} available. Exception {e}'
+    else:
+        logger.info(f'Slave ID {target_slave_id} already in use')
+        result['Error'] = f'Other device already detected on slave {target_slave_id}'
+
     return result
 
 

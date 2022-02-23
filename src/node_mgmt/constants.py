@@ -135,5 +135,3 @@ HOST_IP_KEY = 'ipv4'
 HOST_MAC_KEY = 'mac'
 HOST_VENDOR_KEY = 'vendor'
 HOST_PORTS_KEY = 'ports'
-
-SLAVE_IDS_FOR_HOLYKELL = [7, 8]
