@@ -232,15 +232,15 @@ def _change_address_holykell(target_slave_id: int) -> dict:
     mod.serial.timeout = 3
     result = {}
 
-    # confirm first that Holykell is accessible on slave id 1
-    logger.info('Checking if communication with holykell is up')
+    # confirm first that Holykell is accessible on default slave id 1
     try:
+        logger.info('Checking if communication with holykell is up')
         _read_holykell(mod, slave_id=1)
     except Exception as e:
         result['Error'] = f'No HPT604 detected on default slave 1. Exception: {e}'
     else:
         try:
-            # check that no device is already on slave address
+            # check that no device is already on target slave address
             _read_holykell(mod, slave_id=target_slave_id)
         except minimalmodbus.NoResponseError:
             # no device detected on target slave, go ahead and set address
