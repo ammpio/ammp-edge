@@ -238,21 +238,20 @@ def _change_address_holykell(target_slave_id: int) -> dict:
         _read_holykell(mod, slave_id=1)
     except Exception as e:
         result['Error'] = f'No HPT604 detected on default slave 1. Exception: {e}'
-        return result
-
-    try:
-        # check that no device is already on slave address
-        _read_holykell(mod, slave_id=target_slave_id)
-    except minimalmodbus.NoResponseError:
-        # no device detected on target slave, go ahead and set address
-        result = _set_address_holykell(mod, result, target_slave_id=target_slave_id)
-    except Exception as e:
-        # if any other exception than NoResponseError is caught, the command must fail
-        logger.warning(f'Failed to check if slave {target_slave_id} available. Exception {e}')
-        result['Error'] = f'Failed to check if slave {target_slave_id} available. Exception {e}'
     else:
-        logger.info(f'Slave ID {target_slave_id} already in use')
-        result['Error'] = f'Other device already detected on slave {target_slave_id}'
+        try:
+            # check that no device is already on slave address
+            _read_holykell(mod, slave_id=target_slave_id)
+        except minimalmodbus.NoResponseError:
+            # no device detected on target slave, go ahead and set address
+            result = _set_address_holykell(mod, result, target_slave_id=target_slave_id)
+        except Exception as e:
+            # if any other exception than NoResponseError is caught, the command must fail
+            logger.warning(f'Failed to check if slave {target_slave_id} available. Exception {e}')
+            result['Error'] = f'Failed to check if slave {target_slave_id} available. Exception {e}'
+        else:
+            logger.info(f'Slave ID {target_slave_id} already in use')
+            result['Error'] = f'Other device already detected on slave {target_slave_id}'
 
     return result
 
