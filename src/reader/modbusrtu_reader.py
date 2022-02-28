@@ -80,7 +80,12 @@ class Reader(object):
 
         try:
             # The minimalmodbus library helpfully converts the binary result to a list of integers, so
-            # it's best to first convert it back to binary (assuming big-endian)
+            # it's best to first convert it back to binary. We assume big-endian order - unless 'order'
+            # parameter is set to 'lsr' = least significant register, in which case we reverse the order
+            # of the registers.
+            if kwargs.get('order') == 'lsr':
+                val_i.reverse()
+                
             val_b = struct.pack('>%sH' % len(val_i), *val_i)
         except Exception:
             logger.error('Exception while processing value from register %d' % register)
