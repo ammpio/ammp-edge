@@ -186,7 +186,7 @@ def get_readout(node):
                     OUTPUT_READINGS_DEV_ID,
                     {
                         VENDOR_ID_KEY: node.config.get(CONFIG_CALC_VENDOR_ID),
-                        output_field['field']: output_field['value']
+                        output_field['field']: output_field.get('value')
                     }
                 )
 
