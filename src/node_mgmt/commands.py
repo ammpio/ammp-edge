@@ -250,7 +250,8 @@ def _change_address_holykell(original_slave_id: int, target_slave_id: int) -> di
     return result
 
 
-def _set_address_holykell(mod, result: dict, original_slave_id: int, target_slave_id: int) -> dict:
+def _set_address_holykell(mod: minimalmodbus.Instrument, result: dict,
+                          original_slave_id: int, target_slave_id: int) -> dict:
     logger.info(f'Slave {target_slave_id} free, assigning the device to it')
     result[f'Check on slave {target_slave_id}'] = 'Slave available, assigning the device to it'
     try:
