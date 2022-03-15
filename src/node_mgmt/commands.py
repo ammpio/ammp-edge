@@ -273,7 +273,7 @@ def _set_address_holykell(mod: minimalmodbus.Instrument, result: dict,
         return result
 
 
-def _read_holykell(mod, slave_id: int):
+def _read_holykell(mod: minimalmodbus.Instrument, slave_id: int):
     mod.address = slave_id
     return mod.read_registers(registeraddress=0, number_of_registers=40, functioncode=3)
 
