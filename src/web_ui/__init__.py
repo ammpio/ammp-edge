@@ -3,6 +3,11 @@ import logging
 
 from flask import Flask, render_template, request
 from node_mgmt import NetworkEnv, EnvScanner, get_ssh_fingerprint
+from node_mgmt.commands import (
+    imt_sensor_address,
+    holykell_sensor_address_7,
+    holykell_sensor_address_8
+)
 from db_model import NodeConfig
 import os
 from urllib.request import urlopen
@@ -16,6 +21,12 @@ app = Flask(__name__)
 kvs = KVStore()
 KVS_WIFI_AP_CONFIG = 'node:wifi_ap_config'
 KVS_WIFI_AP_AVAILABLE = 'node:wifi_ap_available'
+
+ACTIONS = {
+    'imt_sensor_address': imt_sensor_address,
+    'holykell_sensor_address_7': holykell_sensor_address_7,
+    'holykell_sensor_address_8': holykell_sensor_address_8
+}
 
 try:
     nodeconf = NodeConfig.get()
@@ -55,7 +66,7 @@ def index():
         snap_revision=snap_revision,
         ssh_fingerprint=ssh_fingerprint,
         network_interfaces=network_interfaces,
-        )
+    )
 
 
 @app.route("/env_scan")
@@ -71,7 +82,7 @@ def env_scan():
         'env_scan.html',
         node_id=node_id,
         scan_result=scan_result
-        )
+    )
 
 
 @app.route("/network_scan")
@@ -92,14 +103,14 @@ def network_scan():
         node_id=node_id,
         interface=interface,
         network_scan_hosts=network_scan_hosts
-        )
+    )
 
 
 @app.route("/wifi_ap")
 def wifi_ap():
     args = dict(
         disabled=request.args.get('disabled', type=int)
-        )
+    )
 
     logger.info(f"Arguments received: {args}")
 
@@ -123,21 +134,20 @@ def wifi_ap():
         node_id=node_id,
         wifi_ap_available=wifi_ap_available,
         wifi_ap_cfg=wifi_ap_cfg
-        )
+    )
 
 
 @app.route("/custom_actions")
 def wifi_ap_status():
     args = dict(
         action=request.args.get('action', type=str)
-        )
+    )
 
     logger.info(f"Arguments received: {args}")
 
     # Carry out action command if set
-    if args['action'] == 'imt_sensor_address':
-        from node_mgmt.commands import imt_sensor_address
-        action_result = imt_sensor_address(None)
+    if args['action'] in ACTIONS:
+        action_result = ACTIONS[args['action']](None)
     else:
         action_result = None
 
@@ -146,7 +156,7 @@ def wifi_ap_status():
         node_id=node_id,
         action_requested=args.get('action'),
         action_result=action_result
-        )
+    )
 
 
 def test_online():
