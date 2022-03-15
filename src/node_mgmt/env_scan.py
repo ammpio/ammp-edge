@@ -14,145 +14,37 @@ from reader.modbustcp_reader import Reader as ModbusTCPReader
 from reader.sma_speedwire_reader import Reader as SpeedWireReader
 from processor import process_reading
 
+from node_mgmt.constants import (
+    DEFAULT_NMAP_SCAN_OPTS,
+    DEFAULT_SERIAL_DEV,
+    DSE_MODTCP_SCAN_ITEMS,
+    DSE_MODTCP_UNIT_IDS,
+    HOST_IP_KEY,
+    HOST_MAC_KEY,
+    HOST_PORTS_KEY,
+    HOST_VENDOR_KEY,
+    MODTCP_FIELD_KEY,
+    MODTCP_PORT,
+    MODTCP_RESULT_KEY,
+    MODTCP_TIMEOUT,
+    MODTCP_UNIT_ID_KEY,
+    NMAP_ADDR_KEY,
+    NMAP_ADDR_TYPE_KEY,
+    NMAP_IP_ADDR_TYPE,
+    NMAP_MAC_ADDR_TYPE,
+    NMAP_PORT_KEY,
+    NMAP_PORT_OPEN,
+    NMAP_PORT_STATE_KEY,
+    NMAP_PORTID_KEY,
+    NMAP_PORTS_KEY,
+    NMAP_VENDOR_KEY,
+    DEFAULT_SERIAL_BAUD_RATE,
+    SERIAL_SCAN_SIGNATURES,
+    SMA_MODTCP_SCAN_ITEMS,
+    SMA_MODTCP_UNIT_IDS
+)
+
 logger = logging.getLogger(__name__)
-
-DEFAULT_NMAP_SCAN_OPTS = ['--disable-arp-ping', '-p', '22,80,443,502']
-DEFAULT_SERIAL_DEV = '/dev/ttyAMA0'
-
-MODTCP_PORT = 502
-SMA_MODTCP_UNIT_IDS = [3]
-DSE_MODTCP_UNIT_IDS = [1]
-MODTCP_TIMEOUT = 1
-MODTCP_UNIT_ID_KEY = 'unit_id'
-MODTCP_FIELD_KEY = 'field'
-MODTCP_REGISTER_KEY = 'register'
-MODTCP_WORDS_KEY = 'words'
-MODTCP_DATATYPE_KEY = 'uint32'
-SMA_MODTCP_SCAN_ITEMS = [
-    {
-        MODTCP_FIELD_KEY: 'sma_device_class',
-        MODTCP_REGISTER_KEY: 30051,
-        MODTCP_WORDS_KEY: 2,
-        MODTCP_DATATYPE_KEY: 'uint32'
-    },
-    {
-        MODTCP_FIELD_KEY: 'sma_device_type',
-        MODTCP_REGISTER_KEY: 30053,
-        MODTCP_WORDS_KEY: 2,
-        MODTCP_DATATYPE_KEY: 'uint32'
-    },
-    {
-        MODTCP_FIELD_KEY: 'sma_inverter_serial',
-        MODTCP_REGISTER_KEY: 30057,
-        MODTCP_WORDS_KEY: 2,
-        MODTCP_DATATYPE_KEY: 'uint32'
-    }
-]
-DSE_MODTCP_SCAN_ITEMS = [
-    {
-        MODTCP_FIELD_KEY: 'dse_model_number',
-        MODTCP_REGISTER_KEY: 769,
-        MODTCP_WORDS_KEY: 1,
-        MODTCP_DATATYPE_KEY: 'uint16'
-    },
-    {
-        MODTCP_FIELD_KEY: 'dse_control_mode',
-        MODTCP_REGISTER_KEY: 772,
-        MODTCP_WORDS_KEY: 1,
-        MODTCP_DATATYPE_KEY: 'uint16'
-    },
-    {
-        MODTCP_FIELD_KEY: 'dse_serial',
-        MODTCP_REGISTER_KEY: 770,
-        MODTCP_WORDS_KEY: 2,
-        MODTCP_DATATYPE_KEY: 'uint32'
-    },
-]
-MODTCP_RESULT_KEY = 'modbustcp'
-
-SERIAL_SCAN_SIGNATURES = [{
-    'name': 'Gamicos ultrasonic sensor',
-    'slave_id': 1,
-    'reading': 'fuel level (distance from sensor (m))',
-    'register': 1,
-    'words': 2,
-    'datatype': 'float',
-    'fncode': 3
-}, {
-    'name': 'IMT irradiation sensor',
-    'slave_id': 2,
-    'reading': 'irradiance (W/m2)',
-    'register': 0,
-    'words': 1,
-    'datatype': 'uint16',
-    'fncode': 4
-}, {
-    'name': 'APM303 genset controller',
-    'slave_id': 5,
-    'reading': 'oil pressure (bar)',
-    'register': 28,
-    'words': 1,
-    'datatype': 'int16',
-    'fncode': 4
-}, {
-    'name': 'APM303 genset controller',
-    'slave_id': 6,
-    'reading': 'oil pressure (bar)',
-    'register': 28,
-    'words': 1,
-    'datatype': 'int16',
-    'fncode': 4
-}, {
-    'name': 'Cummins PS0600',
-    'slave_id': 4,
-    'reading': 'genset state',
-    'register': 10,
-    'words': 1,
-    'datatype': 'uint16',
-    'fncode': 3
-}, {
-    'name': 'Cummins PS0600',
-    'slave_id': 3,
-    'reading': 'genset state',
-    'register': 10,
-    'words': 1,
-    'datatype': 'uint16',
-    'fncode': 3
-}, {
-    'name': 'Holykell HPT604',
-    'slave_id': 7,
-    'reading': 'fuel level (distance from sensor (mm))',
-    'register': 2,
-    'words': 1,
-    'datatype': 'uint16',
-    'fncode': 3
-}, {
-    'name': 'Holykell HPT604',
-    'slave_id': 8,
-    'reading': 'fuel level (distance from sensor (mm))',
-    'register': 2,
-    'words': 1,
-    'datatype': 'uint16',
-    'fncode': 3
-}]
-
-SERIAL_SCAN_BAUD_RATE = 9600
-
-NMAP_ADDR_KEY = 'addr'
-NMAP_ADDR_TYPE_KEY = 'addrtype'
-NMAP_IP_ADDR_TYPE = 'ipv4'
-NMAP_MAC_ADDR_TYPE = 'mac'
-NMAP_VENDOR_KEY = 'vendor'
-NMAP_PORTS_KEY = 'ports'
-NMAP_PORT_KEY = 'port'
-NMAP_PORT_STATE_KEY = 'state'
-NMAP_PORT_OPEN = 'open'
-NMAP_PORTID_KEY = 'portid'
-
-HOST_IP_KEY = 'ipv4'
-HOST_MAC_KEY = 'mac'
-HOST_VENDOR_KEY = 'vendor'
-HOST_PORTS_KEY = 'ports'
 
 
 class NetworkEnv():
@@ -410,19 +302,19 @@ class SerialEnv():
         result = []
 
         for sig in SERIAL_SCAN_SIGNATURES:
-            test = f"Testing slave ID {sig['slave_id']} for {sig['name']} at baud rate {SERIAL_SCAN_BAUD_RATE}"
-            with ModbusRTUReader(device, sig['slave_id'], SERIAL_SCAN_BAUD_RATE, timeout=1, debug=True) as r:
+            test = f"Testing slave ID {sig['slave_id']} for {sig['name']} at baud rate {DEFAULT_SERIAL_BAUD_RATE}"
+            with ModbusRTUReader(device, sig['slave_id'], DEFAULT_SERIAL_BAUD_RATE, timeout=1, debug=True) as r:
                 try:
                     response = process_reading(r.read(register=sig['register'], words=sig['words'],
                                                       fncode=sig['fncode']), datatype=sig['datatype'])
                     res = f"Got test response for {sig['reading']} = {response}"
                     if response is not None:
                         res += f" ==> SUCCESS: Device {sig['name']} present as ID {sig['slave_id']} " \
-                               f"at baud rate = {SERIAL_SCAN_BAUD_RATE}"
+                               f"at baud rate = {DEFAULT_SERIAL_BAUD_RATE}"
                 except Exception as e:
                     res = f"Error: {e}"
                     res += f". {sig['name']} doesn't show up, make sure the configuration is correct:" \
-                           f" slave id = {sig['slave_id']}, baud rate = {SERIAL_SCAN_BAUD_RATE}"
+                           f" slave id = {sig['slave_id']}, baud rate = {DEFAULT_SERIAL_BAUD_RATE}"
             result.append([test, res])
         return result
 
