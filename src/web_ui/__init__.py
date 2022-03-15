@@ -149,7 +149,7 @@ def wifi_ap_status():
     if args['action'] in ACTIONS:
         action_result = ACTIONS[args['action']](None)
     else:
-        action_result = None
+        action_result = {'Error': 'Unknown action'}
 
     return render_template(
         'custom_actions.html',
