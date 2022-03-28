@@ -48,6 +48,8 @@
         "grid_S": {"description": "Mains total VA", "register": 1568, "words": 2, "datatype": "int32", "multiplier": 1, "unit": "VA", "typecast": "float", "valuemap": {"0xffffffff": null}},
         "grid_S_L1": {"description": "Mains L1 VA", "register": 1562, "words": 2, "datatype": "int32", "multiplier": 1, "unit": "VA", "typecast": "float", "valuemap": {"0xffffffff": null}},
         "grid_S_L2": {"description": "Mains L2 VA", "register": 1564, "words": 2, "datatype": "int32", "multiplier": 1, "unit": "VA", "typecast": "float", "valuemap": {"0xffffffff": null}},
-        "grid_S_L3": {"description": "Mains L3 VA", "register": 1566, "words": 2, "datatype": "int32", "multiplier": 1, "unit": "VA", "typecast": "float", "valuemap": {"0xffffffff": null}}
+        "grid_S_L3": {"description": "Mains L3 VA", "register": 1566, "words": 2, "datatype": "int32", "multiplier": 1, "unit": "VA", "typecast": "float", "valuemap": {"0xffffffff": null}},
+        "grid_E": {"description": "Mains positive energy", "register": 1810, "words": 2, "datatype": "uint32", "multiplier": 100, "unit": "Wh", "typecast": "float", "valuemap": {"0xffffffff": null}},
+        "feedin_E": {"description": "Mains negative energy", "register": 1812, "words": 2, "datatype": "uint32", "multiplier": 100, "unit": "Wh", "typecast": "float", "valuemap": {"0xffffffff": null}}
     }
 }
