@@ -76,6 +76,11 @@ apps:
     adapter: full
     command: bin/redis-cli
     plugs: [network]
+  mosquitto:
+    command: bin/mosquitto_launcher.sh
+    daemon: simple
+    restart-condition: always
+    plugs: [network, network-bind]
 
 parts:
   ammp-edge:
@@ -127,6 +132,9 @@ parts:
     plugin: nil
     stage-snaps:
      - mosquitto
+    organize:
+      launcher.sh: bin/mosquitto_launcher.sh
+    
 
 plugs:
   provisioning-edge:
