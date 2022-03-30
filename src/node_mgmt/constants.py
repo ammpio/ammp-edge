@@ -116,6 +116,14 @@ SERIAL_SCAN_SIGNATURES = [{
     'words': 1,
     'datatype': 'uint16',
     'fncode': 3
+}, {
+    'name': 'Carlo Gavazzi meter EM24',
+    'slave_id': 9,
+    'reading': 'Frequency (Hz*10)',
+    'register': 55,
+    'words': 1,
+    'datatype': 'int16',
+    'fncode': 3
 }]
 
 DEFAULT_SERIAL_BAUD_RATE = 9600
