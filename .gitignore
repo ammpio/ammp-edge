@@ -12,3 +12,8 @@
 src/*.egg-info/
 *.egg
 src/build/
+
+# Directories related to snapcraft build
+parts/
+prime/
+stage/
