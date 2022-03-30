@@ -123,6 +123,10 @@ parts:
     organize:
       '*': bin/
     prime: [bin]
+  mosquitto:
+    plugin: nil
+    stage-snaps:
+     - mosquitto
 
 plugs:
   provisioning-edge:
