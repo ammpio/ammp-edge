@@ -77,9 +77,10 @@ apps:
     command: bin/redis-cli
     plugs: [network]
   mosquitto:
-    command: bin/mosquitto_launcher.sh
+    command: bin/mosquitto_svc.sh
     daemon: simple
     restart-condition: always
+    restart-delay: 2s
     plugs: [network, network-bind]
 
 parts:
@@ -104,6 +105,9 @@ parts:
     prime:
       - remote.yaml
       - redis.conf
+      - mosquitto.conf.tpl
+      - mqtt-bridge.conf.tpl
+      - mqtt-bridge-stage.conf.tpl
   resources:
     plugin: dump
     source: resources
@@ -127,13 +131,41 @@ parts:
     source: bin
     organize:
       '*': bin/
-    prime: [bin]
-  mosquitto:
+    prime: 
+     - bin
+  envsubst:
     plugin: nil
-    stage-snaps:
-     - mosquitto
-    organize:
-      launcher.sh: bin/mosquitto_launcher.sh
+    stage-packages:
+     - gettext-base
+    prime:
+     -  usr/bin/envsubst
+  mosquitto:
+    plugin: make
+    make-parameters: 
+     - "prefix=/usr"
+     - "WITH_DOCS=no"
+     - "WITH_CJSON=no"
+     - "WITH_ADNS=yes"
+     - "CFLAGS=-Wall -ggdb -O2 -I$SNAPCRAFT_STAGE/include -D_GNU_SOURCE"
+    source: https://github.com/eclipse/mosquitto
+    source-type: git
+    source-tag: v2.0.14
+    source-depth: 1
+    build-packages:
+      - libssl-dev
+      - gcc
+      - g++
+    stage-packages:
+      - libssl1.0.0
+    prime:
+      - usr/sbin/mosquitto
+      - usr/lib/libmosquitto.so*
+      - lib/*-linux-gnu/libcrypto.so*
+      - lib/*-linux-gnu/libssl.so*
+      - usr/include/mosquitto.h
+      - usr/include/mosquitto_broker.h
+      - usr/include/mosquitto_plugin.h
+      - usr/include/mqtt_protocol.h
     
 
 plugs:
