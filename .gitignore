@@ -18,3 +18,6 @@ parts/
 prime/
 stage/
 *.snap
+
+# Directories related to Rust code
+rust/target/

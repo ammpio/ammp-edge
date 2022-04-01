@@ -1,0 +1,12 @@
+[workspace]
+
+members = [
+    "ammp-kvs",
+    "kvstore"
+]
+
+[profile.release]
+strip = true  # Automatically strip symbols from the binary.
+lto = true
+opt-level = "z"  # Optimize for size.
+codegen-units = 1

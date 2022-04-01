@@ -133,6 +133,9 @@ parts:
       '*': bin/
     prime: 
      - bin
+  rust-binaries:
+    plugin: rust
+    source: rust
   envsubst:
     plugin: nil
     stage-packages:
