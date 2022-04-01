@@ -14,9 +14,10 @@ pub struct Cat {
 }
 
 fn main() -> Result<()> {
+    env_logger::init();
     let sqlite_db = format!(
         "{}/{}",
-        env::var(BASE_PATH_ENV_VAR).unwrap_or(String::from(".")),
+        env::var(BASE_PATH_ENV_VAR).unwrap_or_else(|_| String::from(".")),
         SQLITE_REL_PATH
     );
 

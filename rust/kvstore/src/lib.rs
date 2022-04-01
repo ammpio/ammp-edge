@@ -40,8 +40,8 @@ impl<AccessTag> Db<AccessTag> {
 // Methods specific to read-only connection
 impl DbRO {
     pub fn open(path: impl AsRef<Path>) -> Result<Self> {
-        println!("Connecting in read-only mode");
-        let connection = Connection::open_with_flags(path, OpenFlags::SQLITE_OPEN_READ_ONLY)?;
+        let connection = Connection::open_with_flags(&path, OpenFlags::SQLITE_OPEN_READ_ONLY)?;
+        log::info!("Opened {} in read-only mode", path.as_ref().display());
         Ok(Db(connection, AccessRO))
     }
 }
@@ -49,10 +49,13 @@ impl DbRO {
 // Methods specific to read-write connection
 impl DbRW {
     pub fn open(path: impl AsRef<Path>) -> Result<Self> {
-        println!("Connecting in read-write mode");
         // Create directory for DB if it doesn't already exist
-        std::fs::create_dir_all(path.as_ref().parent().unwrap_or(Path::new("")))?;
-        let connection = Connection::open(path)?;
+        std::fs::create_dir_all(path.as_ref().parent().unwrap_or_else(|| Path::new("")))?;
+        let connection = Connection::open(&path)?;
+        connection.execute_batch(
+            "PRAGMA journal_mode = WAL;  -- better write-concurrency
+            PRAGMA synchronous = FULL;  -- fsync after each commit",
+        )?;
         connection.execute(
             &format!(
                 "CREATE TABLE IF NOT EXISTS '{TABLENAME}' (
@@ -62,7 +65,7 @@ impl DbRW {
             ),
             [],
         )?;
-
+        log::info!("Opened {} in read-write mode", path.as_ref().display());
         Ok(Db(connection, AccessRW))
     }
 
@@ -72,7 +75,7 @@ impl DbRW {
             ON CONFLICT({KEY_FIELD}) DO UPDATE SET {VALUE_FIELD}=?2",
         ))?;
         let res = stmt.execute(params![key.as_ref(), value.as_ref()])?;
-        println!("Inserted: {:?}", res);
+        log::debug!("Inserted: {:?}", res);
         Ok(())
     }
 
@@ -82,12 +85,26 @@ impl DbRW {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
+    use super::*;
+    const IN_MEMORY: &str = ":memory:";
+    const TEST_KEY: &str = "key";
+    const TEST_VALUE: &[u8] = b"value";
+
     #[test]
-    fn it_works() {
-        let result = 2 + 2;
-        assert_eq!(result, 4);
+    fn open_db_read_and_write() -> Result<()> {
+        let db = DbRW::open(&IN_MEMORY)?;
+        db.upsert(TEST_KEY, TEST_VALUE)?;
+        assert_eq!(TEST_VALUE, db.select(TEST_KEY).unwrap().unwrap());
+        Ok(())
+    }
+
+    #[test]
+    fn open_db_read_error() -> Result<()> {
+        let db = DbRO::open(&IN_MEMORY)?;
+        // This will error out since the kvstore table is not initialized
+        assert!(db.select(TEST_KEY).is_err());
+        Ok(())
     }
 }
