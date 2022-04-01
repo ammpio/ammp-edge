@@ -12,3 +12,6 @@ env_logger = "*"
 rusqlite = { version = "*", features = ["bundled"] }
 serde = "*"
 serde_json = "*"
+
+[dev-dependencies]
+serde_derive = "*"
