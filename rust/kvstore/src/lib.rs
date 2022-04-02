@@ -35,6 +35,10 @@ impl<AccessTag> Db<AccessTag> {
             .transpose()
             .map_err(Into::into)
     }
+
+    pub fn get_raw<K: AsRef<str>>(&self, key: K) -> Result<Option<Vec<u8>>> {
+        self.select(key)
+    }
 }
 
 // Methods specific to read-only connection
@@ -75,12 +79,17 @@ impl DbRW {
             ON CONFLICT({KEY_FIELD}) DO UPDATE SET {VALUE_FIELD}=?2",
         ))?;
         let res = stmt.execute(params![key.as_ref(), value.as_ref()])?;
-        log::debug!("Inserted: {:?}", res);
+        log::debug!("Inserted: {:?} row(s)", res);
         Ok(())
     }
 
     pub fn set<K: AsRef<str>, V: Serialize>(&self, key: K, value: V) -> Result<()> {
         self.upsert(key, serde_json::to_vec(&value)?)?;
+        Ok(())
+    }
+
+    pub fn set_raw<K: AsRef<str>, V: AsRef<[u8]>>(&self, key: K, value: V) -> Result<()> {
+        self.upsert(key, &value)?;
         Ok(())
     }
 }

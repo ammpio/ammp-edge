@@ -11,4 +11,4 @@ log = "*"
 env_logger = "*"
 kvstore = { path = "../kvstore" }
 serde = "*"
-serde_derive = "*"
+serde_json = "*"

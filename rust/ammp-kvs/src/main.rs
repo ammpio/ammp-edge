@@ -1,43 +1,50 @@
 use anyhow::Result;
 use kvstore::{DbRO, DbRW};
-use serde_derive::{Deserialize, Serialize};
+use serde_json::Value;
 use std::env;
 
-const SQLITE_REL_PATH: &str = "db/kvstore.db";
+const SQLITE_REL_PATH: &str = "kvs/kvstore.db";
 const BASE_PATH_ENV_VAR: &str = "SNAP_COMMON";
 
-#[derive(Debug, Deserialize, Serialize)]
-pub struct Cat {
-    name: String,
-    lives: u64,
-    siblings: Vec<String>,
-}
+const ACTION_GET: &str = "get";
+const ACTION_SET: &str = "set";
 
 fn main() -> Result<()> {
-    env_logger::init();
+    let args: Vec<String> = env::args().collect();
+    let action = &args[1];
+    let key = &args[2];
+
     let sqlite_db = format!(
         "{}/{}",
         env::var(BASE_PATH_ENV_VAR).unwrap_or_else(|_| String::from(".")),
         SQLITE_REL_PATH
     );
 
-    let db = DbRW::open(&sqlite_db)?;
-
-    let lulu = Cat {
-        name: String::from("Lulu"),
-        lives: 9,
-        siblings: vec![String::from("Mollie"), String::from("Lilly")],
-    };
-
-    db.set("lulu", &lulu)?;
-    let newlu: Cat = db.get("lulu").expect("Error reading KV store").unwrap();
-    println!("Newlu is {:?}", newlu);
-
-    let db2 = DbRO::open(&sqlite_db)?;
-    let newnewlu: Cat = db2.get("lulu").expect("Error reading KV store").unwrap();
-    println!("Newnewlu is {:?}", newnewlu);
-
-    // db2.set("lulu", &lulu)?; // wouldn't compile
+    match action.as_str() {
+        ACTION_GET => {
+            let db = DbRO::open(&sqlite_db)?;
+            let value = db.get_raw(key).expect("Error reading KV store");
+            match value {
+                Some(bytes) => {
+                    let res: Result<Value, serde_json::Error> = serde_json::from_slice(&bytes);
+                    if let Ok(parsed) = res {
+                        if parsed.is_string() {
+                            print!("{}", parsed.as_str().unwrap());
+                            return Ok(());
+                        }
+                    }
+                    print!("{}", String::from_utf8(bytes).unwrap())
+                }
+                None => eprintln!("No value set for key '{key}'"),
+            }
+        }
+        ACTION_SET => {
+            let value = &args[3];
+            let db = DbRW::open(&sqlite_db)?;
+            db.set_raw(key, value)?;
+        }
+        _ => panic!("Action must be one of 'get', 'set'"),
+    }
 
     Ok(())
 }
