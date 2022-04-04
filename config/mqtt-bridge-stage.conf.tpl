@@ -1,4 +1,4 @@
-connection $NODE_ID-bridge
+connection $NODE_ID-brg-stage
 
 address mqtt.stage.ammp.io:8883
 
@@ -9,7 +9,7 @@ bridge_protocol_version mqttv50
 bridge_insecure false
 
 cleansession false
-remote_clientid $NODE_ID-bridge
+remote_clientid $NODE_ID-brg-stage
 start_type automatic
 
 notifications true

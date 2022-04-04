@@ -1,5 +1,5 @@
-listener 1883
-
+listener 1883 127.0.0.1
+allow_anonymous true
 user root
 
 persistence true
