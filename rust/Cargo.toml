@@ -8,7 +8,7 @@ repository = "https://github.com/ammpio/ammp-edge"
 
 [dependencies]
 anyhow = "*"
-env_logger = "*"
+env_logger = { version = "*", default-features = false }
 kvstore = { path = "kvstore" }
 log = "*"
 pico-args = "*"
