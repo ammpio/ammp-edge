@@ -1,7 +1,26 @@
-[workspace]
+[package]
+name = "ammp-cli"
+version = "0.1.0"
+authors = ["AMMP Technologies B.V. <dev@ammp.io>"]
+edition = "2021"
+description = "Edge application for AMMP"
+repository = "https://github.com/ammpio/ammp-edge"
 
+[dependencies]
+anyhow = "*"
+env_logger = "*"
+kvstore = { path = "kvstore" }
+log = "*"
+pico-args = "*"
+serde = "*"
+serde_json = "*"
+
+[[bin]]
+name = "ammp"
+path = "src/main.rs"
+
+[workspace]
 members = [
-    "ammp-kvs",
     "kvstore"
 ]
 

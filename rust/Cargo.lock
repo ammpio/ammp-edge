@@ -23,13 +23,14 @@ dependencies = [
 ]
 
 [[package]]
-name = "ammp-kvs"
+name = "ammp-cli"
 version = "0.1.0"
 dependencies = [
  "anyhow",
  "env_logger",
  "kvstore",
  "log",
+ "pico-args",
  "serde",
  "serde_json",
 ]
@@ -194,6 +195,12 @@ name = "once_cell"
 version = "1.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "87f3e037eac156d1775da914196f0f37741a274155e34a0b7e427c35d2a2ecb9"
+
+[[package]]
+name = "pico-args"
+version = "0.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "db8bcd96cb740d03149cbad5518db9fd87126a10ab519c011893b1754134c468"
 
 [[package]]
 name = "pkg-config"
