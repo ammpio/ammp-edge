@@ -9,9 +9,12 @@ repository = "https://github.com/ammpio/ammp-edge"
 [dependencies]
 anyhow = "*"
 env_logger = { version = "*", default-features = false }
+hex = "*"
 kvstore = { path = "kvstore" }
 log = "*"
+nix = "*"
 pico-args = "*"
+rand = "*"
 serde = "*"
 serde_json = "*"
 

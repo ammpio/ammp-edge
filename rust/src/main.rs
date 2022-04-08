@@ -1,5 +1,6 @@
 mod argsets;
 mod command;
+mod node_funcs;
 
 use anyhow::{anyhow, Result};
 
