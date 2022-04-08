@@ -1,6 +1,6 @@
-use hex::encode;
+use hex;
 use nix::{ifaddrs::getifaddrs, sys::socket::SockAddr};
-use rand::random;
+use rand;
 
 /// Uses the `getifaddrs` call to retrieve a list of network interfaces on the
 /// host device and returns the first MAC address listed that isn't
@@ -32,14 +32,14 @@ pub fn generate_node_id() -> String {
 
     for ifn in IFN_PRIORITY {
         if let Some(address) = get_mac(Some(ifn)) {
-            return encode(address);
+            return hex::encode(address);
         }
     }
 
     if let Some(address) = get_mac(None) {
-        return encode(address);
+        return hex::encode(address);
     }
 
-    let rand_mac: [u8; 5] = random();
-    format!("ff{}", encode(rand_mac))
+    // Generate random node ID with "ff" prefix
+    format!("ff{}", hex::encode(rand::random::<[u8; 5]>()))
 }
