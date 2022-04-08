@@ -1,6 +1,6 @@
 use hex;
 use nix::{ifaddrs::getifaddrs, sys::socket::SockAddr};
-use rand;
+use getrandom::getrandom;
 
 /// Uses the `getifaddrs` call to retrieve a list of network interfaces on the
 /// host device and returns the first MAC address listed that isn't
@@ -43,5 +43,7 @@ pub fn generate_node_id() -> String {
     }
 
     // If not available, generate random node ID with "ff" prefix
-    format!("ff{}", hex::encode(rand::random::<[u8; 5]>()))
+    let mut randmac = [0u8, 5];
+    getrandom(&mut randmac).unwrap();
+    format!("ff{}", hex::encode(randmac))
 }
