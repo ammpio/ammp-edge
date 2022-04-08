@@ -28,6 +28,7 @@ fn get_mac(name: Option<&str>) -> Option<[u8; 6]> {
 }
 
 pub fn generate_node_id() -> String {
+    // Try to get MAC address based on interface list (in order)
     const IFN_PRIORITY: &[&str] = &["eth0", "en0", "eth1", "en1", "em0", "em1", "wlan0", "wlan1"];
 
     for ifn in IFN_PRIORITY {
@@ -36,10 +37,11 @@ pub fn generate_node_id() -> String {
         }
     }
 
+    // If not successful, get MAC of any available interface
     if let Some(address) = get_mac(None) {
         return hex::encode(address);
     }
 
-    // Generate random node ID with "ff" prefix
+    // If not available, generate random node ID with "ff" prefix
     format!("ff{}", hex::encode(rand::random::<[u8; 5]>()))
 }
