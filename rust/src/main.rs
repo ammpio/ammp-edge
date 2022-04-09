@@ -1,6 +1,6 @@
 mod argsets;
 mod command;
-mod node_funcs;
+mod node_mgmt;
 
 use anyhow::{anyhow, Result};
 
