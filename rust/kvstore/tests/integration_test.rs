@@ -1,6 +1,6 @@
 use anyhow::Result;
 use kvstore::{DbRO, DbRW};
-use serde_derive::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 use std::fs;
 
 const SQLITE_DIR: &str = "testdb_temp";

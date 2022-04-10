@@ -14,4 +14,4 @@ serde = "*"
 serde_json = "*"
 
 [dev-dependencies]
-serde_derive = "*"
+serde = {version = "*", features = ["derive"] }
