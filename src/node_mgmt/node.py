@@ -27,8 +27,15 @@ class Node(object):
         self.kvs = KVStore()
 
         try:
+            # possible overwrite of YAML file in SNAP_COMMON dir
+            path_to_yaml_overwrite = os.path.join(os.getenv('SNAP_COMMON', './'), 'remote.yaml')
+            if os.path.isfile(path_to_yaml_overwrite):
+                path_to_remote_yaml = path_to_yaml_overwrite
+            else:
+                path_to_remote_yaml = os.path.join(os.getenv('SNAP', './'), 'remote.yaml')
+                
             # Load base config from YAML file
-            with open(os.path.join(os.getenv('SNAP', './'), 'remote.yaml'), 'r') as remote_yaml:
+            with open(path_to_remote_yaml, 'r') as remote_yaml:
                 remote = yaml.safe_load(remote_yaml)
                 self.remote_api = remote['api']
                 self.data_endpoints = remote.get('data-endpoints', [])
