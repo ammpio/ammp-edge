@@ -45,7 +45,7 @@ impl<AccessTag> Db<AccessTag> {
 impl DbRO {
     pub fn open(path: impl AsRef<Path>) -> Result<Self> {
         let connection = Connection::open_with_flags(&path, OpenFlags::SQLITE_OPEN_READ_ONLY)?;
-        log::info!("Opened {} in read-only mode", path.as_ref().display());
+        log::debug!("Opened {} in read-only mode", path.as_ref().display());
         Ok(Db(connection, AccessRO))
     }
 }
@@ -69,7 +69,7 @@ impl DbRW {
             ),
             [],
         )?;
-        log::info!("Opened {} in read-write mode", path.as_ref().display());
+        log::debug!("Opened {} in read-write mode", path.as_ref().display());
         Ok(Db(connection, AccessRW))
     }
 
