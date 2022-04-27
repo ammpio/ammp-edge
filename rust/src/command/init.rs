@@ -1,11 +1,15 @@
 use anyhow::Result;
 
-use crate::node_mgmt::{activate, generate_node_id};
-use crate::interfaces::kvstore;
 use crate::interfaces::keys;
-
+use crate::interfaces::kvstore;
+use crate::node_mgmt::{activate, generate_node_id};
 
 pub fn init() -> Result<()> {
+    if let Ok(Some(node_id)) = kvstore::get::<_, String>(keys::NODE_ID) {
+        log::info!("Node ID: {node_id}");
+        return Ok(());
+    }
+
     let node_id = generate_node_id();
     log::info!("Node ID is {}", node_id);
 
