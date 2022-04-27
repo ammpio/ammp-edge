@@ -84,7 +84,8 @@ impl DbRW {
     }
 
     pub fn set<K: AsRef<str>, V: Serialize>(&self, key: K, value: V) -> Result<()> {
-        self.upsert(key, serde_json::to_vec(&value)?)?;
+        self.upsert(&key, serde_json::to_vec(&value)?)?;
+        // log::debug!("Set {}={:?}", key.as_ref(), serde_json::to_vec(&value)?);
         Ok(())
     }
 
