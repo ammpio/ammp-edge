@@ -1,6 +1,7 @@
 use anyhow::Result;
 
 use crate::helpers::now_iso;
+use crate::interfaces::{get_legacy_config};
 use crate::interfaces::keys;
 use crate::interfaces::kvstore;
 use crate::node_mgmt::{activate, generate_node_id};
@@ -9,6 +10,15 @@ pub fn init() -> Result<()> {
     if let Ok(Some(node_id)) = kvstore::get::<_, String>(keys::NODE_ID) {
         log::info!("Node ID: {node_id}");
         return Ok(());
+    }
+
+    match get_legacy_config() {
+        Ok(Some(config)) => {
+            log::info!("Legacy config found: {:?}; migrating...", config);
+            // TODO: Migrate config
+            return Ok(());
+        },
+        _ => log::info!("Legacy config not found"),
     }
 
     let node_id = generate_node_id();

@@ -28,6 +28,7 @@ dependencies = [
  "native-tls",
  "nix",
  "pico-args",
+ "rusqlite",
  "serde",
  "serde_json",
  "ureq",
