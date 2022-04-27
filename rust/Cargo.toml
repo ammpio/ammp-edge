@@ -9,6 +9,7 @@ repository = "https://github.com/ammpio/ammp-edge"
 [dependencies]
 anyhow = "*"
 backoff = "*"
+chrono = "*"
 env_logger = { version = "*", default-features = false }
 getrandom = "*"
 hex = "*"

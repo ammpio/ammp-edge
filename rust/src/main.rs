@@ -1,5 +1,6 @@
 mod argsets;
 mod command;
+mod helpers;
 mod node_mgmt;
 mod interfaces;
 
