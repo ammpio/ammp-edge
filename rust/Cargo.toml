@@ -8,15 +8,18 @@ repository = "https://github.com/ammpio/ammp-edge"
 
 [dependencies]
 anyhow = "*"
+backoff = "*"
 env_logger = { version = "*", default-features = false }
 getrandom = "*"
 hex = "*"
 kvstore = { path = "kvstore" }
 log = "*"
+native-tls = "*"
 nix = "*"
 pico-args = "*"
-serde = "*"
+serde = {version = "*", features = ["derive"] }
 serde_json = "*"
+ureq = { version = "*", default-features = false, features = ["json", "native-tls"] }
 
 [[bin]]
 name = "ammp"
