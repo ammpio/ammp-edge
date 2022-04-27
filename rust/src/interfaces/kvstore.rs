@@ -24,6 +24,7 @@ pub fn get<K: AsRef<str>, V: DeserializeOwned>(key: K) -> Result<Option<V>> {
     db.get(&key)
 }
 
+#[allow(dead_code)]
 pub fn get_many<K: AsRef<str>, V: DeserializeOwned>(keys: Vec<K>) -> Result<Vec<Option<V>>> {
     let db = DbRO::open(&sqlite_db_path())?;
     let mut res: Vec<Option<V>> = vec![];

@@ -5,7 +5,6 @@ use serde_json::{json, Value};
 use crate::interfaces::kvstore;
 
 pub fn kvs_set(args: KvsSetArgs) -> Result<()> {
-    // let db = DbRW::open(&sqlite_db_path())?;
     let res: Result<Value, serde_json::Error> = serde_json::from_str(&args.value);
     // If input was valid JSON, then set value to this;
     // otherwise treat input as a string, and generate JSON from it
@@ -17,7 +16,6 @@ pub fn kvs_set(args: KvsSetArgs) -> Result<()> {
 }
 
 pub fn kvs_get(args: KvsGetArgs) -> Result<()> {
-    // let db = DbRO::open(&sqlite_db_path())?;
     let value: Value = kvstore::get(&args.key)?
         .ok_or_else(|| anyhow!("No value set for key '{}'", &args.key))?;
     // If the value contains a single string, just output that
