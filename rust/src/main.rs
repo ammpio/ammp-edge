@@ -1,6 +1,7 @@
 mod argsets;
 mod command;
 mod node_mgmt;
+mod interfaces;
 
 use anyhow::{anyhow, Result};
 
@@ -9,6 +10,8 @@ const CMD_KVS_GET: &str = "kvs-get";
 const CMD_KVS_SET: &str = "kvs-set";
 
 fn main() -> Result<()> {
+    env_logger::init();
+
     let mut args = pico_args::Arguments::from_env();
     match args.subcommand()?.as_deref() {
         Some(CMD_INIT) => command::init(),
@@ -19,6 +22,6 @@ fn main() -> Result<()> {
             key: args.free_from_str()?,
             value: args.free_from_str()?,
         }),
-        _ => Err(anyhow!("Subcommand must be one of 'kvs-get', 'kvs-set'")),
+        _ => Err(anyhow!("Subcommand must be one of 'init', 'kvs-get', 'kvs-set'")),
     }
 }
