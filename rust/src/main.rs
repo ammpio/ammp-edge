@@ -5,6 +5,7 @@ mod interfaces;
 mod node_mgmt;
 
 use anyhow::{anyhow, Result};
+use dotenv::dotenv;
 use env_logger::Env;
 
 const CMD_INIT: &str = "init";
@@ -12,9 +13,10 @@ const CMD_KVS_GET: &str = "kvs-get";
 const CMD_KVS_SET: &str = "kvs-set";
 
 const LOG_LEVEL_ENV_VAR: &str = "LOGGING_LEVEL";
-const DEFAULT_LOG_LEVEL: &str = "info";
+const DEFAULT_LOG_LEVEL: &str = "INFO";
 
 fn main() -> Result<()> {
+    dotenv()?;
     env_logger::Builder::from_env(Env::default().filter_or(LOG_LEVEL_ENV_VAR, DEFAULT_LOG_LEVEL))
         .init();
 
