@@ -5,7 +5,7 @@ from easysnmp import Session
 import builtins
 
 class Reader(object):
-    def __init__(self, host, port=161, community='public', version=2, timeout=60):
+    def __init__(self, host, port=161, community='public', version=2, timeout=60, **kwargs):
 
         self._host = host
         self._port = port
