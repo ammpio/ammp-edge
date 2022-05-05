@@ -9,7 +9,7 @@ edition = "2021"
 anyhow = "*"
 log = "*"
 env_logger = { version = "*", default-features = false }
-rusqlite = { version = "*", features = ["bundled"] }
+rusqlite = { version = "*" }
 serde = "*"
 serde_json = "*"
 

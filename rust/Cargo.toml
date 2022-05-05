@@ -19,7 +19,7 @@ log = "*"
 native-tls = "*"
 nix = { version = "0.23" }
 pico-args = "*"
-rusqlite = { version = "*", features = ["bundled"] }
+rusqlite = { version = "*" }
 serde = {version = "*", features = ["derive"] }
 serde_json = "*"
 ureq = { version = "*", default-features = false, features = ["json", "native-tls"] }
