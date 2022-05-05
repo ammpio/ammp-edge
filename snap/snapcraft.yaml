@@ -102,7 +102,6 @@ parts:
     plugin: dump
     source: config
     prime:
-      - remote.yaml
       - mosquitto.conf.tpl
       - mqtt-bridge.conf.tpl
       - mqtt-bridge-stage.conf.tpl

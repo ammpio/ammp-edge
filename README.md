@@ -40,4 +40,4 @@ make local-run
 to spin up the necessary Docker containers and run the `ammp-edge` code.
 
 ### Interfaces
-Currently, ammp-edge pulls its configuration from the AMMP API and interfaces with the AMMP MQTT broker. This can be altered by modifying the `remote.yaml` configuration.
+Currently, ammp-edge pulls its configuration from the AMMP API and interfaces with the AMMP MQTT broker.

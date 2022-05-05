@@ -1,13 +1,8 @@
 import logging
-import yaml
 import json
-import requests
-import sys
 import os
-import time
 
-from db_model import NodeConfig
-from kvstore import KVStore
+from kvstore import keys, KVStore
 from edge_api import EdgeAPI
 from .events import NodeEvents
 from .config_watch import ConfigWatch
@@ -26,65 +21,16 @@ class Node(object):
 
         self.kvs = KVStore()
 
-        try:
-            # Load base config from YAML file
-            with open(os.path.join(os.getenv('SNAP', './'), 'remote.yaml'), 'r') as remote_yaml:
-                remote = yaml.safe_load(remote_yaml)
-                self.remote_api = remote['api']
-                self.data_endpoints = remote.get('data-endpoints', [])
-                for dep in self.data_endpoints:
-                    if dep.get('isdefault') and dep.get('type') == 'mqtt':
-                        self._remote_mqtt_broker_config = dep['config']
-                    else:
-                        logger.warning(f"No remote MQTT Broker found for endpoint: [{dep.get('name')}]")
-                        continue
-        except Exception:
-            logger.exception('Base configuration file remote.yaml cannot be loaded. Quitting')
-            sys.exit('Base configuration file remote.yaml cannot be loaded. Quitting')
-
-        # If additional provisioning remote.yaml is available, load it also
-        try:
-            with open(os.path.join(os.getenv('SNAP', './'), 'provisioning', 'remote.yaml'), 'r') as p_remote_yaml:
-                remote = yaml.safe_load(p_remote_yaml)
-                if isinstance(remote.get('data-endpoints'), list):
-                    self.data_endpoints.extend(remote['data-endpoints'])
-                    logger.info(f"Added {len(remote['data-endpoints'])} data endpoints from provisioning remote.yaml")
-                else:
-                    logger.info("No valid data-endpoints definition found in provisioning remote.yaml")
-        except FileNotFoundError:
-            logger.info("No provisioning remote.yaml found")
-        except Exception:
-            logger.exception('Exception while trying to process provisioning remote.yaml')
-
-        try:
-            self._dbconfig = NodeConfig.get()
-
-            if self._dbconfig.node_id == 'd43639139e08':
-                raise ValueError('Node ID indicates Moxa with hardcoded non-unique MAC. Needs re-initialization')
-        except NodeConfig.DoesNotExist:
-            logger.info('No node configuration found in internal database. Attempting node initialization')
-            self.__initialize()
-        except ValueError:
-            logger.warning('ValueError in config.', exc_info=True)
-            self.__initialize()
-
-        self.node_id = self._dbconfig.node_id
-        self.access_key = self._dbconfig.access_key
+        self.node_id = self.kvs.get(keys.NODE_ID)
+        self.access_key = self.kvs.get(keys.ACCESS_KEY)
 
         logger.info('Node ID: %s', self.node_id)
 
         self.api = EdgeAPI()
         logger.info("Instantiated API")
 
-        try:
-            self.mqtt_client = MQTTPublisher(
-                node_id=self.node_id,
-                access_key=self.access_key,
-                config=self._remote_mqtt_broker_config
-            )
-            logger.info("Instantiated MQTT")
-        except AttributeError:
-            logger.warning("No MQTT Connection initialized. Missing MQTT endpoint in remote.yaml")
+        self.mqtt_client = MQTTPublisher()
+        logger.info("Instantiated MQTT")
 
         self.events = NodeEvents()
         config_watch = ConfigWatch(self)
@@ -93,12 +39,11 @@ class Node(object):
         command_watch = CommandWatch(self)
         command_watch.start()
 
-        self.config = None
+        self.config = self.kvs.get(keys.CONFIG)
 
-        if self._dbconfig.config:
+        if self.config is not None:
             # Configuration is available in DB; use this
             logger.info('Using stored configuration from database')
-            self.config = self._dbconfig.config
         else:
             # Check for a provisioning configuration
             try:
@@ -123,17 +68,6 @@ class Node(object):
         # Load drivers from files, and also add any from the config
         self.drivers = self.__get_drivers()
         self.update_drv_from_config()
-        # Updates data endpoints if present in the remote config
-        self.update_endpoints_from_config()
-
-    @property
-    def node_id(self) -> str:
-        return self._node_id
-
-    @node_id.setter
-    def node_id(self, value) -> None:
-        self._node_id = value
-        self.kvs.set('node:node_id', value)
 
     @property
     def config(self) -> dict:
@@ -143,25 +77,7 @@ class Node(object):
     def config(self, value) -> None:
         self._config = value
         if value is not None:
-            self.kvs.set('node:config', value)
-
-    @property
-    def access_key(self) -> str:
-        return self._access_key
-
-    @access_key.setter
-    def access_key(self, value) -> None:
-        self._access_key = value
-        self.kvs.set('node:access_key', value)
-
-    @property
-    def remote_api(self) -> dict:
-        return self._remote_api
-
-    @remote_api.setter
-    def remote_api(self, value) -> None:
-        self._remote_api = value
-        self.kvs.set('node:remote_api', value)
+            self.kvs.set(keys.CONFIG, value)
 
     @property
     def drivers(self) -> dict:
@@ -170,130 +86,6 @@ class Node(object):
     @drivers.setter
     def drivers(self, value) -> None:
         self._drivers = value
-
-    def __initialize(self) -> None:
-        node_id = self.__generate_node_id()
-        logger.info('Generated node ID %s' % node_id)
-
-        access_key = None
-        while not access_key:
-            access_key = self.__do_node_activation(node_id)
-            if not access_key:
-                logger.error('Unable to obtain access key. Retrying in %d seconds...' % ACTIVATE_RETRY_DELAY)
-                time.sleep(ACTIVATE_RETRY_DELAY)
-
-        # If there are existing saved configs (potentially for a different node_id, wipe them)
-        try:
-            q = NodeConfig.delete()
-            n_deleted = q.execute()
-            if n_deleted:
-                logger.info('Deleted %d existing config(s)' % n_deleted)
-        except Exception:
-            logger.warning('Could not clean existing config database')
-
-        # Save node_id and access_key in database
-        self._dbconfig = NodeConfig.create(node_id=node_id, access_key=access_key)
-        self._dbconfig.save()
-        logger.debug('Saved new config for node ID %s' % node_id)
-
-    def __generate_node_id(self) -> str:
-        # Get ID (ideally hardware MAC address) that is used to identify logger when pushing data
-        def get_hw_addr(ifname: str) -> str:
-            import socket
-            from fcntl import ioctl
-            import struct
-
-            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
-                info = ioctl(s.fileno(), 0x8927, struct.pack('256s', bytes(ifname, 'utf-8')[:15]))
-
-            return info[18:24].hex()
-
-        node_id = None
-
-        # First try to get the address of the primary Ethernet adapter
-        ifn_wanted = ['eth0', 'en0', 'eth1', 'en1', 'em0', 'em1', 'wlan0', 'wlan1']
-        for ifn in ifn_wanted:
-            try:
-                node_id = get_hw_addr(ifn)
-            except Exception as e:
-                logger.warn(f"Could not get MAC address of interface {ifn}. Exception {e}")
-
-            if node_id:
-                break
-
-        if not node_id:
-            logger.warn('Cannot find primary network interface MAC; trying UUID MAC')
-
-            try:
-                from uuid import getnode
-
-                uuid_node = getnode()
-                node_id = "{0:0{1}x}".format(uuid_node, 12)
-
-            except Exception:
-                logger.exception('Cannot get MAC via UUID method; generating random node ID starting with ff')
-
-                # If that also doesn't work, generate a random 12-character hex string
-                import random
-                node_id = 'ff' + '%010x' % random.randrange(16**10)
-
-        if node_id == 'd43639139e08':
-            # This is a Moxa with a hardcoded MAC address. Need to generate something semi-random...
-            logger.warning('Generating semi-random ID for Moxa with hardcoded MAC')
-            import random
-            node_id = 'd43639' + ('%06x' % random.randrange(16**6))
-
-        return node_id
-
-    def __do_node_activation(self, node_id: str) -> str:
-
-        # Initiate activation
-        logger.info('Requesting activation for node %s' % node_id)
-
-        try:
-            r1 = requests.get(
-                'https://%s/api/%s/nodes/%s/activate' % (self.remote_api['host'], self.remote_api['apiver'], node_id)
-                )
-            rtn = json.loads(r1.text)
-
-            if r1.status_code == 200:
-                access_key = rtn['access_key']
-                logger.info('Obtained API key')
-                if rtn:
-                    logger.debug('API response: %s' % rtn)
-            else:
-                logger.error('Error %d requesting activation from API' % r1.status_code)
-                if rtn:
-                    logger.debug('API response: %s' % rtn)
-                return None
-        except Exception:
-            logger.exception('Exception raised while requesting activation from API')
-            return None
-
-        # Confirm activation
-        logger.info('Confirming activation for node %s' % node_id)
-
-        try:
-            r2 = requests.post(
-                'https://%s/api/%s/nodes/%s/activate' % (self.remote_api['host'], self.remote_api['apiver'], node_id),
-                headers={'Authorization': access_key}
-                )
-            rtn = json.loads(r2.text)
-
-            if r2.status_code == 200:
-                logger.info('Confirmed activation')
-                if rtn:
-                    logger.debug('API response: %s' % rtn)
-            else:
-                logger.error('Error %d confirming activation with API' % r2.status_code)
-                if rtn:
-                    logger.debug('API response: %s' % rtn)
-                return None
-        except Exception:
-            logger.exception('Exception raised while confirming activation with API')
-            return None
-
-        return access_key
 
     def __get_drivers(self) -> dict:
 
@@ -312,19 +104,6 @@ class Node(object):
 
         return drivers
 
-    def save_config(self) -> None:
-        """
-        This method saves the current config to the database. It is not only an internal method, as it needs to be
-        called also by the config_watch thread, when a new config has been obtained from the API.
-        """
-
-        try:
-            self._dbconfig.config = self.config
-            self._dbconfig.save()
-            logger.debug('Saved active config to internal database')
-        except Exception:
-            logger.exception('Exception raised when attempting to commit configuration to database')
-
     def update_drv_from_config(self) -> None:
         """
         Check whether there are custom drivers in the config definition, and if so add them to the driver definition.
@@ -335,13 +114,3 @@ class Node(object):
                 self.drivers.update(self.config['drivers'])
             except AttributeError:
                 self.drivers = self.config['drivers']
-
-    def update_endpoints_from_config(self) -> None:
-        """
-        Check whether there are custom endpoints in the config definition, and if so update the data_endpoints
-        """
-        if 'data_endpoints' in self.config:
-            try:
-                self.data_endpoints = self.config['data_endpoints']
-            except Exception:
-                logger.exception('Exception raised while updating data-endpoints from config')

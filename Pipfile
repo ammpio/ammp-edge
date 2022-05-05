@@ -18,7 +18,6 @@ yapf = "*"
 autopep8 = "*"
 
 [packages]
-pyyaml = "*"
 python-dotenv = "*"
 pymodbustcp = "*"
 minimalmodbus = "*"
