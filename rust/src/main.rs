@@ -16,7 +16,7 @@ const LOG_LEVEL_ENV_VAR: &str = "LOGGING_LEVEL";
 const DEFAULT_LOG_LEVEL: &str = "INFO";
 
 fn main() -> Result<()> {
-    dotenv()?;
+    let _ = dotenv();
     env_logger::Builder::from_env(Env::default().filter_or(LOG_LEVEL_ENV_VAR, DEFAULT_LOG_LEVEL))
         .init();
 
