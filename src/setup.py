@@ -63,7 +63,6 @@ setup(
         'xmltodict',
         'requests-unixsocket',
         'flask',
-        'redis',
         'paho-mqtt',
         'pyjsonata>=0.0.1a9',
     ]

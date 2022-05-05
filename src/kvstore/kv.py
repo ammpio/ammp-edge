@@ -55,7 +55,7 @@ class KV:
     def set(self, key: str, value) -> bool:
         bvalue = self.__dump(value)
         return self._sqlite.insert(key=key, value=bvalue) \
-                .on_conflict('replace').execute() > 0
+            .on_conflict('replace').execute() > 0
 
     class KVStore(Model):
         key = TextField(primary_key=True)
@@ -78,7 +78,6 @@ class KVStore(KV):
         )
         self._sqlite_db.connect(reuse_if_open=True)
         self._sqlite = self.KVStore
-
 
 
 class KVCache(KV):

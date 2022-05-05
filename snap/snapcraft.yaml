@@ -28,7 +28,7 @@ apps:
     command: bin/ammp_edge
     daemon: simple
     restart-condition: always
-    after: [ae-init, redis-server]
+    after: [ae-init]
     plugs:
       - network
       - network-bind
@@ -63,25 +63,14 @@ apps:
     command: bin/wifi_ap_control
     daemon: simple
     restart-condition: on-abnormal
-    after: [redis-server]
     plugs: [network]
   env-scan:
     command: bin/env_scan_svc
     daemon: simple
-    after: [redis-server]
     plugs: [network, network-observe]
     timer: 0:00~24:00/36
     environment:
       LD_LIBRARY_PATH: "$LD_LIBRARY_PATH:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/blas"
-  redis-server:
-    adapter: full
-    command: bin/redis-server $SNAP/redis.conf --dir $SNAP_COMMON
-    daemon: simple
-    plugs: [network, network-bind]
-  redis-cli:
-    adapter: full
-    command: bin/redis-cli
-    plugs: [network]
   mosquitto:
     command: bin/mosquitto_svc.sh
     daemon: simple
@@ -114,7 +103,6 @@ parts:
     source: config
     prime:
       - remote.yaml
-      - redis.conf
       - mosquitto.conf.tpl
       - mqtt-bridge.conf.tpl
       - mqtt-bridge-stage.conf.tpl
@@ -130,12 +118,6 @@ parts:
     organize:
       '*': drivers/
     prime: [drivers]
-  redis-server:
-    plugin: make
-    source: https://github.com/antirez/redis.git
-    source-tag: 6.0.9
-    source-depth: 1
-    make-install-var: PREFIX
   bin:
     plugin: dump
     source: bin

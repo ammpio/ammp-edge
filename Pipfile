@@ -15,6 +15,7 @@ flake8-annotations = "*"
 mypy = "*"
 flake8-mypy = "*"
 yapf = "*"
+autopep8 = "*"
 
 [packages]
 pyyaml = "*"
@@ -31,7 +32,6 @@ influxdb = "*"
 xmltodict = "*"
 requests-unixsocket = "*"
 flask = "*"
-redis = "*"
 paho-mqtt = "*"
 ammp-pyjsonata = ">=0.0.1a9"
 
