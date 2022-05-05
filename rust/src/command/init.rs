@@ -18,6 +18,7 @@ pub fn init() -> Result<()> {
             return KVStore::set_many(vec![
                 (keys::NODE_ID, lconf.node_id),
                 (keys::ACCESS_KEY, lconf.access_key),
+                (keys::CONFIG, lconf.config),
             ]);
         }
         _ => log::info!("Legacy config not found"),

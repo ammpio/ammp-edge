@@ -3,13 +3,14 @@ use std::env;
 use anyhow::Result;
 use rusqlite::{Connection, OpenFlags, OptionalExtension};
 
-const LEGACY_SQLITE_REL_PATH: &str = "data/config.db";
+const LEGACY_SQLITE_REL_PATH: &str = "config.db";
 const BASE_PATH_ENV_VAR: &str = "SNAP_COMMON";
 
 #[derive(Debug)]
 pub struct LegacyConfig {
     pub node_id: String,
     pub access_key: String,
+    pub config: String,
 }
 
 pub fn get_legacy_config() -> Result<Option<LegacyConfig>> {
@@ -22,6 +23,7 @@ pub fn get_legacy_config() -> Result<Option<LegacyConfig>> {
             Ok(LegacyConfig {
                 node_id: r.get(0)?,
                 access_key: r.get(1)?,
+                config: r.get(2)?,
             })
         },
     )
