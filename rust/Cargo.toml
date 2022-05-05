@@ -17,7 +17,7 @@ hex = "*"
 kvstore = { path = "kvstore" }
 log = "*"
 native-tls = "*"
-nix = "*"
+nix = { version = "0.23" }
 pico-args = "*"
 rusqlite = { version = "*", features = ["bundled"] }
 serde = {version = "*", features = ["derive"] }
