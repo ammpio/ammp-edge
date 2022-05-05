@@ -92,6 +92,9 @@ parts:
       - libsnmp-dev
     stage-snaps:
       - nmap
+    stage:
+      - -usr/lib/aarch64-linux-gnu/libsqlite3.so.0
+      - -usr/lib/aarch64-linux-gnu/libsqlite3.so.0.8.6
     override-prime: |
       snapcraftctl prime
       "${SNAPCRAFT_PRIME}"/usr/bin/python3 \
@@ -169,7 +172,9 @@ parts:
       - usr/include/mosquitto_broker.h
       - usr/include/mosquitto_plugin.h
       - usr/include/mqtt_protocol.h
-    
+  libsqlite3:
+    source: https://sqlite.org/2022/sqlite-autoconf-3380400.tar.gz
+    plugin: autotools    
 
 plugs:
   provisioning-edge:
