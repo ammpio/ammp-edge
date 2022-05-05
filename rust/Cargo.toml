@@ -1,5 +1,5 @@
 [package]
-name = "ammp-cli"
+name = "ammp-edge"
 version = "0.1.0"
 authors = ["AMMP Technologies B.V. <dev@ammp.io>"]
 edition = "2021"
@@ -25,7 +25,7 @@ serde_json = "*"
 ureq = { version = "*", default-features = false, features = ["json", "native-tls"] }
 
 [[bin]]
-name = "ammp"
+name = "ae"
 path = "src/main.rs"
 
 [workspace]

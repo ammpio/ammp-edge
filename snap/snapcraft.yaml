@@ -133,7 +133,7 @@ parts:
       '*': bin/
     prime: 
      - bin
-  rust-binaries:
+  ae:
     plugin: rust
     source: rust
   envsubst:
@@ -141,7 +141,7 @@ parts:
     stage-packages:
      - gettext-base
     prime:
-     -  usr/bin/envsubst
+     - usr/bin/envsubst
   mosquitto:
     plugin: make
     make-parameters: 
