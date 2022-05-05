@@ -11,7 +11,7 @@ import signal
 from dotenv import load_dotenv
 
 import node_mgmt
-from data_mgmt import DataPusher, NonVolatileQProc
+from data_mgmt import DataPusher
 from reader import get_readout
 
 # Set up logging
@@ -111,13 +111,6 @@ def main():
         # Create queue processor instances and start the threads' internal run() method
         pusher = DataPusher(node, q, dep)
         pusher.start()
-
-        # If set, create an instance of the volatile<->non-volatile queue processor, and start it
-        # NOTE: At present, there should only ever be one queue which has a non-volatile backup
-        # (for the default API endpoint)
-        if dep.get('isdefault', False):
-            nvqproc = NonVolatileQProc(node, q)
-            nvqproc.start()
 
     if node.config.get('read_interval'):
         # We will be carrying out periodic readings (daemon mode)
