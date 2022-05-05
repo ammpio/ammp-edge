@@ -1,0 +1,6 @@
+NODE_ID = 'node_id'
+ACCESS_KEY = 'access_key'
+CONFIG = 'config'
+WIFI_AP_AVAILABLE = 'n/wifi_ap_available'
+WIFI_AP_CONFIG = 'n/wifi_ap_config'
+REMOTE_API = 'remote_api'
