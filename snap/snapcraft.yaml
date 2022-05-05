@@ -181,7 +181,11 @@ parts:
       - usr/include/mqtt_protocol.h
   libsqlite3:
     source: https://sqlite.org/2022/sqlite-autoconf-3380400.tar.gz
-    plugin: autotools    
+    plugin: autotools
+    stage:
+      - lib/libsqlite3.so
+      - lib/libsqlite3.so.0
+      - lib/libsqlite3.so.0.8.6
 
 plugs:
   provisioning-edge:
