@@ -19,11 +19,16 @@ architectures:
 epoch: 1
 
 apps:
+  ae-init:
+    command: bin/ae init
+    daemon: simple
+    restart-condition: always
+    restart-delay: 2s
   ammp-edge:
     command: bin/ammp_edge
     daemon: simple
     restart-condition: always
-    after: [redis-server]
+    after: [ae-init, redis-server]
     plugs:
       - network
       - network-bind
@@ -39,6 +44,7 @@ apps:
     command: python3 -m flask run
     daemon: simple
     restart-condition: always
+    after: [ae-init]
     plugs:
       - network-bind
     environment:
@@ -81,6 +87,7 @@ apps:
     daemon: simple
     restart-condition: always
     restart-delay: 2s
+    after: [ae-init]
     plugs: [network, network-bind]
 
 parts:
