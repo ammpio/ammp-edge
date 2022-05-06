@@ -1,8 +1,5 @@
 import logging
-import requests
 import os
-import zipfile
-import datetime
 from time import sleep
 import serial
 import minimalmodbus

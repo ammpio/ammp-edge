@@ -11,6 +11,7 @@ MAX_REQUEST_RETRIES = 5
 REQUEST_HOLDOFF = 15
 REMOTE_API_ROOT = 'https://edge.stage.ammp.io/api/v0/'
 
+
 class EdgeAPI(object):
     def __init__(self, root: str = REMOTE_API_ROOT) -> None:
 
@@ -30,7 +31,7 @@ class EdgeAPI(object):
         status_code, rtn = self.__get_request('')
 
         if status_code == 200:
-            logger.info(f"Obtained node metadata from API")
+            logger.info("Obtained node metadata from API")
             logger.debug(f"Payload: {rtn}")
             return rtn
         else:
@@ -43,7 +44,7 @@ class EdgeAPI(object):
 
         if status_code == 200:
             if rtn.get('config'):
-                logger.info(f"Obtained config from API")
+                logger.info("Obtained config from API")
                 logger.debug(f"Payload: {rtn}")
                 return rtn['config']
             else:

@@ -1,6 +1,4 @@
 import logging
-import os
-import subprocess
 import json
 from json import JSONDecodeError
 from pyjsonata import jsonata, PyjsonataError

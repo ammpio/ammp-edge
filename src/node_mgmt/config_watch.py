@@ -12,6 +12,7 @@ CONFIG_REFRESH_DELAY = 60
 
 class ConfigWatch(Thread):
     """Request new configuration for node if flag is set"""
+
     def __init__(self, node):
         Thread.__init__(self)
         self.name = 'config_watch'
@@ -46,7 +47,6 @@ class ConfigWatch(Thread):
 
                         # Update config definition, save it to DB, and load any custom drivers from it
                         self._node.config = config
-                        self._node.save_config()
                         self._node.update_drv_from_config()
 
                         self._node.events.getting_config.notify_all()
@@ -56,7 +56,7 @@ class ConfigWatch(Thread):
             except Exception:
                 logger.exception(
                     f"Exception while checking/obtaining/applying config; sleeping {API_RETRY_DELAY} seconds"
-                    )
+                )
                 time.sleep(API_RETRY_DELAY)
 
     def __new_config_available(self):
