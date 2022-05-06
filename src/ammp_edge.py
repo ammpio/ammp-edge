@@ -5,13 +5,13 @@ import sys
 import os
 import sched
 import time
-import queue
 import signal
 
 from dotenv import load_dotenv
 
 import node_mgmt
 from data_mgmt import DataPusher
+from node_mgmt.node import Node
 from reader import get_readout
 
 # Set up logging
@@ -34,7 +34,7 @@ __version__ = '0.9'
 VOLATILE_QUEUE_MAXSIZE = 10000
 
 
-def reading_cycle(node, qs, sc=None):
+def reading_cycle(node: Node, pusher: DataPusher, sc=None):
     # Check if scheduler has been applied, and if so schedule this function to be run again
     # at the appropriate interval before taking the readings
     if sc:
@@ -46,16 +46,13 @@ def reading_cycle(node, qs, sc=None):
         # non-round timestamps, but if possible ones following that should "catch up". That said,
         # drift can still accumulate and if it becomes greater than 'interval', a reading will be skipped.
         if node.config.get('read_roundtime'):
-            sc.enterabs(roundtime(node.config['read_interval']), 1, reading_cycle, (node, qs, sc))
+            sc.enterabs(roundtime(node.config['read_interval']), 1, reading_cycle, (node, pusher, sc))
         else:
-            sc.enter(node.config['read_interval'], 1, reading_cycle, (node, qs, sc))
+            sc.enter(node.config['read_interval'], 1, reading_cycle, (node, pusher, sc))
 
     try:
         readout = get_readout(node)
-        # Put the readout in each of the data queues. We create individual copies
-        # so that separate queues don't overwrite each other's copies if modifying
-        for q in qs:
-            q.put(readout)
+        pusher.push_readout(readout)
 
     except Exception:
         logger.exception('READ: Exception getting readings')
@@ -101,41 +98,27 @@ def main():
     # Handle SIGTERM from daemon control
     signal.signal(signal.SIGTERM, sigterm_handler)
 
-    qs = []
-    # For each data endpoint:
-    for dep in node.data_endpoints:
-        # Set up reading queues for each data endpoint
-        q = queue.LifoQueue(VOLATILE_QUEUE_MAXSIZE)
-        qs.append(q)
-
-        # Create queue processor instances and start the threads' internal run() method
-        pusher = DataPusher(node, q, dep)
-        pusher.start()
+    # Create queue processor instances and start the threads' internal run() method
+    pusher = DataPusher(node)
 
     if node.config.get('read_interval'):
         # We will be carrying out periodic readings (daemon mode)
-        try:
-            # Set up scheduler and run reading cycle with schedule (reading_cycle function then schedules
-            # its own further iterations)
-            s = sched.scheduler(time.time, time.sleep)
 
-            if node.config.get('read_roundtime'):
-                s.enterabs(roundtime(node.config['read_interval']), 1, reading_cycle, (node, qs, s))
-                logger.info('Waiting to start on round time interval...')
-            else:
-                reading_cycle(node, qs, s)
+        # Set up scheduler and run reading cycle with schedule (reading_cycle function then schedules
+        # its own further iterations)
+        s = sched.scheduler(time.time, time.sleep)
 
-            s.run()
+        if node.config.get('read_roundtime'):
+            s.enterabs(roundtime(node.config['read_interval']), 1, reading_cycle, (node, qs, s))
+            logger.info('Waiting to start on round time interval...')
+        else:
+            reading_cycle(node, pusher, s)
 
-        except (KeyboardInterrupt, SystemExit):
-            node.events.do_shutdown.set()
-            for q in qs:
-                q.put({})
+        s.run()
 
     else:
         # Carry out a one-off reading, with no scheduler
-        reading_cycle(node, q)
-        q.put({})
+        reading_cycle(node, pusher)
 
 
 if __name__ == '__main__':

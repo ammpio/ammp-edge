@@ -1,11 +1,12 @@
 import logging
-from os import getenv, path
 import json
 import paho.mqtt.client as mqtt
 from typing import Dict, List, Optional
-import ssl
 
 logger = logging.getLogger(__name__)
+
+MQTT_HOST = 'localhost'
+MQTT_PORT = 1883
 
 MQTT_CLEAN_SESSION = False
 MQTT_QOS = 1
@@ -13,54 +14,32 @@ MQTT_RETAIN = False
 MQTT_CONN_SUCCESS = 0
 MQTT_PUB_SUCCESS = 0
 
-# Attempt to send (including waiting for PUBACK) at most 2 message at a time
-MAX_INFLIGHT_MESSAGES = 2
-# Only use the internal MQTT queue minimally
-# (note that 0 = unlimited queue size, so 1 is the minimum)
-MAX_QUEUED_MESSAGES = 2
-# Minimum delay before retrying a CONNECT
-RECONNECT_MIN_DELAY = 1
-# MAximum delay before retrying a CONNECT
-RECONNECT_MAX_DELAY = 120
-# Time period between retrying a PUBLISH that hasn't been acknowledged
-MESSAGE_RETRY = 30
+MQTT_DATA_TOPIC = 'u/data'
 
 
 class MQTTPublisher():
-    def __init__(self, node_id: str, access_key: str, config: Dict, client_id_suffix: Optional[str] = None) -> None:
+    def __init__(self, node_id: str, client_id_suffix: Optional[str] = None) -> None:
         if client_id_suffix is None:
             client_id = node_id
         else:
             client_id = f'{node_id}-{client_id_suffix}'
         client = mqtt.Client(client_id=client_id, clean_session=MQTT_CLEAN_SESSION)
         client.enable_logger(logger)
-        client.tls_set(
-            ca_certs=path.join(getenv('SNAP', '.'), 'resources', 'certs', config['cert']),
-            cert_reqs=ssl.CERT_NONE
-        )
-        client.username_pw_set(node_id, access_key)
-        client.max_inflight_messages_set(MAX_INFLIGHT_MESSAGES)
-        client.max_queued_messages_set(MAX_QUEUED_MESSAGES)
-        client.reconnect_delay_set(min_delay=RECONNECT_MIN_DELAY, max_delay=RECONNECT_MAX_DELAY)
-        client.message_retry_set(MESSAGE_RETRY)
 
         client.on_connect = self.__on_connect
         client.on_disconnect = self.__on_disconnect
-        client.connect_async(host=config['host'], port=config['port'])
+        client.connect_async(host=MQTT_HOST, port=MQTT_PORT)
         client.loop_start()
 
         self._client = client
-        self._host = config['host']
-        self._node_id = node_id
         self._connected = False
 
-    def publish(self, payload: Dict, subtopic: str = None) -> None:
+    def publish(self, payload: Dict, topic: str) -> bool:
         if not self._connected:
             logger.warning("MQTT client not yet connected; not publishing")
             return False
-        mqtt_topic = self.__get_topic(subtopic)
         rc = self._client.publish(
-            mqtt_topic,
+            topic,
             self.__get_mqtt_payload(payload),
             qos=MQTT_QOS, retain=MQTT_RETAIN
         )
@@ -78,9 +57,8 @@ class MQTTPublisher():
             logger.debug("PUSH [mqtt] Error - Message not published")
             return False
 
-    def __get_topic(self, subtopic: str) -> str:
-        mqtt_topic = f"a/{self._node_id}/{subtopic}"
-        return mqtt_topic
+    def publish_data(self, payload: Dict) -> bool:
+        return self.publish(payload, MQTT_DATA_TOPIC)
 
     @staticmethod
     def __get_mqtt_payload(payload: dict) -> str:
@@ -90,14 +68,14 @@ class MQTTPublisher():
     def __on_connect(self, client: mqtt.Client, userdata, flags, rc: List) -> None:
         # Callback for when the client receives a CONNACK response from the server.
         if rc == MQTT_CONN_SUCCESS:
-            logger.info(f"Successfully connected to MQTT host {self._host}")
+            logger.info("Successfully connected to MQTT broker")
             self._connected = True
         else:
-            logger.error(f"Connection attempt to {self._host} yielded result code {rc}")
+            logger.error(f"Connection attempt to broker yielded result code {rc}")
 
     def __on_disconnect(self, client: mqtt.Client, userdata, rc: List) -> None:
         if rc == MQTT_CONN_SUCCESS:
-            logger.info(f"Successfully disconnected to MQTT host {self._host}")
+            logger.info(f"Successfully disconnected to MQTT broker")
         else:
-            logger.error(f"Disconnection from {self._host} with result code {rc}")
+            logger.error(f"Disconnection from broker with result code {rc}")
         self._connected = False
