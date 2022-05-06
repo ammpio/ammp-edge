@@ -58,7 +58,6 @@ setup(
         'peewee',
         'psutil',
         'requests',
-        'influxdb',
         'xmltodict',
         'requests-unixsocket',
         'flask',
