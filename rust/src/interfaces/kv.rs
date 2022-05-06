@@ -63,6 +63,6 @@ impl DbPath for Store {
 
 impl DbPath for Cache {
     fn sqlite_db_path() -> String {
-        String::from("/var/run/ammp/kvcache.db")
+        String::from("/tmp/ae-kvcache.db")
     }
 }
