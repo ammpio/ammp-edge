@@ -109,7 +109,7 @@ def main():
         s = sched.scheduler(time.time, time.sleep)
 
         if node.config.get('read_roundtime'):
-            s.enterabs(roundtime(node.config['read_interval']), 1, reading_cycle, (node, qs, s))
+            s.enterabs(roundtime(node.config['read_interval']), 1, reading_cycle, (node, pusher, s))
             logger.info('Waiting to start on round time interval...')
         else:
             reading_cycle(node, pusher, s)
