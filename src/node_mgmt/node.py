@@ -41,7 +41,9 @@ class Node(object):
         command_watch = CommandWatch(self)
         command_watch.start()
 
-        self.config = self.kvs.get(keys.CONFIG)
+        # Setting the internal property directly, since using the self.config
+        # setter (intended as the public API) will trigger a write to KVS
+        self._config = self.kvs.get(keys.CONFIG)
 
         if self.config is not None:
             # Configuration is available in DB; use this
