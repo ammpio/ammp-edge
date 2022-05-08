@@ -11,8 +11,7 @@ from data_mgmt.helpers.mqtt_pub import MQTTPublisher
 
 logger = logging.getLogger(__name__)
 
-# If activation is not successful, wait ACTIVATE_RETRY_DELAY seconds before retrying
-ACTIVATE_RETRY_DELAY = 60
+MQTT_CLIENT_ID_SUFFIX = 'meta'
 
 
 class Node(object):
@@ -29,7 +28,10 @@ class Node(object):
         self.api = EdgeAPI()
         logger.info("Instantiated API")
 
-        self.mqtt_client = MQTTPublisher()
+        self.mqtt_client = MQTTPublisher(
+            node_id=self.node_id,
+            client_id_suffix=MQTT_CLIENT_ID_SUFFIX,
+        )
         logger.info("Instantiated MQTT")
 
         self.events = NodeEvents()
