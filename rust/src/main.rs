@@ -11,6 +11,7 @@ use helpers::load_dotenv;
 const CMD_INIT: &str = "init";
 const CMD_KVS_GET: &str = "kvs-get";
 const CMD_KVS_SET: &str = "kvs-set";
+const TEST_SQLITE: &str = "test-sqlite";
 
 const LOG_LEVEL_ENV_VAR: &str = "LOGGING_LEVEL";
 const DEFAULT_LOG_LEVEL: &str = "INFO";
@@ -30,6 +31,7 @@ fn main() -> Result<()> {
             key: args.free_from_str()?,
             value: args.free_from_str()?,
         }),
+        Some(TEST_SQLITE) => command::test_sqlite(),
         _ => Err(anyhow!(
             "Subcommand must be one of 'init', 'kvs-get', 'kvs-set'"
         )),
