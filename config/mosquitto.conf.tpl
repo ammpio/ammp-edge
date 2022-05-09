@@ -9,4 +9,7 @@ autosave_interval 300
 max_inflight_messages 2
 max_queued_messages 525600
 
+log_type all
+log_timestamp false
+
 include_dir $INCLUDE_DIR

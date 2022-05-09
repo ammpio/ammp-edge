@@ -15,8 +15,6 @@ start_type automatic
 notifications true
 notification_topic u/bridge_state
 
-log_type all
-
 remote_username $NODE_ID
 remote_password $ACCESS_KEY
 
