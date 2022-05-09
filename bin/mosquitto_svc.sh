@@ -13,7 +13,7 @@ export NODE_ID=$(ae kvs-get node_id)
 export ACCESS_KEY=$(ae kvs-get access_key)
 
 # Bridge to prod broker - enable unless explicitly disabled
-if [ "$(ae kvs-get mqtt_bridge)" = 'false' ]; then
+if [ "$(ae kvs-get mqtt_bridge_prod)" = 'false' ]; then
   rm -f $INCLUDE_DIR/mqtt-bridge.conf
 else
   envsubst < $SNAP/mqtt-bridge.conf.tpl > $INCLUDE_DIR/mqtt-bridge.conf
