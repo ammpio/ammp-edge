@@ -13,7 +13,7 @@ const CMD_KVS_GET: &str = "kvs-get";
 const CMD_KVS_SET: &str = "kvs-set";
 
 const LOG_LEVEL_ENV_VAR: &str = "LOGGING_LEVEL";
-const DEFAULT_LOG_LEVEL: &str = "INFO";
+const DEFAULT_LOG_LEVEL: &str = "info";
 
 fn main() -> Result<()> {
     load_dotenv();
