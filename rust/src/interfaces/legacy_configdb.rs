@@ -1,10 +1,9 @@
-use std::env;
-
 use anyhow::Result;
 use rusqlite::{Connection, OpenFlags, OptionalExtension};
 
-const LEGACY_SQLITE_REL_PATH: &str = "config.db";
-const BASE_PATH_ENV_VAR: &str = "SNAP_COMMON";
+use crate::helpers::base_path;
+
+const LEGACY_SQLITE_DB: &str = "config.db";
 
 #[derive(Debug)]
 pub struct LegacyConfig {
@@ -14,7 +13,10 @@ pub struct LegacyConfig {
 }
 
 pub fn get_legacy_config() -> Result<Option<LegacyConfig>> {
-    let conn = Connection::open_with_flags(&sqlite_db_path(), OpenFlags::SQLITE_OPEN_READ_ONLY)?;
+    let conn = Connection::open_with_flags(
+        &format!("{}/config.db", base_path::data_dir()),
+        OpenFlags::SQLITE_OPEN_READ_ONLY,
+    )?;
 
     conn.query_row(
         "SELECT node_id, access_key, config FROM 'nodeconfig' LIMIT 1",
@@ -29,12 +31,4 @@ pub fn get_legacy_config() -> Result<Option<LegacyConfig>> {
     )
     .optional()
     .map_err(Into::into)
-}
-
-fn sqlite_db_path() -> String {
-    format!(
-        "{}/{}",
-        env::var(BASE_PATH_ENV_VAR).unwrap_or_else(|_| String::from(".")),
-        LEGACY_SQLITE_REL_PATH
-    )
 }

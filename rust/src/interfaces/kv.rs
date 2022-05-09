@@ -1,7 +1,8 @@
 use anyhow::Result;
 use kvstore::{DbRO, DbRW};
 use serde::{de::DeserializeOwned, Serialize};
-use std::env;
+
+use crate::helpers::base_path;
 
 pub struct Store;
 pub struct Cache;
@@ -51,18 +52,12 @@ pub trait DbPath {
 
 impl DbPath for Store {
     fn sqlite_db_path() -> String {
-        const SQLITE_REL_PATH: &str = "kvs-db/kvstore.db";
-        const BASE_PATH_ENV_VAR: &str = "SNAP_COMMON";
-        format!(
-            "{}/{}",
-            env::var(BASE_PATH_ENV_VAR).unwrap_or_else(|_| String::from(".")),
-            SQLITE_REL_PATH
-        )
+        format!("{}/kvs-db/kvstore.db", base_path::data_dir())
     }
 }
 
 impl DbPath for Cache {
     fn sqlite_db_path() -> String {
-        String::from("/tmp/ae-kvcache.db")
+        format!("{}/ae-kvcache.db", base_path::tmp_dir())
     }
 }
