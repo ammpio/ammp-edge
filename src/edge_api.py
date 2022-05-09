@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 DEFAULT_REQUEST_TIMEOUT = 60
 MAX_REQUEST_RETRIES = 5
 REQUEST_HOLDOFF = 15
-REMOTE_API_ROOT = 'https://edge.stage.ammp.io/api/v0/'
+REMOTE_API_ROOT = 'https://edge.ammp.io/api/v0/'
 
 
 class EdgeAPI(object):
