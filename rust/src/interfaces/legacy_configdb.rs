@@ -3,8 +3,6 @@ use rusqlite::{Connection, OpenFlags, OptionalExtension};
 
 use crate::helpers::base_path;
 
-const LEGACY_SQLITE_DB: &str = "config.db";
-
 #[derive(Debug)]
 pub struct LegacyConfig {
     pub node_id: String,
