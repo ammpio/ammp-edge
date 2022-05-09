@@ -21,9 +21,10 @@ epoch: 1
 apps:
   ae-init:
     command: bin/ae init
-    daemon: simple
-    restart-condition: always
+    daemon: oneshot
+    restart-condition: on-failure
     restart-delay: 2s
+    plugs: [network]
   ammp-edge:
     command: bin/ammp_edge
     daemon: simple
