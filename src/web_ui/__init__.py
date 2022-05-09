@@ -8,10 +8,9 @@ from node_mgmt.commands import (
     holykell_sensor_address_7,
     holykell_sensor_address_8
 )
-from db_model import NodeConfig
 import os
 from urllib.request import urlopen
-from kvstore import KVStore
+from kvstore import keys, KVStore
 
 logging.basicConfig(format='%(name)s [%(levelname)s] %(message)s', level='INFO')
 logger = logging.getLogger(__name__)
@@ -28,15 +27,10 @@ ACTIONS = {
     'holykell_sensor_address_8': holykell_sensor_address_8
 }
 
-try:
-    nodeconf = NodeConfig.get()
-    node_id = nodeconf.node_id
-except NodeConfig.DoesNotExist:
+node_id = kvs.get(keys.NODE_ID)
+if not node_id:
     logger.info('No node configuration found in internal database.')
     node_id = 'Not yet initialized'
-except ValueError:
-    logger.warning('ValueError in node config.', exc_info=True)
-    node_id = ''
 
 
 @app.route("/")
@@ -160,7 +154,7 @@ def wifi_ap_status():
 
 
 def test_online():
-    TEST_URL = 'https://www.ammp.io/'
+    TEST_URL = 'http://www.google.com/'
     try:
         urlopen(TEST_URL, timeout=30)
         return True
