@@ -6,7 +6,7 @@ use backoff::{retry_notify, Error, ExponentialBackoff};
 use serde::Deserialize;
 
 const REQUEST_TIMEOUT: u64 = 60;
-const REMOTE_API_ROOT: &str = "https://edge.stage.ammp.io/api/v0/";
+const REMOTE_API_ROOT: &str = "https://edge.ammp.io/api/v0/";
 
 pub fn activate(node_id: &str) -> Result<String> {
     #[derive(Debug, Deserialize)]
