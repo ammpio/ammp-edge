@@ -16,12 +16,12 @@ class Node(object):
 
     def __init__(self) -> None:
 
-        self.kvs = KVStore()
+        self._kvs = KVStore()
 
-        self.node_id = self.kvs.get(keys.NODE_ID)
-        self.access_key = self.kvs.get(keys.ACCESS_KEY)
+        self.node_id = self._kvs.get(keys.NODE_ID)
+        self.access_key = self._kvs.get(keys.ACCESS_KEY)
 
-        logger.info('Node ID: %s', self.node_id)
+        logger.info(f"Node ID: {self.node_id}")
 
         self.api = EdgeAPI()
         logger.info("Instantiated API")
@@ -33,6 +33,8 @@ class Node(object):
         logger.info("Instantiated MQTT")
 
         self.events = NodeEvents()
+
+        self.config = None
 
         if self.config is not None:
             # Configuration is available in DB; use this
@@ -58,11 +60,11 @@ class Node(object):
 
     @property
     def config(self) -> dict:
-        return self.kvs.get(keys.CONFIG)
+        return self._kvs.get(keys.CONFIG)
 
     @config.setter
     def config(self, value) -> None:
-        self.kvs.set(keys.CONFIG, value)
+        self._kvs.set(keys.CONFIG, value)
 
     @property
     def drivers(self) -> dict:
