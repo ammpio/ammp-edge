@@ -30,10 +30,7 @@ if os.environ.get('LOGGING_LEVEL'):
     except Exception:
         logger.warn(f"Failed to set log level to {os.environ['LOGGING_LEVEL']}", exc_info=True)
 
-__version__ = '0.9'
-
-
-VOLATILE_QUEUE_MAXSIZE = 10000
+__version__ = '1.0'
 
 
 def reading_cycle(node: Node, pusher: DataPusher, sc=None):
