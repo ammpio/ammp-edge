@@ -12,6 +12,8 @@ from dotenv import load_dotenv
 import node_mgmt
 from data_mgmt import DataPusher
 from node_mgmt.node import Node
+from node_mgmt.config_watch import ConfigWatch
+from node_mgmt.command_watch import CommandWatch
 from reader import get_readout
 
 # Set up logging
@@ -64,41 +66,22 @@ def roundtime(interval):
     return next_roundtime
 
 
-def sigterm_handler(_signo, _stack_frame):
-    logger.info('Received SIGTERM; shutting down')
-    # Raises SystemExit(0):
-    sys.exit(0)
-
-
-class StreamToLogger(object):
-    """
-    Fake file-like stream object that redirects writes to a logger instance.
-    """
-    def __init__(self, logger, log_level=logging.INFO):
-        self.logger = logger
-        self.log_level = log_level
-        self.linebuf = ''
-
-    def write(self, buf):
-        for line in buf.rstrip().splitlines():
-            self.logger.log(self.log_level, line.rstrip())
-
-    def flush(self):
-        pass
-
-
 def main():
-
     node = node_mgmt.Node()
 
-    # Redirect stdout and stderr to error file
-    sys.stdout = StreamToLogger(logger, logging.INFO)
-    sys.stderr = StreamToLogger(logger, logging.ERROR)
+    config_watch = ConfigWatch(node)
+    config_watch.start()
 
-    # Handle SIGTERM from daemon control
-    signal.signal(signal.SIGTERM, sigterm_handler)
+    command_watch = CommandWatch(node)
+    command_watch.start()
 
-    # Create queue processor instances and start the threads' internal run() method
+    # If we still have not got a config, wait for one to be provided
+    if node.config is None:
+        logger.info('No stored configuration available')
+        with node.events.getting_config:
+            node.events.getting_config.wait_for(lambda: node.config is not None)
+
+    # Create data pusher
     pusher = DataPusher(node)
 
     if node.config.get('read_interval'):

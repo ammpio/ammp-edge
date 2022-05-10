@@ -4,9 +4,7 @@ import os
 
 from kvstore import keys, KVStore
 from edge_api import EdgeAPI
-from .events import NodeEvents
-from .config_watch import ConfigWatch
-from .command_watch import CommandWatch
+from node_mgmt.events import NodeEvents
 from data_mgmt.helpers.mqtt_pub import MQTTPublisher
 
 logger = logging.getLogger(__name__)
@@ -35,15 +33,6 @@ class Node(object):
         logger.info("Instantiated MQTT")
 
         self.events = NodeEvents()
-        config_watch = ConfigWatch(self)
-        config_watch.start()
-
-        command_watch = CommandWatch(self)
-        command_watch.start()
-
-        # Setting the internal property directly, since using the self.config
-        # setter (intended as the public API) will trigger a write to KVS
-        self._config = self.kvs.get(keys.CONFIG)
 
         if self.config is not None:
             # Configuration is available in DB; use this
@@ -63,25 +52,17 @@ class Node(object):
         # Even if we loaded a stored config, check for a new one
         self.events.check_new_config.set()
 
-        # If we still have not got a config, wait for one to be provided
-        if self.config is None:
-            logger.info('No stored configuration available')
-            with self.events.getting_config:
-                self.events.getting_config.wait_for(lambda: self.config is not None)
-
         # Load drivers from files, and also add any from the config
         self.drivers = self.__get_drivers()
         self.update_drv_from_config()
 
     @property
     def config(self) -> dict:
-        return self._config
+        return self.kvs.get(keys.CONFIG)
 
     @config.setter
     def config(self, value) -> None:
-        self._config = value
-        if value is not None:
-            self.kvs.set(keys.CONFIG, value)
+        self.kvs.set(keys.CONFIG, value)
 
     @property
     def drivers(self) -> dict:
@@ -113,7 +94,7 @@ class Node(object):
         Check whether there are custom drivers in the config definition, and if so add them to the driver definition.
         """
 
-        if 'drivers' in self.config:
+        if self.config and 'drivers' in self.config:
             try:
                 self.drivers.update(self.config['drivers'])
             except AttributeError:
