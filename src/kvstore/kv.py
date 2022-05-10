@@ -14,8 +14,8 @@ VALUE_FIELD = 'value'
 
 class KV:
     def __init__(self, sqlite_db_path: str) -> None:
-        self._conn = sqlite3.connect(sqlite_db_path)
-        # self._conn.set_trace_callback(logger.debug)
+        self._conn = sqlite3.connect(sqlite_db_path, check_same_thread=False)
+        self._conn.set_trace_callback(logger.debug)
         self._cur = self._conn.cursor()
         self.__initialize_db()
 
