@@ -55,7 +55,6 @@ setup(
         'pyserial',
         'easysnmp',
         'arrow',
-        'peewee',
         'psutil',
         'requests',
         'xmltodict',

@@ -1,95 +1,84 @@
 import logging
-from peewee import Model, SqliteDatabase, TextField, BlobField
-import os
+from os import getenv, path
 import json
-
+import sqlite3
 from kvstore.constants import SQLITE_STORE_REL_PATH, SQLITE_CACHE_ABS_PATH
 
 logger = logging.getLogger(__name__)
 
-# A placeholder database object needs to be created in order for the model to be initialized
-sqlite_db = SqliteDatabase(None, autoconnect=False)
+
+TABLENAME = 'kvstore'
+KEY_FIELD = 'key'
+VALUE_FIELD = 'value'
 
 
 class KV:
     def __init__(self, sqlite_db_path: str) -> None:
-        self._sqlite_db = sqlite_db
-        self._sqlite_db.init(
-            sqlite_db_path,
-            pragmas={
-                'journal_mode': 'wal',
-                'synchronous': 'full'
-            },
-        )
-        self._sqlite_db.connect(reuse_if_open=True)
-        self._sqlite = self.KVStore
+        self._conn = sqlite3.connect(sqlite_db_path)
+        # self._conn.set_trace_callback(logger.debug)
+        self._cur = self._conn.cursor()
+        self.__initialize_db()
 
     def __enter__(self):
         return self
 
-    def __exit__(self, exc_type, exc_value, traceback):
-        self._sqlite_db.close()
+    def __exit__(self, exc_type, exc_value, traceback) -> None:
+        self._conn.close()
 
-    def __del__(self):
-        self._sqlite_db.close()
+    def __del__(self) -> None:
+        self._conn.close()
 
-    @staticmethod
+    def __initialize_db(self) -> None:
+        self._cur.executescript(
+            f'''
+            PRAGMA journal_mode = WAL;
+            PRAGMA synchronous = FULL;
+            CREATE TABLE IF NOT EXISTS '{TABLENAME}' (
+                key TEXT PRIMARY KEY NOT NULL,
+                value BLOB NOT NULL
+            );
+            '''
+        )
+        self._conn.commit()
+
+    @ staticmethod
     def __dump(value) -> bytes:
         return json.dumps(value).encode('utf-8')
 
-    @staticmethod
+    @ staticmethod
     def __load(bvalue: bytes):
-        # try:
         return json.loads(bvalue)
-        # except something:
-        #     return None
+
+    def __select(self, key: str) -> bytes:
+        self._cur.execute("SELECT value FROM 'kvstore' WHERE key = :key", {'key': key})
+        return self._cur.fetchone()[0]
+
+    def __upsert(self, key: str, value: bytes) -> None:
+        self._cur.execute(
+            f'''INSERT INTO '{TABLENAME}' ({KEY_FIELD}, {VALUE_FIELD}) values (:key, :value)
+            ON CONFLICT({KEY_FIELD}) DO UPDATE SET {VALUE_FIELD}=:value''', {'key': key, 'value': value}
+        )
+        self._conn.commit()
 
     def get(self, key: str, default=None):
         try:
-            bvalue = self._sqlite.get_by_id(key).value
-        except self._sqlite.DoesNotExist:
+            bvalue = self.__select(key)
+        except TypeError:
             return default
 
         return self.__load(bvalue)
 
-    def set(self, key: str, value) -> bool:
+    def set(self, key: str, value) -> None:
         bvalue = self.__dump(value)
-        return self._sqlite.insert(key=key, value=bvalue) \
-            .on_conflict('replace').execute() > 0
-
-    class KVStore(Model):
-        key = TextField(primary_key=True)
-        value = BlobField(null=True)
-
-        class Meta:
-            database = sqlite_db
+        self.__upsert(key, bvalue)
 
 
 class KVStore(KV):
     def __init__(self) -> None:
-        SQLITE_STORE_DB_PATH = os.path.join(os.getenv('SNAP_COMMON', './'), SQLITE_STORE_REL_PATH)
-        self._sqlite_db = sqlite_db
-        self._sqlite_db.init(
-            SQLITE_STORE_DB_PATH,
-            pragmas={
-                'journal_mode': 'wal',
-                'synchronous': 'full'
-            },
-        )
-        self._sqlite_db.connect(reuse_if_open=True)
-        self._sqlite = self.KVStore
+        SQLITE_STORE_DB_PATH = path.join(getenv('SNAP_COMMON', './'), SQLITE_STORE_REL_PATH)
+        KV.__init__(self, SQLITE_STORE_DB_PATH)
 
 
 class KVCache(KV):
     def __init__(self) -> None:
-        self._sqlite_db = sqlite_db
-        self._sqlite_db.init(
-            SQLITE_CACHE_ABS_PATH,
-            pragmas={
-                'journal_mode': 'wal',
-                'synchronous': 'full'
-            },
-        )
-        self._sqlite_db.connect(reuse_if_open=True)
-        self._sqlite_db.create_tables([self.KVStore], safe=True)
-        self._sqlite = self.KVStore
+        KV.__init__(self, SQLITE_CACHE_ABS_PATH)
