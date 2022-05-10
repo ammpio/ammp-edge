@@ -69,11 +69,13 @@ class ConfigWatch(Thread):
                     logger.info(f"API message: {node_meta['message']}")
 
                 if 'config_id' in node_meta:
-                    if not self._node.config:
+                    available_config = self._node.config
+                    logger.debug(f"Current available local config: {available_config}")
+                    if not available_config:
                         logger.debug("Local configuration is not available, but remote config is.")
                         return True
 
-                    if self._node.config.get('config_id') == node_meta['config_id']:
+                    if available_config.get('config_id') == node_meta['config_id']:
                         logger.info('Latest remote configuration is in use locally')
                         return False
                     else:
