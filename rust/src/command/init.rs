@@ -7,7 +7,9 @@ use crate::interfaces::KVStore;
 use crate::node_mgmt::{activate, generate_node_id};
 
 pub fn init() -> Result<()> {
-    if let Ok(Some(node_id)) = KVStore::get::<_, String>(keys::NODE_ID) {
+    let kvs = KVStore::new()?;
+
+    if let Ok(Some(node_id)) = kvs.get::<String>(keys::NODE_ID) {
         log::info!("Node ID: {node_id}");
         return Ok(());
     }
@@ -15,11 +17,10 @@ pub fn init() -> Result<()> {
     match get_legacy_config() {
         Ok(Some(lconf)) => {
             log::info!("Legacy config found: {:?}; migrating...", lconf);
-            return KVStore::set_many(vec![
-                (keys::NODE_ID, lconf.node_id),
-                (keys::ACCESS_KEY, lconf.access_key),
-                (keys::CONFIG, lconf.config),
-            ]);
+            kvs.set(keys::NODE_ID, lconf.node_id);
+            kvs.set(keys::ACCESS_KEY, lconf.access_key);
+            kvs.set(keys::CONFIG, lconf.config);
+            return Ok(());
         }
         _ => log::info!("Legacy config not found"),
     }
@@ -28,14 +29,9 @@ pub fn init() -> Result<()> {
     log::info!("Node ID: {}. Initializing...", node_id);
 
     let access_key = activate(&node_id)?;
-    KVStore::set_many(
-        [
-            (keys::NODE_ID, &node_id),
-            (keys::ACCESS_KEY, &access_key),
-            (keys::ACTIVATED, &now_iso()),
-        ]
-        .to_vec(),
-    )?;
+    kvs.set(keys::NODE_ID, &node_id);
+    kvs.set(keys::ACCESS_KEY, &access_key);
+    kvs.set(keys::ACTIVATED, &now_iso());
     log::info!("Activation successfully completed");
 
     Ok(())
