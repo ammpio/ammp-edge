@@ -1,5 +1,5 @@
 use anyhow::Result;
-use rusqlite::{params, Connection, OpenFlags, OptionalExtension};
+use rusqlite::{params, Connection, OptionalExtension};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use std::path::Path;
@@ -8,50 +8,9 @@ const TABLENAME: &str = "kvstore";
 const KEY_FIELD: &str = "key";
 const VALUE_FIELD: &str = "value";
 
-pub struct AccessRO;
-pub struct AccessRW;
+pub struct Db(rusqlite::Connection);
 
-pub struct Db<AccessTag>(rusqlite::Connection, AccessTag);
-
-pub type DbRW = Db<AccessRW>;
-pub type DbRO = Db<AccessRO>;
-
-// Methods common to read-only and read-write connections
-impl<AccessTag> Db<AccessTag> {
-    fn select<K: AsRef<str>>(&self, key: K) -> Result<Option<Vec<u8>>> {
-        self.0
-            .query_row(
-                &format!("SELECT {VALUE_FIELD} FROM '{TABLENAME}' WHERE {KEY_FIELD} = ?1"),
-                [key.as_ref()],
-                |r| r.get::<_, Vec<u8>>(0),
-            )
-            .optional()
-            .map_err(Into::into)
-    }
-
-    pub fn get<T: DeserializeOwned>(&self, key: impl AsRef<str>) -> Result<Option<T>> {
-        self.select(key)?
-            .map(|v| serde_json::from_slice::<T>(&v))
-            .transpose()
-            .map_err(Into::into)
-    }
-
-    pub fn get_raw<K: AsRef<str>>(&self, key: K) -> Result<Option<Vec<u8>>> {
-        self.select(key)
-    }
-}
-
-// Methods specific to read-only connection
-impl DbRO {
-    pub fn open(path: impl AsRef<Path>) -> Result<Self> {
-        let connection = Connection::open_with_flags(&path, OpenFlags::SQLITE_OPEN_READ_ONLY)?;
-        log::debug!("Opened {} in read-only mode", path.as_ref().display());
-        Ok(Db(connection, AccessRO))
-    }
-}
-
-// Methods specific to read-write connection
-impl DbRW {
+impl Db {
     pub fn open(path: impl AsRef<Path>) -> Result<Self> {
         // Create directory for DB if it doesn't already exist
         std::fs::create_dir_all(path.as_ref().parent().unwrap_or_else(|| Path::new("")))?;
@@ -70,7 +29,18 @@ impl DbRW {
             [],
         )?;
         log::debug!("Opened {} in read-write mode", path.as_ref().display());
-        Ok(Db(connection, AccessRW))
+        Ok(Db(connection))
+    }
+
+    fn select<K: AsRef<str>>(&self, key: K) -> Result<Option<Vec<u8>>> {
+        self.0
+            .query_row(
+                &format!("SELECT {VALUE_FIELD} FROM '{TABLENAME}' WHERE {KEY_FIELD} = ?1"),
+                [key.as_ref()],
+                |r| r.get::<_, Vec<u8>>(0),
+            )
+            .optional()
+            .map_err(Into::into)
     }
 
     fn upsert<K: AsRef<str>, V: AsRef<[u8]>>(&self, key: K, value: V) -> Result<()> {
@@ -83,10 +53,21 @@ impl DbRW {
         Ok(())
     }
 
+    pub fn get<T: DeserializeOwned>(&self, key: impl AsRef<str>) -> Result<Option<T>> {
+        self.select(key)?
+            .map(|v| serde_json::from_slice::<T>(&v))
+            .transpose()
+            .map_err(Into::into)
+    }
+
     pub fn set<K: AsRef<str>, V: Serialize>(&self, key: K, value: V) -> Result<()> {
         self.upsert(&key, serde_json::to_vec(&value)?)?;
         // log::debug!("Set {}={:?}", key.as_ref(), serde_json::to_vec(&value)?);
         Ok(())
+    }
+
+    pub fn get_raw<K: AsRef<str>>(&self, key: K) -> Result<Option<Vec<u8>>> {
+        self.select(key)
     }
 
     pub fn set_raw<K: AsRef<str>, V: AsRef<[u8]>>(&self, key: K, value: V) -> Result<()> {
@@ -99,22 +80,21 @@ impl DbRW {
 mod tests {
     use super::*;
     const IN_MEMORY: &str = ":memory:";
-    const TEST_KEY: &str = "key";
-    const TEST_VALUE: &[u8] = b"value";
+    const TEST_KEY: &str = "somekey";
+    const TEST_VALUE: &[u8] = b"somevalue";
 
     #[test]
     fn open_db_read_and_write() -> Result<()> {
-        let db = DbRW::open(&IN_MEMORY)?;
+        let db = Db::open(&IN_MEMORY)?;
         db.upsert(TEST_KEY, TEST_VALUE)?;
         assert_eq!(TEST_VALUE, db.select(TEST_KEY).unwrap().unwrap());
         Ok(())
     }
 
     #[test]
-    fn open_db_read_error() -> Result<()> {
-        let db = DbRO::open(&IN_MEMORY)?;
-        // This will error out since the kvstore table is not initialized
-        assert!(db.select(TEST_KEY).is_err());
+    fn open_db_read_empty() -> Result<()> {
+        let db = Db::open(&IN_MEMORY)?;
+        assert!(db.select(TEST_KEY)?.is_none());
         Ok(())
     }
 }
