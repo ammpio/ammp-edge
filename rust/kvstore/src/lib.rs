@@ -8,10 +8,10 @@ const TABLENAME: &str = "kvstore";
 const KEY_FIELD: &str = "key";
 const VALUE_FIELD: &str = "value";
 
-pub struct Db(rusqlite::Connection);
+pub struct KVDb(Connection);
 
-impl Db {
-    pub fn open(path: impl AsRef<Path>) -> Result<Self> {
+impl KVDb {
+    pub fn new(path: impl AsRef<Path>) -> Result<Self> {
         // Create directory for DB if it doesn't already exist
         std::fs::create_dir_all(path.as_ref().parent().unwrap_or_else(|| Path::new("")))?;
         let connection = Connection::open(&path)?;
@@ -29,7 +29,7 @@ impl Db {
             [],
         )?;
         log::debug!("Opened {} in read-write mode", path.as_ref().display());
-        Ok(Db(connection))
+        Ok(KVDb(connection))
     }
 
     fn select<K: AsRef<str>>(&self, key: K) -> Result<Option<Vec<u8>>> {
@@ -85,7 +85,7 @@ mod tests {
 
     #[test]
     fn open_db_read_and_write() -> Result<()> {
-        let db = Db::open(&IN_MEMORY)?;
+        let db = KVDb::new(&IN_MEMORY)?;
         db.upsert(TEST_KEY, TEST_VALUE)?;
         assert_eq!(TEST_VALUE, db.select(TEST_KEY).unwrap().unwrap());
         Ok(())
@@ -93,7 +93,7 @@ mod tests {
 
     #[test]
     fn open_db_read_empty() -> Result<()> {
-        let db = Db::open(&IN_MEMORY)?;
+        let db = KVDb::new(&IN_MEMORY)?;
         assert!(db.select(TEST_KEY)?.is_none());
         Ok(())
     }
