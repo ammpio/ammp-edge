@@ -11,6 +11,7 @@ pub fn data_dir() -> String {
     })
 }
 
+#[allow(dead_code)]
 pub fn tmp_dir() -> String {
     String::from("/tmp")
 }
