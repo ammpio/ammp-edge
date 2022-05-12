@@ -3,12 +3,24 @@ use std::time::Duration;
 
 use anyhow::Result;
 use backoff::{retry_notify, Error, ExponentialBackoff};
+use kvstore::KVDb;
 use serde::Deserialize;
 
-const REQUEST_TIMEOUT: u64 = 60;
-const REMOTE_API_ROOT: &str = "https://edge.ammp.io/api/v0/";
+use crate::interfaces::keys;
 
-pub fn activate(node_id: &str) -> Result<String> {
+const REQUEST_TIMEOUT: u64 = 60;
+
+pub fn get_api_root(kvs: &KVDb) -> String {
+    const DEFAULT_API_ROOT: &str = "https://edge.ammp.io/api/v0/";
+    match kvs.get(keys::HTTP_API_ROOT) {
+        Ok(Some(api_root)) => api_root,
+        _ => DEFAULT_API_ROOT.to_string(),
+    }
+}
+
+pub fn activate(kvs: &KVDb, node_id: &str) -> Result<String> {
+    let api_root = get_api_root(kvs);
+
     #[derive(Debug, Deserialize)]
     struct R1 {
         access_key: String,
@@ -28,7 +40,7 @@ pub fn activate(node_id: &str) -> Result<String> {
     let request_step1 = || {
         log::debug!("Doing activation step 1");
         agent
-            .get(&format!("{REMOTE_API_ROOT}nodes/{node_id}/activate"))
+            .get(&format!("{api_root}nodes/{node_id}/activate"))
             .call()
             .map_err(Error::transient)
     };
@@ -50,7 +62,7 @@ pub fn activate(node_id: &str) -> Result<String> {
     let request_step2 = || {
         log::debug!("Doing activation step 2");
         agent
-            .post(&format!("{REMOTE_API_ROOT}nodes/{node_id}/activate"))
+            .post(&format!("{api_root}nodes/{node_id}/activate"))
             .set("Authorization", &access_key)
             .call()
             .map_err(Error::transient)
