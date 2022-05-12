@@ -127,6 +127,7 @@ parts:
      - bin
   ae:
     plugin: rust
+    rust-channel: nightly
     source: rust
   envsubst:
     plugin: nil
