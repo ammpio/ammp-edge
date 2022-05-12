@@ -1,6 +1,5 @@
 pub mod keys;
-mod kv;
+pub mod kvpath;
 mod legacy_configdb;
 
 pub use legacy_configdb::{get_legacy_config, LegacyConfig};
-pub use kv::{KVStore, KVCache};
