@@ -8,7 +8,7 @@ use crate::helpers::now_iso;
 use crate::interfaces::get_legacy_config;
 use crate::interfaces::keys;
 use crate::interfaces::kvpath;
-use crate::node_mgmt::{activate, generate_node_id};
+use crate::node_mgmt;
 
 
 fn is_already_initialized(kvs: &KVDb) -> Result<bool> {
@@ -36,10 +36,11 @@ fn can_import_legacy_config(legacy_config_path: impl AsRef<Path>, kvs: &KVDb) ->
     }
 }
 
-fn initialize(kvs: &KVDb, node_id: &str) -> Result<()> {
+fn do_fresh_initialization(kvs: &KVDb) -> Result<()> {
+    let node_id = node_mgmt::generate_node_id();
     log::info!("Node ID: {}. Initializing...", node_id);
 
-    let access_key = activate(kvs, node_id)?;
+    let access_key = node_mgmt::activate(kvs, &node_id)?;
     kvs.set(keys::NODE_ID, &node_id)?;
     kvs.set(keys::ACCESS_KEY, &access_key)?;
     kvs.set(keys::ACTIVATED, &now_iso())?;
@@ -59,6 +60,5 @@ pub fn init() -> Result<()> {
         return Ok(());
     }
 
-    let node_id = generate_node_id();
-    initialize(&kvs, &node_id)
+    do_fresh_initialization(&kvs)
 }
