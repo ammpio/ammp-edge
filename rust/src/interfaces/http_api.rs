@@ -6,7 +6,7 @@ use backoff::{retry_notify, Error, ExponentialBackoff};
 use kvstore::KVDb;
 use serde::Deserialize;
 
-use crate::interfaces::keys;
+use crate::constants::keys;
 
 const REQUEST_TIMEOUT: u64 = 60;
 

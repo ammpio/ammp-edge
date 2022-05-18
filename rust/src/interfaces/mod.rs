@@ -1,5 +1,4 @@
 pub mod http_api;
-pub mod keys;
 pub mod kvpath;
 mod legacy_configdb;
 
