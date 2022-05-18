@@ -6,15 +6,14 @@ use backoff::{retry_notify, Error, ExponentialBackoff};
 use kvstore::KVDb;
 use serde::Deserialize;
 
-use crate::constants::keys;
+use crate::constants::{keys, REMOTE_DEFAULTS};
 
 const REQUEST_TIMEOUT: u64 = 60;
 
-pub fn get_api_root(kvs: &KVDb) -> String {
-    const DEFAULT_API_ROOT: &str = "https://edge.ammp.io/api/v0/";
-    match kvs.get(keys::HTTP_API_ROOT) {
-        Ok(Some(api_root)) => api_root,
-        _ => DEFAULT_API_ROOT.to_string(),
+pub fn get_api_base_url(kvs: &KVDb) -> String {
+    match kvs.get(keys::HTTP_API_BASE_URL) {
+        Ok(Some(base_url)) => base_url,
+        _ => REMOTE_DEFAULTS.get(keys::HTTP_API_BASE_URL).unwrap().to_string(),
     }
 }
 

@@ -18,6 +18,7 @@ kvstore = { path = "kvstore" }
 log = "*"
 native-tls = "*"
 nix = { version = "0.23" }
+phf = { version = "*", features = ["macros"] }
 pico-args = "*"
 rusqlite = { version = "*" }
 serde = {version = "*", features = ["derive"] }
