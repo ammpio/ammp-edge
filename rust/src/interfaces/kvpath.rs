@@ -1,10 +1,10 @@
+use std::path::PathBuf;
+
+use lazy_static::lazy_static;
+
 use crate::helpers::base_path;
 
-pub fn sqlite_store() -> String {
-    format!("{}/kvs-db/kvstore.db", base_path::data_dir())
-}
-
-#[allow(dead_code)]
-pub fn sqlite_cache() -> String {
-    format!("{}/ae-kvcache.db", base_path::tmp_dir())
+lazy_static! {
+    pub static ref SQLITE_STORE: PathBuf = base_path::DATA_DIR.join("kvs-db/kvstore.db");
+    pub static ref SQLITE_CACHE: PathBuf = base_path::TEMP_DIR.join("ae-kvcache.db");
 }

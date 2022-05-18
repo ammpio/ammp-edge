@@ -47,13 +47,13 @@ fn do_fresh_initialization(kvs: &KVDb) -> Result<()> {
 }
 
 pub fn init() -> Result<()> {
-    let kvs = KVDb::new(kvpath::sqlite_store())?;
+    let kvs = KVDb::new(kvpath::SQLITE_STORE.as_path())?;
 
     if is_already_initialized(&kvs)? {
         return Ok(());
     }
 
-    let legacy_config_path = &format!("{}/config.db", base_path::data_dir());
+    let legacy_config_path = base_path::DATA_DIR.join("config.db");
     if can_import_legacy_config(legacy_config_path, &kvs)? {
         return Ok(());
     }

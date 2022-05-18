@@ -1,11 +1,7 @@
 use anyhow::Result;
 use kvstore::KVDb;
 use serde::{Deserialize, Serialize};
-use std::fs;
-
-const SQLITE_DIR: &str = "/tmp/testdb";
-const SQLITE_FILE: &str = "kvstore.db";
-
+use tempfile::tempdir;
 #[derive(Debug, Deserialize, Serialize, PartialEq)]
 pub struct Cat {
     name: String,
@@ -16,7 +12,8 @@ pub struct Cat {
 #[test]
 fn write_and_read_object() -> Result<()> {
     env_logger::init();
-    let sqlite_db = format!("{}/{}", SQLITE_DIR, SQLITE_FILE);
+
+    let sqlite_db = tempdir()?.path().join("kvstore.db");
 
     let db = KVDb::new(&sqlite_db)?;
 
@@ -34,7 +31,5 @@ fn write_and_read_object() -> Result<()> {
     let lulu3: Cat = db2.get("lulu").expect("Error reading KV store").unwrap();
     assert_eq!(lulu3, lulu);
 
-    log::info!("Deleting DB directory {SQLITE_DIR}");
-    fs::remove_dir_all(SQLITE_DIR)?;
     Ok(())
 }

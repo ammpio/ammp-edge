@@ -4,5 +4,5 @@ pub fn load_dotenv() {
     dotenv::dotenv().ok();
 
     // Also load .env from data dir if exists
-    dotenv::from_path(&format!("{}/.env", base_path::data_dir())).ok();
+    dotenv::from_path(base_path::DATA_DIR.join(".env")).ok();
 }

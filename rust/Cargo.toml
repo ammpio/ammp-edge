@@ -15,6 +15,7 @@ env_logger = { version = "*", default-features = false }
 getrandom = "*"
 hex = "*"
 kvstore = { path = "kvstore" }
+lazy_static = "*"
 log = "*"
 native-tls = "*"
 nix = { version = "0.23" }

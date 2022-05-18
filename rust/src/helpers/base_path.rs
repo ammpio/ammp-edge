@@ -1,17 +1,27 @@
-use std::env;
+use std::{env, path::PathBuf};
 
-pub fn root_dir() -> String {
-    env::var("AE_ROOT_DIR")
-        .unwrap_or_else(|_| env::var("SNAP").unwrap_or_else(|_| String::from(".")))
-}
+use lazy_static::lazy_static;
 
-pub fn data_dir() -> String {
-    env::var("AE_DATA_DIR").unwrap_or_else(|_| {
-        env::var("SNAP_COMMON").unwrap_or_else(|_| format!("{}/{}", root_dir(), "/data"))
-    })
-}
+lazy_static! {
+    pub static ref ROOT_DIR: PathBuf = {
+        if let Ok(ae_root_dir) = env::var("AE_ROOT_DIR") {
+            return ae_root_dir.into();
+        }
+        if let Ok(snap_dir) = env::var("SNAP") {
+            return snap_dir.into();
+        }
+        PathBuf::from(".")
+    };
 
-#[allow(dead_code)]
-pub fn tmp_dir() -> String {
-    String::from("/tmp")
+    pub static ref DATA_DIR: PathBuf = {
+        if let Ok(ae_data_dir) = env::var("AE_DATA_DIR") {
+            return ae_data_dir.into();
+        }
+        if let Ok(snap_common_dir) = env::var("SNAP_COMMON") {
+            return snap_common_dir.into();
+        }
+        ROOT_DIR.join("data")
+    };
+
+    pub static ref TEMP_DIR: PathBuf = PathBuf::from("/tmp");
 }
