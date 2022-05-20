@@ -2,12 +2,13 @@ use std::path::Path;
 
 use anyhow::Result;
 use rusqlite::{Connection, OpenFlags, OptionalExtension};
+use serde_json::Value;
 
 #[derive(Debug)]
 pub struct LegacyConfig {
     pub node_id: String,
     pub access_key: String,
-    pub config: String,
+    pub config: Value,
 }
 
 pub fn get_legacy_config(path: impl AsRef<Path>) -> Result<Option<LegacyConfig>> {

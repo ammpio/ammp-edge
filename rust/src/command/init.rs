@@ -135,7 +135,7 @@ mod tests {
         assert!(try_import_legacy_config(&legacy_configdb_path, &blank_kvs)?);
         assert_eq!(blank_kvs.get::<String>(keys::NODE_ID)?.unwrap(), SAMPLE_NODE_ID);
         assert_eq!(blank_kvs.get::<String>(keys::ACCESS_KEY)?.unwrap(), SAMPLE_ACCESS_KEY);
-        assert_eq!(blank_kvs.get::<Value>(keys::CONFIG)?.unwrap(), SAMPLE_CONFIG.to_owned());
+        assert_eq!(blank_kvs.get::<Value>(keys::CONFIG)?.unwrap(), *SAMPLE_CONFIG);
         Ok(())
     }
 
