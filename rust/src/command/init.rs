@@ -8,6 +8,7 @@ use crate::helpers::{base_path, now_iso};
 use crate::interfaces::{get_legacy_config, kvpath};
 use crate::node_mgmt;
 
+const LEGACY_CONFIG_FILENAME: &str = "config.db";
 
 fn is_already_initialized(kvs: &KVDb) -> Result<bool> {
     if let Some(node_id) = kvs.get::<String>(keys::NODE_ID)? {
@@ -18,7 +19,7 @@ fn is_already_initialized(kvs: &KVDb) -> Result<bool> {
     }
 }
 
-fn can_import_legacy_config(legacy_config_path: impl AsRef<Path>, kvs: &KVDb) -> Result<bool> {
+fn try_import_legacy_config(legacy_config_path: impl AsRef<Path>, kvs: &KVDb) -> Result<bool> {
     match get_legacy_config(legacy_config_path) {
         Ok(Some(legacy_conf)) => {
             log::info!("Legacy config found: {:?}; migrating...", legacy_conf);
@@ -53,10 +54,107 @@ pub fn init() -> Result<()> {
         return Ok(());
     }
 
-    let legacy_config_path = base_path::DATA_DIR.join("config.db");
-    if can_import_legacy_config(legacy_config_path, &kvs)? {
+    let legacy_config_path = base_path::DATA_DIR.join(LEGACY_CONFIG_FILENAME);
+    if try_import_legacy_config(legacy_config_path, &kvs)? {
         return Ok(());
     }
 
     do_fresh_initialization(&kvs)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rusqlite::{params, Connection};
+
+    const IN_MEMORY: &str = ":memory:";
+    const SAMPLE_NODE_ID: &str = "abcdef123456";
+    const SAMPLE_ACCESS_KEY: &str = "secret";
+    const SAMPLE_CONFIG: &str = r#"
+    {
+        "devices": {"blah": "blah"},
+        "readings": ["a", "b"],
+        "timestamp": "2000-01-01T00:00:00Z"
+    }
+    "#;
+
+    fn create_kvs_initialized(path: impl AsRef<Path>) -> Result<KVDb> {
+        let kvs = KVDb::new(path)?;
+        kvs.set(keys::NODE_ID, SAMPLE_NODE_ID)?;
+        kvs.set(keys::ACCESS_KEY, SAMPLE_ACCESS_KEY)?;
+        Ok(kvs)
+    }
+
+    fn create_legacy_configdb(path: impl AsRef<Path>) -> Result<()> {
+        let conn = Connection::open(path.as_ref())?;
+
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS 'nodeconfig' (
+            node_id TEXT PRIMARY KEY NOT NULL,
+            access_key TEXT,
+            config TEXT
+            )",
+            [],
+        )?;
+
+        let mut stmt = conn.prepare(
+            "INSERT INTO 'nodeconfig' (node_id, access_key, config) values (?1, ?2, ?3)",
+        )?;
+        let res = stmt.execute(params![
+            SAMPLE_NODE_ID.to_string(),
+            SAMPLE_ACCESS_KEY.to_string(),
+            SAMPLE_CONFIG.to_string()
+        ])?;
+        log::debug!("Inserted: {:?} row(s)", res);
+        Ok(())
+    }
+
+    #[test]
+    fn with_initialized_kvs() -> Result<()> {
+        let initialized_kvs = create_kvs_initialized(IN_MEMORY)?;
+        assert!(is_already_initialized(&initialized_kvs)?);
+        Ok(())
+    }
+
+    #[test]
+    fn without_initialized_kvs() -> Result<()> {
+        let blank_kvs = KVDb::new(IN_MEMORY)?;
+        assert!(!is_already_initialized(&blank_kvs)?);
+        Ok(())
+    }
+
+    #[test]
+    fn with_legacy_config() -> Result<()> {
+        let blank_kvs = KVDb::new(IN_MEMORY)?;
+        let tempdir = tempfile::tempdir()?;
+        let legacy_configdb_path = tempdir.path().join(LEGACY_CONFIG_FILENAME);
+        create_legacy_configdb(&legacy_configdb_path)?;
+        assert!(try_import_legacy_config(&legacy_configdb_path, &blank_kvs)?);
+        assert_eq!(blank_kvs.get::<String>(keys::NODE_ID)?.unwrap(), SAMPLE_NODE_ID);
+        assert_eq!(blank_kvs.get::<String>(keys::ACCESS_KEY)?.unwrap(), SAMPLE_ACCESS_KEY);
+        // assert_eq!(blank_kvs.get::<Value>(keys::CONFIG)?.unwrap(), serde_json::from_str::<Value>(SAMPLE_CONFIG)?);
+        assert_eq!(blank_kvs.get::<String>(keys::CONFIG)?.unwrap(), SAMPLE_CONFIG);
+        Ok(())
+    }
+
+    #[test]
+    fn without_legacy_config() -> Result<()> {
+        let blank_kvs = KVDb::new(IN_MEMORY)?;
+        let tempdir = tempfile::tempdir()?;
+        let legacy_configdb_path = tempdir.path().join(LEGACY_CONFIG_FILENAME);
+        assert!(!try_import_legacy_config(&legacy_configdb_path, &blank_kvs)?);
+        Ok(())
+    }
+
+    #[test]
+    fn fresh_initialization() -> Result<()> {
+        let blank_kvs = KVDb::new(IN_MEMORY)?;
+        // TODO
+        blank_kvs.set(keys::NODE_ID, SAMPLE_NODE_ID)?;
+        assert_eq!(
+            blank_kvs.get::<String>(keys::NODE_ID)?.unwrap(),
+            SAMPLE_NODE_ID
+        );
+        Ok(())
+    }
 }

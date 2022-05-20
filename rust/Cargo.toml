@@ -26,6 +26,9 @@ serde = {version = "*", features = ["derive"] }
 serde_json = "*"
 ureq = { version = "*", default-features = false, features = ["json", "native-tls"] }
 
+[dev-dependencies]
+tempfile = "*"
+
 [[bin]]
 name = "ae"
 path = "src/main.rs"
