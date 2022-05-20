@@ -65,18 +65,21 @@ pub fn init() -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use once_cell::sync::Lazy;
+
     use rusqlite::{params, Connection};
+    use serde_json::{Value, json};
 
     const IN_MEMORY: &str = ":memory:";
     const SAMPLE_NODE_ID: &str = "abcdef123456";
     const SAMPLE_ACCESS_KEY: &str = "secret";
-    const SAMPLE_CONFIG: &str = r#"
-    {
-        "devices": {"blah": "blah"},
-        "readings": ["a", "b"],
-        "timestamp": "2000-01-01T00:00:00Z"
-    }
-    "#;
+    static SAMPLE_CONFIG: Lazy<Value> = Lazy::new(||
+        json!({
+            "devices": {"blah": "blah"},
+            "readings": ["a", "b"],
+            "timestamp": "2000-01-01T00:00:00Z"
+        })
+    );
 
     fn create_kvs_initialized(path: impl AsRef<Path>) -> Result<KVDb> {
         let kvs = KVDb::new(path)?;
@@ -132,8 +135,7 @@ mod tests {
         assert!(try_import_legacy_config(&legacy_configdb_path, &blank_kvs)?);
         assert_eq!(blank_kvs.get::<String>(keys::NODE_ID)?.unwrap(), SAMPLE_NODE_ID);
         assert_eq!(blank_kvs.get::<String>(keys::ACCESS_KEY)?.unwrap(), SAMPLE_ACCESS_KEY);
-        // assert_eq!(blank_kvs.get::<Value>(keys::CONFIG)?.unwrap(), serde_json::from_str::<Value>(SAMPLE_CONFIG)?);
-        assert_eq!(blank_kvs.get::<String>(keys::CONFIG)?.unwrap(), SAMPLE_CONFIG);
+        assert_eq!(blank_kvs.get::<Value>(keys::CONFIG)?.unwrap(), SAMPLE_CONFIG.to_owned());
         Ok(())
     }
 
