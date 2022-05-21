@@ -10,19 +10,19 @@ mod node_mgmt;
 use anyhow::{anyhow, Result};
 use env_logger::Env;
 
+use constants::{defaults, envvars};
 use helpers::load_dotenv;
-use constants::envvars;
 
-pub const CMD_INIT: &str = "init";
-pub const CMD_KVS_GET: &str = "kvs-get";
-pub const CMD_KVS_SET: &str = "kvs-set";
-
-const DEFAULT_LOG_LEVEL: &str = "info";
+const CMD_INIT: &str = "init";
+const CMD_KVS_GET: &str = "kvs-get";
+const CMD_KVS_SET: &str = "kvs-set";
 
 fn main() -> Result<()> {
     load_dotenv();
-    env_logger::Builder::from_env(Env::default().filter_or(envvars::LOG_LEVEL, DEFAULT_LOG_LEVEL))
-        .init();
+    env_logger::Builder::from_env(
+        Env::default().filter_or(envvars::LOG_LEVEL, defaults::LOG_LEVEL),
+    )
+    .init();
 
     let mut args = pico_args::Arguments::from_env();
     match args.subcommand()?.as_deref() {

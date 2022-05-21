@@ -6,9 +6,7 @@ use backoff::{retry_notify, Error, ExponentialBackoff};
 use kvstore::KVDb;
 use serde::Deserialize;
 
-use crate::constants::{keys, REMOTE_DEFAULTS};
-
-const REQUEST_TIMEOUT: u64 = 60;
+use crate::constants::{defaults, keys, REMOTE_DEFAULTS};
 
 pub fn get_api_base_url(kvs: &KVDb) -> String {
     match kvs.get(keys::HTTP_API_BASE_URL) {
@@ -20,7 +18,7 @@ pub fn get_api_base_url(kvs: &KVDb) -> String {
 fn get_ureq_agent() -> Result<ureq::Agent> {
     Ok(ureq::AgentBuilder::new()
         .tls_connector(Arc::new(native_tls::TlsConnector::new()?))
-        .timeout(Duration::from_secs(REQUEST_TIMEOUT))
+        .timeout(Duration::from_secs(defaults::API_REQUEST_TIMEOUT))
         .build())
 }
 
@@ -95,3 +93,4 @@ pub fn activate(api_root: &str, node_id: &str) -> Result<String> {
     activation_step_2(&agent, api_root, node_id, &access_key)?;
     Ok(access_key)
 }
+
