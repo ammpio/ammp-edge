@@ -1,36 +1,45 @@
 use getrandom::getrandom;
-use nix::{ifaddrs::getifaddrs, sys::socket::SockAddr};
+use nix::ifaddrs::{getifaddrs, InterfaceAddress};
 
 /// Uses the `getifaddrs` call to retrieve a list of network interfaces on the
 /// host device. Iterates over them and returns the MAC address corresponding to
 /// the primary interface (based on priority list). If there are no matches against
 /// the priority list, returns the first non-zero MAC address.
-fn get_primary_mac() -> Option<[u8; 6]> {
+
+fn mac_is_non_zero(mac: &[u8; 6]) -> bool {
+    mac.iter().any(|&x| x != 0)
+}
+
+fn get_interface_priority(interface: &InterfaceAddress) -> Option<usize> {
     // Try to get MAC address based on interface list (in order)
     const IFN_PRIORITY: &[&str] = &["eth0", "en0", "eth1", "en1", "wlan0", "wlan1"];
+
+    IFN_PRIORITY
+        .iter()
+        .position(|&x| x == interface.interface_name)
+}
+
+fn get_primary_mac() -> Option<[u8; 6]> {
     let mut best_prio = 99;
     let mut best_mac: Option<[u8; 6]> = None;
 
     if let Ok(ifiter) = getifaddrs() {
         for interface in ifiter {
-            if let Some(SockAddr::Link(link)) = interface.address {
-                let mac = link.addr();
-                if mac.iter().any(|&x| x != 0) {
-                    if best_mac.is_none() {
-                        best_mac = Some(mac);
-                        log::debug!("Fallback MAC: {:?}", hex::encode(best_mac.unwrap()));
-                    }
+            if let Some(link) = interface.address
+            && let Some(link_addr) = link.as_link_addr()
+            && let Some(mac) = link_addr.addr()
+            && mac_is_non_zero(&mac) {
 
-                    if let Some(prio) = IFN_PRIORITY
-                        .iter()
-                        .position(|&x| x == interface.interface_name)
-                    {
-                        if prio < best_prio {
-                            best_mac = Some(mac);
-                            best_prio = prio;
-                            log::debug!("Found MAC {:?} with priority {:?}", hex::encode(best_mac.unwrap()), best_prio);
-                        }
-                    }
+                if best_mac.is_none() {
+                    best_mac = Some(mac);
+                    log::debug!("Fallback MAC: {:?}", hex::encode(best_mac.unwrap()));
+                }
+
+                if let Some(prio) = get_interface_priority(&interface)
+                && prio < best_prio {
+                    best_mac = Some(mac);
+                    best_prio = prio;
+                    log::debug!("Found MAC {:?} with priority {:?}", hex::encode(best_mac.unwrap()), best_prio);
                 }
             }
         }
