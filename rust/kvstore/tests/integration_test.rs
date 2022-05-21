@@ -1,7 +1,9 @@
 use anyhow::Result;
-use kvstore::KVDb;
 use serde::{Deserialize, Serialize};
 use tempfile::tempdir;
+
+use kvstore::KVDb;
+
 #[derive(Debug, Deserialize, Serialize, PartialEq)]
 pub struct Cat {
     name: String,
