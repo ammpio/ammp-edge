@@ -19,7 +19,6 @@ log = "*"
 native-tls = "*"
 nix = { version = "0.23" }
 once_cell = "*"
-phf = { version = "*", features = ["macros"] }
 pico-args = "*"
 rusqlite = { version = "*", features = ["serde_json"] }
 serde = {version = "*", features = ["derive"] }

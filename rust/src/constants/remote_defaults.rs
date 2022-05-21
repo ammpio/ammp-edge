@@ -1,3 +1,10 @@
-pub static REMOTE_DEFAULTS: phf::Map<&'static str, &'static str> = phf::phf_map! {
-    "http_api_base_url" => "https://edge.ammp.io/api/v0/",
-};
+use once_cell::sync::Lazy;
+use std::collections::HashMap;
+
+use super::keys;
+
+pub static REMOTE_DEFAULTS: Lazy<HashMap<&str, &str>> = Lazy::new(|| {
+    HashMap::from([
+        (keys::HTTP_API_BASE_URL, "https://edge.ammp.io/api/v0/"),
+    ])
+});
