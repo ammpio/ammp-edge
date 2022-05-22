@@ -1,10 +1,10 @@
 use getrandom::getrandom;
 use nix::ifaddrs::getifaddrs;
 
-/// Uses the `getifaddrs` call to retrieve a list of network interfaces on the
-/// host device. Iterates over them and returns the MAC address corresponding to
-/// the primary interface (based on priority list). If there are no matches against
-/// the priority list, returns the first non-zero MAC address.
+// Uses the `getifaddrs` call to retrieve a list of network interfaces on the
+// host device. Iterates over them and returns the MAC address corresponding to
+// the primary interface (based on priority list). If there are no matches against
+// the priority list, returns the first non-zero MAC address.
 
 fn mac_is_non_zero(mac: &[u8; 6]) -> bool {
     mac.iter().any(|&x| x != 0)
@@ -29,12 +29,10 @@ fn get_primary_mac() -> Option<[u8; 6]> {
             && let Some(link_addr) = link.as_link_addr()
             && let Some(mac) = link_addr.addr()
             && mac_is_non_zero(&mac) {
-
                 if best_mac.is_none() {
                     best_mac = Some(mac);
                     log::debug!("Fallback MAC: {:?}", hex::encode(best_mac.unwrap()));
                 }
-
                 if let Some(prio) = get_interface_priority(&interface.interface_name)
                 && prio < best_prio {
                     best_mac = Some(mac);
@@ -44,7 +42,6 @@ fn get_primary_mac() -> Option<[u8; 6]> {
             }
         }
     }
-
     best_mac
 }
 
@@ -77,6 +74,7 @@ mod tests {
     fn interface_priorities() {
         assert_eq!(get_interface_priority(&"eth0".to_string()), Some(0));
         assert_eq!(get_interface_priority(&"wlan0".to_string()), Some(4));
+        assert_eq!(get_interface_priority(&"en3".to_string()), None);
     }
 
     #[test]
