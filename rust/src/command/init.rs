@@ -19,7 +19,7 @@ fn is_already_initialized(kvs: &KVDb) -> Result<bool> {
     }
 }
 
-fn try_import_legacy_config(legacy_config_path: impl AsRef<Path>, kvs: &KVDb) -> Result<bool> {
+fn can_import_legacy_config(legacy_config_path: impl AsRef<Path>, kvs: &KVDb) -> Result<bool> {
     match get_legacy_config(legacy_config_path) {
         Ok(Some(legacy_conf)) => {
             log::info!("Legacy config found: {:?}; migrating...", legacy_conf);
@@ -55,7 +55,7 @@ pub fn init() -> Result<()> {
     }
 
     let legacy_config_path = base_path::DATA_DIR.join(LEGACY_CONFIG_FILENAME);
-    if try_import_legacy_config(legacy_config_path, &kvs)? {
+    if can_import_legacy_config(legacy_config_path, &kvs)? {
         return Ok(());
     }
 
@@ -132,7 +132,7 @@ mod tests {
         let tempdir = tempfile::tempdir()?;
         let legacy_configdb_path = tempdir.path().join(LEGACY_CONFIG_FILENAME);
         create_legacy_configdb(&legacy_configdb_path)?;
-        assert!(try_import_legacy_config(&legacy_configdb_path, &blank_kvs)?);
+        assert!(can_import_legacy_config(&legacy_configdb_path, &blank_kvs)?);
         assert_eq!(blank_kvs.get::<String>(keys::NODE_ID)?.unwrap(), SAMPLE_NODE_ID);
         assert_eq!(blank_kvs.get::<String>(keys::ACCESS_KEY)?.unwrap(), SAMPLE_ACCESS_KEY);
         assert_eq!(blank_kvs.get::<Value>(keys::CONFIG)?.unwrap(), *SAMPLE_CONFIG);
@@ -144,7 +144,7 @@ mod tests {
         let blank_kvs = KVDb::new(IN_MEMORY)?;
         let tempdir = tempfile::tempdir()?;
         let legacy_configdb_path = tempdir.path().join(LEGACY_CONFIG_FILENAME);
-        assert!(!try_import_legacy_config(&legacy_configdb_path, &blank_kvs)?);
+        assert!(!can_import_legacy_config(&legacy_configdb_path, &blank_kvs)?);
         Ok(())
     }
 
