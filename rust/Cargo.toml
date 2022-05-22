@@ -28,6 +28,7 @@ ureq = { version = "*", default-features = false, features = ["json", "native-tl
 [dev-dependencies]
 assert_cmd = "*"
 predicates = "*"
+temp-env = "*"
 tempfile = "*"
 
 [[bin]]
