@@ -18,7 +18,7 @@ pub fn get_api_base_url(kvs: &KVDb) -> String {
 fn get_ureq_agent() -> Result<ureq::Agent> {
     Ok(ureq::AgentBuilder::new()
         .tls_connector(Arc::new(native_tls::TlsConnector::new()?))
-        .timeout(Duration::from_secs(defaults::API_REQUEST_TIMEOUT))
+        .timeout(defaults::API_REQUEST_TIMEOUT)
         .build())
 }
 
