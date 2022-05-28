@@ -1,3 +1,14 @@
+// Copyright (c) 2016 The Rouille developers
+// Licensed under the Apache License, Version 2.0
+// <LICENSE-APACHE or
+// http://www.apache.org/licenses/LICENSE-2.0> or the MIT
+// license <LICENSE-MIT or http://opensource.org/licenses/MIT>,
+// at your option. All files in the project carrying such
+// notice may not be copied, modified, or distributed except
+// according to those terms.
+
+// Below is from the Rouille example at https://github.com/tomaka/rouille/blob/245acb86d17483cd15f6b98764ab344a4a317d57/examples/hello-world.rs
+
 use rouille::router;
 
 pub fn web_ui() {
