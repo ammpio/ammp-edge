@@ -12,6 +12,7 @@ from edge_api import EdgeAPI
 from .events import NodeEvents
 from .config_watch import ConfigWatch
 from .command_watch import CommandWatch
+from data_mgmt.helpers.mqtt_pub import MQTTPublisher
 
 logger = logging.getLogger(__name__)
 
@@ -26,11 +27,24 @@ class Node(object):
         self.kvs = KVStore()
 
         try:
+            # possible overwrite of YAML file in SNAP_COMMON dir
+            path_to_yaml_overwrite = os.path.join(os.getenv('SNAP_COMMON', './'), 'remote.yaml')
+            if os.path.isfile(path_to_yaml_overwrite):
+                path_to_remote_yaml = path_to_yaml_overwrite
+            else:
+                path_to_remote_yaml = os.path.join(os.getenv('SNAP', './'), 'remote.yaml')
+                
             # Load base config from YAML file
-            with open(os.path.join(os.getenv('SNAP', './'), 'remote.yaml'), 'r') as remote_yaml:
+            with open(path_to_remote_yaml, 'r') as remote_yaml:
                 remote = yaml.safe_load(remote_yaml)
                 self.remote_api = remote['api']
                 self.data_endpoints = remote.get('data-endpoints', [])
+                for dep in self.data_endpoints:
+                    if dep.get('isdefault') and dep.get('type') == 'mqtt':
+                        self._remote_mqtt_broker_config = dep['config']
+                    else:
+                        logger.warning(f"No remote MQTT Broker found for endpoint: [{dep.get('name')}]")
+                        continue
         except Exception:
             logger.exception('Base configuration file remote.yaml cannot be loaded. Quitting')
             sys.exit('Base configuration file remote.yaml cannot be loaded. Quitting')
@@ -69,6 +83,16 @@ class Node(object):
         self.api = EdgeAPI()
         logger.info("Instantiated API")
 
+        try:
+            self.mqtt_client = MQTTPublisher(
+                node_id=self.node_id,
+                access_key=self.access_key,
+                config=self._remote_mqtt_broker_config
+            )
+            logger.info("Instantiated MQTT")
+        except AttributeError:
+            logger.warning("No MQTT Connection initialized. Missing MQTT endpoint in remote.yaml")
+
         self.events = NodeEvents()
         config_watch = ConfigWatch(self)
         config_watch.start()
@@ -106,6 +130,8 @@ class Node(object):
         # Load drivers from files, and also add any from the config
         self.drivers = self.__get_drivers()
         self.update_drv_from_config()
+        # Updates data endpoints if present in the remote config
+        self.update_endpoints_from_config()
 
     @property
     def node_id(self) -> str:
@@ -316,3 +342,13 @@ class Node(object):
                 self.drivers.update(self.config['drivers'])
             except AttributeError:
                 self.drivers = self.config['drivers']
+
+    def update_endpoints_from_config(self) -> None:
+        """
+        Check whether there are custom endpoints in the config definition, and if so update the data_endpoints
+        """
+        if 'data_endpoints' in self.config:
+            try:
+                self.data_endpoints = self.config['data_endpoints']
+            except Exception:
+                logger.exception('Exception raised while updating data-endpoints from config')

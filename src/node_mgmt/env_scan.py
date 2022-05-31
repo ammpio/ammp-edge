@@ -1,5 +1,4 @@
 import logging
-
 import socket
 import arrow
 import subprocess
@@ -12,84 +11,40 @@ from collections import defaultdict
 from kvstore import KVStore
 from reader.modbusrtu_reader import Reader as ModbusRTUReader
 from reader.modbustcp_reader import Reader as ModbusTCPReader
+from reader.sma_speedwire_reader import Reader as SpeedWireReader
 from processor import process_reading
 
+from node_mgmt.constants import (
+    DEFAULT_NMAP_SCAN_OPTS,
+    DEFAULT_SERIAL_DEV,
+    DSE_MODTCP_SCAN_ITEMS,
+    DSE_MODTCP_UNIT_IDS,
+    HOST_IP_KEY,
+    HOST_MAC_KEY,
+    HOST_PORTS_KEY,
+    HOST_VENDOR_KEY,
+    MODTCP_FIELD_KEY,
+    MODTCP_PORT,
+    MODTCP_RESULT_KEY,
+    MODTCP_TIMEOUT,
+    MODTCP_UNIT_ID_KEY,
+    NMAP_ADDR_KEY,
+    NMAP_ADDR_TYPE_KEY,
+    NMAP_IP_ADDR_TYPE,
+    NMAP_MAC_ADDR_TYPE,
+    NMAP_PORT_KEY,
+    NMAP_PORT_OPEN,
+    NMAP_PORT_STATE_KEY,
+    NMAP_PORTID_KEY,
+    NMAP_PORTS_KEY,
+    NMAP_VENDOR_KEY,
+    DEFAULT_SERIAL_BAUD_RATE,
+    SERIAL_SCAN_SIGNATURES,
+    SMA_MODTCP_SCAN_ITEMS,
+    SMA_MODTCP_UNIT_IDS
+)
+
 logger = logging.getLogger(__name__)
-
-DEFAULT_NMAP_SCAN_OPTS = ['--disable-arp-ping', '-p', '22,80,443,502']
-DEFAULT_SERIAL_DEV = '/dev/ttyAMA0'
-
-MODTCP_PORT = 502
-MODTCP_UNIT_IDS = [3]
-MODTCP_TIMEOUT = 1
-MODTCP_UNIT_ID_KEY = 'unit_id'
-MODTCP_FIELD_KEY = 'field'
-MODTCP_REGISTER_KEY = 'register'
-MODTCP_WORDS_KEY = 'words'
-MODTCP_DATATYPE_KEY = 'uint32'
-MODTCP_SCAN_ITEMS = [
-    {
-        MODTCP_FIELD_KEY: 'sma_device_class',
-        MODTCP_REGISTER_KEY: 30051,
-        MODTCP_WORDS_KEY: 2,
-        MODTCP_DATATYPE_KEY: 'uint32'
-    },
-    {
-        MODTCP_FIELD_KEY: 'sma_device_type',
-        MODTCP_REGISTER_KEY: 30053,
-        MODTCP_WORDS_KEY: 2,
-        MODTCP_DATATYPE_KEY: 'uint32'
-    },
-    {
-        MODTCP_FIELD_KEY: 'sma_serial',
-        MODTCP_REGISTER_KEY: 30057,
-        MODTCP_WORDS_KEY: 2,
-        MODTCP_DATATYPE_KEY: 'uint32'
-    },
-]
-MODTCP_RESULT_KEY = 'modbustcp'
-
-SERIAL_SCAN_SIGNATURES = [{
-    'name': 'Gamicos ultrasonic sensor',
-    'readings': [{
-        'register': 1,
-        'words': 2,
-        'fncode': 3
-    }]
-}, {
-    'name': 'IMT irradiation sensor',
-    'readings': [{
-        'register': 0,
-        'words': 1,
-        'fncode': 4
-    }]
-}, {
-    'name': 'APM303 genset controller',
-    'readings': [{
-        'register': 39,
-        'words': 1,
-        'fncode': 4
-    }]
-}]
-
-SERIAL_SCAN_BAUD_RATES = [9600, 2400]
-SERIAL_SCAN_SLAVE_IDS = [1, 2, 5]
-
-NMAP_ADDR_KEY = 'addr'
-NMAP_ADDR_TYPE_KEY = 'addrtype'
-NMAP_IP_ADDR_TYPE = 'ipv4'
-NMAP_MAC_ADDR_TYPE = 'mac'
-NMAP_VENDOR_KEY = 'vendor'
-NMAP_PORTS_KEY = 'ports'
-NMAP_PORT_KEY = 'port'
-NMAP_PORT_STATE_KEY = 'state'
-NMAP_PORT_OPEN = 'open'
-NMAP_PORTID_KEY = 'portid'
-
-HOST_IP_KEY = 'ipv4'
-HOST_MAC_KEY = 'mac'
-HOST_VENDOR_KEY = 'vendor'
-HOST_PORTS_KEY = 'ports'
 
 
 class NetworkEnv():
@@ -268,7 +223,42 @@ class NetworkEnv():
                 return None
 
     @staticmethod
-    def modbus_scan(hosts: list) -> None:
+    def modbus_read(host_vendor, host_ip):
+        if 'SMA' in host_vendor:
+            unit_ids = SMA_MODTCP_UNIT_IDS
+            modtcp_scan_items = SMA_MODTCP_SCAN_ITEMS
+        elif 'Deep Sea Electronics' in host_vendor:
+            unit_ids = DSE_MODTCP_UNIT_IDS
+            modtcp_scan_items = DSE_MODTCP_SCAN_ITEMS
+        else:
+            return None
+        for u_id in unit_ids:
+            result_for_unit = {
+                MODTCP_UNIT_ID_KEY: u_id,
+            }
+            try:
+                with ModbusTCPReader(
+                        host=host_ip,
+                        port=MODTCP_PORT,
+                        unit_id=u_id,
+                        timeout=MODTCP_TIMEOUT,
+                ) as r:
+                    for rdg in modtcp_scan_items:
+                        val_b = r.read(**rdg)
+                        if val_b is None:
+                            continue
+                        try:
+                            value = process_reading(val_b, **rdg)
+                        except Exception as e:
+                            logger.error(f"Could not process reading: {e}\nval_b={val_b}\nrdg={rdg}")
+                            continue
+                        result_for_unit[rdg[MODTCP_FIELD_KEY]] = value
+            except Exception as e:
+                logger.info(f"Error: {e}")
+
+            return result_for_unit
+
+    def modbus_scan(self, hosts: list) -> None:
         if hosts is None:
             return
 
@@ -277,32 +267,11 @@ class NetworkEnv():
                 or MODTCP_PORT not in \
                     [int(p) for p in h.get(HOST_PORTS_KEY, [])]:
                 continue
+            host_vendor = h[HOST_VENDOR_KEY]
             host_ip = h[HOST_IP_KEY]
             h[MODTCP_RESULT_KEY] = []
-            for unit_id in MODTCP_UNIT_IDS:
-                result_for_unit = {
-                    MODTCP_UNIT_ID_KEY: unit_id,
-                }
-                try:
-                    with ModbusTCPReader(
-                            host=host_ip,
-                            port=MODTCP_PORT,
-                            unit_id=unit_id,
-                            timeout=MODTCP_TIMEOUT,
-                    ) as r:
-                        for rdg in MODTCP_SCAN_ITEMS:
-                            val_b = r.read(**rdg)
-                            if val_b is None:
-                                continue
-                            try:
-                                value = process_reading(val_b, **rdg)
-                            except Exception as e:
-                                logger.error(f"Could not process reading: {e}\nval_b={val_b}\nrdg={rdg}")
-                                continue
-                            result_for_unit[rdg[MODTCP_FIELD_KEY]] = value
-                except Exception as e:
-                    logger.info(f"Error: {e}")
-                h[MODTCP_RESULT_KEY].append(result_for_unit)
+            result_for_unit = self.modbus_read(host_vendor, host_ip)
+            h[MODTCP_RESULT_KEY].append(result_for_unit)
 
 
 class SerialEnv():
@@ -332,26 +301,21 @@ class SerialEnv():
 
         result = []
 
-        for br in SERIAL_SCAN_BAUD_RATES:
-            for slave in SERIAL_SCAN_SLAVE_IDS:
-                for sig in SERIAL_SCAN_SIGNATURES:
-                    test = f"Testing slave ID {slave} for '{sig['name']}' at baud rate {br}"
-                    with ModbusRTUReader(device, slave, br, timeout=1, debug=True) as r:
-                        success = True
-                        for rdg in sig['readings']:
-                            try:
-                                response = r.read(**rdg)
-                                res = f"Got response {response}"
-                                if response is None:
-                                    success = False
-                            except Exception as e:
-                                res = f"Error: {e}"
-                                success = False
-                        if success:
-                            res = res + f"==> SUCCESS: Device '{sig['name']}' present as ID {slave} at baud rate {br}"
-
-                    result.append([test, res])
-
+        for sig in SERIAL_SCAN_SIGNATURES:
+            test = f"Testing slave ID {sig['slave_id']} for {sig['name']} at baud rate {DEFAULT_SERIAL_BAUD_RATE}"
+            with ModbusRTUReader(device, sig['slave_id'], DEFAULT_SERIAL_BAUD_RATE, timeout=1, debug=True) as r:
+                try:
+                    response = process_reading(r.read(register=sig['register'], words=sig['words'],
+                                                      fncode=sig['fncode']), datatype=sig['datatype'])
+                    res = f"Got test response for {sig['reading']} = {response}"
+                    if response is not None:
+                        res += f" ==> SUCCESS: Device {sig['name']} present as ID {sig['slave_id']} " \
+                               f"at baud rate = {DEFAULT_SERIAL_BAUD_RATE}"
+                except Exception as e:
+                    res = f"Error: {e}"
+                    res += f". {sig['name']} doesn't show up, make sure the configuration is correct:" \
+                           f" slave id = {sig['slave_id']}, baud rate = {DEFAULT_SERIAL_BAUD_RATE}"
+            result.append([test, res])
         return result
 
 
@@ -360,6 +324,7 @@ class EnvScanner(object):
 
         self.net_env = NetworkEnv(default_ifname=ifname)
         self.serial_env = SerialEnv(default_serial_dev=serial_dev)
+        self.speedwire_env = SpeedWireReader()
 
     def do_scan(self):
         network_hosts = self.net_env.network_scan()
@@ -368,6 +333,8 @@ class EnvScanner(object):
         except Exception:
             logger.exception("Exception while running ModbusTCP scan")
         serial_devices = self.serial_env.serial_scan()
+        with self.speedwire_env:
+            speedwire_serials = self.speedwire_env.scan_serials()
 
         scan_result = {
             'time':
@@ -378,8 +345,8 @@ class EnvScanner(object):
                 'netmask': self.net_env.default_netmask_bits,
                 'hosts': network_hosts
             }],
-            'serial_scan':
-            serial_devices
+            'serial_scan': serial_devices,
+            'speedwire_serials': speedwire_serials
         }
 
         return scan_result

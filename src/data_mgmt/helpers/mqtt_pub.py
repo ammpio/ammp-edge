@@ -2,7 +2,7 @@ import logging
 from os import getenv, path
 import json
 import paho.mqtt.client as mqtt
-from typing import Dict, List
+from typing import Dict, List, Optional
 import ssl
 
 logger = logging.getLogger(__name__)
@@ -27,8 +27,12 @@ MESSAGE_RETRY = 30
 
 
 class MQTTPublisher():
-    def __init__(self, node_id: str, access_key: str, config: Dict) -> None:
-        client = mqtt.Client(client_id=node_id, clean_session=MQTT_CLEAN_SESSION)
+    def __init__(self, node_id: str, access_key: str, config: Dict, client_id_suffix: Optional[str] = None) -> None:
+        if client_id_suffix is None:
+            client_id = node_id
+        else:
+            client_id = f'{node_id}-{client_id_suffix}'
+        client = mqtt.Client(client_id=client_id, clean_session=MQTT_CLEAN_SESSION)
         client.enable_logger(logger)
         client.tls_set(
             ca_certs=path.join(getenv('SNAP', '.'), 'resources', 'certs', config['cert']),
@@ -48,16 +52,15 @@ class MQTTPublisher():
         self._client = client
         self._host = config['host']
         self._node_id = node_id
-        self._topic = self.__get_topic()
         self._connected = False
 
-    def publish(self, payload: Dict) -> None:
+    def publish(self, payload: Dict, subtopic: str = None) -> None:
         if not self._connected:
             logger.warning("MQTT client not yet connected; not publishing")
             return False
-
+        mqtt_topic = self.__get_topic(subtopic)
         rc = self._client.publish(
-            self._topic,
+            mqtt_topic,
             self.__get_mqtt_payload(payload),
             qos=MQTT_QOS, retain=MQTT_RETAIN
         )
@@ -75,8 +78,8 @@ class MQTTPublisher():
             logger.debug("PUSH [mqtt] Error - Message not published")
             return False
 
-    def __get_topic(self) -> str:
-        mqtt_topic = f"a/{self._node_id}/data"
+    def __get_topic(self, subtopic: str) -> str:
+        mqtt_topic = f"a/{self._node_id}/{subtopic}"
         return mqtt_topic
 
     @staticmethod

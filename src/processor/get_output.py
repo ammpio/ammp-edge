@@ -1,11 +1,13 @@
 import logging
+from typing import Dict, List
 from processor.jsonata import evaluate_jsonata
 from processor.process_reading import typecast
+from copy import deepcopy
 
 logger = logging.getLogger(__name__)
 
 
-def get_output(dev_rdg, output_config):
+def get_output(dev_rdg: Dict, output_config: List) -> List:
     """
     Get output fields based on readings.
 
@@ -19,16 +21,16 @@ def get_output(dev_rdg, output_config):
       take the readings).
     output_config: list of outputs. Each item in the list should be a dict containing
       'source' and 'field' keys with string values. The 'source' value should be a JSONata
-      expression that's applied to dev_rdg. The output of that is saved as a value under a key
-      named after 'field' in the output dict
+      expression that's applied to dev_rdg. The output is saved under the 'value' key in
+      the same list.
     """
 
-    output = {}
+    output = deepcopy(output_config)
 
-    for oc in output_config:
+    for oc in output:
         evaluated_value = evaluate_jsonata(dev_rdg, oc['source'])
         if evaluated_value is None:
             continue
-        output[oc['field']] = typecast(evaluated_value, **oc)
+        oc['value'] = typecast(evaluated_value, **oc)
 
     return output

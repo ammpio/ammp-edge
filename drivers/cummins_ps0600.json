@@ -1,0 +1,27 @@
+{
+  "common": {
+    "fncode": 3
+  },
+  "fields": {
+    "runtime": {"description": "Engine runtime", "register": 69, "words": 2, "datatype": "uint32", "multiplier": 180, "unit": "s", "typecast": "float"},
+    "P": {"description": "Generator total watts", "register": 33, "words": 1, "datatype": "int16", "multiplier": 1000, "unit": "W", "typecast": "float"},
+    "P_L1": {"description": "Generator L1 watts", "register": 30, "words": 1, "datatype": "int16", "multiplier": 1000, "unit": "W", "typecast": "float"},
+    "P_L2": {"description": "Generator L2 watts", "register": 31, "words": 1, "datatype": "int16", "multiplier": 1000, "unit": "W", "typecast": "float"},
+    "P_L3": {"description": "Generator L3 watts", "register": 32, "words": 1, "datatype": "int16", "multiplier": 1000, "unit": "W", "typecast": "float"},
+    "S": {"description": "Generator total VA", "register": 42, "words": 1, "datatype": "uint16", "multiplier": 1000, "unit": "VA", "typecast": "float"},
+    "S_L1": {"description": "Generator L1 VA", "register": 39, "words": 1, "datatype": "uint16", "multiplier": 1000, "unit": "VA", "typecast": "float"},
+    "S_L2": {"description": "Generator L2 VA", "register": 40, "words": 1, "datatype": "uint16", "multiplier": 1000, "unit": "VA", "typecast": "float"},
+    "S_L3": {"description": "Generator L3 VA", "register": 41, "words": 1, "datatype": "uint16", "multiplier": 1000, "unit": "VA", "typecast": "float"},
+    "V_L1": {"description": "Generator L1-N voltage", "register": 17, "words": 1, "datatype": "uint16", "multiplier": 1, "unit": "V", "typecast": "float"},
+    "V_L2": {"description": "Generator L2-N voltage", "register": 18, "words": 1, "datatype": "uint16", "multiplier": 1, "unit": "V", "typecast": "float"},
+    "V_L3": {"description": "Generator L3-N voltage", "register": 19, "words": 1, "datatype": "uint16", "multiplier": 1, "unit": "V", "typecast": "float"},
+    "I_L1": {"description": "Generator current through L1", "register": 25, "words": 1, "datatype": "uint16", "multiplier": 1, "unit": "A", "typecast": "float"},
+    "I_L2": {"description": "Generator current through L2", "register": 26, "words": 1, "datatype": "uint16", "multiplier": 1, "unit": "A", "typecast": "float"},
+    "I_L3": {"description": "Generator current through L3", "register": 27, "words": 1, "datatype": "uint16", "multiplier": 1, "unit": "A", "typecast": "float"},
+    "alarm_status": {"description": "Alarm status, current fault", "register": 11, "words": 1, "datatype": "uint16", "typecast": "int"},
+    "genset_state": {"description": "Genset state", "register": 10, "words": 1, "datatype": "uint16", "typecast": "int"},
+    "freq": {"description": "Generator frequency", "register": 43, "words": 1, "datatype": "uint16", "typecast": "float", "multiplier": 0.01, "unit": "Hz"},
+    "temp_coolant": {"description": "Coolant temperature", "register": 63, "words": 1, "datatype": "uint16", "typecast": "float", "multiplier": 0.1, "unit": "F"},
+    "oil_pressure": {"description": "Oil pressure", "register": 61, "words": 1, "datatype": "uint16", "typecast": "float", "multiplier": 0.1, "unit": "psi"}
+  }
+}
