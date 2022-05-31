@@ -8,7 +8,7 @@ import serial.tools.list_ports
 import xmltodict
 from collections import defaultdict
 
-from kvstore import KVStore
+from kvstore import KVCache, keys
 from reader.modbusrtu_reader import Reader as ModbusRTUReader
 from reader.modbustcp_reader import Reader as ModbusTCPReader
 from reader.sma_speedwire_reader import Reader as SpeedWireReader
@@ -135,7 +135,7 @@ class NetworkEnv():
                      this_ip_addr: str = None,
                      netmask_bits: int = None,
                      nmap_scan_opts: list = DEFAULT_NMAP_SCAN_OPTS,
-                     save_to_kvs: bool = True) -> dict:
+                     save_to_kvc: bool = True) -> dict:
         if not this_ip_addr:
             this_ip_addr = self.default_ip
         if not netmask_bits:
@@ -177,15 +177,15 @@ class NetworkEnv():
 
         # The default behavior is to save the results to the key-value store,
         # for potential use by other processes
-        if save_to_kvs:
+        if save_to_kvc:
             try:
-                kvs = KVStore()
+                kvc = KVCache()
                 for h in hosts:
                     if h.get('mac'):  # Skip any hosts without MAC addresses
                         this_mac = h['mac'].lower()
-                        kvs.set(f"env:net:mac:{this_mac}", h)
+                        kvc.set(f"{keys.ENV_NET_MAC_PFX}/{this_mac}", h)
             except Exception as e:
-                logger.error(f"Cannot save scan results to key-value store: {e}")
+                logger.error(f"Cannot save scan results to key-value cache: {e}")
 
         return hosts
 

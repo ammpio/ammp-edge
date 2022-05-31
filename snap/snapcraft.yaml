@@ -19,11 +19,17 @@ architectures:
 epoch: 1
 
 apps:
+  ae-init:
+    command: bin/ae init
+    daemon: oneshot
+    restart-condition: on-failure
+    restart-delay: 2s
+    plugs: [network]
   ammp-edge:
     command: bin/ammp_edge
     daemon: simple
     restart-condition: always
-    after: [redis-server]
+    after: [ae-init]
     plugs:
       - network
       - network-bind
@@ -39,6 +45,7 @@ apps:
     command: python3 -m flask run
     daemon: simple
     restart-condition: always
+    after: [ae-init]
     plugs:
       - network-bind
     environment:
@@ -57,25 +64,21 @@ apps:
     command: bin/wifi_ap_control
     daemon: simple
     restart-condition: on-abnormal
-    after: [redis-server]
     plugs: [network]
   env-scan:
     command: bin/env_scan_svc
     daemon: simple
-    after: [redis-server]
     plugs: [network, network-observe]
     timer: 0:00~24:00/36
     environment:
       LD_LIBRARY_PATH: "$LD_LIBRARY_PATH:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/blas"
-  redis-server:
-    adapter: full
-    command: bin/redis-server $SNAP/redis.conf --dir $SNAP_COMMON
+  mosquitto:
+    command: bin/mosquitto_svc.sh
     daemon: simple
+    restart-condition: always
+    restart-delay: 2s
+    after: [ae-init]
     plugs: [network, network-bind]
-  redis-cli:
-    adapter: full
-    command: bin/redis-cli
-    plugs: [network]
 
 parts:
   ammp-edge:
@@ -86,6 +89,9 @@ parts:
       - libsnmp-dev
     stage-snaps:
       - nmap
+    stage:
+      - -usr/lib/aarch64-linux-gnu/libsqlite3.so.0
+      - -usr/lib/aarch64-linux-gnu/libsqlite3.so.0.8.6
     override-prime: |
       snapcraftctl prime
       "${SNAPCRAFT_PRIME}"/usr/bin/python3 \
@@ -97,8 +103,9 @@ parts:
     plugin: dump
     source: config
     prime:
-      - remote.yaml
-      - redis.conf
+      - mosquitto.conf.tpl
+      - mqtt-bridge.conf.tpl
+      - mqtt-bridge-stage.conf.tpl
   resources:
     plugin: dump
     source: resources
@@ -111,18 +118,57 @@ parts:
     organize:
       '*': drivers/
     prime: [drivers]
-  redis-server:
-    plugin: make
-    source: https://github.com/antirez/redis.git
-    source-tag: 6.0.9
-    source-depth: 1
-    make-install-var: PREFIX
   bin:
     plugin: dump
     source: bin
     organize:
       '*': bin/
-    prime: [bin]
+    prime: 
+     - bin
+  ae:
+    plugin: rust
+    rust-channel: nightly
+    source: rust
+  envsubst:
+    plugin: nil
+    stage-packages:
+     - gettext-base
+    prime:
+     - usr/bin/envsubst
+  mosquitto:
+    plugin: make
+    make-parameters: 
+     - "prefix=/usr"
+     - "WITH_DOCS=no"
+     - "WITH_CJSON=no"
+     - "WITH_ADNS=yes"
+     - "CFLAGS=-Wall -ggdb -O2 -I$SNAPCRAFT_STAGE/include -D_GNU_SOURCE"
+    source: https://github.com/eclipse/mosquitto
+    source-type: git
+    source-tag: v2.0.14
+    source-depth: 1
+    build-packages:
+      - libssl-dev
+      - gcc
+      - g++
+    stage-packages:
+      - libssl1.0.0
+    prime:
+      - usr/sbin/mosquitto
+      - usr/lib/libmosquitto.so*
+      - lib/*-linux-gnu/libcrypto.so*
+      - lib/*-linux-gnu/libssl.so*
+      - usr/include/mosquitto.h
+      - usr/include/mosquitto_broker.h
+      - usr/include/mosquitto_plugin.h
+      - usr/include/mqtt_protocol.h
+  libsqlite3:
+    source: https://sqlite.org/2022/sqlite-autoconf-3380400.tar.gz
+    plugin: autotools
+    stage:
+      - lib/libsqlite3.so
+      - lib/libsqlite3.so.0
+      - lib/libsqlite3.so.0.8.6
 
 plugs:
   provisioning-edge:

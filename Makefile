@@ -22,7 +22,6 @@ clean:
 
 local-prepare:
 	mkdir -p .local
-	cp config/remote.yaml .local/
 	cp -a provisioning .local/
 	ln -sf ../drivers .local/
 	ln -sf ../resources .local/

@@ -6,14 +6,6 @@ services:
   #   volumes:
   #     - ./src:/src
   #   command: bash -c "apt-get update && apt-get install -y libsnmp-dev nmap && pip install ./src && ammp_edge"
-  redis:
-    image: redis:6.0.9
-    command: redis-server /usr/local/etc/redis/redis.conf --bind 0.0.0.0
-    ports:
-      - "127.0.0.1:6379:6379"
-    volumes:
-      - $PWD/.local/data:/var/lib/redis
-      - $PWD/config/redis.conf:/usr/local/etc/redis/redis.conf
   mock_sma_stp:
     container_name: mock_sma_stp
     image: python:slim

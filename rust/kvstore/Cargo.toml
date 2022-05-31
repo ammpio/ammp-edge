@@ -1,0 +1,18 @@
+[package]
+name = "kvstore"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "*"
+log = "*"
+env_logger = { version = "*", default-features = false }
+rusqlite = { version = "*" }
+serde = "*"
+serde_json = "*"
+
+[dev-dependencies]
+serde = {version = "*", features = ["derive"] }
+tempfile = "*"
