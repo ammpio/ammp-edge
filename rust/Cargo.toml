@@ -17,7 +17,8 @@ hex = "*"
 kvstore = { path = "kvstore" }
 log = "*"
 native-tls = "*"
-nix = { version = "*", features = ["socket"] }
+#nix = { version = "*", features = ["socket"] }
+nix = { git = "https://github.com/nix-rust/nix", features = ["socket"] }
 once_cell = "*"
 pico-args = "*"
 rouille = { version = "*", default-features = false }

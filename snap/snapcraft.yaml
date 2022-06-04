@@ -9,7 +9,7 @@ description: |
 grade: stable
 confinement: strict
 
-base: core18
+base: core22
 
 architectures:
   - build-on: amd64
@@ -42,7 +42,7 @@ apps:
     environment:
       LD_LIBRARY_PATH: "$LD_LIBRARY_PATH:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/blas"
   web-ui:
-    command: python3 -m flask run
+    command: bin/python3 -m flask run
     daemon: simple
     restart-condition: always
     after: [ae-init]
@@ -56,7 +56,7 @@ apps:
       LANG: C.UTF-8
       LD_LIBRARY_PATH: "$LD_LIBRARY_PATH:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/blas"
   nmap:
-    command: nmap
+    command: usr/bin/nmap
     environment:
       LD_LIBRARY_PATH: "$LD_LIBRARY_PATH:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/blas"
     plugs: [network, network-bind, network-control]
@@ -83,18 +83,15 @@ apps:
 parts:
   ammp-edge:
     plugin: python
-    python-version: python3
     source: src
     stage-packages:
       - libsnmp-dev
-    stage-snaps:
       - nmap
-    stage:
-      - -usr/lib/aarch64-linux-gnu/libsqlite3.so.0
-      - -usr/lib/aarch64-linux-gnu/libsqlite3.so.0.8.6
+    build-environment:
+      - PIP_EXTRA_INDEX_URL: https://ammplipy.ammp.io/
     override-prime: |
       snapcraftctl prime
-      "${SNAPCRAFT_PRIME}"/usr/bin/python3 \
+      "${SNAPCRAFT_PRIME}"/bin/python3 \
         -m compileall \
         -q \
         --workers 0 \
@@ -123,11 +120,10 @@ parts:
     source: bin
     organize:
       '*': bin/
-    prime: 
+    prime:
      - bin
   ae:
     plugin: rust
-    rust-channel: nightly
     source: rust
   envsubst:
     plugin: nil
@@ -137,12 +133,12 @@ parts:
      - usr/bin/envsubst
   mosquitto:
     plugin: make
-    make-parameters: 
+    make-parameters:
      - "prefix=/usr"
      - "WITH_DOCS=no"
      - "WITH_CJSON=no"
      - "WITH_ADNS=yes"
-     - "CFLAGS=-Wall -ggdb -O2 -I$SNAPCRAFT_STAGE/include -D_GNU_SOURCE"
+     - "CFLAGS='-Wall -ggdb -O2 -I$SNAPCRAFT_STAGE/include -D_GNU_SOURCE'"
     source: https://github.com/eclipse/mosquitto
     source-type: git
     source-tag: v2.0.14
@@ -152,7 +148,7 @@ parts:
       - gcc
       - g++
     stage-packages:
-      - libssl1.0.0
+      - libssl3
     prime:
       - usr/sbin/mosquitto
       - usr/lib/libmosquitto.so*
@@ -162,13 +158,6 @@ parts:
       - usr/include/mosquitto_broker.h
       - usr/include/mosquitto_plugin.h
       - usr/include/mqtt_protocol.h
-  libsqlite3:
-    source: https://sqlite.org/2022/sqlite-autoconf-3380400.tar.gz
-    plugin: autotools
-    stage:
-      - lib/libsqlite3.so
-      - lib/libsqlite3.so.0
-      - lib/libsqlite3.so.0.8.6
 
 plugs:
   provisioning-edge:
