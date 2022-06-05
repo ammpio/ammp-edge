@@ -22,3 +22,6 @@ stage/
 
 # Directories related to Rust code
 rust/target/
+
+# Python virtual environment
+venv/

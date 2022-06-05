@@ -41,3 +41,13 @@ to spin up the necessary Docker containers and run the `ammp-edge` code.
 
 ### Interfaces
 Currently, ammp-edge pulls its configuration from the AMMP API and interfaces with the AMMP MQTT broker.
+
+
+### Set up Python virtual environment
+```
+python -m venv venv
+. env/bin/activate
+cd src
+pip install -U . --extra-index-url https://ammplipy.ammp.io/
+```
+The extra index is currently needed to obtain builds of [https://pypi.org/project/pyjsonata/](pyjsonata) for relevant architectures/Python versions.
