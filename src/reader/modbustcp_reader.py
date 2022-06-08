@@ -9,11 +9,12 @@ logger = logging.getLogger(__name__)
 
 
 class Reader(object):
-    def __init__(self, host, port=502, unit_id=1, timeout=10, conn_check=False, conn_retry=10, debug=False, **kwargs):
+    def __init__(self, host, port=502, unit_id=1, register_offset=0, timeout=10, conn_check=False, conn_retry=10, debug=False, **kwargs):
 
         self._host = host
         self._port = port
         self._unit_id = unit_id
+        self._register_offset = register_offset
         self._timeout = timeout
         self._conn_check = conn_check
         self._conn_retry = conn_retry
@@ -102,11 +103,12 @@ class Reader(object):
                 register = int(register, 16)
 
             if fncode == 3:  # Default is fncode 3
-                val_i = self._conn.read_holding_registers(register, words)
+                val_i = self._conn.read_holding_registers(register + self._register_offset, words)
             elif fncode == 4:
-                val_i = self._conn.read_input_registers(register, words)
+                val_i = self._conn.read_input_registers(register + self._register_offset, words)
             else:
                 logger.warn(f"Unrecognized Modbus function code '{fncode}'")
+                val_i = None
         except Exception:
             logger.error(f"Exception while processing register {register}")
             raise
