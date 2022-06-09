@@ -60,7 +60,7 @@ class Reader(object):
 
     def __open_connection(self, retries_left=0):
         # Make sure we have an open connection to server
-        if not self._conn.is_open():
+        if not self._conn.is_open:
             if self._conn_check:
                 # Do a quick ping check
                 r = os.system('ping -c 1 %s' % self._host)
@@ -81,7 +81,7 @@ class Reader(object):
 
             self._conn.open()
 
-        if self._conn.is_open():
+        if self._conn.is_open:
             return True
         elif retries_left > 0:
             logger.warn(f"Connection attempt to {self._host}:{self._port}/{self._unit_id} failed. Retrying")
