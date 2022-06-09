@@ -201,7 +201,7 @@ def read_device(dev, readings, readout_q, dev_lock=None):
     if dev_lock:
         dev_lock.acquire()
         # If we've just finished reading another device on this port, let it breathe
-        time.sleep(0.5)
+        time.sleep(5)
 
     fields = {
         DEVICE_ID_KEY: dev['id'],
