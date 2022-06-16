@@ -12,3 +12,6 @@
 src/*.egg-info/
 *.egg
 src/build/
+
+venv
+rust/target
