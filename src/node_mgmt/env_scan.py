@@ -199,7 +199,7 @@ class NetworkEnv():
             args = [args]
 
         if os.getenv('SNAP'):
-            nmap_path = os.path.join(os.getenv('SNAP'), 'usr/bin', 'nmap')
+            nmap_path = os.path.join(os.getenv('SNAP'), 'bin', 'nmap')
         else:
             nmap_path = 'nmap'
 
