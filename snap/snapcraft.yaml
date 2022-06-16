@@ -50,8 +50,6 @@ apps:
       LD_LIBRARY_PATH: "$LD_LIBRARY_PATH:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/blas"
   nmap:
     command: nmap
-    stage-packages:
-      - nmap
     environment:
       LD_LIBRARY_PATH: "$LD_LIBRARY_PATH:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/blas"
     plugs: [network, network-bind, network-control]
@@ -86,7 +84,6 @@ parts:
     source: src
     stage-packages:
       - libsnmp-dev
-    stage-snaps:
       - nmap
     override-prime: |
       snapcraftctl prime
