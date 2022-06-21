@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 
 MQTT_STATE_SUBTOPIC = 'state/env_scan'
 GENERATE_NEW_CONFIG_FLAG = 'generate_new_config'
+INPUT_PARAMETERS = 'input_parameters'
 
 
 def send_log(node):
@@ -28,13 +29,13 @@ def send_log(node):
     # Package logs in zipped archive
     zipped_logs = __create_log_archive(node)
     if not zipped_logs:
-        logger.warn('No log archive available. Exiting log upload.')
+        logger.warning('No log archive available. Exiting log upload.')
         return
 
     # Obtain S3 location for file upload
     upload_url = node.api.get_upload_url()
     if not upload_url:
-        logger.warn('No upload URL available. Exiting log upload.')
+        logger.warning('No upload URL available. Exiting log upload.')
         return
 
     # Send logs
@@ -51,7 +52,7 @@ def send_log(node):
             logger.info('Upload successful')
             logger.debug(r.text)
         else:
-            logger.warn('Upload not successful')
+            logger.warning('Upload not successful')
             logger.info(r.text)
     except Exception:
         logger.exception('Exception while uploading log archive')
@@ -62,7 +63,7 @@ def send_log(node):
     try:
         os.remove(zipped_logs)
     except Exception:
-        logger.warn('Cannot delete local log archive', exc_info=True)
+        logger.warning('Cannot delete local log archive', exc_info=True)
 
 
 def __create_log_archive(node):
@@ -165,11 +166,17 @@ def env_scan(node):
         logger.warning(f"ENV_SCAN [mqtt]: Push failed")
 
 
-def trigger_config_generation(node):
+def trigger_config_generation(node, tank_dimensions=None):
     logger.info('Starting environment scan')
     scanner = EnvScanner()
     scan_result = scanner.do_scan()
     scan_result[GENERATE_NEW_CONFIG_FLAG] = True
+    # Allow for more input parameters
+    scan_result[INPUT_PARAMETERS] = list()
+    if tank_dimensions is not None and isinstance(tank_dimensions, dict):
+        # first version only supports rectangular tanks
+        tank_dimensions.update({'type': 'tank', 'shape': 'rectangular'})
+    scan_result[INPUT_PARAMETERS].append(tank_dimensions)
     logger.info('Completed environment scan. Submitting results to MQTT Broker.')
     if node.mqtt_client.publish(scan_result, subtopic=MQTT_STATE_SUBTOPIC):
         logger.info(f"ENV_SCAN [mqtt]: Successfully pushed")
@@ -285,23 +292,26 @@ def sys_reboot(node):
 
 def sys_start_snapd(node):
     os.system(
-        'busctl call org.freedesktop.systemd1 /org/freedesktop/systemd1 org.freedesktop.systemd1.Manager StartUnit ss "snapd.service" "replace"'
+        'busctl call org.freedesktop.systemd1 /org/freedesktop/systemd1 org.freedesktop.systemd1.Manager StartUnit ss '
+        '"snapd.service" "replace"'
     )
 
 
 def sys_stop_snapd(node):
     os.system(
-        'busctl call org.freedesktop.systemd1 /org/freedesktop/systemd1 org.freedesktop.systemd1.Manager StopUnit ss "snapd.service" "replace"'
+        'busctl call org.freedesktop.systemd1 /org/freedesktop/systemd1 org.freedesktop.systemd1.Manager StopUnit ss '
+        '"snapd.service" "replace"'
     )
 
 
 def sys_remount_rw(node):
     os.system(
-        'busctl call org.freedesktop.systemd1 /org/freedesktop/systemd1 org.freedesktop.systemd1.Manager StartUnit ss "remount-rw.service" "replace"'
+        'busctl call org.freedesktop.systemd1 /org/freedesktop/systemd1 org.freedesktop.systemd1.Manager StartUnit ss '
+        '"remount-rw.service" "replace"'
     )
 
 
 def sys_remount_ro(node):
     os.system(
-        'busctl call org.freedesktop.systemd1 /org/freedesktop/systemd1 org.freedesktop.systemd1.Manager StopUnit ss "remount-rw.service" "replace"'
+        'busctl call org.freedesktop.systemd1 /org/freedesktop/systemd1 org.freedesktop.systemd1.Manager StopUnit ss '
     )

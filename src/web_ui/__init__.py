@@ -2,16 +2,18 @@
 import logging
 
 from flask import Flask, render_template, request
-from node_mgmt import NetworkEnv, EnvScanner, get_ssh_fingerprint
-from node_mgmt.commands import (
+
+from src.node_mgmt import NetworkEnv, EnvScanner, get_ssh_fingerprint, Node
+from src.node_mgmt.commands import (
     imt_sensor_address,
     holykell_sensor_address_7,
-    holykell_sensor_address_8
+    holykell_sensor_address_8,
+    trigger_config_generation
 )
-from db_model import NodeConfig
+from src.db_model import NodeConfig
 import os
 from urllib.request import urlopen
-from kvstore import KVStore
+from src.kvstore import KVStore
 
 logging.basicConfig(format='%(name)s [%(levelname)s] %(message)s', level='INFO')
 logger = logging.getLogger(__name__)
@@ -29,8 +31,8 @@ ACTIONS = {
 }
 
 try:
-    nodeconf = NodeConfig.get()
-    node_id = nodeconf.node_id
+    node = Node()
+    node_id = node._dbconfig.node_id
 except NodeConfig.DoesNotExist:
     logger.info('No node configuration found in internal database.')
     node_id = 'Not yet initialized'
@@ -156,6 +158,39 @@ def wifi_ap_status():
         node_id=node_id,
         action_requested=args.get('action'),
         action_result=action_result
+    )
+
+
+@app.route("/auto_config", methods=['GET', 'POST'])
+def auto_config():
+    if request.method == 'POST':
+        width = request.form["Width"]
+        length = request.form["Length"]
+        height = request.form["Height"]
+        if not all([width, length, height]):
+            return render_template(
+                'auto_config.html',
+                node_id=node_id,
+                confirmed=0,
+                status=f'Please fill all Tank Dimensions fields!'
+            )
+
+        # TODO call command passing the tanks dimensions
+        tank_dimensions = {k.lower(): v for k, v in request.form.items()}
+        trigger_config_generation(node, tank_dimensions)
+        return render_template(
+            'auto_config.html',
+            node_id=node_id,
+            confirmed=1,
+            status=f'Tank Dimensions: {width} m X {length} m X {height} m Submitted'
+        )
+
+    status = 'Tank dimensions not set'
+    return render_template(
+        'auto_config.html',
+        node_id=node_id,
+        confirmed=None,
+        status=status
     )
 
 
