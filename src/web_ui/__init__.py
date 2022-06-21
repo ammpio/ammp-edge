@@ -31,8 +31,8 @@ ACTIONS = {
 }
 
 try:
-    node = Node()
-    node_id = node._dbconfig.node_id
+    nodeconf = NodeConfig.get()
+    node_id = nodeconf.node_id
 except NodeConfig.DoesNotExist:
     logger.info('No node configuration found in internal database.')
     node_id = 'Not yet initialized'
@@ -177,6 +177,7 @@ def auto_config():
 
         # TODO call command passing the tanks dimensions
         tank_dimensions = {k.lower(): v for k, v in request.form.items()}
+        node = Node()
         trigger_config_generation(node, tank_dimensions)
         return render_template(
             'auto_config.html',
