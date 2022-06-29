@@ -3,17 +3,17 @@ import logging
 
 from flask import Flask, render_template, request
 
-from src.node_mgmt import NetworkEnv, EnvScanner, get_ssh_fingerprint, Node
-from src.node_mgmt.commands import (
+from node_mgmt import NetworkEnv, EnvScanner, get_ssh_fingerprint, Node
+from node_mgmt.commands import (
     imt_sensor_address,
     holykell_sensor_address_7,
     holykell_sensor_address_8,
     trigger_config_generation
 )
-from src.db_model import NodeConfig
+from db_model import NodeConfig
 import os
 from urllib.request import urlopen
-from src.kvstore import KVStore
+from kvstore import KVStore
 
 logging.basicConfig(format='%(name)s [%(levelname)s] %(message)s', level='INFO')
 logger = logging.getLogger(__name__)
