@@ -314,4 +314,5 @@ def sys_remount_rw(node):
 def sys_remount_ro(node):
     os.system(
         'busctl call org.freedesktop.systemd1 /org/freedesktop/systemd1 org.freedesktop.systemd1.Manager StopUnit ss '
+        '"remount-rw.service" "replace"'
     )
