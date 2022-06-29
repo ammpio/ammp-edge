@@ -164,9 +164,9 @@ def wifi_ap_status():
 @app.route("/auto_config", methods=['GET', 'POST'])
 def auto_config():
     if request.method == 'POST':
-        width = request.form["Width"]
-        length = request.form["Length"]
-        height = request.form["Height"]
+        width = request.form["width"]
+        length = request.form["length"]
+        height = request.form["height"]
         if not all([width, length, height]):
             return render_template(
                 'auto_config.html',
