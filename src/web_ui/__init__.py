@@ -185,7 +185,7 @@ def auto_config():
             'auto_config.html',
             node_id=node_id,
             confirmed=1,
-            status=f'Tank Dimensions: {width}m X {length}m X {height}m submitted'
+            status=f'Tank Dimensions: {width}m X {length}m X {height}m submitted. Automatic configuration pending.'
         )
 
     status = 'Tank dimensions not set'
