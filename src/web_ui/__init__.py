@@ -177,9 +177,7 @@ def auto_config():
 
         # TODO call command passing the tanks dimensions
         tank_dimensions = {k.lower(): v for k, v in request.form.items()}
-        node = Node()
-        trigger_config_generation(node, tank_dimensions)
-        del node
+        trigger_config_generation(Node(), tank_dimensions)
         return render_template(
             'auto_config.html',
             node_id=node_id,
