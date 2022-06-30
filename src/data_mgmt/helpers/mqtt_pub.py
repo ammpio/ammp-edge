@@ -2,6 +2,7 @@ import logging
 from os import getenv, path
 import json
 import paho.mqtt.client as mqtt
+from random import randrange
 from typing import Dict, List, Optional
 import ssl
 
@@ -29,7 +30,7 @@ MESSAGE_RETRY = 30
 class MQTTPublisher():
     def __init__(self, node_id: str, access_key: str, config: Dict, client_id_suffix: Optional[str] = None) -> None:
         if client_id_suffix is None:
-            client_id = node_id
+            client_id = f'{node_id}-{"%06x" % randrange(16**6)}'
         else:
             client_id = f'{node_id}-{client_id_suffix}'
         client = mqtt.Client(client_id=client_id, clean_session=MQTT_CLEAN_SESSION)
