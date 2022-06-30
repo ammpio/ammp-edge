@@ -1,12 +1,15 @@
 # Set up logging
 import logging
 
+from multiprocessing.sharedctypes import Value
 from flask import Flask, render_template, request
-from node_mgmt import NetworkEnv, EnvScanner, get_ssh_fingerprint
+
+from node_mgmt import NetworkEnv, EnvScanner, get_ssh_fingerprint, Node
 from node_mgmt.commands import (
     imt_sensor_address,
     holykell_sensor_address_7,
-    holykell_sensor_address_8
+    holykell_sensor_address_8,
+    trigger_config_generation
 )
 from db_model import NodeConfig
 import os
@@ -156,6 +159,41 @@ def wifi_ap_status():
         node_id=node_id,
         action_requested=args.get('action'),
         action_result=action_result
+    )
+
+
+@app.route("/auto_config", methods=['GET', 'POST'])
+def auto_config():
+    if request.method == 'POST':
+        try:
+            width = float(request.form['width'])
+            length = float(request.form['length'])
+            height = float(request.form['height'])
+        except ValueError:
+            width, length, height = None, None, None
+        if not all([width, length, height]):
+            return render_template(
+                'auto_config.html',
+                node_id=node_id,
+                confirmed=0,
+                status='Please input valid numbers in all Tank Dimensions fields'
+            )
+
+        tank_dimensions = {'width': width, 'length': length, 'height': height}
+        trigger_config_generation(Node(), tank_dimensions)
+        return render_template(
+            'auto_config.html',
+            node_id=node_id,
+            confirmed=1,
+            status=f'Tank Dimensions: {width}m X {length}m X {height}m submitted. Automatic configuration pending.'
+        )
+
+    status = 'Tank dimensions not set'
+    return render_template(
+        'auto_config.html',
+        node_id=node_id,
+        confirmed=None,
+        status=status
     )
 
 
