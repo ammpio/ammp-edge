@@ -1,6 +1,7 @@
 # Set up logging
 import logging
 
+from decimal import Decimal, InvalidOperation
 from flask import Flask, render_template, request
 
 from node_mgmt import NetworkEnv, EnvScanner, get_ssh_fingerprint, Node
@@ -164,15 +165,18 @@ def wifi_ap_status():
 @app.route("/auto_config", methods=['GET', 'POST'])
 def auto_config():
     if request.method == 'POST':
-        width = request.form["width"]
-        length = request.form["length"]
-        height = request.form["height"]
+        try:
+            width = Decimal(request.form['width'])
+            length = Decimal(request.form['length'])
+            height = Decimal(request.form['height'])
+        except InvalidOperation:
+            width, length, height = None, None, None
         if not all([width, length, height]):
             return render_template(
                 'auto_config.html',
                 node_id=node_id,
                 confirmed=0,
-                status=f'Please fill all Tank Dimensions fields!'
+                status='Please input valid numbers in all Tank Dimensions fields'
             )
 
         # TODO call command passing the tanks dimensions
@@ -182,7 +186,7 @@ def auto_config():
             'auto_config.html',
             node_id=node_id,
             confirmed=1,
-            status=f'Tank Dimensions: {width} m X {length} m X {height} m Submitted'
+            status=f'Tank Dimensions: {width}m X {length}m X {height}m submitted'
         )
 
     status = 'Tank dimensions not set'
