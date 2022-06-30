@@ -117,8 +117,8 @@ parts:
     make-install-var: PREFIX
   nmap:
       plugin: autotools
-      autotools-configure-parameters:
-        - --prefix=/usr
+      configflags: [--prefix=$SNAPCRAFT_PART_INSTALL/usr]
+      install-via: "prefix"
       source: https://github.com/nmap/nmap
       source-type: git
       source-branch: master
