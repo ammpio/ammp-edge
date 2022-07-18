@@ -1,6 +1,7 @@
 import logging
 import json
 import paho.mqtt.client as mqtt
+from random import randrange
 from typing import Dict, List, Optional
 
 logger = logging.getLogger(__name__)
@@ -20,7 +21,7 @@ MQTT_DATA_TOPIC = 'u/data'
 class MQTTPublisher():
     def __init__(self, node_id: str, client_id_suffix: Optional[str] = None) -> None:
         if client_id_suffix is None:
-            client_id = node_id
+            client_id = f'{node_id}-{"%06x" % randrange(16**6)}'
         else:
             client_id = f'{node_id}-{client_id_suffix}'
         client = mqtt.Client(client_id=client_id, clean_session=MQTT_CLEAN_SESSION)

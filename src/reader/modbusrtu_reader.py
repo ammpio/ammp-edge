@@ -85,7 +85,7 @@ class Reader(object):
             # of the registers.
             if kwargs.get('order') == 'lsr':
                 val_i.reverse()
-                
+
             val_b = struct.pack('>%sH' % len(val_i), *val_i)
         except Exception:
             logger.error('Exception while processing value from register %d' % register)
