@@ -1,8 +1,5 @@
 import logging
-import requests
 import os
-import zipfile
-import datetime
 from time import sleep
 import serial
 import minimalmodbus
@@ -21,107 +18,6 @@ logger = logging.getLogger(__name__)
 MQTT_STATE_SUBTOPIC = 'state/env_scan'
 GENERATE_NEW_CONFIG_FLAG = 'generate_new_config'
 INPUT_PARAMETERS = 'input_parameters'
-
-
-def send_log(node):
-    """ Upload system logs to S3 """
-
-    # Package logs in zipped archive
-    zipped_logs = __create_log_archive(node)
-    if not zipped_logs:
-        logger.warning('No log archive available. Exiting log upload.')
-        return
-
-    # Obtain S3 location for file upload
-    upload_url = node.api.get_upload_url()
-    if not upload_url:
-        logger.warning('No upload URL available. Exiting log upload.')
-        return
-
-    # Send logs
-    try:
-        fh = open(zipped_logs, 'rb')
-    except Exception:
-        logger.exception('Cannot open log archive. Exiting log upload.')
-        return
-
-    try:
-        r = requests.put(upload_url, data=fh.read(), headers={'Content-Disposition': os.path.basename(zipped_logs)})
-
-        if r.status_code == 200:
-            logger.info('Upload successful')
-            logger.debug(r.text)
-        else:
-            logger.warning('Upload not successful')
-            logger.info(r.text)
-    except Exception:
-        logger.exception('Exception while uploading log archive')
-    finally:
-        fh.close()
-
-    # Delete temporary file
-    try:
-        os.remove(zipped_logs)
-    except Exception:
-        logger.warning('Cannot delete local log archive', exc_info=True)
-
-
-def __create_log_archive(node):
-    """ Find the systemd logs and create a zipped archive of them """
-
-    # List of directories where to look for logs.
-    # The function will stop and try to get logs from the first one that exists
-    LOG_DIRS_TO_CHECK = ['/run/log/journal/']
-    output_path = None
-
-    for log_dir in LOG_DIRS_TO_CHECK:
-        if os.path.isdir(log_dir):
-            filename = f"logs_{node.node_id}_{datetime.datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')}.zip"
-            output_path = os.path.join(os.environ['SNAP_DATA'], filename)
-
-            logger.info('Zipping logs in %s into %s' % (log_dir, output_path))
-            __zip_directory(log_dir, output_path)
-
-            break
-
-    return output_path
-
-
-def __zip_directory(dir_path, output_path):
-    """Zip the contents of an entire folder (with that folder included
-    in the archive). Empty subfolders will be included in the archive
-    as well.
-    """
-    parent_folder = os.path.dirname(dir_path)
-    # Retrieve the paths of the folder contents.
-    contents = os.walk(dir_path)
-    try:
-        zip_file = zipfile.ZipFile(output_path, 'w', zipfile.ZIP_DEFLATED)
-        for root, folders, files in contents:
-            # Include all subfolders, including empty ones.
-            for folder_name in folders:
-                absolute_path = os.path.join(root, folder_name)
-                relative_path = absolute_path.replace(parent_folder + '\\', '')
-                logger.debug('Adding %s to archive.' % absolute_path)
-                zip_file.write(absolute_path, relative_path)
-            for file_name in files:
-                absolute_path = os.path.join(root, file_name)
-                relative_path = absolute_path.replace(parent_folder + '\\', '')
-                logger.debug('Adding %s to archive.' % absolute_path)
-                zip_file.write(absolute_path, relative_path)
-        logger.debug('%s created successfully.' % output_path)
-    except IOError:
-        logger.exception('I/O Error')
-        return None
-    except OSError:
-        logger.exception('OS Error')
-        return None
-    except zipfile.BadZipfile:
-        logger.exception('"Bad ZIP file" error')
-        return None
-    finally:
-        zip_file.close()
-        return True
 
 
 def snap_refresh(node):

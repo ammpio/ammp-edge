@@ -65,7 +65,7 @@ class WifiAPSnapCtl(object):
                 logger.info("Config is already applied. Not applying")
                 return True
 
-            logger.info(f"Sending new configuration to Wifi AP API")
+            logger.info("Sending new configuration to Wifi AP API")
             self.__socket_post('v1/configuration', conf_payload)
             logger.info(f"Response from wifi-ap snap API: Status {res.status_code} / {res.text}")
             return res.status_code == 200

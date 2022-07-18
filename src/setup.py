@@ -36,8 +36,6 @@ setup(
     packages=find_packages(),
     py_modules=[
         package_name,
-        'db_model',
-        'kvstore',
         'edge_api',
         'constants',
     ],
@@ -49,24 +47,20 @@ setup(
             'env_scan_svc = env_scan_svc:main'
         ]
     },
-    python_requires='~=3.6',
+    python_requires='~=3.10',
     install_requires=[
-        'PyYAML',
         'python-dotenv',
         'pyModbusTCP',
         'minimalmodbus',
         'pyserial',
         'easysnmp',
         'arrow',
-        'peewee',
         'psutil',
         'requests',
-        'influxdb',
         'xmltodict',
         'requests-unixsocket',
         'flask',
-        'redis',
         'paho-mqtt',
         'pyjsonata>=0.0.1a9',
-    ]
+    ],
 )

@@ -1,11 +1,11 @@
 import logging
 from threading import Thread, Lock
 from time import sleep
-from kvstore import KVStore
+from kvstore import keys, KVCache
 
 logger = logging.getLogger(__name__)
 
-kvs = KVStore()
+kvc = KVCache()
 
 scan_in_progress = Lock()
 # Time to pause after a scan, before the next scan can be triggered
@@ -54,11 +54,11 @@ def arp_get_ip_from_mac(mac: str) -> str:
         with open(ARP_TABLE_FILE, 'r') as arp_table:
             # Skip header row
             next(arp_table)
-            for l in arp_table:
+            for arp_line in arp_table:
                 try:
-                    this_ip, _, _, this_mac, _, _ = l.split()
+                    this_ip, _, _, this_mac, _, _ = arp_line.split()
                 except ValueError:
-                    logger.warning(f"Malformed ARP table entry: {l}. Skipping")
+                    logger.warning(f"Malformed ARP table entry: {arp_line}. Skipping")
                     continue
                 if this_mac == INVALID_MAC:
                     logger.debug(f"Ignoring MAC address with only zeros for IP: {this_ip}, consider flushing ARP cache")
@@ -122,7 +122,7 @@ def set_host_from_mac(address: dict) -> None:
         # If not available in ARP cache, look in key-value store
         if not ip:
             logger.info(f"MAC {mac} not found in ARP cache; looking in k-v store")
-            ip = kvs.get(f"env:net:mac:{mac}", {}).get('ipv4')
+            ip = kvc.get(f"{keys.ENV_NET_MAC_PFX}/{mac}", {}).get('ipv4')
             logger.debug(f"KVS cache: Obtained IP {ip} from MAC {mac}")
 
             if not ip:

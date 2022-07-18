@@ -1,7 +1,7 @@
-from typing import Dict, NoReturn
+from typing import Dict, List
 
 
-def add_to_device_readings(readings: Dict, device_key: str, kv: Dict) -> NoReturn:
+def add_to_device_readings(readings: List[Dict], device_key: str, kv: Dict) -> None:
     try:
         # Find readout for this device and append result
         next(r for r in readings if r['_d'] == device_key).update(kv)

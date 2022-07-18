@@ -11,10 +11,9 @@ from node_mgmt.commands import (
     holykell_sensor_address_8,
     trigger_config_generation
 )
-from db_model import NodeConfig
 import os
 from urllib.request import urlopen
-from kvstore import KVStore
+from kvstore import keys, KVStore
 
 logging.basicConfig(format='%(name)s [%(levelname)s] %(message)s', level='INFO')
 logger = logging.getLogger(__name__)
@@ -22,8 +21,6 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 
 kvs = KVStore()
-KVS_WIFI_AP_CONFIG = 'node:wifi_ap_config'
-KVS_WIFI_AP_AVAILABLE = 'node:wifi_ap_available'
 
 ACTIONS = {
     'imt_sensor_address': imt_sensor_address,
@@ -31,15 +28,10 @@ ACTIONS = {
     'holykell_sensor_address_8': holykell_sensor_address_8
 }
 
-try:
-    nodeconf = NodeConfig.get()
-    node_id = nodeconf.node_id
-except NodeConfig.DoesNotExist:
+node_id = kvs.get(keys.NODE_ID)
+if not node_id:
     logger.info('No node configuration found in internal database.')
     node_id = 'Not yet initialized'
-except ValueError:
-    logger.warning('ValueError in node config.', exc_info=True)
-    node_id = ''
 
 
 @app.route("/")
@@ -119,12 +111,12 @@ def wifi_ap():
 
     # Carry out disable/enable command if set
     if args['disabled'] == 1:
-        kvs.set(KVS_WIFI_AP_CONFIG, {'disabled': True})
+        kvs.set(keys.WIFI_AP_CONFIG, {'disabled': True})
     elif args['disabled'] == 0:
-        kvs.set(KVS_WIFI_AP_CONFIG, {'disabled': False})
+        kvs.set(keys.WIFI_AP_CONFIG, {'disabled': False})
 
-    wifi_ap_available = kvs.get(KVS_WIFI_AP_AVAILABLE)
-    wifi_ap_cfg = kvs.get(KVS_WIFI_AP_CONFIG)
+    wifi_ap_available = kvs.get(keys.WIFI_AP_AVAILABLE)
+    wifi_ap_cfg = kvs.get(keys.WIFI_AP_CONFIG)
 
     if wifi_ap_available:
         if wifi_ap_cfg is None:
@@ -198,7 +190,7 @@ def auto_config():
 
 
 def test_online():
-    TEST_URL = 'https://www.ammp.io/'
+    TEST_URL = 'http://www.google.com/'
     try:
         urlopen(TEST_URL, timeout=30)
         return True

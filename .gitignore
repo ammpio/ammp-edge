@@ -9,9 +9,19 @@
 **/.DS_Store
 **/__pycache__/
 *.db
+*.db-*
 src/*.egg-info/
 *.egg
 src/build/
 
-venv
-rust/target
+# Directories related to snapcraft build
+parts/
+prime/
+stage/
+*.snap
+
+# Directories related to Rust code
+rust/target/
+
+# Python virtual environment
+venv/

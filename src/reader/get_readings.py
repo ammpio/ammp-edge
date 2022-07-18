@@ -86,11 +86,16 @@ def get_readings(node):
 
 def get_readout(node):
     # 'readout' is a dict formatted for device-based readings. It also contains a timestamp, snap_rev and config_id
+    try:
+        snap_rev = int(os.getenv('SNAP_REVISION', 0))
+    except ValueError:  # Occurs if it's a devel snap with revision prefixed in 'x'
+        snap_rev = os.getenv('SNAP_REVISION')
+
     readout = {
         't': arrow.utcnow().int_timestamp,
         'r': [],
         'm': {
-            'snap_rev': int(os.getenv('SNAP_REVISION', 0)),
+            'snap_rev': snap_rev,
             'config_id': node.config.get('config_id', '0')
         }
     }

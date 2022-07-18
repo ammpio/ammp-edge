@@ -9,7 +9,7 @@ description: |
 grade: stable
 confinement: strict
 
-base: core18
+base: core22
 
 architectures:
   - build-on: amd64
@@ -19,11 +19,17 @@ architectures:
 epoch: 1
 
 apps:
+  ae-init:
+    command: bin/ae init
+    daemon: oneshot
+    restart-condition: on-failure
+    restart-delay: 2s
+    plugs: [network]
   ammp-edge:
     command: bin/ammp_edge
     daemon: simple
     restart-condition: always
-    after: [redis-server]
+    after: [ae-init]
     plugs:
       - network
       - network-bind
@@ -36,9 +42,10 @@ apps:
     environment:
       LD_LIBRARY_PATH: "$LD_LIBRARY_PATH:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/blas"
   web-ui:
-    command: python3 -m flask run
+    command: bin/python3 -m flask run
     daemon: simple
     restart-condition: always
+    after: [ae-init]
     plugs:
       - network-bind
     environment:
@@ -49,7 +56,7 @@ apps:
       LANG: C.UTF-8
       LD_LIBRARY_PATH: "$LD_LIBRARY_PATH:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/blas"
   nmap:
-    command: nmap
+    command: usr/bin/nmap
     environment:
       LD_LIBRARY_PATH: "$LD_LIBRARY_PATH:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/blas"
     plugs: [network, network-bind, network-control]
@@ -57,36 +64,34 @@ apps:
     command: bin/wifi_ap_control
     daemon: simple
     restart-condition: on-abnormal
-    after: [redis-server]
     plugs: [network]
   env-scan:
     command: bin/env_scan_svc
     daemon: simple
-    after: [redis-server]
     plugs: [network, network-observe]
     timer: 0:00~24:00/36
     environment:
       LD_LIBRARY_PATH: "$LD_LIBRARY_PATH:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/blas"
-  redis-server:
-    adapter: full
-    command: bin/redis-server $SNAP/redis.conf --dir $SNAP_COMMON
+  mosquitto:
+    command: bin/mosquitto_svc.sh
     daemon: simple
+    restart-condition: always
+    restart-delay: 2s
+    after: [ae-init]
     plugs: [network, network-bind]
-  redis-cli:
-    adapter: full
-    command: bin/redis-cli
-    plugs: [network]
 
 parts:
   ammp-edge:
     plugin: python
-    python-version: python3
     source: src
     stage-packages:
       - libsnmp-dev
+      - nmap
+    build-environment:
+      - PIP_EXTRA_INDEX_URL: https://ammplipy.ammp.io/
     override-prime: |
       snapcraftctl prime
-      "${SNAPCRAFT_PRIME}"/usr/bin/python3 \
+      "${SNAPCRAFT_PRIME}"/bin/python3 \
         -m compileall \
         -q \
         --workers 0 \
@@ -95,8 +100,9 @@ parts:
     plugin: dump
     source: config
     prime:
-      - remote.yaml
-      - redis.conf
+      - mosquitto.conf.tpl
+      - mqtt-bridge.conf.tpl
+      - mqtt-bridge-stage.conf.tpl
   resources:
     plugin: dump
     source: resources
@@ -109,31 +115,49 @@ parts:
     organize:
       '*': drivers/
     prime: [drivers]
-  redis-server:
-    plugin: make
-    source: https://github.com/antirez/redis.git
-    source-tag: 6.0.9
-    source-depth: 1
-    make-install-var: PREFIX
-  nmap:
-    plugin: autotools
-    configflags: [--prefix=$SNAPCRAFT_PART_INSTALL/usr]
-    install-via: "prefix"
-    source: https://github.com/nmap/nmap
-    source-type: git
-    source-branch: master
-    override-pull: |
-      snapcraftctl pull
-      git -C $SNAPCRAFT_PART_SRC tag 7.92 f7cc961
-      snapcraftctl set-version $(git describe --tags --long)
-    build-packages: [liblinear-dev, liblua5.3-dev, libpcap0.8-dev, libpcre3-dev, libssh2-1-dev, libssl-dev, lua-lpeg-dev, zlib1g-dev]
-    stage-packages: [liblinear3, liblua5.3-0, libpcap0.8, libpcre3, libssh2-1, libssl1.1, lua-lpeg, zlib1g]
   bin:
     plugin: dump
     source: bin
     organize:
       '*': bin/
-    prime: [bin]
+    prime:
+     - bin
+  ae:
+    plugin: rust
+    source: rust
+  envsubst:
+    plugin: nil
+    stage-packages:
+     - gettext-base
+    prime:
+     - usr/bin/envsubst
+  mosquitto:
+    plugin: make
+    make-parameters:
+     - "prefix=/usr"
+     - "WITH_DOCS=no"
+     - "WITH_CJSON=no"
+     - "WITH_ADNS=yes"
+     - "CFLAGS='-Wall -ggdb -O2 -I$SNAPCRAFT_STAGE/include -D_GNU_SOURCE'"
+    source: https://github.com/eclipse/mosquitto
+    source-type: git
+    source-tag: v2.0.14
+    source-depth: 1
+    build-packages:
+      - libssl-dev
+      - gcc
+      - g++
+    stage-packages:
+      - libssl3
+    prime:
+      - usr/sbin/mosquitto
+      - usr/lib/libmosquitto.so*
+      - lib/*-linux-gnu/libcrypto.so*
+      - lib/*-linux-gnu/libssl.so*
+      - usr/include/mosquitto.h
+      - usr/include/mosquitto_broker.h
+      - usr/include/mosquitto_plugin.h
+      - usr/include/mqtt_protocol.h
 
 plugs:
   provisioning-edge:

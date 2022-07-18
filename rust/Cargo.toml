@@ -1,0 +1,52 @@
+[package]
+name = "ammp-edge"
+version = "0.1.0"
+authors = ["AMMP Technologies B.V. <dev@ammp.io>"]
+edition = "2021"
+description = "Edge application for AMMP"
+repository = "https://github.com/ammpio/ammp-edge"
+
+[dependencies]
+anyhow = "*"
+backoff = "*"
+chrono = "*"
+dotenv = "*"
+env_logger = { version = "*", default-features = false }
+getrandom = "*"
+hex = "*"
+kvstore = { path = "kvstore" }
+log = "*"
+native-tls = "*"
+#nix = { version = "*", features = ["socket"] }
+nix = { git = "https://github.com/nix-rust/nix", features = ["socket"] }
+once_cell = "*"
+pico-args = "*"
+rouille = { version = "*", default-features = false }
+rumqttc = { version = "*", default-features = false }
+rusqlite = { version = "*", features = ["serde_json"] }
+serde = {version = "*", features = ["derive"] }
+serde_json = "*"
+ureq = { version = "*", default-features = false, features = ["json", "native-tls"] }
+
+[dev-dependencies]
+assert_cmd = "*"
+mockito = "*"
+regex = "*"
+predicates = "*"
+temp-env = "*"
+tempfile = "*"
+
+[[bin]]
+name = "ae"
+path = "src/main.rs"
+
+[workspace]
+members = [
+    "kvstore"
+]
+
+[profile.release]
+strip = true  # Automatically strip symbols from the binary.
+lto = true
+opt-level = "z"  # Optimize for size.
+codegen-units = 1
