@@ -125,6 +125,8 @@ parts:
   ae:
     plugin: rust
     source: rust
+    build-packages:
+      - cargo
   envsubst:
     plugin: nil
     stage-packages:
