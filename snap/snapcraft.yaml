@@ -40,7 +40,7 @@ apps:
       - log-observe
     # The following is required in order to make libblas3 visible to nmap
     environment:
-      LD_LIBRARY_PATH: "$LD_LIBRARY_PATH:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/blas"
+      LD_LIBRARY_PATH: "$LD_LIBRARY_PATH:$SNAP/usr/lib/$CRAFT_ARCH_TRIPLET/blas"
   web-ui:
     command: bin/python3 -m flask run
     daemon: simple
@@ -54,11 +54,11 @@ apps:
       FLASK_RUN_PORT: 8000
       LC_ALL: C.UTF-8
       LANG: C.UTF-8
-      LD_LIBRARY_PATH: "$LD_LIBRARY_PATH:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/blas"
+      LD_LIBRARY_PATH: "$LD_LIBRARY_PATH:$SNAP/usr/lib/$CRAFT_ARCH_TRIPLET/blas"
   nmap:
     command: usr/bin/nmap
     environment:
-      LD_LIBRARY_PATH: "$LD_LIBRARY_PATH:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/blas"
+      LD_LIBRARY_PATH: "$LD_LIBRARY_PATH:$SNAP/usr/lib/$CRAFT_ARCH_TRIPLET/blas"
     plugs: [network, network-bind, network-control]
   wifi-ap-control:
     command: bin/wifi_ap_control
@@ -71,7 +71,7 @@ apps:
     plugs: [network, network-observe]
     timer: 0:00~24:00/36
     environment:
-      LD_LIBRARY_PATH: "$LD_LIBRARY_PATH:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/blas"
+      LD_LIBRARY_PATH: "$LD_LIBRARY_PATH:$SNAP/usr/lib/$CRAFT_ARCH_TRIPLET/blas"
   mosquitto:
     command: bin/mosquitto_svc.sh
     daemon: simple
@@ -90,12 +90,12 @@ parts:
     build-environment:
       - PIP_EXTRA_INDEX_URL: https://ammplipy.ammp.io/
     override-prime: |
-      snapcraftctl prime
-      "${SNAPCRAFT_PRIME}"/bin/python3 \
+      craftctl default
+      "${CRAFT_PRIME}"/bin/python3 \
         -m compileall \
         -q \
         --workers 0 \
-        "${SNAPCRAFT_PRIME}"
+        "${CRAFT_PRIME}"
   configs:
     plugin: dump
     source: config
@@ -127,6 +127,7 @@ parts:
     source: rust
     build-packages:
       - cargo
+      - rustc
   envsubst:
     plugin: nil
     stage-packages:
@@ -140,7 +141,7 @@ parts:
      - "WITH_DOCS=no"
      - "WITH_CJSON=no"
      - "WITH_ADNS=yes"
-     - "CFLAGS='-Wall -ggdb -O2 -I$SNAPCRAFT_STAGE/include -D_GNU_SOURCE'"
+     - "CFLAGS='-Wall -ggdb -O2 -I$CRAFT_STAGE/include -D_GNU_SOURCE'"
     source: https://github.com/eclipse/mosquitto
     source-type: git
     source-tag: v2.0.14
