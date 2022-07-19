@@ -128,9 +128,12 @@ parts:
     build-packages:
       - cargo
       - rustc
-      - zlib1g-dev
-      - libcrypt1
-      - libtirpc3
+    override-build: |
+      curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+      . $HOME/.cargo/env
+      rustup toolchain install nightly
+      rustup default nightly
+      craftctl default
   envsubst:
     plugin: nil
     stage-packages:
