@@ -126,9 +126,9 @@ parts:
     plugin: nil
     override-pull: |
       curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-      . $HOME/.cargo/env
-      rustup toolchain install nightly
-      rustup default nightly
+#      . $HOME/.cargo/env
+#      rustup toolchain install nightly
+#      rustup default nightly
   ae:
     plugin: rust
     source: rust
