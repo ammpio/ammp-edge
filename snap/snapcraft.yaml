@@ -124,15 +124,17 @@ parts:
      - bin
   rust-deps:
     plugin: nil
+    build-packages:
+      - curl
     override-pull: |
       curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-#      . $HOME/.cargo/env
-#      rustup toolchain install nightly
-#      rustup default nightly
   ae:
     plugin: rust
     source: rust
     after: [rust-deps]
+    build-packages:
+      - pkg-config
+      - libsqlite3-dev
   envsubst:
     plugin: nil
     stage-packages:
