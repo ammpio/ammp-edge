@@ -122,18 +122,17 @@ parts:
       '*': bin/
     prime:
      - bin
-  ae:
-    plugin: rust
-    source: rust
-    build-packages:
-      - cargo
-      - rustc
-    override-build: |
+  rust-deps:
+    plugin: nil
+    override-pull: |
       curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
       . $HOME/.cargo/env
       rustup toolchain install nightly
       rustup default nightly
-      craftctl default
+  ae:
+    plugin: rust
+    source: rust
+    after: [rust-deps]
   envsubst:
     plugin: nil
     stage-packages:
