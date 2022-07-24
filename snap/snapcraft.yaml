@@ -84,11 +84,12 @@ parts:
   ammp-edge:
     plugin: python
     source: src
-    stage-packages:
+    build-packages:
       - libsnmp-dev
-      - nmap
     build-environment:
       - PIP_EXTRA_INDEX_URL: https://ammplipy.ammp.io/
+    stage-packages:
+      - nmap
     override-prime: |
       craftctl default
       "${CRAFT_PRIME}"/bin/python3 \
