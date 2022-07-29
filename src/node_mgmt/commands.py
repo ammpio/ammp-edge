@@ -74,7 +74,7 @@ def trigger_config_generation(node, tank_dimensions=None):
         tank_dimensions.update({'type': 'tank', 'shape': 'rectangular'})
     scan_result[INPUT_PARAMETERS].append(tank_dimensions)
     logger.info('Completed environment scan. Submitting results to MQTT Broker.')
-    if node.mqtt_client.publish(scan_result, subtopic=MQTT_STATE_TOPIC):
+    if node.mqtt_client.publish(scan_result, topic=MQTT_STATE_TOPIC):
         logger.info(f"ENV_SCAN [mqtt]: Successfully pushed")
     else:
         # For some reason the env_state wasn't pushed successfully
