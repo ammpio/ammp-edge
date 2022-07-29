@@ -15,7 +15,7 @@ from reader.modbusrtu_reader import Reader
 
 logger = logging.getLogger(__name__)
 
-MQTT_STATE_SUBTOPIC = 'state/env_scan'
+MQTT_STATE_TOPIC = 'u/state/env_scan'
 GENERATE_NEW_CONFIG_FLAG = 'generate_new_config'
 INPUT_PARAMETERS = 'input_parameters'
 
@@ -55,7 +55,7 @@ def env_scan(node):
     scan_result = scanner.do_scan()
     logger.info('Completed environment scan. Submitting results to API and MQTT')
     node.api.post_env_scan(scan_result)
-    if node.mqtt_client.publish(scan_result, subtopic=MQTT_STATE_SUBTOPIC):
+    if node.mqtt_client.publish(scan_result, topic=MQTT_STATE_TOPIC):
         logger.info(f"ENV_SCAN [mqtt]: Successfully pushed")
     else:
         # For some reason the env_state wasn't pushed successfully
@@ -74,7 +74,7 @@ def trigger_config_generation(node, tank_dimensions=None):
         tank_dimensions.update({'type': 'tank', 'shape': 'rectangular'})
     scan_result[INPUT_PARAMETERS].append(tank_dimensions)
     logger.info('Completed environment scan. Submitting results to MQTT Broker.')
-    if node.mqtt_client.publish(scan_result, subtopic=MQTT_STATE_SUBTOPIC):
+    if node.mqtt_client.publish(scan_result, subtopic=MQTT_STATE_TOPIC):
         logger.info(f"ENV_SCAN [mqtt]: Successfully pushed")
     else:
         # For some reason the env_state wasn't pushed successfully
