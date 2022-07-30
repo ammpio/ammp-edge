@@ -6,7 +6,8 @@
     },
     "fields": {
         "irradiance": {"register": 0, "unit": "W/m2", "typecast": "float", "multiplier": 0.1, "description": "Irradiation on sensor surface"},
+        "temp_pv": {"register": 1, "unit": "C", "typecast": "float", "multiplier": 0.1, "offset": -25, "description": "PV module temperature"},
         "temp_ext": {"register": 2, "unit": "C", "typecast": "float", "multiplier": 0.1, "offset": -25, "description": "Ambient temperature", "valuemap": {"0x0": null}},
-        "temp_pv": {"register": 1, "unit": "C", "typecast": "float", "multiplier": 0.1, "offset": -25, "description": "PV module temperature"}
+        "wind_speed": {"register": 3, "unit": "m/s2", "typecast": "float", "multiplier": 0.1, "offset": 0, "description": "Wind speed"}
     }
 }
