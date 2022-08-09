@@ -1,0 +1,10 @@
+{
+    "common": {
+        "fncode": 3
+    },
+    "fields": {
+        "liquid_level": {"datatype": "float", "description": "liquid level", "register": 0},
+        "volume": {"datatype": "float", "description": "volume", "register": 2},
+        "quality": {"datatype": "float", "description": "quality", "register": 4}
+    }
+}
