@@ -1,10 +1,11 @@
 {
     "common": {
-        "fncode": 3
+        "fncode": 3,
+        "order": "lsr"
     },
     "fields": {
-        "liquid_level": {"datatype": "float", "description": "liquid level", "register": 0},
-        "volume": {"datatype": "float", "description": "volume", "register": 2},
-        "quality": {"datatype": "float", "description": "quality", "register": 4}
-    }
+        "liquid_level": {"datatype": "float", "description": "liquid level", "register": 0, "words": 2},
+        "volume": {"datatype": "float", "description": "volume", "register": 2, "words": 2},
+        "quality": {"datatype": "float", "description": "quality", "register": 4, "words": 2}
+   }
 }
