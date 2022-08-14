@@ -1,0 +1,30 @@
+version: '3.3'
+
+services:
+  ammp-edge:
+    build: ..
+    container_name:
+      ammp-edge_container
+    image:
+      ammp-edge_image
+    depends_on:
+      - mosquitto-broker
+    env_file:
+      - env.local
+    volumes:
+      - ../.local/data:/data
+  mosquitto-broker:
+    container_name: mosquitto
+    image: eclipse-mosquitto
+    volumes:
+      - ../.local/mosquitto:/mosquitto
+    ports:
+      - "1883:1883"
+  mock_sma_stp:
+    container_name: mock_sma_stp
+    image: python:3.10-slim
+    volumes:
+      - ./mock_devices/sma_stp:/srv/mockdev
+    ports:
+      - "0.0.0.0:502:502"
+    command: bash -c "pip install umodbus && python -u /srv/mockdev/modtcp_server.py -b 0.0.0.0:502"

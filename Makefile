@@ -5,11 +5,11 @@ include .env
 .PHONY: docker-build docker-run docker-clean clean run
 
 docker-build:
-	docker-compose -f docker-compose.yml build
+	docker-compose -f tests/docker-compose.yml build
 
 docker-run:
 	$(MAKE) docker-build
-	docker-compose -f docker-compose.yml up -d
+	docker-compose -f tests/docker-compose.yml up -d
 
 docker-clean:
 	docker-compose -f docker-compose.yml down
