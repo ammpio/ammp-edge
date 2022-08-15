@@ -1,7 +1,5 @@
 PROJECT_NAME=ammp-edge
 
-include .env
-
 .PHONY: docker-build docker-run docker-clean clean run
 
 docker-build:
