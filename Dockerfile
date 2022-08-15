@@ -17,7 +17,7 @@ RUN apt update && \
 
 COPY drivers drivers
 COPY resources resources
-COPY provisioning provisioning
+COPY tests/config/provisioning provisioning
 COPY src src
 
 COPY tests/bin/run-process.sh /usr/local/bin/
