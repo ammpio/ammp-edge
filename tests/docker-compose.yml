@@ -13,11 +13,27 @@ services:
       - env.local
     volumes:
       - ../.local/data:/data
+    command: ae-init-and-run
+  web-ui:
+    container_name:
+      web-ui_container
+    image:
+      ammp-edge_image
+    depends_on:
+      - ammp-edge
+    env_file:
+      - env.local
+      - webui-env.local
+    volumes:
+      - ../.local/data:/data
+    command: web-ui
+    ports:
+      - "8000:8000"
   mosquitto-broker:
     container_name: mosquitto
     image: eclipse-mosquitto
-    volumes:
-      - ../.local/mosquitto:/mosquitto
+    # volumes:
+    #   - ../.local/mosquitto:/mosquitto
     ports:
       - "1883:1883"
   mock_sma_stp:

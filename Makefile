@@ -5,7 +5,7 @@ include .env
 .PHONY: docker-build docker-run docker-clean clean run
 
 docker-build:
-	docker-compose -f tests/docker-compose.yml build
+	docker-compose -f tests/docker-compose.yml build  # --progress=plain
 
 docker-run:
 	$(MAKE) docker-build
