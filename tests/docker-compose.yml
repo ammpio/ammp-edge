@@ -38,7 +38,7 @@ services:
     ports:
       - "1883:1883"
   mock_sma_stp:
-    container_name: mock_sma_stp
+    container_name: mock-sma-stp
     image: python:3.10-bullseye
     volumes:
       - ./mock_devices/sma_stp:/srv/mockdev
