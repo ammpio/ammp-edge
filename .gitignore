@@ -25,3 +25,6 @@ rust/target/
 
 # Python virtual environment
 venv/
+
+# Local execution environment and cache
+tests/.cache
