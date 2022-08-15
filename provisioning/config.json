@@ -1,19 +1,19 @@
 {
   "config_id": "a0",
-  "name": "Basic StratoPi config",
-  "devices": {
-    "logger": {
-      "driver": "sys_generic",
-      "enabled": true,
-      "name": "Logger",
-      "reading_type": "sys"
-    },
-    "logger_strato": {
-      "driver": "sys_rpi3",
-      "enabled": true,
-      "name": "Logger (StratoPi extension)",
-      "reading_type": "sys"
-    }
+  "name": "Basic config",
+  "logger": {
+    "name": "Logger",
+    "driver": "sys_generic",
+    "enabled": true,
+    "vendor_id": "strato-1",
+    "reading_type": "sys"
+  },
+  "logger_strato": {
+    "name": "Logger (StratoPi extension)",
+    "driver": "sys_rpi3",
+    "enabled": true,
+    "vendor_id": "strato-1",
+    "reading_type": "sys"
   },
   "readings": {
     "comms_lggr_boot_time": {"device": "logger", "var": "boot_time"},
