@@ -4,7 +4,7 @@ services:
   ammp-edge:
     build: ..
     container_name:
-      ammp-edge_container
+      ammp-edge-main
     image:
       ammp-edge_image
     depends_on:
@@ -16,7 +16,7 @@ services:
     command: ae-init-and-run
   web-ui:
     container_name:
-      web-ui_container
+      ammp-edge-web-ui
     image:
       ammp-edge_image
     depends_on:
@@ -25,7 +25,7 @@ services:
       - env.local
       - webui-env.local
     volumes:
-      - ../.local/data:/data
+      - ./.cache/data:/data
     command: web-ui
     ports:
       - "8000:8000"
