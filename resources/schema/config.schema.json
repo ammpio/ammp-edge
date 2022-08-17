@@ -1,5 +1,5 @@
 {
-    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$schema": "https://json-schema.org/draft/2019-09/schema",
     "$id": "https://github.com/ammpio/ammp-edge/blob/main/resources/schama/config.schema.json",
     "title": "AMMP Edge configuration",
     "description": "This document records the configuration of an AMMP Edge node",
@@ -343,7 +343,7 @@
             "additionalProperties": {
                 "type": "object",
                 "$comment": {
-                    "$ref": "https://github.com/ammpio/ammp-edge/blob/main/resources/schama/driver.schema.json"
+                    "ref": "https://github.com/ammpio/ammp-edge/blob/main/resources/schama/driver.schema.json"
                 }
             }
         },
