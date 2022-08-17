@@ -7,6 +7,7 @@
     "fields": {
         "V_L1": {"register": 19000, "description": "Voltage L1-N", "unit": "V"},
         "V_L2": {"register": 19002, "description": "Voltage L2-N", "unit": "V"},
-        "V_L3": {"register": 19004, "description": "Voltage L3-N", "unit": "V"}
+        "V_L3": {"register": 19004, "description": "Voltage L3-N", "unit": "V"},
+        "V_L4": {"register": 19004, "description": "Blah", "unit": "V"}
     }
 }
