@@ -1,13 +1,38 @@
 {
     "common": {
-        "datatype": "float",
         "fncode": 3,
-        "words": 2
+        "words" = 2
     },
     "fields": {
-        "V_L1": {"register": 19000, "description": "Voltage L1-N", "unit": "V"},
-        "V_L2": {"register": 19002, "description": "Voltage L2-N", "unit": "V"},
-        "V_L3": {"register": 19004, "description": "Voltage L3-N", "unit": "V"},
-        "V_L4": {"register": 19004, "description": "Blah", "unit": "V"}
+        "E_exported_Total": {"datatype": "float", "description": "Total export energy", "multiplier": 1, "register": 19076, "unit": "Wh"},
+        "E_imported_Total": {"datatype": "float", "description": "Total import energy", "multiplier": 1, "register": 19068, "unit": "Wh"},
+        "E_exported_L1": {"datatype": "float", "description": "Export energy on phase 1", "multiplier": 1, "register": 19070, "unit": "Wh"},
+        "E_imported_L1": {"datatype": "float", "description": "Import energy on phase 1", "multiplier": 1, "register": 19062, "unit": "Wh"},
+        "E_exported_L2": {"datatype": "float", "description": "Export energy on phase 2", "multiplier": 1, "register": 19072, "unit": "Wh"},
+        "E_imported_L2": {"datatype": "float", "description": "Import energy on phase 2", "multiplier": 1, "register": 19064, "unit": "Wh"},
+        "E_exported_L3": {"datatype": "float", "description": "Export energy on phase 3", "multiplier": 1, "register": 19074, "unit": "Wh"},
+        "E_imported_L3": {"datatype": "float", "description": "Import energy on phase 3", "multiplier": 1, "register": 19066, "unit": "Wh"},
+        "freq": {"datatype": "float", "description": "Frequency", "multiplier": 1, "register": 19050, "unit": "Hz"},
+        "I_L1": {"datatype": "float", "description": "Phase 1 current", "multiplier": 1, "register": 19012, "unit": "A"},
+        "I_L2": {"datatype": "float", "description": "Phase 2 current", "multiplier": 1, "register": 19014, "unit": "A"},
+        "I_L3": {"datatype": "float", "description": "Phase 3 current", "multiplier": 1, "register": 19016, "unit": "A"},
+        "P_L1": {"datatype": "float", "description": "Phase 1 active power", "multiplier": 1, "register": 19020, "unit": "W"},
+        "P_L2": {"datatype": "float", "description": "Phase 2 active power", "multiplier": 1, "register": 19022, "unit": "W"},
+        "P_L3": {"datatype": "float", "description": "Phase 3 active power", "multiplier": 1, "register": 19024, "unit": "W"},
+        "P_total": {"datatype": "float", "description": "Total active power", "multiplier": 1, "register": 19026, "unit": "W"},
+        "pf_L1": {"datatype": "float", "description": "Phase 1 power factor", "multiplier": 1, "register": 828},
+        "pf_L2": {"datatype": "float", "description": "Phase 2 power factor", "multiplier": 1, "register": 830},
+        "pf_L3": {"datatype": "float", "description": "Phase 3 power factor", "multiplier": 1, "register": 832},
+        "Q_L1": {"datatype": "float", "description": "Phase 1 reactive power", "multiplier": 1, "register": 19036, "unit": "VAr"},
+        "Q_L2": {"datatype": "float", "description": "Phase 2 reactive power", "multiplier": 1, "register": 19038, "unit": "VAr"},
+        "Q_L3": {"datatype": "float", "description": "Phase 3 reactive power", "multiplier": 1, "register": 19042, "unit": "VAr"},
+        "Q_total": {"datatype": "float", "description": "Total reactive power", "multiplier": 1, "register": 19044, "unit": "VAr"},
+        "S_L1": {"datatype": "float", "description": "Phase 1 apparent power", "multiplier": 1, "register": 19028, "unit": "VA"},
+        "S_L2": {"datatype": "float", "description": "Phase 2 apparent power", "multiplier": 1, "register": 19030, "unit": "VA"},
+        "S_L3": {"datatype": "float", "description": "Phase 3 apparent power", "multiplier": 1, "register": 19032, "unit": "VA"},
+        "S_total": {"datatype": "float", "description": "Total apparent power", "multiplier": 1, "register": 19034, "unit": "VA"},
+        "V_L1": {"datatype": "float", "description": "Phase 1 line to neutral volts", "multiplier": 1, "register": 19000, "unit": "V"},
+        "V_L2": {"datatype": "float", "description": "Phase 2 line to neutral volts", "multiplier": 1, "register": 19002, "unit": "V"},
+        "V_L3": {"datatype": "flaot", "description": "Phase 3 line to neutral volts", "multiplier": 1, "register": 19004, "unit": "V"}
     }
 }
