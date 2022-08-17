@@ -4,7 +4,6 @@
     "title": "AMMP Edge configuration",
     "description": "This document records the configuration of an AMMP Edge node",
     "type": "object",
-    "default": {},
     "required": [
         "devices",
         "readings"
@@ -12,7 +11,6 @@
     "properties": {
         "name": {
             "type": "string",
-            "default": "",
             "title": "Name of the config",
             "examples": [
                 "Auto-generated"
@@ -83,146 +81,139 @@
         },
         "devices": {
             "type": "object",
-            "default": {},
-            "title": "The devices Schema",
-            "properties": {
-                "additionalProperties": {
-                    "type": "object",
-                    "default": {},
-                    "title": "The logger Schema",
-                    "required": [
-                        "driver",
-                        "vendor_id",
-                        "device_model",
-                        "reading_type"
-                    ],
-                    "properties": {
-                        "name": {
-                            "type": "string",
-                            "default": "",
-                            "title": "Device name",
-                            "examples": [
-                                "Logger"
-                            ]
-                        },
-                        "driver": {
-                            "type": "string",
-                            "default": "",
-                            "title": "Device driver",
-                            "examples": [
-                                "sys_generic"
-                            ]
-                        },
-                        "address": {
-                            "type": "object",
-                            "default": {},
-                            "title": "Address of the device",
-                            "properties": {
-                                "host": {
-                                    "type": "string",
-                                    "title": "IP address or hostname",
-                                    "examples": [
-                                        "192.168.1.215"
-                                    ]
-                                },
-                                "mac": {
-                                    "type": "string",
-                                    "title": "MAC address",
-                                    "examples": [
-                                        "E8:A4:C1:05:19:B2"
-                                    ]
-                                },
-                                "port": {
-                                    "type": "integer",
-                                    "default": 0,
-                                    "title": "Port",
-                                    "examples": [
-                                        502
-                                    ]
-                                },
-                                "unit_id": {
-                                    "type": "integer",
-                                    "default": 0,
-                                    "title": "Modbus unit ID",
-                                    "examples": [
-                                        1
-                                    ]
-                                },
-                                "device": {
-                                    "type": "string",
-                                    "default": "",
-                                    "title": "The device Schema",
-                                    "examples": [
-                                        "/dev/ttyNS0"
-                                    ]
-                                },
-                                "slaveaddr": {
-                                    "type": "integer",
-                                    "default": 0,
-                                    "title": "The slaveaddr Schema",
-                                    "examples": [
-                                        1
-                                    ]
-                                },
-                                "baudrate": {
-                                    "type": "integer",
-                                    "default": 0,
-                                    "title": "The baudrate Schema",
-                                    "examples": [
-                                        9600
-                                    ]
-                                }
-                            },
-                            "examples": [{
-                                "host": "192.168.1.215",
-                                "mac": "E8:A4:C1:05:19:B2",
-                                "port": 502,
-                                "unit_id": 1
-                            }]
-                        },
-                        "enabled": {
-                            "type": "boolean",
-                            "default": true,
-                            "title": "Whether device is enabled",
-                            "examples": [
-                                true
-                            ]
-                        },
-                        "vendor_id": {
-                            "type": "string",
-                            "default": "",
-                            "title": "Vendor ID of device. Must match vendor_id in device table",
-                            "examples": [
-                                "strato-1"
-                            ]
-                        },
-                        "device_model": {
-                            "type": "string",
-                            "default": "",
-                            "title": "Device model. Must match device_model_key in device_model table",
-                            "examples": [
-                                "gateway_ammp"
-                            ]
-                        },
-                        "reading_type": {
-                            "type": "string",
-                            "default": "",
-                            "enum": ["sys", "modbustcp", "modbusrtu", "snmp", "speedwire"],
-                            "title": "Type of reading",
-                            "examples": [
-                                "modbustcp"
-                            ]
-                        }
+            "title": "Devices",
+            "additionalProperties": {
+                "type": "object",
+                "title": "Device",
+                "required": [
+                    "driver",
+                    "vendor_id",
+                    "device_model",
+                    "reading_type"
+                ],
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "title": "Device name",
+                        "examples": [
+                            "Logger"
+                        ]
                     },
-                    "examples": [{
-                        "name": "Logger",
-                        "driver": "sys_generic",
-                        "enabled": true,
-                        "vendor_id": "strato-1",
-                        "device_model": "gateway_ammp",
-                        "reading_type": "sys"
-                    }]
-                }
+                    "driver": {
+                        "type": "string",
+                        "title": "Device driver",
+                        "examples": [
+                            "sys_generic"
+                        ]
+                    },
+                    "address": {
+                        "type": "object",
+                        "title": "Address of the device",
+                        "properties": {
+                            "host": {
+                                "type": "string",
+                                "title": "IP address or hostname",
+                                "examples": [
+                                    "192.168.1.215"
+                                ]
+                            },
+                            "mac": {
+                                "type": "string",
+                                "title": "MAC address",
+                                "examples": [
+                                    "E8:A4:C1:05:19:B2"
+                                ]
+                            },
+                            "port": {
+                                "type": "integer",
+                                "title": "Port",
+                                "min": 1,
+                                "max": 65535,
+                                "examples": [
+                                    502
+                                ]
+                            },
+                            "unit_id": {
+                                "type": "integer",
+                                "title": "Modbus unit ID",
+                                "min": 1,
+                                "max": 255,
+                                "examples": [
+                                    1
+                                ]
+                            },
+                            "device": {
+                                "type": "string",
+                                "title": "Serial device path",
+                                "examples": [
+                                    "/dev/ttyNS0"
+                                ]
+                            },
+                            "slaveaddr": {
+                                "type": "integer",
+                                "title": "Unit ID for serial device",
+                                "min": 1,
+                                "max": 255,
+                                "examples": [
+                                    1
+                                ]
+                            },
+                            "baudrate": {
+                                "type": "integer",
+                                "title": "Baud rate for serial device",
+                                "enum": [2400, 9600, 115200],
+                                "examples": [
+                                    9600
+                                ]
+                            }
+                        },
+                        "examples": [{
+                            "host": "192.168.1.215",
+                            "mac": "E8:A4:C1:05:19:B2",
+                            "port": 502,
+                            "unit_id": 1
+                        }]
+                    },
+                    "enabled": {
+                        "type": "boolean",
+                        "default": true,
+                        "title": "Whether device is enabled",
+                        "examples": [
+                            true
+                        ]
+                    },
+                    "vendor_id": {
+                        "type": "string",
+                        "title": "Vendor ID of device. Must match vendor_id in device table",
+                        "examples": [
+                            "strato-1"
+                        ]
+                    },
+                    "device_model": {
+                        "type": "string",
+                        "title": "Device model. Must match device_model_key in device_model table",
+                        "examples": [
+                            "gateway_ammp"
+                        ]
+                    },
+                    "reading_type": {
+                        "type": "string",
+                        "enum": ["sys", "modbustcp", "modbusrtu", "snmp", "speedwire"],
+                        "title": "Type of reading",
+                        "examples": [
+                            "modbustcp"
+                        ]
+                    }
+                },
+                "minProperties": 1,
+                "examples": [{
+                    "name": "Logger",
+                    "driver": "sys_generic",
+                    "enabled": true,
+                    "vendor_id": "strato-1",
+                    "device_model": "gateway_ammp",
+                    "reading_type": "sys"
+                }]
             },
             "examples": [{
                 "logger": {
@@ -287,36 +278,35 @@
         "readings": {
             "type": "object",
             "title": "Readings to take",
-            "properties": {
-                "additionalProperties": {
-                    "type": "object",
-                    "title": "Reading schema",
-                    "required": [
-                        "device",
-                        "var"
-                    ],
-                    "properties": {
-                        "device": {
-                            "type": "string",
-                            "title": "Device key (matches 'devices' object)",
-                            "examples": [
-                                "sens_1"
-                            ]
-                        },
-                        "var": {
-                            "type": "string",
-                            "title": "Variable key (matches device driver)",
-                            "examples": [
-                                "temp_ext"
-                            ]
-                        }
+            "additionalProperties": {
+                "type": "object",
+                "title": "Reading schema",
+                "required": [
+                    "device",
+                    "var"
+                ],
+                "properties": {
+                    "device": {
+                        "type": "string",
+                        "title": "Device key (matches 'devices' object)",
+                        "examples": [
+                            "sens_1"
+                        ]
                     },
-                    "examples": [{
-                        "device": "sens_1",
-                        "var": "temp_ext"
-                    }]
-                }
+                    "var": {
+                        "type": "string",
+                        "title": "Variable key (matches device driver)",
+                        "examples": [
+                            "temp_ext"
+                        ]
+                    }
+                },
+                "examples": [{
+                    "device": "sens_1",
+                    "var": "temp_ext"
+                }]
             },
+            "minProperties": 1,
             "examples": [{
                 "sens_2_irradiance": {
                     "device": "sens_2",
@@ -350,9 +340,9 @@
         },
         "drivers": {
             "title": "Additional drivers",
-            "properties": {
-                "additionalProperties": {
-                    "type": "object",
+            "additionalProperties": {
+                "type": "object",
+                "$comment": {
                     "$ref": "https://github.com/ammpio/ammp-edge/blob/main/resources/schama/driver.schema.json"
                 }
             }
