@@ -1,12 +1,13 @@
 import logging
 import json
+from os import getenv
 import paho.mqtt.client as mqtt
 from random import randrange
 from typing import Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
-MQTT_HOST = 'localhost'
+MQTT_HOST = getenv('MQTT_BRIDGE_HOST', 'localhost')
 MQTT_PORT = 1883
 
 MQTT_CLEAN_SESSION = False

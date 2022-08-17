@@ -1,0 +1,47 @@
+version: '3.3'
+
+services:
+  ammp-edge:
+    build: ..
+    container_name:
+      ammp-edge-main
+    image:
+      ammp-edge_image
+    depends_on:
+      - mosquitto-broker
+    env_file:
+      - env.local
+    volumes:
+      - ./.cache:/data
+    command: ae-init-and-run
+  web-ui:
+    container_name:
+      ammp-edge-web-ui
+    image:
+      ammp-edge_image
+    depends_on:
+      - ammp-edge
+    env_file:
+      - env.local
+      - webui-env.local
+    volumes:
+      - ./.cache:/data
+    command: web-ui
+    ports:
+      - "8000:8000"
+  mosquitto-broker:
+    container_name: mosquitto
+    image: eclipse-mosquitto
+    volumes:
+      - ./config/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - ./.cache:/data
+    ports:
+      - "1883:1883"
+  mock_sma_stp:
+    container_name: mock-sma-stp
+    image: python:3.10-bullseye
+    volumes:
+      - ./mock_devices/sma_stp:/srv/mockdev
+    ports:
+      - "0.0.0.0:502:502"
+    command: bash -c "pip install umodbus && python -u /srv/mockdev/modtcp_server.py -b 0.0.0.0:502"

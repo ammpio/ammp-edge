@@ -4,7 +4,7 @@
 # exclude patterns (uncomment them if you want to use them):
 # *.[oa]
 # *~
-.*
+.env
 !.gitignore
 **/.DS_Store
 **/__pycache__/
@@ -25,3 +25,6 @@ rust/target/
 
 # Python virtual environment
 venv/
+
+# Local execution environment and cache
+tests/.cache

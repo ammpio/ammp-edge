@@ -198,10 +198,7 @@ class NetworkEnv():
         if not isinstance(args, list):
             args = [args]
 
-        if os.getenv('SNAP'):
-            nmap_path = os.path.join(os.getenv('SNAP'), 'usr/bin', 'nmap')
-        else:
-            nmap_path = 'nmap'
+        nmap_path = 'nmap'
 
         cmd = [nmap_path, '-oX', '-'] + args
 
