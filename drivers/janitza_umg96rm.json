@@ -5,8 +5,8 @@
         "words" : 2
     },
     "fields": {
-        "E_exported_Total": { "description": "total export energy", "register": 19076, "unit": "Wh"},
-        "E_imported_Total": { "description": "total import energy", "register": 19068, "unit": "Wh"},
+        "E_exported": { "description": "total export energy", "register": 19076, "unit": "Wh"},
+        "E_imported": { "description": "total import energy", "register": 19068, "unit": "Wh"},
         "E_exported_L1": { "description": "Export energy on phase 1", "register": 19070, "unit": "Wh"},
         "E_imported_L1": { "description": "Import energy on phase 1", "register": 19062, "unit": "Wh"},
         "E_exported_L2": { "description": "Export energy on phase 2", "register": 19072, "unit": "Wh"},
