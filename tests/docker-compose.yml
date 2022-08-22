@@ -26,6 +26,7 @@ services:
       - webui-env.local
     volumes:
       - ./.cache:/data
+      - ../src/web_ui:/srv/ammp-edge/src/web_ui
     command: web-ui
     ports:
       - "8000:8000"
