@@ -1,0 +1,45 @@
+<html>
+  <head>
+    <title>Real-time Readings - AMMP Edge {{ node_id }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <!-- Bootstrap core CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+  </head>
+  <body>
+    <div class="text-center mb-4">
+      <h1 class="h3 mb-3">Real-time readings result {% if node_id %} for {{ node_id }} {% endif %}</h1>
+      {{ readings[0] }}
+      <div style="height: 30px"></div>
+      <h3 class="h4 mb-3">Readings</h3>
+      <div style="height: 30px"></div>
+      <div class="card text-left mx-auto" style="width: 75%;">
+        <div class="card-body">
+          <h5 class="card-title">Tip</h5>
+          <p class="card-text">
+            If devices (such as inverters) that you expect to see in the table above do not appear, check that:
+            <ul>
+              <li>The network cable connections are in order, and that any lights on the network ports are lit/blinking</li>
+              <li>The devices are set to automatically obtain their network address from the router via DHCP</li>
+            </ul>
+            If devices that should be monitored appear above but do not have "Y" in the Modbus column, please ensure that Modbus is enabled in their settings.
+          </p>
+        </div>
+      </div>
+      {% for reading in readings %}
+        <table class="table-bordered table-striped" style="width: 50%">
+          <tr>
+          {% for k,_ in reading.items() %}
+              <th>{{k}}</th>
+          {% endfor %}
+          </tr>
+          <tr>
+          {% for _,v in reading.items() %}
+              <td style="text-align: center;">{{ v }}</td>
+          {% endfor %}
+          </tr>
+        </table>
+      <br>   
+      {% endfor %}
+    </div>
+  </body>
+</html>

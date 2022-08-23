@@ -3,7 +3,6 @@ import logging
 
 from multiprocessing.sharedctypes import Value
 from flask import Flask, render_template, request
-
 from node_mgmt import NetworkEnv, EnvScanner, get_ssh_fingerprint, Node
 from node_mgmt.commands import (
     imt_sensor_address,
@@ -12,15 +11,24 @@ from node_mgmt.commands import (
     trigger_config_generation
 )
 import os
+import json
+import datetime
+
 from urllib.request import urlopen
 from kvstore import keys, KVStore
+from reader.get_readings import get_readings
+from reader.modbusrtu_reader import Reader as ModbusRTUReader
+from reader.mqtt_reader import Reader
 
-logging.basicConfig(format='%(name)s [%(levelname)s] %(message)s', level='INFO')
+logging.basicConfig(
+    format='%(name)s [%(levelname)s] %(message)s', level='INFO')
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
 kvs = KVStore()
+
+app.run(host="0.0.0.0", debug=True)
 
 ACTIONS = {
     'imt_sensor_address': imt_sensor_address,
@@ -49,7 +57,8 @@ def index():
     try:
         net_env = NetworkEnv()
         # An ugly-ish way to combine two dicts, in order to get the interface names on the same level
-        network_interfaces = [{**v, **{'name': k}} for k, v in net_env.interfaces.items()]
+        network_interfaces = [{**v, **{'name': k}}
+                              for k, v in net_env.interfaces.items()]
     except Exception:
         logger.exception("Exception while doing network scan")
         network_interfaces = []
@@ -77,6 +86,25 @@ def env_scan():
         'env_scan.html',
         node_id=node_id,
         scan_result=scan_result
+    )
+
+
+@app.route("/realtime-readings")
+def realtime_readings():
+    devices = []
+    with Reader() as reader:
+        result_bytes = reader.read('u/data')
+        if result_bytes is not None:
+            result = json.loads(result_bytes)
+        for reading in result.get('r'):
+            devices.append(reading)
+        timestamp = datetime.datetime.fromtimestamp( result.get('t') )
+    return render_template(
+        'realtime_readings.html',
+        node_id=node_id,
+        readings=devices,
+        timestamp = timestamp,
+        keys = keys
     )
 
 
