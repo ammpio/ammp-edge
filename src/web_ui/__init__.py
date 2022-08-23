@@ -2,6 +2,7 @@
 import logging
 
 from multiprocessing.sharedctypes import Value
+from constants import NAME_KEY_MAP
 from flask import Flask, render_template, request
 from node_mgmt import NetworkEnv, EnvScanner, get_ssh_fingerprint, Node
 from node_mgmt.commands import (
@@ -16,8 +17,6 @@ import datetime
 
 from urllib.request import urlopen
 from kvstore import keys, KVStore
-from reader.get_readings import get_readings
-from reader.modbusrtu_reader import Reader as ModbusRTUReader
 from reader.mqtt_reader import Reader
 
 logging.basicConfig(
@@ -92,15 +91,17 @@ def env_scan():
 @app.route("/realtime-readings")
 def realtime_readings():
     devices = []
+    DATA_TOPIC = f'a/{node_id}/data'
     with Reader() as reader:
         result_bytes = reader.read('u/data')
         if result_bytes is not None:
             result = json.loads(result_bytes)
-        for reading in result.get('r'):
-            devices.append(reading)
-        timestamp = datetime.datetime.fromtimestamp( result.get('t') )
+            for reading in result.get('r'):
+                devices.append(reading)
+            timestamp = datetime.datetime.fromtimestamp( result.get('t') )
     return render_template(
         'realtime_readings.html',
+        NAME_KEY_MAP=NAME_KEY_MAP,
         node_id=node_id,
         readings=devices,
         timestamp = timestamp,
