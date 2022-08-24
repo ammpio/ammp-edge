@@ -5,6 +5,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/data_reading.css') }}">
   <!-- Bootstrap core CSS -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
     integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
     crossorigin="anonymous"></script>
@@ -45,15 +46,16 @@
                   <td>{{ timestamp }}</td>
                 </tr>
                 <tr>
-                  <th class="col-6 border-top-0">Device</th>
-                  <th class="col-6 border-top-0">Reading value</th>
+                  <th class="border-top-0">Device</th>
+                  <th class="border-top-0">Reading value</th>
                 </tr>
               </thead>
               <tbody>
               {% for reading in readings %}
                 <tr>
-                  <td data-toggle="collapse" data-target="#demo{{loop.index}}" class="accordion-toggle">
-                    {{ reading['_d']}}</td>
+                  <td data-toggle="collapse" data-target="#demo{{loop.index}}" class="accordion-toggle clickable d-flex">
+                    <span class="material-icons chev-down">&#xe5cf;</span>{{ reading['_d']}}
+                  </td>
                   <td></td>
                 </tr>
                 <tr class="space-between">
@@ -62,10 +64,10 @@
                       <table class="table table-condensed">
                         {% for k,v in reading.items() %}
                         <tr class="detail">
-                          <td class="col-6">
+                          <td>
                             <span class="ml-5">{{ k }}</span>
                           </td>
-                          <td class="col-6">{{ v }}</td>
+                          <td>{{ v }}</td>
                         </tr>
                         {% endfor %}
                       </table>
