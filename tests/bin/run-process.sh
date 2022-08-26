@@ -15,9 +15,7 @@ case "$CMD" in
             sleep 1
             echo "Waiting for database file to be initialized"
         done
-        export FLASK_DEBUG=1
-        export FLASK_ENV=development
-        python3 -m flask --debug run
+        python3 -m flask run
         ;;
     *)
     echo >&2 "Invalid option: $CMD";
