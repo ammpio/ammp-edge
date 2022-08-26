@@ -1,15 +1,10 @@
-<html>
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+{% extends 'base.html' %}
 
-    <title>AMMP Edge {{ node_id }}</title>
-    
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
-    <!-- Bootstrap core CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
-  </head>
-  <body>
+{% block title %}
+  {{ node_id }}
+{% endblock title %}
+
+{% block content %}
     <div class="text-center mb-4">
       <h1 class="h3 mb-3">AMMP-edge node ID {{ node_id }}</h1>
 
@@ -55,7 +50,4 @@
       <p><a href="/wifi_ap">Wifi access point control</a></p>
       <p><a href="/custom_actions">Custom actions</a></p>
       <p><a href="/auto_config">Automatic Configuration</a></p>
-
-    </div>
-  </body>
-</html>
+{% endblock content %}
