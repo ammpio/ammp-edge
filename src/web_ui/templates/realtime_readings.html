@@ -53,8 +53,9 @@
               <tbody>
               {% for reading in readings %}
                 <tr>
-                  <td data-toggle="collapse" data-target="#demo{{loop.index}}" class="accordion-toggle clickable d-flex">
-                    <span class="material-icons chev-down">&#xe5cf;</span>{{ reading['_d']}}
+                  <td data-toggle="collapse" data-target="#demo{{loop.index}}" class="accordion-toggle clickable d-flex align-items-center">
+                    <span class="material-icons chev-down">&#xe5cf;</span>
+                    <span>{{ reading['_d']}}</span>
                   </td>
                   <td></td>
                 </tr>

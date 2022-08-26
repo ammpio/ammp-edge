@@ -1,7 +1,6 @@
 # Set up logging
 import logging
 
-from multiprocessing.sharedctypes import Value
 from constants import NAME_KEY_MAP
 from flask import Flask, render_template, request
 from node_mgmt import NetworkEnv, EnvScanner, get_ssh_fingerprint, Node
@@ -11,6 +10,8 @@ from node_mgmt.commands import (
     holykell_sensor_address_8,
     trigger_config_generation
 )
+
+
 import os
 import json
 import datetime
@@ -28,6 +29,9 @@ app = Flask(__name__)
 kvs = KVStore()
 
 app.run(host="0.0.0.0", debug=True)
+
+reader = Reader()
+reader.__enter__() # shouldn't call __enter__ manually, __exit__ wasnn't called
 
 ACTIONS = {
     'imt_sensor_address': imt_sensor_address,
@@ -92,13 +96,12 @@ def env_scan():
 def realtime_readings():
     devices = []
     DATA_TOPIC = f'a/{node_id}/data'
-    with Reader() as reader:
-        result_bytes = reader.read('u/data')
-        if result_bytes is not None:
-            result = json.loads(result_bytes)
-            for reading in result.get('r'):
-                devices.append(reading)
-            timestamp = datetime.datetime.fromtimestamp( result.get('t') )
+    result_bytes = reader.read('u/data')
+    result = json.loads(result_bytes)
+    for reading in result.get('r'):
+        devices.append(reading)
+    timestamp = datetime.datetime.fromtimestamp( result.get('t') )
+
     return render_template(
         'realtime_readings.html',
         NAME_KEY_MAP=NAME_KEY_MAP,
