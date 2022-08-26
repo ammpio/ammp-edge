@@ -1,7 +1,7 @@
 # Set up logging
 import logging
+import sys
 
-from constants import NAME_KEY_MAP
 from flask import Flask, render_template, request
 from node_mgmt import NetworkEnv, EnvScanner, get_ssh_fingerprint, Node
 from node_mgmt.commands import (
@@ -27,12 +27,21 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 
 kvs = KVStore()
+def main() -> None:
+    app.run(host="0.0.0.0", debug=True)
+    
 
-app.run(host="0.0.0.0", debug=True)
 
 reader = Reader()
 reader.__enter__() # shouldn't call __enter__ manually, __exit__ wasnn't called
+if __name__ == '__main__':
+    try:
+        main()
+    except KeyboardInterrupt:
+        reader.__exit__()
+        sys.exit()
 
+reader.subscribe('u/data')
 ACTIONS = {
     'imt_sensor_address': imt_sensor_address,
     'holykell_sensor_address_7': holykell_sensor_address_7,
@@ -95,20 +104,24 @@ def env_scan():
 @app.route("/realtime-readings")
 def realtime_readings():
     devices = []
+    timestamp = None
     DATA_TOPIC = f'a/{node_id}/data'
-    result_bytes = reader.read('u/data')
+    is_loaded = False
+    result_bytes = reader.read_wt_subscribe('u/data')
     result = json.loads(result_bytes)
-    for reading in result.get('r'):
-        devices.append(reading)
-    timestamp = datetime.datetime.fromtimestamp( result.get('t') )
-
+    try:
+        for reading in result.get('r'):
+            devices.append(reading)
+        timestamp = datetime.datetime.fromtimestamp( result.get('t') )
+        is_loaded = True
+    except:
+        logger.debug("Connected to the MQTT broker, still waiting for new payload arrives", exc_info=True)
     return render_template(
         'realtime_readings.html',
-        NAME_KEY_MAP=NAME_KEY_MAP,
         node_id=node_id,
         readings=devices,
         timestamp = timestamp,
-        keys = keys
+        is_loaded = is_loaded
     )
 
 

@@ -39,6 +39,7 @@
       <div class="col-md-12">
         <div class="panel panel-default">
           <div class="panel-body">
+            {% if is_loaded %}
             <table class="table table-condensed table-striped">
               <thead>
                 <tr>
@@ -78,28 +79,13 @@
                 {% endfor %}
               </tbody>
             </table>
+            {% endif %}
           </div>
 
         </div>
 
       </div>
     </div>
-
-    <!-- {% for reading in readings %}
-        <table class="table-bordered table-striped" style="width: 50%">
-          <tr>
-          {% for k,_ in reading.items() %}
-              <th>{{ NAME_KEY_MAP[k] }}</th>
-          {% endfor %}
-          </tr>
-          <tr>
-          {% for _,v in reading.items() %}
-              <td style="text-align: center;">{{ v }}</td>
-          {% endfor %}
-          </tr>
-        </table>
-      <br>   
-      {% endfor %} -->
   </div>
 </body>
 
