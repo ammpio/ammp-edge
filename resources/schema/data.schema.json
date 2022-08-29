@@ -1,6 +1,6 @@
 {
     "$schema": "https://json-schema.org/draft/2019-09/schema",
-    "$id": "https://github.com/ammpio/ammp-edge/blob/main/resources/schama/data.schema.json",
+    "$id": "https://github.com/ammpio/ammp-edge/blob/main/resources/schema/data.schema.json",
     "type": "object",
     "title": "Data payload schema",
     "required": [
