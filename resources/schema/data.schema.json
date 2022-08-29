@@ -1,0 +1,116 @@
+{
+    "$schema": "https://json-schema.org/draft/2019-09/schema",
+    "$id": "https://github.com/ammpio/ammp-edge/blob/main/resources/schema/data.schema.json",
+    "type": "object",
+    "title": "Data payload schema",
+    "required": [
+        "t",
+        "r",
+        "m"
+    ],
+    "properties": {
+        "t": {
+            "type": "integer",
+            "title": "Timestamp (Unix epoch seconds)",
+            "examples": [
+                1660757423
+            ]
+        },
+        "r": {
+            "type": "array",
+            "title": "Readings",
+            "items": {
+                "type": "object",
+                "title": "Reading from device",
+                "required": [
+                    "_vid"
+                ],
+                "properties": {
+                    "_d": {
+                        "type": "string",
+                        "title": "Device key",
+                        "examples": [
+                            "logger",
+                            "apm303",
+                            "sma_stp1",
+                            "dse855"
+                        ]
+                    },
+                    "_vid": {
+                        "type": "string",
+                        "title": "Vendor ID of device (must match vendor_id in device table",
+                        "examples": [
+                            "strato-1",
+                            "imt-1",
+                            "7a7fcafa-6f07-4c97-9b10-952aad8e9dc4",
+                            "35346907"
+                        ]
+                    }
+                },
+                "additionalProperties": {
+                    "type": ["integer", "float", "string", "null"]
+                },
+                "examples": [{
+                    "_d": "logger",
+                    "_vid": "strato-1",
+                    "boot_time": 1660737617.0,
+                    "cpu_load": 0.1,
+                    "memory_usage": 22.4
+                },
+                {
+                    "_d": "diesel_sensor",
+                    "_vid": "gamicos-1",
+                    "analog": 4.0,
+                    "level": 0.0,
+                    "genset_fuel_level_percent": 100.0,
+                    "genset_fuel_volume": 3048.625
+                }]
+            }
+        },
+        "m": {
+            "type": "object",
+            "title": "Metadata",
+            "required": [
+                "snap_rev",
+                "config_id",
+                "reading_duration"
+            ],
+            "properties": {
+                "snap_rev": {
+                    "type": "integer",
+                    "title": "Snap revision",
+                    "examples": [
+                        721
+                    ]
+                },
+                "config_id": {
+                    "type": "string",
+                    "title": "Configuration ID",
+                    "examples": [
+                        "3e43652"
+                    ]
+                },
+                "reading_duration": {
+                    "type": "number",
+                    "title": "Duration of reading",
+                    "examples": [
+                        93.77299094200134
+                    ]
+                },
+                "reading_offset": {
+                    "type": "integer",
+                    "title": "Offset of reading",
+                    "examples": [
+                        0
+                    ]
+                }
+            },
+            "examples": [{
+                "snap_rev": 721,
+                "config_id": "3e43652",
+                "reading_duration": 93.77299094200134,
+                "reading_offset": 0
+            }]
+        }
+    }
+}
