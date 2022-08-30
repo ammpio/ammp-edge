@@ -1,47 +1,32 @@
 # Set up logging
+import datetime
+import json
 import logging
+import os
 import sys
+from urllib.request import urlopen
 
 from flask import Flask, render_template, request
-from node_mgmt import NetworkEnv, EnvScanner, get_ssh_fingerprint, Node
-from node_mgmt.commands import (
-    imt_sensor_address,
-    holykell_sensor_address_7,
-    holykell_sensor_address_8,
-    trigger_config_generation
-)
 
-
-import os
-import json
-import datetime
-
-from urllib.request import urlopen
-from kvstore import keys, KVStore
+from data_mgmt.helpers.mqtt_pub import MQTT_DATA_TOPIC
+from kvstore import KVStore, keys
+from node_mgmt import EnvScanner, NetworkEnv, Node, get_ssh_fingerprint
+from node_mgmt.commands import (holykell_sensor_address_7, holykell_sensor_address_8,
+                                imt_sensor_address, trigger_config_generation)
 from reader.mqtt_reader import Reader
 
-logging.basicConfig(
-    format='%(name)s [%(levelname)s] %(message)s', level='INFO')
+logging.basicConfig(format='%(name)s [%(levelname)s] %(message)s', level='INFO')
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
 kvs = KVStore()
-def main() -> None:
-    app.run(host="0.0.0.0", debug=True)
-    
-
 
 reader = Reader()
-reader.__enter__() # shouldn't call __enter__ manually, __exit__ wasnn't called
-if __name__ == '__main__':
-    try:
-        main()
-    except KeyboardInterrupt:
-        reader.__exit__()
-        sys.exit()
+reader.__enter__()  # shouldn't call __enter__ manually, __exit__ wasnn't called
 
-reader.subscribe('u/data')
+reader.subscribe(MQTT_DATA_TOPIC)
+
 ACTIONS = {
     'imt_sensor_address': imt_sensor_address,
     'holykell_sensor_address_7': holykell_sensor_address_7,
@@ -103,25 +88,25 @@ def env_scan():
 
 @app.route("/realtime-readings")
 def realtime_readings():
-    devices = []
+    device_readings = None
     timestamp = None
     DATA_TOPIC = f'a/{node_id}/data'
     is_loaded = False
-    result_bytes = reader.read_wt_subscribe('u/data')
-    result = json.loads(result_bytes)
     try:
-        for reading in result.get('r'):
-            devices.append(reading)
-        timestamp = datetime.datetime.fromtimestamp( result.get('t') )
-        is_loaded = True
-    except:
-        logger.debug("Connected to the MQTT broker, still waiting for new payload arrives", exc_info=True)
+        with Reader() as reader:
+            result_bytes = reader.read_wt_subscribe('u/data')
+            result = json.loads(result_bytes)
+            device_readings = result.get('r')
+            timestamp = datetime.datetime.fromtimestamp(result.get('t'))
+            is_loaded = True
+    except Exception as e:
+        logger.exception(f"Exception while getting readings. Error: {e}")
     return render_template(
         'realtime_readings.html',
         node_id=node_id,
-        readings=devices,
-        timestamp = timestamp,
-        is_loaded = is_loaded
+        readings=device_readings,
+        timestamp=timestamp,
+        is_loaded=is_loaded
     )
 
 

@@ -1,7 +1,7 @@
 <html>
 
 <head>
-  <title>Real-time Readings - AMMP Edge {{ node_id }}</title>
+  <title>Readings - AMMP Edge {{ node_id }}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/data_reading.css') }}">
   <!-- Bootstrap core CSS -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
@@ -19,7 +19,7 @@
 
 <body>
   <div class="text-center mb-4">
-    <h1 class="h3 mb-3">Real-time readings result {% if node_id %} for {{ node_id }} {% endif %}</h1>
+    <h1 class="h3 mb-3">Readings result {% if node_id %} for {{ node_id }} {% endif %}</h1>
     <h3 class="h4 mb-3">Readings</h3>
     <div class="card text-left mx-auto" style="width: 75%;">
       <div class="card-body">
@@ -56,20 +56,20 @@
                 <tr>
                   <td data-toggle="collapse" data-target="#demo{{loop.index}}" class="accordion-toggle clickable d-flex align-items-center">
                     <span class="material-icons chev-down">&#xe5cf;</span>
-                    <span>{{ reading['_d']}}</span>
+                    <span class="device-value-container">{{ reading['_d']}}</span>
                   </td>
                   <td></td>
                 </tr>
                 <tr class="space-between">
                   <td colspan="12" class="hiddenRow">
-                    <div class="accordian-body collapse" id="demo{{loop.index}}">
+                    <div class="accordian-body collapse show" id="demo{{loop.index}}">
                       <table class="table table-condensed">
                         {% for k,v in reading.items() %}
                         <tr class="detail">
-                          <td>
+                          <td class="w-50">
                             <span class="ml-5">{{ k }}</span>
                           </td>
-                          <td>{{ v }}</td>
+                          <td class="w-50">{{ v }}</td>
                         </tr>
                         {% endfor %}
                       </table>
@@ -79,6 +79,8 @@
                 {% endfor %}
               </tbody>
             </table>
+            {% else %}
+            <div>Waiting for updated readings...</div>
             {% endif %}
           </div>
 
@@ -87,6 +89,11 @@
       </div>
     </div>
   </div>
+  <script>
+    <!-- window.setTimeout( function() {
+      window.location.reload();
+    }, 15000); -->
+  </script>
 </body>
 
 </html>

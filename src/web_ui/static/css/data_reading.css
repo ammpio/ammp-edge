@@ -8,7 +8,9 @@ body {
     padding: 20px;
 }
 
-table, th, td {
+table,
+th,
+td {
     border-collapse: collapse;
 }
 
@@ -20,7 +22,8 @@ table {
     margin: auto;
 }
 
-th, td {
+th,
+td {
     padding: 15px;
 }
 
@@ -46,4 +49,12 @@ th, td {
 
 .accordion-toggle[aria-expanded="true"] .chev-down {
     transform: rotate(180deg);
+}
+
+.chev-down {
+    float: left;
+}
+
+.device-value-container {
+    float: left;
 }
