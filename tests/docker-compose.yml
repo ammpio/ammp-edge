@@ -12,7 +12,8 @@ services:
     env_file:
       - env.local
     volumes:
-      - ./.cache:/data
+      - ./.cache/data:/data
+      - ./.cache/tmp:/tmp
     command: ae-init-and-run
   web-ui:
     container_name:
@@ -25,7 +26,9 @@ services:
       - env.local
       - webui-env.local
     volumes:
-      - ./.cache:/data
+      - ./.cache/data:/data
+      - ./.cache/tmp:/tmp
+      - ../src:/srv/ammp-edge/src
     command: web-ui
     ports:
       - "8000:8000"

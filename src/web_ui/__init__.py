@@ -1,19 +1,16 @@
 # Set up logging
+import datetime
 import logging
-
-from multiprocessing.sharedctypes import Value
-from flask import Flask, render_template, request
-
-from node_mgmt import NetworkEnv, EnvScanner, get_ssh_fingerprint, Node
-from node_mgmt.commands import (
-    imt_sensor_address,
-    holykell_sensor_address_7,
-    holykell_sensor_address_8,
-    trigger_config_generation
-)
 import os
 from urllib.request import urlopen
-from kvstore import keys, KVStore
+
+from flask import Flask, render_template, request
+
+from kvstore import KVCache, KVStore, keys
+from node_mgmt import EnvScanner, NetworkEnv, Node, get_ssh_fingerprint
+from node_mgmt.commands import (holykell_sensor_address_7,
+                                holykell_sensor_address_8, imt_sensor_address,
+                                trigger_config_generation)
 
 logging.basicConfig(format='%(name)s [%(levelname)s] %(message)s', level='INFO')
 logger = logging.getLogger(__name__)
@@ -49,7 +46,8 @@ def index():
     try:
         net_env = NetworkEnv()
         # An ugly-ish way to combine two dicts, in order to get the interface names on the same level
-        network_interfaces = [{**v, **{'name': k}} for k, v in net_env.interfaces.items()]
+        network_interfaces = [{**v, **{'name': k}}
+                              for k, v in net_env.interfaces.items()]
     except Exception:
         logger.exception("Exception while doing network scan")
         network_interfaces = []
@@ -77,6 +75,28 @@ def env_scan():
         'env_scan.html',
         node_id=node_id,
         scan_result=scan_result
+    )
+
+
+@app.route("/realtime-readings")
+def realtime_readings():
+    device_readings = None
+    is_loaded = False
+    timestamp = None
+    with KVCache() as kvc:
+        device_readings = kvc.get(keys.LAST_READINGS)
+        last_reading_ts = kvc.get(keys.LAST_READINGS_TS)
+        if last_reading_ts is not None:
+            timestamp = datetime.datetime.fromtimestamp(last_reading_ts)
+        if device_readings is not None:
+            is_loaded = True
+
+    return render_template(
+        'realtime_readings.html',
+        node_id=node_id,
+        readings=device_readings,
+        is_loaded=is_loaded,
+        timestamp=timestamp
     )
 
 
