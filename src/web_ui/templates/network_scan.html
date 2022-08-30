@@ -1,11 +1,10 @@
-<html>
-  <head>
-    <title>Network scan - AMMP Edge {{ node_id }} - interface {{ if_name }}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
-    <!-- Bootstrap core CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
-  </head>
-  <body>
+{% extends 'base.html' %}
+
+{% block title %}
+  Network scan - AMMP Edge {{ node_id }} - interface {{ if_name }}
+{% endblock title %}
+
+{% block content %}
     <div class="text-center mb-4">
       <h1 class="h3 mb-3">Network scan results{% if node_id %} for {{ node_id }}{% endif %}{% if interface %}, interface {{ interface }} {% endif %} </h1>
       <div style="height: 30px"></div>
@@ -33,6 +32,4 @@
         {% endfor %}
       </table>
     </div>
-
-  </body>
-</html>
+{% endblock content %}

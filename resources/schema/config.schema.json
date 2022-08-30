@@ -1,0 +1,407 @@
+{
+    "$schema": "https://json-schema.org/draft/2019-09/schema",
+    "$id": "https://github.com/ammpio/ammp-edge/blob/main/resources/schema/config.schema.json",
+    "title": "AMMP Edge configuration",
+    "description": "This document records the configuration of an AMMP Edge node",
+    "type": "object",
+    "required": [
+        "devices",
+        "readings"
+    ],
+    "properties": {
+        "name": {
+            "type": "string",
+            "title": "Name of the config",
+            "examples": [
+                "Auto-generated"
+            ]
+        },
+        "output": {
+            "type": "array",
+            "default": [],
+            "title": "The output Schema",
+            "items": {
+                "type": "object",
+                "title": "A Schema",
+                "required": [
+                    "field",
+                    "source",
+                    "typecast"
+                ],
+                "properties": {
+                    "field": {
+                        "type": "string",
+                        "title": "Output field",
+                        "examples": [
+                            "P_total",
+                            "genset_E",
+                            "genset_P",
+                            "grid_in_E",
+                            "grid_in_P"
+                        ]
+                    },
+                    "device": {
+                        "type": "string",
+                        "title": "The device with which to associate the output",
+                        "examples": [
+                            "dse855_1",
+                            "sens_1"
+                        ]
+                    },
+                    "source": {
+                        "type": "string",
+                        "title": "JSONata expression for source of calculation",
+                        "examples": [
+                            "em210_grid[var = \"P_L1\"].value + em210_grid[var = \"P_L2\"].value + em210_grid[var = \"P_L3\"].value"
+                        ]
+                    },
+                    "typecast": {
+                        "type": "string",
+                        "title": "Typecast of output",
+                        "enum": ["int", "float", "str", "bool"],
+                        "examples": [
+                            "int",
+                            "float"
+                        ]
+                    }
+                },
+                "examples": [{
+                    "field": "P_total",
+                    "device": "em210_grid",
+                    "source": "em210_grid[var = \"P_L1\"].value + em210_grid[var = \"P_L2\"].value + em210_grid[var = \"P_L3\"].value",
+                    "typecast": "float"
+                },
+                {
+                    "field": "P_total",
+                    "device": "em210_genset",
+                    "source": "em210_genset[var = \"P_L1\"].value + em210_genset[var = \"P_L2\"].value + em210_genset[var = \"P_L3\"].value",
+                    "typecast": "float"
+                }]
+            }
+        },
+        "devices": {
+            "type": "object",
+            "title": "Devices",
+            "additionalProperties": {
+                "type": "object",
+                "title": "Device",
+                "required": [
+                    "driver",
+                    "vendor_id",
+                    "device_model",
+                    "reading_type"
+                ],
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "title": "Device name",
+                        "examples": [
+                            "Logger"
+                        ]
+                    },
+                    "driver": {
+                        "type": "string",
+                        "title": "Device driver",
+                        "examples": [
+                            "sys_generic"
+                        ]
+                    },
+                    "address": {
+                        "type": "object",
+                        "title": "Address of the device",
+                        "properties": {
+                            "host": {
+                                "type": "string",
+                                "title": "IP address or hostname",
+                                "examples": [
+                                    "192.168.1.215"
+                                ]
+                            },
+                            "mac": {
+                                "type": "string",
+                                "title": "MAC address",
+                                "examples": [
+                                    "E8:A4:C1:05:19:B2"
+                                ]
+                            },
+                            "port": {
+                                "type": "integer",
+                                "title": "Port",
+                                "min": 1,
+                                "max": 65535,
+                                "examples": [
+                                    502
+                                ]
+                            },
+                            "unit_id": {
+                                "type": "integer",
+                                "title": "Modbus unit ID",
+                                "min": 1,
+                                "max": 255,
+                                "examples": [
+                                    1
+                                ]
+                            },
+                            "device": {
+                                "type": "string",
+                                "title": "Serial device path",
+                                "examples": [
+                                    "/dev/ttyNS0"
+                                ]
+                            },
+                            "slaveaddr": {
+                                "type": "integer",
+                                "title": "Unit ID for serial device",
+                                "min": 1,
+                                "max": 255,
+                                "examples": [
+                                    1
+                                ]
+                            },
+                            "baudrate": {
+                                "type": "integer",
+                                "title": "Baud rate for serial device",
+                                "enum": [2400, 9600, 115200],
+                                "examples": [
+                                    9600
+                                ]
+                            }
+                        },
+                        "examples": [{
+                            "host": "192.168.1.215",
+                            "mac": "E8:A4:C1:05:19:B2",
+                            "port": 502,
+                            "unit_id": 1
+                        }]
+                    },
+                    "enabled": {
+                        "type": "boolean",
+                        "default": true,
+                        "title": "Whether device is enabled",
+                        "examples": [
+                            true
+                        ]
+                    },
+                    "vendor_id": {
+                        "type": "string",
+                        "title": "Vendor ID of device. Must match vendor_id in device table",
+                        "examples": [
+                            "strato-1"
+                        ]
+                    },
+                    "device_model": {
+                        "type": "string",
+                        "title": "Device model. Must match device_model_key in device_model table",
+                        "examples": [
+                            "gateway_ammp"
+                        ]
+                    },
+                    "reading_type": {
+                        "type": "string",
+                        "enum": ["sys", "modbustcp", "modbusrtu", "snmp", "speedwire"],
+                        "title": "Type of reading",
+                        "examples": [
+                            "modbustcp"
+                        ]
+                    }
+                },
+                "minProperties": 1,
+                "examples": [{
+                    "name": "Logger",
+                    "driver": "sys_generic",
+                    "enabled": true,
+                    "vendor_id": "strato-1",
+                    "device_model": "gateway_ammp",
+                    "reading_type": "sys"
+                }]
+            },
+            "examples": [{
+                "logger": {
+                    "name": "Logger",
+                    "driver": "sys_generic",
+                    "enabled": true,
+                    "vendor_id": "strato-1",
+                    "device_model": "gateway_ammp",
+                    "reading_type": "sys"
+                },
+                "logger_strato": {
+                    "name": "Logger (StratoPi extension)",
+                    "driver": "sys_rpi3",
+                    "enabled": true,
+                    "vendor_id": "strato-1",
+                    "device_model": "gateway_ammp",
+                    "reading_type": "sys"
+                },
+                "dse855_1": {
+                    "name": "DSE 855 1",
+                    "driver": "deepsea_dse855",
+                    "address": {
+                        "host": "192.168.1.215",
+                        "mac": "E8:A4:C1:05:19:B2",
+                        "port": 502,
+                        "unit_id": 1
+                    },
+                    "enabled": true,
+                    "vendor_id": "dse-1",
+                    "device_model": "gen_control_dse",
+                    "reading_type": "modbustcp"
+                },
+                "sma_stp_1": {
+                    "name": "SMA STP Core 1",
+                    "driver": "sma_stp25000",
+                    "address": {
+                        "host": "192.168.1.111",
+                        "mac": "00:40:AD:A9:E8:85",
+                        "port": 502,
+                        "unit_id": 3
+                    },
+                    "enabled": true,
+                    "vendor_id": "3010482707",
+                    "device_model": "pv_inv_sma",
+                    "reading_type": "modbustcp"
+                },
+                "sens_1": {
+                    "name": "IMT Sensor 1",
+                    "driver": "ingburo_ss_rad",
+                    "address": {
+                        "device": "/dev/ttyNS0",
+                        "slaveaddr": 1,
+                        "baudrate": 9600
+                    },
+                    "enabled": true,
+                    "vendor_id": "imt-1",
+                    "device_model": "irr_sens_imt",
+                    "reading_type": "modbusrtu"
+                }
+            }]
+        },
+        "readings": {
+            "type": "object",
+            "title": "Readings to take",
+            "additionalProperties": {
+                "type": "object",
+                "title": "Reading schema",
+                "required": [
+                    "device",
+                    "var"
+                ],
+                "properties": {
+                    "device": {
+                        "type": "string",
+                        "title": "Device key (matches 'devices' object)",
+                        "examples": [
+                            "sens_1"
+                        ]
+                    },
+                    "var": {
+                        "type": "string",
+                        "title": "Variable key (matches device driver)",
+                        "examples": [
+                            "temp_ext"
+                        ]
+                    }
+                },
+                "examples": [{
+                    "device": "sens_1",
+                    "var": "temp_ext"
+                }]
+            },
+            "minProperties": 1,
+            "examples": [{
+                "sens_2_irradiance": {
+                    "device": "sens_2",
+                    "var": "irradiance"
+                },
+                "genset_1_E": {
+                    "var": "E",
+                    "device": "dse855_1"
+                },
+                "genset_1_P": {
+                    "var": "P",
+                    "device": "dse855_1"
+                },
+                "genset_1_S": {
+                    "var": "S",
+                    "device": "dse855_1"
+                },
+                "pvinv1_P_L1": {
+                    "var": "P_L1",
+                    "device": "sma_stp_1"
+                },
+                "pvinv1_P_L2": {
+                    "var": "P_L2",
+                    "device": "sma_stp_1"
+                },
+                "pvinv1_P_L3": {
+                    "var": "P_L3",
+                    "device": "sma_stp_1"
+                }
+            }]
+        },
+        "drivers": {
+            "title": "Additional drivers",
+            "additionalProperties": {
+                "type": "object",
+                "$comment": {
+                    "ref": "https://github.com/ammpio/ammp-edge/blob/main/resources/schema/driver.schema.json"
+                }
+            }
+        },
+        "timestamp": {
+            "type": "string",
+            "title": "Timestamp of config",
+            "examples": [
+                "2022-07-30T06:07:48Z"
+            ]
+        },
+        "calc_vendor_id": {
+            "type": "string",
+            "title": "Vendor ID to apply to calculated fields (from 'output')",
+            "examples": [
+                "ws-2"
+            ]
+        },
+        "push_timeout": {
+            "type": "integer",
+            "default": 60,
+            "deprecated": true,
+            "title": "Timeout for data push (seconds) [deprecated]",
+            "examples": [
+                120
+            ]
+        },
+        "read_interval": {
+            "type": "integer",
+            "default": 60,
+            "title": "Interval between readings (seconds)",
+            "examples": [
+                60
+            ]
+        },
+        "read_roundtime": {
+            "type": "boolean",
+            "default": false,
+            "title": "Read at round times (based on interval duration)",
+            "examples": [
+                true
+            ]
+        },
+        "volatile_q_size": {
+            "type": "integer",
+            "deprecated": true,
+            "title": "Size of volatile queue for data push [deprecated]",
+            "examples": [
+                5
+            ]
+        },
+        "push_throttle_delay": {
+            "type": "integer",
+            "default": 15,
+            "deprecated": true,
+            "title": "Delay to throttle data push if unsuccessful [deprecated]",
+            "examples": [
+                15
+            ]
+        }
+    }
+}

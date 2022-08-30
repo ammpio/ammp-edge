@@ -61,7 +61,7 @@ def index():
     )
 
 
-@app.route("/env_scan")
+@app.route("/env-scan")
 def env_scan():
     try:
         scanner = EnvScanner()
@@ -77,6 +77,7 @@ def env_scan():
     )
 
 
+<<<<<<< HEAD
 @app.route("/realtime-readings")
 def realtime_readings():
     device_readings = None
@@ -93,7 +94,7 @@ def realtime_readings():
     )
 
 
-@app.route("/network_scan")
+@app.route("/network-scan")
 def network_scan():
     interface = request.args.get('interface')
 
@@ -114,7 +115,7 @@ def network_scan():
     )
 
 
-@app.route("/wifi_ap")
+@app.route("/wifi-ap")
 def wifi_ap():
     args = dict(
         disabled=request.args.get('disabled', type=int)
@@ -145,7 +146,7 @@ def wifi_ap():
     )
 
 
-@app.route("/custom_actions")
+@app.route("/custom-actions")
 def wifi_ap_status():
     args = dict(
         action=request.args.get('action', type=str)
@@ -167,7 +168,7 @@ def wifi_ap_status():
     )
 
 
-@app.route("/auto_config", methods=['GET', 'POST'])
+@app.route("/auto-config", methods=['GET', 'POST'])
 def auto_config():
     if request.method == 'POST':
         try:
