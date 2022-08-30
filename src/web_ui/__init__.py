@@ -80,7 +80,6 @@ def env_scan():
     )
 
 
-<<<<<<< HEAD
 @app.route("/configuration")
 def configuration():
     device_configs = []
