@@ -1,11 +1,10 @@
-<html>
-  <head>
-    <title>Wifi AP status - AMMP Edge {{ node_id }}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
-    <!-- Bootstrap core CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
-  </head>
-  <body>
+{% extends 'base.html' %}
+
+{% block title %}
+  Wifi AP status - AMMP Edge {{ node_id }}
+{% endblock title %}
+
+{% block content %}
     <div class="text-center mb-4">
       <h1 class="h3 mb-3">Wifi access point status</h1>
       <div style="height: 30px"></div>
@@ -37,6 +36,4 @@
         <p>Wifi access point not available on device.</p>
       {% endif %}
       </div>
-
-  </body>
-</html>
+{% endblock content %}
