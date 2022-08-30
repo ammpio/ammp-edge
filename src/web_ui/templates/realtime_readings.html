@@ -43,10 +43,6 @@
             <table class="table table-condensed table-striped">
               <thead>
                 <tr>
-                  <td>Timestamp</td>
-                  <td>{{ timestamp }}</td>
-                </tr>
-                <tr>
                   <th class="border-top-0">Device</th>
                   <th class="border-top-0">Reading value</th>
                 </tr>
@@ -56,7 +52,7 @@
                 <tr>
                   <td data-toggle="collapse" data-target="#demo{{loop.index}}" class="accordion-toggle clickable d-flex align-items-center">
                     <span class="material-icons chev-down">&#xe5cf;</span>
-                    <span class="device-value-container">{{ reading['_d']}}</span>
+                    <span class="device-value-container">{{ reading }}</span>
                   </td>
                   <td></td>
                 </tr>
@@ -64,12 +60,12 @@
                   <td colspan="12" class="hiddenRow">
                     <div class="accordian-body collapse show" id="demo{{loop.index}}">
                       <table class="table table-condensed">
-                        {% for k,v in reading.items() %}
+                        {% for item in readings[reading] %}
                         <tr class="detail">
                           <td class="w-50">
-                            <span class="ml-5">{{ k }}</span>
+                            <span class="ml-5">{{ item['var'] }}</span>
                           </td>
-                          <td class="w-50">{{ v }}</td>
+                          <td class="w-50">{{ item['value'] }} {{ item['unit'] }}</td>
                         </tr>
                         {% endfor %}
                       </table>

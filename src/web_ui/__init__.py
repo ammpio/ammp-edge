@@ -1,15 +1,12 @@
 # Set up logging
-import datetime
-import json
 import logging
 import os
-import sys
 from urllib.request import urlopen
+import json
 
 from flask import Flask, render_template, request
 
-from data_mgmt.helpers.mqtt_pub import MQTT_DATA_TOPIC
-from kvstore import KVStore, keys
+from kvstore import KVStore, KVCache, keys
 from node_mgmt import EnvScanner, NetworkEnv, Node, get_ssh_fingerprint
 from node_mgmt.commands import (holykell_sensor_address_7, holykell_sensor_address_8,
                                 imt_sensor_address, trigger_config_generation)
@@ -21,11 +18,7 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 
 kvs = KVStore()
-
-reader = Reader()
-reader.__enter__()  # shouldn't call __enter__ manually, __exit__ wasnn't called
-
-reader.subscribe(MQTT_DATA_TOPIC)
+node = Node()
 
 ACTIONS = {
     'imt_sensor_address': imt_sensor_address,
@@ -89,24 +82,16 @@ def env_scan():
 @app.route("/realtime-readings")
 def realtime_readings():
     device_readings = None
-    timestamp = None
-    DATA_TOPIC = f'a/{node_id}/data'
-    is_loaded = False
     try:
-        with Reader() as reader:
-            result_bytes = reader.read_wt_subscribe('u/data')
-            result = json.loads(result_bytes)
-            device_readings = result.get('r')
-            timestamp = datetime.datetime.fromtimestamp(result.get('t'))
-            is_loaded = True
+        with KVCache() as kvc:
+            device_readings = kvc.get(keys.LAST_READINGS)
     except Exception as e:
         logger.exception(f"Exception while getting readings. Error: {e}")
     return render_template(
         'realtime_readings.html',
         node_id=node_id,
         readings=device_readings,
-        timestamp=timestamp,
-        is_loaded=is_loaded
+        is_loaded=True
     )
 
 
