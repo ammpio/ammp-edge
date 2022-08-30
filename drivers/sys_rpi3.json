@@ -5,7 +5,7 @@
     "args": {}
   },
   "fields": {
-    "disk_usage": {"method": "disk_usage", "args": {"path": "/root"}, "keypath": [3], "unit": "%"},
-    "cpu_temp": {"method": "sensors_temperatures", "keypath": ["cpu_thermal", 0, 1], "unit": "C"}
+    "disk_usage": {"method": "disk_usage", "args": {"path": "/root"}, "keypath": [3], "unit": "%", "description": "Disk usage"},
+    "cpu_temp": {"method": "sensors_temperatures", "keypath": ["cpu_thermal", 0, 1], "unit": "C", "description": "CPU temperature"}
   }
 }
