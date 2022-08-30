@@ -40,14 +40,14 @@
           <td>{{ interface['name'] }}</td>
           <td>{{ interface['mac'] }}</td>
           <td>{{ interface['ip'] }}{% if interface.get('netmask_bits') %}/{{ interface['netmask_bits'] }} {% endif %}</td>
-          <td style="text-align: center;">{% if interface['ip'] and interface['netmask_bits'] %}<a href="/network_scan?interface={{ interface['name'] }}">Scan</a>{% endif %}</td>
+          <td style="text-align: center;">{% if interface['ip'] and interface['netmask_bits'] %}<a href="/network-scan?interface={{ interface['name'] }}">Scan</a>{% endif %}</td>
         </tr>
         {% endfor %}
       </table>
 
       <div style="height: 30px"></div>
-      <p><a href="/env_scan">Do a full site scan</a></p>
-      <p><a href="/wifi_ap">Wifi access point control</a></p>
-      <p><a href="/custom_actions">Custom actions</a></p>
-      <p><a href="/auto_config">Automatic Configuration</a></p>
+      <p><a href="/env-scan">Do a full site scan</a></p>
+      <p><a href="/wifi-ap">Wifi access point control</a></p>
+      <p><a href="/custom-actions">Custom actions</a></p>
+      <p><a href="/auto-config">Automatic Configuration</a></p>
 {% endblock content %}
