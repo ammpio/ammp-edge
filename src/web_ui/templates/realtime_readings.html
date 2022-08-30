@@ -63,7 +63,7 @@
                         {% for item in readings[reading] %}
                         <tr class="detail">
                           <td class="w-50">
-                            <span class="ml-5">{{ item['var'] }}</span>
+                            <span class="ml-5">{{ item['description'] or item['var'] }}</span>
                           </td>
                           <td class="w-50">{{ item['value'] }} {{ item['unit'] }}</td>
                         </tr>
