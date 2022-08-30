@@ -78,15 +78,14 @@ def env_scan():
         node_id=node_id,
         scan_result=scan_result
     )
-    
+
 
 @app.route("/configuration")
 def configuration():
     device_configs = []
-    config = kvs.get(keys.CONFIG) # how to use node.config()
+    config = kvs.get(keys.CONFIG)
     if config.get('devices'):
-        for device in config.get('devices').items():
-            device_configs.append(device)
+        device_configs = config.get('devices')
     return render_template(
         'configurations.html',
         node_id=node_id,

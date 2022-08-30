@@ -32,11 +32,11 @@
                   </tr>
                 </thead>
                 <tbody>
-                {% for config in configs %}
+                {% for key in configs %}
                   <tr>
                     <td data-toggle="collapse" data-target="#demo{{loop.index}}" class="accordion-toggle clickable d-flex align-items-center">
                       <span class="material-icons chev-down">&#xe5cf;</span>
-                      <span>{{ config[1]['name'] }}</span>
+                      <span>{{ configs[key]['name'] }}</span>
                     </td>
                     <td></td>
                   </tr>
@@ -44,7 +44,7 @@
                     <td colspan="12" class="hiddenRow">
                       <div class="accordian-body collapse" id="demo{{loop.index}}">
                         <table class="table table-condensed">
-                          {% for k,v in config[1].items() %}
+                          {% for k,v in configs[key].items() %}
                             {% if k != 'name' %}
                                 <tr class="detail">
                                     <td>
