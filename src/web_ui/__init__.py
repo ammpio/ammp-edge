@@ -77,20 +77,22 @@ def env_scan():
     )
 
 
-<<<<<<< HEAD
 @app.route("/realtime-readings")
 def realtime_readings():
     device_readings = None
+    is_loaded = False
     try:
         with KVCache() as kvc:
             device_readings = kvc.get(keys.LAST_READINGS)
+            if device_readings is not None:
+                is_loaded = True
     except Exception as e:
         logger.exception(f"Exception while getting readings. Error: {e}")
     return render_template(
         'realtime_readings.html',
         node_id=node_id,
         readings=device_readings,
-        is_loaded=True
+        is_loaded=is_loaded
     )
 
 

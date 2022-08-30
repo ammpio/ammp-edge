@@ -1,11 +1,14 @@
-<html>
+{% extends 'base.html' %}
 
-<head>
-  <title>Readings - AMMP Edge {{ node_id }}</title>
+{% block title %}
+  Readings - AMMP Edge {{ node_id }}
+{% endblock title %}
+
+{% block style_src %}
   <link rel="stylesheet" href="{{ url_for('static', filename='css/data_reading.css') }}">
-  <!-- Bootstrap core CSS -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+{% endblock style_src %}
+{% block extra_script_src %}
   <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
     integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
     crossorigin="anonymous"></script>
@@ -15,12 +18,13 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.1.3/dist/js/bootstrap.min.js"
     integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy"
     crossorigin="anonymous"></script>
-</head>
+{% endblock extra_script_src %}
 
-<body>
-  <div class="text-center mb-4">
-    <h1 class="h3 mb-3">Readings result {% if node_id %} for {{ node_id }} {% endif %}</h1>
-    <h3 class="h4 mb-3">Readings</h3>
+
+{% block content %}
+  <div class="mb-4">
+    <h1 class="h3 mb-3 text-center">Readings result {% if node_id %} for {{ node_id }} {% endif %}</h1>
+    <h3 class="h4 mb-3 text-center">Readings</h3>
     <div class="card text-left mx-auto" style="width: 75%;">
       <div class="card-body">
         <h5 class="card-title">Tip</h5>
@@ -85,11 +89,4 @@
       </div>
     </div>
   </div>
-  <script>
-    <!-- window.setTimeout( function() {
-      window.location.reload();
-    }, 15000); -->
-  </script>
-</body>
-
-</html>
+{% endblock content %}
