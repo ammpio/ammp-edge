@@ -1,4 +1,5 @@
 # Set up logging
+import datetime
 import logging
 import os
 from urllib.request import urlopen
@@ -81,9 +82,12 @@ def env_scan():
 def realtime_readings():
     device_readings = None
     is_loaded = False
+    timestamp = None
     try:
         with KVCache() as kvc:
             device_readings = kvc.get(keys.LAST_READINGS)
+            last_reading_ts = kvc.get(keys.LAST_READINGS_TS)
+            timestamp = datetime.datetime.fromtimestamp(last_reading_ts)
             if device_readings is not None:
                 is_loaded = True
     except Exception as e:
@@ -92,7 +96,8 @@ def realtime_readings():
         'realtime_readings.html',
         node_id=node_id,
         readings=device_readings,
-        is_loaded=is_loaded
+        is_loaded=is_loaded,
+        timestamp=timestamp
     )
 
 
