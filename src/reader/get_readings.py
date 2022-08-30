@@ -168,6 +168,7 @@ def get_readout(node):
     logger.debug(f"Populated readings for all devices: {dev_rdg}")
     with KVCache() as kvc:
         kvc.set(keys.LAST_READINGS, dev_rdg)
+        kvc.set(keys.LAST_READINGS_TS, readout['t'])
 
     # time that took to read all devices.
     readout['m']['reading_duration'] = arrow.utcnow().float_timestamp - \
