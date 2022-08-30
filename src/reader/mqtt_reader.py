@@ -71,15 +71,3 @@ class Reader(object):
             return None
 
         return self._current_payloads.get(topic)
-    
-    def read_wt_subscribe(self, topic, **rdg):
-        logger.debug("Enter __Read_wt__")
-        return self._current_payloads.get(topic)
-    
-    def subscribe(self, topic):
-        logger.debug("Enter __Read_wt__")
-        res, _ = self._client.subscribe(topic, qos=DEFAULT_QOS)
-        self.mqtt_res = res
-        if res != mqtt.MQTT_ERR_SUCCESS:
-            logger.error(f"Could not subscribe to topic '{topic}'. Result: {res}")
-        self._current_payloads[topic] = b'{}'

@@ -2,15 +2,14 @@
 import logging
 import os
 from urllib.request import urlopen
-import json
 
 from flask import Flask, render_template, request
 
-from kvstore import KVStore, KVCache, keys
+from kvstore import KVCache, KVStore, keys
 from node_mgmt import EnvScanner, NetworkEnv, Node, get_ssh_fingerprint
-from node_mgmt.commands import (holykell_sensor_address_7, holykell_sensor_address_8,
-                                imt_sensor_address, trigger_config_generation)
-from reader.mqtt_reader import Reader
+from node_mgmt.commands import (holykell_sensor_address_7,
+                                holykell_sensor_address_8, imt_sensor_address,
+                                trigger_config_generation)
 
 logging.basicConfig(format='%(name)s [%(levelname)s] %(message)s', level='INFO')
 logger = logging.getLogger(__name__)
@@ -18,7 +17,6 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 
 kvs = KVStore()
-node = Node()
 
 ACTIONS = {
     'imt_sensor_address': imt_sensor_address,
