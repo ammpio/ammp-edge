@@ -8,19 +8,12 @@
       "enabled": true,
       "vendor_id": "strato-1",
       "reading_type": "sys"
-    },
-    "logger_strato": {
-      "name": "Logger (StratoPi extension)",
-      "driver": "sys_rpi3",
-      "enabled": true,
-      "vendor_id": "strato-1",
-      "reading_type": "sys"
     }
   },
   "readings": {
     "comms_lggr_boot_time": {"device": "logger", "var": "boot_time"},
     "comms_lggr_cpu_load": {"device": "logger", "var": "cpu_load"},
-    "comms_lggr_disk_usage": {"device": "logger_strato", "var": "disk_usage"},
+    "comms_lggr_disk_usage": {"device": "logger", "var": "disk_usage"},
     "comms_lggr_mem_usage": {"device": "logger", "var": "memory_usage"}
   },
   "timestamp": "2022-08-15T13:03:17Z",

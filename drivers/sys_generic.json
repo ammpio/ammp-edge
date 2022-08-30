@@ -7,6 +7,7 @@
   "fields": {
     "disk_usage": {"method": "disk_usage", "args": {"path": "/"}, "keypath": [3], "unit": "%", "description": "Disk usage"},
     "cpu_load": {"module": "os", "method": "getloadavg", "keypath": [0], "description": "CPU load"},
+    "cpu_temp": {"method": "sensors_temperatures", "keypath": ["cpu_thermal", 0, 1], "unit": "C", "description": "CPU temperature"},
     "memory_usage": {"method": "virtual_memory", "keypath": [2], "unit": "%", "description": "Memory usage"},
     "boot_time": {"method": "boot_time", "keypath": [], "unit": "epoch", "description": "Boot time"}
   }
