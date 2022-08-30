@@ -87,7 +87,8 @@ def realtime_readings():
         with KVCache() as kvc:
             device_readings = kvc.get(keys.LAST_READINGS)
             last_reading_ts = kvc.get(keys.LAST_READINGS_TS)
-            timestamp = datetime.datetime.fromtimestamp(last_reading_ts)
+            if last_reading_ts is not None:
+                timestamp = datetime.datetime.fromtimestamp(last_reading_ts)
             if device_readings is not None:
                 is_loaded = True
     except Exception as e:
