@@ -13,11 +13,10 @@
   "readings": {
     "comms_lggr_boot_time": {"device": "logger", "var": "boot_time"},
     "comms_lggr_cpu_load": {"device": "logger", "var": "cpu_load"},
-    "comms_lggr_cpu_temp": {"device": "logger", "var": "cpu_temp"},
     "comms_lggr_disk_usage": {"device": "logger", "var": "disk_usage"},
     "comms_lggr_mem_usage": {"device": "logger", "var": "memory_usage"}
   },
   "timestamp": "2022-08-15T13:03:17Z",
-  "read_interval": 300,
+  "read_interval": 15,
   "read_roundtime": true
 }

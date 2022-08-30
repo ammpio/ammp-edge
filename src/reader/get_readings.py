@@ -8,6 +8,7 @@ import queue
 from time import sleep
 from copy import deepcopy
 
+from kvstore import keys, KVCache
 from processor import process_reading, get_output
 from .helpers import set_host_from_mac, check_host_vs_mac, add_to_device_readings
 
@@ -165,6 +166,9 @@ def get_readout(node):
             logger.warning('Not all devices returned readings')
 
     logger.debug(f"Populated readings for all devices: {dev_rdg}")
+    with KVCache() as kvc:
+        kvc.set(keys.LAST_READINGS, dev_rdg)
+        kvc.set(keys.LAST_READINGS_TS, readout['t'])
 
     # time that took to read all devices.
     readout['m']['reading_duration'] = arrow.utcnow().float_timestamp - \

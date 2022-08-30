@@ -46,7 +46,7 @@ Currently, ammp-edge pulls its configuration from the AMMP API and interfaces wi
 ### Set up Python virtual environment
 ```
 python -m venv venv
-. env/bin/activate
+. venv/bin/activate
 cd src
 pip install -U . --extra-index-url https://ammplipy.ammp.io/
 ```

@@ -162,7 +162,7 @@ parts:
      - "CFLAGS='-Wall -ggdb -O2 -I$CRAFT_STAGE/include -D_GNU_SOURCE'"
     source: https://github.com/eclipse/mosquitto
     source-type: git
-    source-tag: v2.0.14
+    source-tag: v2.0.15
     source-depth: 1
     build-packages:
       - libssl-dev
