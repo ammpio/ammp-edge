@@ -83,16 +83,14 @@ def realtime_readings():
     device_readings = None
     is_loaded = False
     timestamp = None
-    try:
-        with KVCache() as kvc:
-            device_readings = kvc.get(keys.LAST_READINGS)
-            last_reading_ts = kvc.get(keys.LAST_READINGS_TS)
-            if last_reading_ts is not None:
-                timestamp = datetime.datetime.fromtimestamp(last_reading_ts)
-            if device_readings is not None:
-                is_loaded = True
-    except Exception as e:
-        logger.exception(f"Exception while getting readings. Error: {e}")
+    with KVCache() as kvc:
+        device_readings = kvc.get(keys.LAST_READINGS)
+        last_reading_ts = kvc.get(keys.LAST_READINGS_TS)
+        if last_reading_ts is not None:
+            timestamp = datetime.datetime.fromtimestamp(last_reading_ts)
+        if device_readings is not None:
+            is_loaded = True
+
     return render_template(
         'realtime_readings.html',
         node_id=node_id,
