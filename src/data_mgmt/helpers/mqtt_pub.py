@@ -24,7 +24,7 @@ class MQTTPublisher():
         if client_id_suffix is None:
             client_id = f'{node_id}-{"%06x" % randrange(16**6)}'
         else:
-            client_id = f'{node_id}-{client_id_suffix}'
+            client_id = f'{node_id}-{client_id_suffix}-{"%06x" % randrange(16**6)}'
         client = mqtt.Client(client_id=client_id, clean_session=MQTT_CLEAN_SESSION)
         client.enable_logger(logger)
 
