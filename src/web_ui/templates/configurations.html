@@ -48,7 +48,7 @@ View Configurations - AMMP Edge {{ node_id }}
                         </tr>
                         <tr class="space-between">
                             <td colspan="12" class="hiddenRow">
-                                <div class="accordian-body collapse" id="demo{{loop.index}}">
+                                <div class="accordian-body collapse show" id="demo{{loop.index}}">
                                     <table class="table table-condensed">
                                         {% for k,v in configs[key].items() %}
                                         {% if k != 'name' %}
