@@ -80,10 +80,11 @@ def env_scan():
 
 @app.route("/configuration")
 def configuration():
-    device_configs = []
     config = kvs.get(keys.CONFIG)
-    if config.get('devices'):
-        device_configs = config.get('devices')
+    if config is not None:
+        device_configs = config.get('devices', {})
+    else:
+        device_configs = {}
     return render_template(
         'configurations.html',
         node_id=node_id,
