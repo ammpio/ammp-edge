@@ -12,7 +12,7 @@
     <h3 class="h4 mb-3">{{ status }}</h3>
     {% else %}
       <h3 class="h4 mb-3">{{ status }}</h3>
-      <form action="{{ url_for('auto-config') }}" method="post">
+      <form action="{{ url_for('auto_config') }}" method="post">
         <label for="width">Insert Tank Width in meters</label>
         <br>
         <input type="text" name="width"
