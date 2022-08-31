@@ -88,6 +88,7 @@ parts:
     build-environment:
       - PIP_EXTRA_INDEX_URL: https://ammplipy.ammp.io/
     stage-packages:
+      - libsnmp40
       - nmap
     override-prime: |
       craftctl default

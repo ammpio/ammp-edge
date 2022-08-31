@@ -4,9 +4,9 @@
         "order": "lsr"
     },
     "fields": {
-        "level": {"datatype": "float", "description": "liquid level", "register": 0, "words": 2},
-        "volume": {"datatype": "float", "description": "volume", "register": 2, "words": 2},
-        "quality": {"datatype": "float", "description": "quality", "register": 4, "words": 2},
+        "level": {"datatype": "float", "description": "Liquid level", "register": 0, "words": 2},
+        "volume": {"datatype": "float", "description": "Volume", "register": 2, "words": 2, "unit": "L"},
+        "quality": {"datatype": "float", "description": "Quality", "register": 4, "words": 2},
         "alarm_state_1": {"datatype": "uint16", "description": "1st alarm state", "register": 6, "words": 1},
         "alarm_state_2": {"datatype": "uint16", "description": "2nd alarm state", "register": 7, "words": 1},
         "alarm_state_3": {"datatype": "uint16", "description": "3rd alarm state", "register": 8, "words": 1},

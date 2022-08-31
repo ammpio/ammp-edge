@@ -1,3 +1,5 @@
+#![feature(let_chains)]
+
 mod argsets;
 mod command;
 mod constants;

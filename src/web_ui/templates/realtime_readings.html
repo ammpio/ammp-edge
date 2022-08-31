@@ -58,7 +58,7 @@
                           <td class="w-50">
                             <span class="ml-5">{{ item['description'] or item['var'] }}</span>
                           </td>
-                          <td class="w-50">{{ item['value'] }} {{ item['unit'] }}</td>
+                          <td class="w-50">{{ item['value'] if item['value'] is not none else 'No data' }} {{ item['unit'] if item['value'] is not none else '' }}</td>
                         </tr>
                         {% endfor %}
                       </table>
