@@ -59,7 +59,7 @@
                             <span class="ml-5">{{ item['description'] or item['var'] }}</span>
                           </td>
                           <td class="w-50">
-                            {% if item['value'] is not none %}
+                            {% if item['value'] is defined and item['value'] is not none %}
                               {{ item['value'] }} {{ item['unit']}}
                             {% else %}
                               <div style="color: rgb(255, 100, 100)">No data</div>

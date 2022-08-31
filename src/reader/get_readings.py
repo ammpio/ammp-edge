@@ -286,7 +286,6 @@ def read_device(dev, readings, readout_q, dev_lock=None):
                     if val_b is None:
                         logger.warning('READ: [%s] Returned None for reading %s' % (
                             dev['id'], rdg['reading']))
-                        rdg['value'] = None
                         continue
 
                 except Exception:
