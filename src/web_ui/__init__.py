@@ -113,7 +113,7 @@ def realtime_readings():
     )
 
 
-@ app.route("/network-scan")
+@app.route("/network-scan")
 def network_scan():
     interface = request.args.get('interface')
 
@@ -134,7 +134,7 @@ def network_scan():
     )
 
 
-@ app.route("/wifi-ap")
+@app.route("/wifi-ap")
 def wifi_ap():
     args = dict(
         disabled=request.args.get('disabled', type=int)
@@ -165,7 +165,7 @@ def wifi_ap():
     )
 
 
-@ app.route("/custom-actions")
+@app.route("/custom-actions")
 def wifi_ap_status():
     args = dict(
         action=request.args.get('action', type=str)
@@ -187,7 +187,7 @@ def wifi_ap_status():
     )
 
 
-@ app.route("/auto-config", methods=['GET', 'POST'])
+@app.route("/auto-config", methods=['GET', 'POST'])
 def auto_config():
     if request.method == 'POST':
         try:
