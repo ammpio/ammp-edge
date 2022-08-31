@@ -82,13 +82,13 @@ def env_scan():
 def configuration():
     config = kvs.get(keys.CONFIG)
     if config is not None:
-        device_configs = config.get('devices', {})
+        devices = config.get('devices', {})
     else:
-        device_configs = {}
+        devices = {}
     return render_template(
-        'configurations.html',
+        'configuration.html',
         node_id=node_id,
-        configs=device_configs
+        devices=devices
     )
 
 

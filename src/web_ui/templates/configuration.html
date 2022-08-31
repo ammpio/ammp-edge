@@ -37,12 +37,12 @@ View Configurations - AMMP Edge {{ node_id }}
                         </tr>
                     </thead>
                     <tbody>
-                        {% for key in configs %}
+                        {% for key in devices %}
                         <tr>
                             <td data-toggle="collapse" data-target="#demo{{loop.index}}"
                                 class="accordion-toggle clickable d-flex align-items-center">
                                 <span class="material-icons chev-down">&#xe5cf;</span>
-                                <span>{{ configs[key]['name'] }}</span>
+                                <span>{{ devices[key]['name'] }}</span>
                             </td>
                             <td></td>
                         </tr>
@@ -50,7 +50,7 @@ View Configurations - AMMP Edge {{ node_id }}
                             <td colspan="12" class="hiddenRow">
                                 <div class="accordian-body collapse show" id="demo{{loop.index}}">
                                     <table class="table table-condensed">
-                                        {% for k,v in configs[key].items() %}
+                                        {% for k,v in devices[key].items() %}
                                         {% if k != 'name' %}
                                         <tr class="detail">
                                             <td class="w-50">
