@@ -78,6 +78,20 @@ def env_scan():
     )
 
 
+@app.route("/configuration")
+def configuration():
+    config = kvs.get(keys.CONFIG)
+    if config is not None:
+        devices = config.get('devices', {})
+    else:
+        devices = {}
+    return render_template(
+        'configuration.html',
+        node_id=node_id,
+        devices=devices
+    )
+
+
 @app.route("/realtime-readings")
 def realtime_readings():
     device_readings = None
