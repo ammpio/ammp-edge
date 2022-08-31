@@ -94,7 +94,6 @@ def configuration():
 
 @app.route("/realtime-readings")
 def realtime_readings():
-    device_readings = None
     is_loaded = False
     timestamp = None
     with KVCache() as kvc:
