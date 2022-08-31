@@ -1,0 +1,52 @@
+.hiddenRow {
+    padding: 0 !important;
+}
+
+body {
+    font-family: monospace;
+    color: #444;
+    padding: 20px;
+}
+
+table,
+th,
+td {
+    border-collapse: collapse;
+}
+
+th {
+    text-align: left !important;
+}
+
+table {
+    margin: auto;
+}
+
+th,
+td {
+    padding: 15px;
+}
+
+.detail>td {
+    background-color: white !important;
+    border-top: 0px !important;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.space-between {
+    height: 10px;
+}
+
+.row:before,
+.row:after {
+    width: 0px;
+    height: 0px;
+}
+
+.clickable {
+    cursor: pointer;
+}
+
+.accordion-toggle[aria-expanded="true"] .chev-down {
+    transform: rotate(180deg);
+} 
