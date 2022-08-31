@@ -143,3 +143,5 @@ HOST_IP_KEY = 'ipv4'
 HOST_MAC_KEY = 'mac'
 HOST_VENDOR_KEY = 'vendor'
 HOST_PORTS_KEY = 'ports'
+
+MIN_NETMASK_BITS_TO_SCAN = 22
