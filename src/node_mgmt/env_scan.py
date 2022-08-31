@@ -23,6 +23,7 @@ from node_mgmt.constants import (
     HOST_MAC_KEY,
     HOST_PORTS_KEY,
     HOST_VENDOR_KEY,
+    MIN_NETMASK_BITS_TO_SCAN,
     MODTCP_FIELD_KEY,
     MODTCP_PORT,
     MODTCP_RESULT_KEY,
@@ -140,6 +141,8 @@ class NetworkEnv():
             this_ip_addr = self.default_ip
         if not netmask_bits:
             netmask_bits = self.default_netmask_bits
+        if netmask_bits < MIN_NETMASK_BITS_TO_SCAN:
+            netmask_bits = MIN_NETMASK_BITS_TO_SCAN
 
         net_to_scan = this_ip_addr + '/' + str(netmask_bits)
 
