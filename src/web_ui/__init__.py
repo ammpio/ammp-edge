@@ -189,36 +189,36 @@ def wifi_ap_status():
 
 @app.route("/auto-config", methods=['GET', 'POST'])
 def auto_config():
+    tank_dimensions = None
     if request.method == 'POST':
-        try:
-            width = float(request.form['width'])
-            length = float(request.form['length'])
-            height = float(request.form['height'])
-        except ValueError:
-            width, length, height = None, None, None
-        if not all([width, length, height]):
-            return render_template(
-                'auto_config.html',
-                node_id=node_id,
-                confirmed=0,
-                status='Please input valid numbers in all Tank Dimensions fields'
-            )
-
-        tank_dimensions = {'width': width, 'length': length, 'height': height}
+        tank_input_option = request.form['showTankInputOptions']
+        if tank_input_option == 'yes':
+            try:
+                width = float(request.form['width'])
+                length = float(request.form['length'])
+                height = float(request.form['height'])
+            except ValueError:
+                width, length, height = None, None, None
+            if not all([width, length, height]):
+                return render_template(
+                    'auto_config.html',
+                    node_id=node_id,
+                    confirmed=0,
+                    status='Please input valid numbers in all Tank Dimensions fields'
+                )
+            tank_dimensions = {'width': width, 'length': length, 'height': height}
         trigger_config_generation(Node(), tank_dimensions)
         return render_template(
             'auto_config.html',
             node_id=node_id,
             confirmed=1,
-            status=f'Tank Dimensions: {width}m X {length}m X {height}m submitted. Automatic configuration pending.'
+            status=f'Automatic configuration pending.'
         )
 
-    status = 'Tank dimensions not set'
     return render_template(
         'auto_config.html',
         node_id=node_id,
-        confirmed=None,
-        status=status
+        confirmed=None
     )
 
 
