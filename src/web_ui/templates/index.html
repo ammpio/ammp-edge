@@ -48,11 +48,26 @@
       <div style="height: 30px"></div>
       
       <p><b><a href="/realtime-readings">📈 Real-time data readings</a></b></p>
-      <p><b><a href="/env-scan">📡 Do a full site scan</a></b></p>
+      <p><b><a id="envScan" href="/env-scan">🔮 Full site scan & Automatic configuration</a></b></p>
       <p><a href="/configuration">⚙️ View Configuration</a></p>
-      <p><a href="/auto-config">🔮 Automatic configuration</a></p>
       <p><a href="/wifi-ap">📶 Wifi access point control</a></p>
       <p><a href="/custom-actions">🛠 Custom actions</a></p>
     </div>
+    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-modal="true"
+    role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
+                <button type="button" class="close" aria-label="Close" onclick="closeModal()">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            
+        </div>
+    </div>
+</div>
+<div class="modal-backdrop fade show" id="backdrop" style="display: none;"></div>
+
 
 {% endblock content %}

@@ -267,7 +267,8 @@ class NetworkEnv():
                 or MODTCP_PORT not in \
                     [int(p) for p in h.get(HOST_PORTS_KEY, [])]:
                 continue
-            host_vendor = h[HOST_VENDOR_KEY]
+            # host_vendor = h[HOST_VENDOR_KEY]
+            host_vendor = 'vendor'
             host_ip = h[HOST_IP_KEY]
             h[MODTCP_RESULT_KEY] = []
             result_for_unit = self.modbus_read(host_vendor, host_ip)
@@ -348,7 +349,9 @@ class EnvScanner(object):
             'serial_scan': serial_devices,
             'speedwire_serials': speedwire_serials
         }
-
+        with KVCache() as kvc:
+            kvc.set(keys.LAST_ENV_SCAN, scan_result)
+            logger.info(f"ENV_SCAN [cache]: Successfully saved")
         return scan_result
 
 

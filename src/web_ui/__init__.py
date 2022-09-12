@@ -11,6 +11,7 @@ from node_mgmt import EnvScanner, NetworkEnv, Node, get_ssh_fingerprint
 from node_mgmt.commands import (holykell_sensor_address_7,
                                 holykell_sensor_address_8, imt_sensor_address,
                                 trigger_config_generation)
+from node_mgmt.commands import env_scan as do_env_scan
 
 logging.basicConfig(format='%(name)s [%(levelname)s] %(message)s', level='INFO')
 logger = logging.getLogger(__name__)
@@ -62,20 +63,56 @@ def index():
     )
 
 
-@app.route("/env-scan")
+@app.route("/env-scan", methods=['GET', 'POST'])
 def env_scan():
-    try:
-        scanner = EnvScanner()
-        scan_result = scanner.do_scan()
-    except Exception as e:
-        logger.exception("Exception while doing scan")
-        return f"Error: {e}"
+    scan_result = None
+    tank_dimensions = None
+    template = 'env_scan.html'
+    if request.method == 'GET':
+        try:
+            scanner = EnvScanner()
+            scan_result = scanner.do_scan()
+        except Exception as e:
+            logger.exception("Exception while doing scan")
+            return f"Error: {e}"
+        return render_template(
+            template,
+            node_id=node_id,
+            scan_result=scan_result
+        )
+    elif request.method == 'POST':
+        with KVCache() as kvc:
+            scan_result = kvc.get(keys.LAST_ENV_SCAN)
+        tank_input_option = request.form['showTankInputOptions']
+        if tank_input_option == 'yes':
+            try:
+                width = float(request.form['width'])
+                length = float(request.form['length'])
+                height = float(request.form['height'])
+            except ValueError:
+                width, length, height = None, None, None
+            if not all([width, length, height]):
+                return render_template(
+                    template,
+                    node_id=node_id,
+                    status={
+                        "code": "ERROR",
+                        "desc": "Please input valid numbers in all Tank Dimensions fields"
+                    },
+                    scan_result=scan_result
+                )
+            tank_dimensions = {'width': width, 'length': length, 'height': height}
 
-    return render_template(
-        'env_scan.html',
-        node_id=node_id,
-        scan_result=scan_result
-    )
+        trigger_config_generation(Node(), tank_dimensions)
+        return render_template(
+            template,
+            node_id=node_id,
+            status={
+                "code": "SUCCESS",
+                "desc": "Your request has been submitted successfully!"
+            },
+            scan_result=scan_result
+        )
 
 
 @app.route("/configuration")
@@ -184,41 +221,6 @@ def wifi_ap_status():
         node_id=node_id,
         action_requested=args.get('action'),
         action_result=action_result
-    )
-
-
-@app.route("/auto-config", methods=['GET', 'POST'])
-def auto_config():
-    tank_dimensions = None
-    if request.method == 'POST':
-        tank_input_option = request.form['showTankInputOptions']
-        if tank_input_option == 'yes':
-            try:
-                width = float(request.form['width'])
-                length = float(request.form['length'])
-                height = float(request.form['height'])
-            except ValueError:
-                width, length, height = None, None, None
-            if not all([width, length, height]):
-                return render_template(
-                    'auto_config.html',
-                    node_id=node_id,
-                    confirmed=0,
-                    status='Please input valid numbers in all Tank Dimensions fields'
-                )
-            tank_dimensions = {'width': width, 'length': length, 'height': height}
-        trigger_config_generation(Node(), tank_dimensions)
-        return render_template(
-            'auto_config.html',
-            node_id=node_id,
-            confirmed=1,
-            status=f'Automatic configuration pending.'
-        )
-
-    return render_template(
-        'auto_config.html',
-        node_id=node_id,
-        confirmed=None
     )
 
 

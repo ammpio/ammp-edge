@@ -1,6 +1,7 @@
 import logging
 import os
 from time import sleep
+from kvstore import keys, KVCache
 import serial
 import minimalmodbus
 
@@ -55,26 +56,23 @@ def env_scan(node):
     scan_result = scanner.do_scan()
     logger.info('Completed environment scan. Submitting results to API and MQTT')
     node.api.post_env_scan(scan_result)
-    if node.mqtt_client.publish(scan_result, topic=MQTT_STATE_TOPIC):
-        logger.info(f"ENV_SCAN [mqtt]: Successfully pushed")
-    else:
-        # For some reason the env_state wasn't pushed successfully
-        logger.warning(f"ENV_SCAN [mqtt]: Push failed")
 
 
 def trigger_config_generation(node, tank_dimensions=None):
-    logger.info('Starting environment scan')
-    scanner = EnvScanner()
-    scan_result = scanner.do_scan()
-    scan_result[GENERATE_NEW_CONFIG_FLAG] = True
+    logger.info('Starting autoconfig trigger')
+    last_env_scan = None
+    with KVCache() as kvc:
+        last_env_scan = kvc.get(keys.LAST_ENV_SCAN)
+    last_env_scan[GENERATE_NEW_CONFIG_FLAG] = True
     # Allow for more input parameters
-    scan_result[INPUT_PARAMETERS] = list()
+    last_env_scan[INPUT_PARAMETERS] = list()
     if tank_dimensions is not None and isinstance(tank_dimensions, dict):
         # first version only supports rectangular tanks
         tank_dimensions.update({'type': 'tank', 'shape': 'rectangular'})
-    scan_result[INPUT_PARAMETERS].append(tank_dimensions)
-    logger.info('Completed environment scan. Submitting results to MQTT Broker.')
-    if node.mqtt_client.publish(scan_result, topic=MQTT_STATE_TOPIC):
+    last_env_scan[INPUT_PARAMETERS].append(tank_dimensions)
+
+    logger.info('Submitting results to MQTT Broker.')
+    if node.mqtt_client.publish(last_env_scan, topic=MQTT_STATE_TOPIC):
         logger.info(f"ENV_SCAN [mqtt]: Successfully pushed")
     else:
         # For some reason the env_state wasn't pushed successfully
