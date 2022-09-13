@@ -267,8 +267,7 @@ class NetworkEnv():
                 or MODTCP_PORT not in \
                     [int(p) for p in h.get(HOST_PORTS_KEY, [])]:
                 continue
-            # host_vendor = h[HOST_VENDOR_KEY]
-            host_vendor = 'vendor'
+            host_vendor = h[HOST_VENDOR_KEY]
             host_ip = h[HOST_IP_KEY]
             h[MODTCP_RESULT_KEY] = []
             result_for_unit = self.modbus_read(host_vendor, host_ip)
