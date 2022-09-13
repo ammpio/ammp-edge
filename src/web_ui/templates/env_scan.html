@@ -87,8 +87,16 @@
     Generate configuration using this scan result
   </button>
   {% if status %}
-    <div class="{% if status['code'] == 'SUCCESS' %} text-success {% else %} text-danger {% endif %}">
-      {{ status['desc'] }}
+    <div>
+       <div class="{% if status['code'] == 'SUCCESS' %} text-success {% else %} text-danger {% endif %}">
+          {{ status['desc'] }}
+       </div>
+      <br>
+      {% if status['info'] %}
+        {% autoescape false %}
+          {{ status['info'] }}  
+        {% endautoescape %}
+      {% endif %}
     </div>
   {% endif %}
   <form class="collapse w-75 mx-auto" action="{{ url_for('env_scan') }}" method="post" id="tankForm">

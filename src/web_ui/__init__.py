@@ -65,9 +65,9 @@ def index():
 
 @app.route("/env-scan", methods=['GET', 'POST'])
 def env_scan():
+    template = 'env_scan.html'
     scan_result = None
     tank_dimensions = None
-    template = 'env_scan.html'
     if request.method == 'GET':
         try:
             scanner = EnvScanner()
@@ -109,7 +109,9 @@ def env_scan():
             node_id=node_id,
             status={
                 "code": "SUCCESS",
-                "desc": "Your request has been submitted successfully!"
+                "desc": "Your request has been submitted successfully!",
+                "info": "It might take a few minutes for the configbe generated. <br>After that, you can verify the \
+                    config at <a href='/configuration'>View Configuration</a>"
             },
             scan_result=scan_result
         )

@@ -3,7 +3,17 @@
 {% block title %}
   {{ node_id }}
 {% endblock title %}
-
+{% block extra_script_src %}
+  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+    integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+    crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.3/dist/umd/popper.min.js"
+    integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49"
+    crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.1.3/dist/js/bootstrap.min.js"
+    integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy"
+    crossorigin="anonymous"></script>
+{% endblock extra_script_src %}
 {% block content %}
     <div class="text-center mb-4">
       <h1 class="h3 mb-3">AMMP-edge node ID {{ node_id }}</h1>
@@ -27,7 +37,6 @@
 
       <div style="height: 50px"></div>
       <h3 class="h4 mb-3">Network interfaces</h3>
-
       <table class="table-bordered table-striped" style="width: 50%">
         <tr>
           <th>Interface</th>
@@ -35,6 +44,7 @@
           <th>IP/Netmask</th>
           <th>Scan</th>
         </tr>
+        
         {% for interface in network_interfaces %}
         <tr>
           <td>{{ interface['name'] }}</td>
@@ -48,26 +58,37 @@
       <div style="height: 30px"></div>
       
       <p><b><a href="/realtime-readings">📈 Real-time data readings</a></b></p>
-      <p><b><a id="envScan" href="/env-scan">🔮 Full site scan & Automatic configuration</a></b></p>
+      <p><b><a href="/env-scan" id="envScan" >🔮 Full site scan & Automatic configuration</a></b></p>
       <p><a href="/configuration">⚙️ View Configuration</a></p>
       <p><a href="/wifi-ap">📶 Wifi access point control</a></p>
       <p><a href="/custom-actions">🛠 Custom actions</a></p>
     </div>
-    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-modal="true"
-    role="dialog">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
-                <button type="button" class="close" aria-label="Close" onclick="closeModal()">
-                    <span aria-hidden="true">×</span>
-                </button>
-            </div>
-            
-        </div>
-    </div>
-</div>
-<div class="modal-backdrop fade show" id="backdrop" style="display: none;"></div>
-
+    <div class="modal fade" id="render_page" role="dialog">
+      <div class="modal-dialog">
+          <div class="modal-content">
+              <div class="modal-body">
+                  <div id="user_msg" align="left">Doing a full site scan... This could take 1-2 minutes </div>
+              </div>
+          </div>
+      </div>
+  </div>
 
 {% endblock content %}
+{% block extra_script %}
+  <script type="text/javascript">
+    $(document).ready(function() {
+      $("#envScan").click(function(evt) {
+        evt.preventDefault();
+        showModal().then(function() {
+          window.location.href="/env-scan"
+        })
+      });
+    });
+    
+    function showModal() {
+      return new Promise(function(resolve, reject) {
+        resolve($('#render_page').modal('show'));
+      })
+    }
+  </script>
+{% endblock extra_script %}
