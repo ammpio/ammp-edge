@@ -103,7 +103,7 @@
   {% endif %}
   <form class="collapse w-75 mx-auto" action="{{ url_for('env_scan') }}" method="post" id="tankForm">
     <div class="text-center">
-      <div>Does the system have one (or more) fuel sensor which requires information on tank dimension?</div>
+      <div>Does the system have a fuel sensor which requires information on tank dimension?</div>
       <div>
         <div class="form-check-inline">
           <input class="form-check-input" type="radio" name="showTankInputOptions" id="yesRadius" value="yes">
@@ -121,16 +121,16 @@
     </div>
     <div class="d-none m-4 w-50 mx-auto" id="tankInputSection">
       <div class="mb-3">
-        <label for="width" class="form-label">Insert Tank Width in meters</label>
-        <input type="text" placeholder="Tank Width [m]" name="width" class="form-control" aria-describedby="widthlHelp" value="{{ request.form['width'] }}">
+        <label for="width" class="form-label">Tank width [meters]</label>
+        <input type="text" placeholder="Width [m]" name="width" class="form-control" aria-describedby="widthlHelp" value="{{ request.form['width'] }}">
       </div>
       <div class="mb-3">
-        <label for="length" class="form-label">Insert Tank Length in meters</label>
-        <input type="text" placeholder="Tank Length [m]" name="length" class="form-control" value="{{ request.form['length'] }}">
+        <label for="length" class="form-label">Tank length [meters]</label>
+        <input type="text" placeholder="Length [m]" name="length" class="form-control" value="{{ request.form['length'] }}">
       </div>
       <div class="mb-3">
-        <label for="height" class="form-label">Insert Tank Height in meters</label>
-        <input type="text" placeholder="Tank Height [m]" name="height" class="form-control" value="{{ request.form['height'] }}">
+        <label for="height" class="form-label">Tank height [meters]</label>
+        <input type="text" placeholder="Height [m]" name="height" class="form-control" value="{{ request.form['height'] }}">
       </div>
     </div>
     <button class="btn btn-primary m-3 text-center" type="submit" form="tankForm">Submit</button>
