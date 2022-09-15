@@ -2,6 +2,8 @@ import logging
 from os import getenv, path
 import json
 import sqlite3
+import threading
+
 from kvstore.constants import SQLITE_STORE_REL_PATH, SQLITE_CACHE_ABS_PATH
 
 logger = logging.getLogger(__name__)
@@ -11,13 +13,20 @@ TABLENAME = 'kvstore'
 KEY_FIELD = 'key'
 VALUE_FIELD = 'value'
 
+# The locks are created globally, since there is a chance that more than one
+# instance of KVCache or KVStore would be created and used concurrently
+KVS_lock = threading.Lock()
+KVC_lock = threading.Lock()
+
 
 class KV:
-    def __init__(self, sqlite_db_path: str) -> None:
+    def __init__(self, sqlite_db_path: str, lock: threading.Lock) -> None:
         self._conn = sqlite3.connect(sqlite_db_path, check_same_thread=False)
         self._conn.set_trace_callback(logger.debug)
         self._cur = self._conn.cursor()
-        self.__initialize_db()
+        self._lock = lock
+        with self._lock:
+            self.__initialize_db()
 
     def __enter__(self):
         return self
@@ -50,15 +59,17 @@ class KV:
         return json.loads(bvalue)
 
     def __select(self, key: str) -> bytes:
-        self._cur.execute("SELECT value FROM 'kvstore' WHERE key = :key", {'key': key})
-        return self._cur.fetchone()[0]
+        with self._lock:
+            self._cur.execute("SELECT value FROM 'kvstore' WHERE key = :key", {'key': key})
+            return self._cur.fetchone()[0]
 
     def __upsert(self, key: str, value: bytes) -> None:
-        self._cur.execute(
-            f'''INSERT INTO '{TABLENAME}' ({KEY_FIELD}, {VALUE_FIELD}) values (:key, :value)
-            ON CONFLICT({KEY_FIELD}) DO UPDATE SET {VALUE_FIELD}=:value''', {'key': key, 'value': value}
-        )
-        self._conn.commit()
+        with self._lock:
+            self._cur.execute(
+                f'''INSERT INTO '{TABLENAME}' ({KEY_FIELD}, {VALUE_FIELD}) values (:key, :value)
+                ON CONFLICT({KEY_FIELD}) DO UPDATE SET {VALUE_FIELD}=:value''', {'key': key, 'value': value}
+            )
+            self._conn.commit()
 
     def get(self, key: str, default=None):
         try:
@@ -76,9 +87,9 @@ class KV:
 class KVStore(KV):
     def __init__(self) -> None:
         SQLITE_STORE_DB_PATH = path.join(getenv('SNAP_COMMON', './'), SQLITE_STORE_REL_PATH)
-        KV.__init__(self, SQLITE_STORE_DB_PATH)
+        KV.__init__(self, SQLITE_STORE_DB_PATH, KVS_lock)
 
 
 class KVCache(KV):
     def __init__(self) -> None:
-        KV.__init__(self, SQLITE_CACHE_ABS_PATH)
+        KV.__init__(self, SQLITE_CACHE_ABS_PATH, KVC_lock)

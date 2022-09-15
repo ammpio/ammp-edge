@@ -27,7 +27,6 @@
 
       <div style="height: 50px"></div>
       <h3 class="h4 mb-3">Network interfaces</h3>
-
       <table class="table-bordered table-striped" style="width: 50%">
         <tr>
           <th>Interface</th>
@@ -35,6 +34,7 @@
           <th>IP/Netmask</th>
           <th>Scan</th>
         </tr>
+        
         {% for interface in network_interfaces %}
         <tr>
           <td>{{ interface['name'] }}</td>
@@ -48,9 +48,8 @@
       <div style="height: 30px"></div>
       
       <p><b><a href="/realtime-readings">📈 Real-time data readings</a></b></p>
-      <p><b><a href="/env-scan">📡 Do a full site scan</a></b></p>
+      <p><b><a href="/env-scan" id="envScan" >🔮 Full site scan & Automatic configuration</a></b></p>
       <p><a href="/configuration">⚙️ View Configuration</a></p>
-      <p><a href="/auto-config">🔮 Automatic configuration</a></p>
       <p><a href="/wifi-ap">📶 Wifi access point control</a></p>
       <p><a href="/custom-actions">🛠 Custom actions</a></p>
     </div>
