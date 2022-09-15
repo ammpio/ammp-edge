@@ -348,7 +348,9 @@ class EnvScanner(object):
             'serial_scan': serial_devices,
             'speedwire_serials': speedwire_serials
         }
-
+        with KVCache() as kvc:
+            kvc.set(keys.LAST_ENV_SCAN, scan_result)
+            logger.info(f"ENV_SCAN [cache]: Successfully saved")
         return scan_result
 
 

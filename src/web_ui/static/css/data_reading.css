@@ -47,7 +47,7 @@ td {
     cursor: pointer;
 }
 
-.accordion-toggle[aria-expanded="true"] .chev-down {
+.accordion-toggle[aria-expanded="false"] .chev-down {
     transform: rotate(180deg);
 }
 

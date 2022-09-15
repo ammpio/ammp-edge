@@ -62,20 +62,55 @@ def index():
     )
 
 
-@app.route("/env-scan")
+@app.route("/env-scan", methods=['GET', 'POST'])
 def env_scan():
-    try:
-        scanner = EnvScanner()
-        scan_result = scanner.do_scan()
-    except Exception as e:
-        logger.exception("Exception while doing scan")
-        return f"Error: {e}"
+    template = 'env_scan.html'
+    scan_result = None
+    tank_dimensions = None
+    if request.method == 'GET':
+        try:
+            scanner = EnvScanner()
+            scan_result = scanner.do_scan()
+        except Exception as e:
+            logger.exception("Exception while doing scan")
+            return f"Error: {e}"
+        return render_template(
+            template,
+            node_id=node_id,
+            scan_result=scan_result
+        )
+    elif request.method == 'POST':
+        tank_input_option = request.form['showTankInputOptions']
+        if tank_input_option == 'yes':
+            try:
+                width = float(request.form['width'])
+                length = float(request.form['length'])
+                height = float(request.form['height'])
+            except ValueError:
+                width, length, height = None, None, None
+            if not all([width, length, height]):
+                return render_template(
+                    template,
+                    node_id=node_id,
+                    status={
+                        "code": "ERROR",
+                        "desc": "Please input valid numbers in all Tank Dimensions fields"
+                    },
+                )
+            tank_dimensions = {'width': width, 'length': length, 'height': height}
 
-    return render_template(
-        'env_scan.html',
-        node_id=node_id,
-        scan_result=scan_result
-    )
+        trigger_config_generation(Node(), tank_dimensions)
+        return render_template(
+            template,
+            node_id=node_id,
+            status={
+                "code": "SUCCESS",
+                "desc": "Your request has been submitted successfully!",
+                "info": "It might take a few minutes for the configbe generated. <br>After that, you can verify the \
+                    config at <a href='/configuration'>View Configuration</a>"
+            },
+            scan_result=scan_result
+        )
 
 
 @app.route("/configuration")
@@ -83,12 +118,15 @@ def configuration():
     config = kvs.get(keys.CONFIG)
     if config is not None:
         devices = config.get('devices', {})
+        config_ts = config.get('timestamp')
     else:
         devices = {}
+        config_ts = None
     return render_template(
         'configuration.html',
         node_id=node_id,
-        devices=devices
+        devices=devices,
+        timestamp=config_ts
     )
 
 
@@ -184,41 +222,6 @@ def wifi_ap_status():
         node_id=node_id,
         action_requested=args.get('action'),
         action_result=action_result
-    )
-
-
-@app.route("/auto-config", methods=['GET', 'POST'])
-def auto_config():
-    if request.method == 'POST':
-        try:
-            width = float(request.form['width'])
-            length = float(request.form['length'])
-            height = float(request.form['height'])
-        except ValueError:
-            width, length, height = None, None, None
-        if not all([width, length, height]):
-            return render_template(
-                'auto_config.html',
-                node_id=node_id,
-                confirmed=0,
-                status='Please input valid numbers in all Tank Dimensions fields'
-            )
-
-        tank_dimensions = {'width': width, 'length': length, 'height': height}
-        trigger_config_generation(Node(), tank_dimensions)
-        return render_template(
-            'auto_config.html',
-            node_id=node_id,
-            confirmed=1,
-            status=f'Tank Dimensions: {width}m X {length}m X {height}m submitted. Automatic configuration pending.'
-        )
-
-    status = 'Tank dimensions not set'
-    return render_template(
-        'auto_config.html',
-        node_id=node_id,
-        confirmed=None,
-        status=status
     )
 
 
