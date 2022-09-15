@@ -17,6 +17,7 @@
 
 {% block content %}
 <div class="text-center mb-4">
+  {% if scan_result %}
   <h1 class="h3 mb-3">Site scan results {% if node_id %} for {{ node_id }} {% endif %}</h1>
 
   <div style="height: 30px"></div>
@@ -73,7 +74,6 @@
     </tr>
     {% endfor %}
   </table>
-
   <div style="height: 30px"></div>
   <div class="card text-left mx-auto" style="width: 75%;">
     <div class="card-body">
@@ -83,6 +83,8 @@
       </p>
     </div>
   </div>
+  {% endif %}
+
   <button class="btn m-3 text-center" id="toggleAutoConfig" data-toggle="collapse" type="button" data-target="#tankForm" aria-expanded="false" aria-controls="tankForm">
     Generate configuration using this scan result
   </button>

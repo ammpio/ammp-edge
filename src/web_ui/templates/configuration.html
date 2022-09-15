@@ -23,7 +23,6 @@ View Configurations - AMMP Edge {{ node_id }}
 {% block content %}
 <div class="text-center mb-4">
     <h1 class="h3 mb-3">Device configurations</h1>
-    <div style="height: 30px"></div>
 </div>
 <div class="container">
     <div class="col-md-12">
@@ -31,6 +30,10 @@ View Configurations - AMMP Edge {{ node_id }}
             <div class="panel-body">
                 <table class="table table-condensed table-striped">
                     <thead>
+                        <tr>
+                            <td class="border-top-0 w-50">Last updated (UTC timezone):</td>
+                            <td class="border-top-0 w-50">{{ timestamp }}</td>
+                          </tr>
                         <tr>
                             <th class="border-top-0 w-50">Device</th>
                             <th class="border-top-0 w-50">Config</th>

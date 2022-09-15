@@ -80,8 +80,6 @@ def env_scan():
             scan_result=scan_result
         )
     elif request.method == 'POST':
-        with KVCache() as kvc:
-            scan_result = kvc.get(keys.LAST_ENV_SCAN)
         tank_input_option = request.form['showTankInputOptions']
         if tank_input_option == 'yes':
             try:
@@ -98,7 +96,6 @@ def env_scan():
                         "code": "ERROR",
                         "desc": "Please input valid numbers in all Tank Dimensions fields"
                     },
-                    scan_result=scan_result
                 )
             tank_dimensions = {'width': width, 'length': length, 'height': height}
 
@@ -121,12 +118,15 @@ def configuration():
     config = kvs.get(keys.CONFIG)
     if config is not None:
         devices = config.get('devices', {})
+        config_ts = config.get('timestamp')
     else:
         devices = {}
+        config_ts = None
     return render_template(
         'configuration.html',
         node_id=node_id,
-        devices=devices
+        devices=devices,
+        timestamp=config_ts
     )
 
 
