@@ -23,7 +23,7 @@ class Node(object):
 
         logger.info(f"Node ID: {self.node_id}")
 
-        self.api = EdgeAPI()
+        self.api = EdgeAPI(self.node_id, self.access_key)
         logger.info("Instantiated API")
 
         self.mqtt_client = MQTTPublisher(
