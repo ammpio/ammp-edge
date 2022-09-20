@@ -13,13 +13,11 @@ REMOTE_API_ROOT = 'https://edge.ammp.io/api/v0/'
 
 
 class EdgeAPI(object):
-    def __init__(self, root: str = REMOTE_API_ROOT) -> None:
-
-        self._kvs = KVStore()
+    def __init__(self, node_id: str, access_key: str, root: str = REMOTE_API_ROOT) -> None:
 
         self.remote_api_root = root
-        self.node_id = self._kvs.get(keys.NODE_ID)
-        self.access_key = self._kvs.get(keys.ACCESS_KEY)
+        self.node_id = node_id
+        self.access_key = access_key
 
         self._base_url = f"{self.remote_api_root}nodes/{self.node_id}"
 

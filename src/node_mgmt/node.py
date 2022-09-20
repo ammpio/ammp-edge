@@ -23,7 +23,7 @@ class Node(object):
 
         logger.info(f"Node ID: {self.node_id}")
 
-        self.api = EdgeAPI()
+        self.api = EdgeAPI(self.node_id, self.access_key)
         logger.info("Instantiated API")
 
         self.mqtt_client = MQTTPublisher(
@@ -33,8 +33,6 @@ class Node(object):
         logger.info("Instantiated MQTT")
 
         self.events = NodeEvents()
-
-        self.config = None
 
         if self.config is not None:
             # Configuration is available in DB; use this

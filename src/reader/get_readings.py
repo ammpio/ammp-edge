@@ -21,28 +21,28 @@ DEVICE_DEFAULT_TIMEOUT = 5
 DEVICE_READ_MAXTIMEOUT = 600
 
 
-def get_readings(node):
+def get_readings(config: dict, drivers: dict):
 
     # Work out all the readings that need to be taken, refactored by device
     dev_rdg = {}
 
-    for rdg in node.config['readings']:
+    for rdg in config['readings']:
         # Ignore readings that are explicitly disabled
         # (if 'enabled' key is missing altogether, assume enabled by default)
-        if not node.config['readings'][rdg].get('enabled', True):
+        if not config['readings'][rdg].get('enabled', True):
             continue
 
         # Get device and variable name for reading; if not available then move on
         try:
-            dev_id = node.config['readings'][rdg]['device']
-            var = node.config['readings'][rdg]['var']
+            dev_id = config['readings'][rdg]['device']
+            var = config['readings'][rdg]['var']
         except KeyError:
             continue
 
         # Ignore devices that are explicitly disabled in the devices configuration
         # (if 'enabled' key is missing altogether, assume enabled by default)
-        if dev_id in node.config['devices']:
-            dev = node.config['devices'][dev_id]
+        if dev_id in config['devices']:
+            dev = config['devices'][dev_id]
         else:
             logger.error(
                 'Reading from device %s requested, but device not defined. Skipping' % dev_id)
@@ -53,7 +53,7 @@ def get_readings(node):
 
         # Get the driver name
         drv_id = dev['driver']
-        if drv_id not in node.drivers:
+        if drv_id not in drivers:
             logger.error(
                 f"Reading using driver {drv_id} requested, but driver not found. Skipping device {dev_id}")
             continue
@@ -69,10 +69,10 @@ def get_readings(node):
         # Start by setting reading name
         rdict = {'reading': rdg, 'var': var}
         # If applicable, add common reading parameters from driver file (e.g. function code)
-        rdict.update(node.drivers[drv_id].get('common', {}))
+        rdict.update(drivers[drv_id].get('common', {}))
 
         try:
-            rdict.update(node.drivers[drv_id]['fields'][var])
+            rdict.update(drivers[drv_id]['fields'][var])
         except KeyError:
             logger.warning(
                 f"Variable {var} not found in driver {drv_id}, or driver definition malformed.")
@@ -85,7 +85,7 @@ def get_readings(node):
     return dev_rdg
 
 
-def get_readout(node):
+def get_readout(config: dict, drivers: dict):
     # 'readout' is a dict formatted for device-based readings. It also contains a timestamp, snap_rev and config_id
     try:
         snap_rev = int(os.getenv('SNAP_REVISION', 0))
@@ -97,11 +97,11 @@ def get_readout(node):
         'r': [],
         'm': {
             'snap_rev': snap_rev,
-            'config_id': node.config.get('config_id', '0')
+            'config_id': config.get('config_id', '0')
         }
     }
 
-    dev_rdg = get_readings(node)
+    dev_rdg = get_readings(config, drivers)
     # Set up queue in which to save readouts from the multiple threads that are reading each device
     readout_q = queue.Queue()
     jobs = []
@@ -117,7 +117,7 @@ def get_readout(node):
     # lock object for each.
     locks = {}
 
-    for dev_id, dev in node.config['devices'].items():
+    for dev_id, dev in config['devices'].items():
         if 'address' in dev:
             # Get the device or host name if available
             d = dev['address'].get('device') or dev['address'].get(
@@ -131,7 +131,7 @@ def get_readout(node):
             set_host_from_mac(dev['address'])
     # Set up threads for reading each of the devices
     for dev_id in dev_rdg:
-        dev = node.config['devices'][dev_id]
+        dev = config['devices'][dev_id]
         dev.update({'id': dev_id})
 
         try:
@@ -174,12 +174,12 @@ def get_readout(node):
     readout['m']['reading_duration'] = arrow.utcnow().float_timestamp - \
         readout['t']
 
-    if 'output' in node.config:
+    if 'output' in config:
         # Get additional processed values
-        output = get_output(dev_rdg, node.config['output'])
+        output = get_output(dev_rdg, config['output'])
         logger.debug(f"Calculated outputs: {output}")
         for output_field in output:
-            if output_field.get('device') in node.config['devices']:
+            if output_field.get('device') in config['devices']:
                 # The field needs to be added for a known device
                 add_to_device_readings(
                     readout['r'],
@@ -194,7 +194,7 @@ def get_readout(node):
                     readout['r'],
                     OUTPUT_READINGS_DEV_ID,
                     {
-                        VENDOR_ID_KEY: node.config.get(CONFIG_CALC_VENDOR_ID),
+                        VENDOR_ID_KEY: config.get(CONFIG_CALC_VENDOR_ID),
                         output_field['field']: output_field.get('value')
                     }
                 )
