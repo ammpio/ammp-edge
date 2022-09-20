@@ -34,8 +34,6 @@ class Node(object):
 
         self.events = NodeEvents()
 
-        self.config = None
-
         if self.config is not None:
             # Configuration is available in DB; use this
             logger.info('Using stored configuration from database')
