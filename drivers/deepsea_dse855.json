@@ -25,6 +25,7 @@
         "utilization_L3": {"description": "Gen L3 percentage of full power", "register": 1620, "words": 1, "datatype": "int16", "multiplier": 0.1, "unit": "%", "typecast": "float", "valuemap": {"0x7fff": null, "0xffff": null}},
         "E": {"description": "Generator positive energy", "register": 1800, "words": 2, "datatype": "uint32", "multiplier": 100, "unit": "Wh", "typecast": "float", "valuemap": {"0x7fffffff": null, "0xffffffff": null}},
         "fuel_used": {"description": "Fuel used", "register": 1826, "words": 2, "datatype": "uint32", "multiplier": 1, "unit": "L", "typecast": "float", "valuemap": {"0x7fffffff": null, "0xffffffff": null}},
+        "fuel_level": {"description": "Fuel level", "register": 1027, "words": 1, "datatype": "int16", "multiplier": 1, "unit": "%", "typecast": "float", "valuemap": {"0x7fffffff": null,"0xffffffff": null}},
         "module_time": {"description": "Module Time since 1/1/1970", "register": 4911, "words": 2, "datatype": "uint32", "multiplier": 1, "unit": "s", "typecast": "float", "valuemap": {"0x7fffffff": null, "0xffffffff": null}},
         "alarm_status": {"description": "Alarm status", "register": 774, "words": 1, "datatype": "uint16", "typecast": "int"},
         "freq": {"description": "Generator frequency", "register": 1031, "words": 1, "datatype": "uint16", "typecast": "float", "multiplier": 0.1, "unit": "Hz", "valuemap": {"0x7fff": null, "0xffff": null}},
