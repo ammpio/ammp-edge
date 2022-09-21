@@ -59,9 +59,8 @@ class KV:
         return json.loads(bvalue)
 
     def __select(self, key: str) -> bytes:
-        with self._lock:
-            self._cur.execute("SELECT value FROM 'kvstore' WHERE key = :key", {'key': key})
-            return self._cur.fetchone()[0]
+        self._cur.execute("SELECT value FROM 'kvstore' WHERE key = :key", {'key': key})
+        return self._cur.fetchone()[0]
 
     def __upsert(self, key: str, value: bytes) -> None:
         with self._lock:

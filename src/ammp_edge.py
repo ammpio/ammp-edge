@@ -34,6 +34,8 @@ __version__ = '1.0'
 
 
 def reading_cycle(node: Node, pusher: DataPusher, sc=None):
+    config = node.config
+
     # Check if scheduler has been applied, and if so schedule this function to be run again
     # at the appropriate interval before taking the readings
     if sc:
@@ -44,13 +46,13 @@ def reading_cycle(node: Node, pusher: DataPusher, sc=None):
         # With the round-time option, any readings immediately following ones that take too long will have
         # non-round timestamps, but if possible ones following that should "catch up". That said,
         # drift can still accumulate and if it becomes greater than 'interval', a reading will be skipped.
-        if node.config.get('read_roundtime'):
-            sc.enterabs(roundtime(node.config['read_interval']), 1, reading_cycle, (node, pusher, sc))
+        if config.get('read_roundtime'):
+            sc.enterabs(roundtime(config['read_interval']), 1, reading_cycle, (node, pusher, sc))
         else:
-            sc.enter(node.config['read_interval'], 1, reading_cycle, (node, pusher, sc))
+            sc.enter(config['read_interval'], 1, reading_cycle, (node, pusher, sc))
 
     try:
-        readout = get_readout(node)
+        readout = get_readout(config, node.drivers)
         pusher.push_readout(readout)
 
     except Exception:

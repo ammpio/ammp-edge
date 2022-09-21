@@ -1,11 +1,10 @@
 import logging
 import paho.mqtt.client as mqtt
 from time import sleep
-from kvstore import KVStore
 
 logger = logging.getLogger(__name__)
 
-CLIENT_ID_PREFIX = 'ammp-edge-'
+CLIENT_ID = 'ammp-edge'
 DEFAULT_QOS = 1
 
 # A note on the reading logic; the approach implemented here does the following:
@@ -23,16 +22,13 @@ DEFAULT_QOS = 1
 class Reader(object):
     def __init__(self, host: str = 'localhost', port: int = 1883, timeout: int = 3, **kwargs):
 
-        self._kvs = KVStore()
-        node_id = self.node_id = self._kvs.get('node:node_id', '')
-
         self._host = host
         self._port = port
         # Note that the timeout is the time to wait for data, not for establishing a connection
         # A timeout for connection is not supported by the Paho MQTT library
         self._timeout = timeout
 
-        self._client = mqtt.Client(client_id=CLIENT_ID_PREFIX + node_id, clean_session=False, **kwargs)
+        self._client = mqtt.Client(client_id=CLIENT_ID, clean_session=False, **kwargs)
 
         self._client.enable_logger(logger=logger)
 
