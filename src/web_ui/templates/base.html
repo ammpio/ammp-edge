@@ -13,6 +13,9 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
   </head>
   <body>
+    {% if request.path != '/' %}
+      <a href="/"> Back to home page</a>
+    {% endif %}
     {% block content %}
     {% endblock %}
     {% block extra_script %}
