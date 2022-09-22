@@ -16,6 +16,7 @@ use helpers::load_dotenv;
 const CMD_INIT: &str = "init";
 const CMD_KVS_GET: &str = "kvs-get";
 const CMD_KVS_SET: &str = "kvs-set";
+const CMD_MQTT_PUB_META: &str = "mqtt-pub-meta";
 const CMD_MQTT_SUB: &str = "mqtt-sub";
 const CMD_WEB_UI: &str = "web-ui";
 
@@ -36,10 +37,11 @@ fn main() -> Result<()> {
             key: args.free_from_str()?,
             value: args.free_from_str()?,
         }),
+        Some(CMD_MQTT_PUB_META) => { command::mqtt_pub_meta() },
         Some(CMD_MQTT_SUB) => { command::mqtt_sub(); Ok(()) },
         Some(CMD_WEB_UI) => { command::web_ui(); Ok(()) },
         _ => Err(anyhow!(
-            "Subcommand must be one of '{CMD_INIT}', '{CMD_KVS_GET}', '{CMD_KVS_SET}'"
+            "Subcommand must be one of '{CMD_INIT}', '{CMD_KVS_GET}', '{CMD_KVS_SET}', '{CMD_MQTT_PUB_META}'"
         )),
     }
 }
