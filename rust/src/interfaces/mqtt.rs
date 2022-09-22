@@ -95,7 +95,7 @@ pub fn publish_msgs(
         match notification {
             Ok(Event::Incoming(Packet::PubAck(_))) => expected_msg_acks -= 1,
             Err(e) => return Err(e.into()),
-            _ => continue,
+            _ => (),
         }
         if expected_msg_acks == 0 {
             break;
