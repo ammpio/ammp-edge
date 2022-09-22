@@ -22,6 +22,11 @@ static MQTT_BRIDGE_PORT: Lazy<u16> = Lazy::new(|| {
     defaults::MQTT_BRIDGE_PORT
 });
 
+pub struct MqttMessage {
+    pub topic: String,
+    pub payload: String,
+}
+
 pub fn get_rand_client_id(prefix: Option<String>) -> String {
     const RAND_ID_BYTES: usize = 3;
     let mut rand = [0u8; RAND_ID_BYTES];
@@ -46,44 +51,56 @@ pub fn client_conn(client_id: String, clean_session: Option<bool>) -> (Client, C
     Client::new(mqttoptions, 10)
 }
 
+#[allow(dead_code)]
 pub fn publish(
     mut client: Client,
-    topic: String,
-    payload: Vec<u8>,
+    msg: MqttMessage,
     retain: Option<bool>,
     qos: Option<QoS>,
 ) -> Result<()> {
-    if let Ok(payload_str) = String::from_utf8(payload.clone()) {
-        log::debug!("Publishing to {topic}: {payload_str}");
-    } else {
-        log::debug!("Publishing to {topic}");
-    }
+    log::debug!("Publishing to {}: {}", msg.topic, msg.payload);
+
     client
         .publish(
-            topic,
+            msg.topic,
             qos.unwrap_or(QoS::AtLeastOnce),
             retain.unwrap_or(false),
-            payload,
+            msg.payload.as_bytes(),
         )
         .map_err(Into::into)
 }
 
-pub fn publish_one(
-    topic: String,
-    payload: Vec<u8>,
+pub fn publish_msgs(
+    messages: Vec<MqttMessage>,
     retain: Option<bool>,
-    qos: Option<QoS>,
 ) -> Result<()> {
-    let (client, mut connection) = client_conn(get_rand_client_id(None), None);
-    publish(client, topic, payload, retain, qos)?;
+    let (mut client, mut connection) = client_conn(get_rand_client_id(None), None);
+
+    let mut expected_msg_acks = messages.len();
+
+    for msg in messages.into_iter() {
+        log::debug!("Publishing to {}: {}", msg.topic, msg.payload);
+    
+        client
+        .publish(
+            msg.topic,
+            QoS::AtLeastOnce,
+            retain.unwrap_or(false),
+            msg.payload.as_bytes(),
+        )?;
+    }
 
     for (_, notification) in connection.iter().enumerate() {
         log::debug!("Notification = {:?}", notification);
         match notification {
-            Ok(Event::Incoming(Packet::PubAck(_))) => break,
+            Ok(Event::Incoming(Packet::PubAck(_))) => expected_msg_acks -= 1,
             Err(e) => return Err(e.into()),
             _ => continue,
         }
+        if expected_msg_acks == 0 {
+            break;
+        }
     }
+    client.disconnect()?;
     Ok(())
 }
