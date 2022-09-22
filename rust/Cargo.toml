@@ -17,8 +17,7 @@ hex = "*"
 kvstore = { path = "kvstore" }
 log = "*"
 native-tls = "*"
-#nix = { version = "*", features = ["socket"] }
-nix = { git = "https://github.com/nix-rust/nix", features = ["socket"] }
+nix = { version = "*", features = ["socket"] }
 once_cell = "*"
 pico-args = "*"
 rouille = { version = "*", default-features = false }
@@ -26,6 +25,7 @@ rumqttc = { version = "*", default-features = false }
 rusqlite = { version = "*", features = ["serde_json"] }
 serde = {version = "*", features = ["derive"] }
 serde_json = "*"
+sys-info = "*"
 ureq = { version = "*", default-features = false, features = ["json", "native-tls"] }
 
 [dev-dependencies]
