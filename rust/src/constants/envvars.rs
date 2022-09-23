@@ -10,4 +10,5 @@ pub const LOG_LEVEL: &str = "LOGGING_LEVEL";
 pub const MQTT_BRIDGE_HOST: &str = "MQTT_BRIDGE_HOST";
 pub const MQTT_BRIDGE_PORT: &str = "MQTT_BRIDGE_PORT";
 
+pub const SNAP_ARCH: &str = "SNAP_ARCH";
 pub const SNAP_REVISION: &str = "SNAP_REVISION";
