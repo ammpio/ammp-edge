@@ -5,21 +5,28 @@ use anyhow::Result;
 use backoff::{retry_notify, Error, ExponentialBackoff};
 use sysinfo::{System, SystemExt};
 
-use crate::envvars::SNAP_REVISION;
+use crate::envvars::{SNAP_ARCH, SNAP_REVISION};
 use crate::helpers::get_ssh_fingerprint;
 use crate::interfaces::mqtt::{self, MqttMessage};
 
 fn construct_meta_msg() -> Vec<MqttMessage> {
-    let mut msgs = vec![
-        MqttMessage {
+    let mut msgs = vec![MqttMessage {
+        topic: "u/meta/boot_time".into(),
+        payload: System::new().boot_time().to_string(),
+    }];
+
+    if let Ok(snap_revision) = env::var(SNAP_REVISION) {
+        msgs.push(MqttMessage {
             topic: "u/meta/snap_rev".into(),
-            payload: env::var(SNAP_REVISION).unwrap_or_else(|_| "N/A".into()),
-        },
-        MqttMessage {
-            topic: "u/meta/boot_time".into(),
-            payload: System::new().boot_time().to_string(),
-        }
-    ];
+            payload: snap_revision,
+        })
+    }
+    if let Ok(arch) = env::var(SNAP_ARCH) {
+        msgs.push(MqttMessage {
+            topic: "u/meta/arch".into(),
+            payload: arch,
+        })
+    }
     if let Ok(ssh_fingerprint) = get_ssh_fingerprint() {
         msgs.push(MqttMessage {
             topic: "u/meta/ssh_fingerprint".into(),
@@ -31,9 +38,13 @@ fn construct_meta_msg() -> Vec<MqttMessage> {
 
 pub fn mqtt_pub_meta() -> Result<()> {
     let messages = construct_meta_msg();
+    log::info!("Publishing metadata: {:?}", messages);
     let res = mqtt::publish_msgs(&messages, Some(true), Some("local-pub-meta".into()));
     if let Err(e) = res {
-        log::error!("Error while publishing to MQTT: {e}\nMessages: {:?}", messages);
+        log::error!(
+            "Error while publishing to MQTT: {e}\nMessages: {:?}",
+            messages
+        );
     }
     // The command will log and ignore errors, and always return a success exit code.
     // This is a temporary workaround since snapd will try to run this by itself, without Mosquitto running
