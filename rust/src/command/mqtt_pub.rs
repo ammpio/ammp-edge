@@ -28,7 +28,7 @@ fn construct_meta_msg() -> Vec<MqttMessage> {
 
 
 pub fn mqtt_pub_meta() -> Result<()> {
-    let messages = construct_meta_msg()
+    let messages = construct_meta_msg();
 
     let publish_msgs = || {
         mqtt::publish_msgs(&messages, Some(true), Some("local-pub-meta".into()))
