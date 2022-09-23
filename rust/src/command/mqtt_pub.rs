@@ -6,19 +6,29 @@ use backoff::{retry_notify, Error, ExponentialBackoff};
 use sys_info::boottime;
 
 use crate::envvars::SNAP_REVISION;
+use crate::helpers::get_ssh_fingerprint;
 use crate::interfaces::mqtt::{self, MqttMessage};
 
-pub fn mqtt_pub_meta() -> Result<()> {
-    let messages = vec![
+fn construct_meta_msg() -> Vec<MqttMessage> {
+    vec![
         MqttMessage {
             topic: "u/meta/snap_rev".into(),
             payload: env::var(SNAP_REVISION).unwrap_or_else(|_| "N/A".into()),
         },
         MqttMessage {
-            topic: "u/meta/boottime".into(),
+            topic: "u/meta/boot_time".into(),
             payload: boottime().unwrap().tv_sec.to_string(),
         },
-    ];
+        MqttMessage {
+            topic: "u/meta/ssh_fingerprint".into(),
+            payload: get_ssh_fingerprint().unwrap_or("".into()),
+        },
+    ]
+}
+
+
+pub fn mqtt_pub_meta() -> Result<()> {
+    let messages = construct_meta_msg()
 
     let publish_msgs = || {
         mqtt::publish_msgs(&messages, Some(true), Some("local-pub-meta".into()))
