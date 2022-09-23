@@ -4,7 +4,7 @@ use tempfile::tempdir;
 
 use kvstore::KVDb;
 
-#[derive(Debug, Deserialize, Serialize, PartialEq)]
+#[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct Cat {
     name: String,
     lives: u64,

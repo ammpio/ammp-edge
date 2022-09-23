@@ -26,4 +26,13 @@ else
   rm -f $INCLUDE_DIR/mqtt-bridge-stage.conf
 fi
 
+# The persistence file mosquitto.db.new may be created in case of a power outage.
+# If this happens, corruption is likely, and it's best to clear the persistence store.
+# TODO: Identify more refined approach for dealing with this
+if [ -e $MOSQUITTO_DIR/mosquitto.db.new ]; then
+  echo 'Suspected corruption in Mosquitto persistence store; clearing'
+  rm -f $MOSQUITTO_DIR/mosquitto.db
+  mv $MOSQUITTO_DIR/mosquitto.db.new $MOSQUITTO_DIR/mosquitto.db.new.bak
+fi
+
 $SNAP/usr/sbin/mosquitto -c $CONFIG_FILE $@

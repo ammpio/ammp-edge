@@ -106,7 +106,7 @@ def env_scan():
             status={
                 "code": "SUCCESS",
                 "desc": "Your request has been submitted successfully!",
-                "info": "It might take a few minutes for the configbe generated. <br>After that, you can verify the \
+                "info": "It might take a few minutes for the config to be generated. <br>After that, you can verify the\
                     config at <a href='/configuration'>View Configuration</a>"
             },
             scan_result=scan_result
