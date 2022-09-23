@@ -71,19 +71,19 @@ pub fn publish(
 }
 
 pub fn publish_msgs(
-    messages: Vec<MqttMessage>,
+    messages: &Vec<MqttMessage>,
     retain: Option<bool>,
+    client_prefix: Option<String>,
 ) -> Result<()> {
-    let (mut client, mut connection) = client_conn(get_rand_client_id(None), None);
+    let (mut client, mut connection) = client_conn(get_rand_client_id(client_prefix), None);
 
     let mut expected_msg_acks = messages.len();
 
-    for msg in messages.into_iter() {
+    for msg in messages.iter() {
         log::debug!("Publishing to {}: {}", msg.topic, msg.payload);
-    
-        client
-        .publish(
-            msg.topic,
+
+        client.publish(
+            msg.topic.clone(),
             QoS::AtLeastOnce,
             retain.unwrap_or(false),
             msg.payload.as_bytes(),
