@@ -6,14 +6,20 @@ use backoff::{retry_notify, Error, ExponentialBackoff};
 use sysinfo::{System, SystemExt};
 
 use crate::envvars::{SNAP_ARCH, SNAP_REVISION};
-use crate::helpers::get_ssh_fingerprint;
+use crate::helpers::{get_ssh_fingerprint, now_epoch};
 use crate::interfaces::mqtt::{self, MqttMessage};
 
 fn construct_meta_msg() -> Vec<MqttMessage> {
-    let mut msgs = vec![MqttMessage {
-        topic: "u/meta/boot_time".into(),
-        payload: System::new().boot_time().to_string(),
-    }];
+    let mut msgs = vec![
+        MqttMessage {
+            topic: "u/meta/boot_time".into(),
+            payload: System::new().boot_time().to_string(),
+        },
+        MqttMessage {
+            topic: "u/meta/start_time".into(),
+            payload: now_epoch().to_string(),
+        },
+    ];
 
     if let Ok(snap_revision) = env::var(SNAP_REVISION) {
         msgs.push(MqttMessage {
