@@ -29,8 +29,20 @@ fn construct_meta_msg() -> Vec<MqttMessage> {
     msgs
 }
 
-
 pub fn mqtt_pub_meta() -> Result<()> {
+    let messages = construct_meta_msg();
+    let res = mqtt::publish_msgs(&messages, Some(true), Some("local-pub-meta".into()));
+    if let Err(e) = res {
+        log::error!("Error while publishing to MQTT: {e}\nMessages: {:?}", messages);
+    }
+    // The command will log and ignore errors, and always return a success exit code.
+    // This is a temporary workaround since snapd will try to run this by itself, without Mosquitto running
+    // See https://forum.snapcraft.io/t/bug-refreshing-snap-with-new-service-doesnt-respect-dependencies/31890
+    Ok(())
+}
+
+#[allow(dead_code)]
+pub fn mqtt_pub_meta_persistent() -> Result<()> {
     let messages = construct_meta_msg();
 
     let publish_msgs = || {
