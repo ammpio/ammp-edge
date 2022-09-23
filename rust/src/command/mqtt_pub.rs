@@ -3,7 +3,7 @@ use std::time::Duration;
 
 use anyhow::Result;
 use backoff::{retry_notify, Error, ExponentialBackoff};
-use sys_info::boottime;
+use sysinfo::{System, SystemExt};
 
 use crate::envvars::SNAP_REVISION;
 use crate::helpers::get_ssh_fingerprint;
@@ -17,7 +17,7 @@ fn construct_meta_msg() -> Vec<MqttMessage> {
         },
         MqttMessage {
             topic: "u/meta/boot_time".into(),
-            payload: boottime().unwrap().tv_sec.to_string(),
+            payload: System::new().boot_time().to_string(),
         }
     ];
     if let Ok(ssh_fingerprint) = get_ssh_fingerprint() {
