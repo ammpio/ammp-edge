@@ -10,7 +10,7 @@ use crate::helpers::get_ssh_fingerprint;
 use crate::interfaces::mqtt::{self, MqttMessage};
 
 fn construct_meta_msg() -> Vec<MqttMessage> {
-    vec![
+    let mut msgs = vec![
         MqttMessage {
             topic: "u/meta/snap_rev".into(),
             payload: env::var(SNAP_REVISION).unwrap_or_else(|_| "N/A".into()),
@@ -18,12 +18,15 @@ fn construct_meta_msg() -> Vec<MqttMessage> {
         MqttMessage {
             topic: "u/meta/boot_time".into(),
             payload: boottime().unwrap().tv_sec.to_string(),
-        },
-        MqttMessage {
+        }
+    ];
+    if let Ok(ssh_fingerprint) = get_ssh_fingerprint() {
+        msgs.push(MqttMessage {
             topic: "u/meta/ssh_fingerprint".into(),
-            payload: get_ssh_fingerprint().unwrap_or("".into()),
-        },
-    ]
+            payload: ssh_fingerprint,
+        });
+    }
+    msgs
 }
 
 
