@@ -6,3 +6,8 @@ pub const SNAP: &str = "SNAP";
 pub const SNAP_COMMON: &str = "SNAP_COMMON";
 
 pub const LOG_LEVEL: &str = "LOGGING_LEVEL";
+
+pub const MQTT_BRIDGE_HOST: &str = "MQTT_BRIDGE_HOST";
+pub const MQTT_BRIDGE_PORT: &str = "MQTT_BRIDGE_PORT";
+
+pub const SNAP_REVISION: &str = "SNAP_REVISION";

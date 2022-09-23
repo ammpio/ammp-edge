@@ -18,16 +18,23 @@ architectures:
 epoch: 1
 
 apps:
+  # Oneshot services don't support restart-on-failure
+  # (see https://forum.snapcraft.io/t/restart-condition-not-respected-for-oneshot-systemd-service/)
+  # So this needs to be provided for in the application itself
   ae-init:
     command: bin/ae init
     daemon: oneshot
-    restart-condition: on-failure
-    restart-delay: 2s
+    plugs: [network]
+  ae-pub-meta:
+    command: bin/ae mqtt-pub-meta
+    daemon: oneshot
+    after: [mosquitto]
     plugs: [network]
   ammp-edge:
     command: bin/ammp_edge
     daemon: simple
     restart-condition: always
+    restart-delay: 2s
     after: [ae-init]
     plugs:
       - network
