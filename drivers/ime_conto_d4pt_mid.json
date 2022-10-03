@@ -1,0 +1,169 @@
+{
+    "common": {
+        "fncode": 3
+    },
+    "fields": {
+        "KTA": {
+            "words": 1,
+            "datatype": "uint16",
+            "register": 4608,
+            "multiplier": 1,
+            "description": "Current transformer ratio"
+        },
+        "KTV": {
+            "words": 1,
+            "datatype": "uint16",
+            "register": 4609,
+            "multiplier": 0.1,
+            "description": "Voltage transformer ratio"
+        },
+        "I_L1": {
+            "unit": "A",
+            "words": 2,
+            "datatype": "uint32",
+            "register": 4102,
+            "multiplier": 0.001,
+            "description": "Phase 1 : current"
+        },
+        "I_L2": {
+            "unit": "A",
+            "words": 2,
+            "datatype": "uint32",
+            "register": 4104,
+            "multiplier": 0.001,
+            "description": "Phase 2 : current"
+        },
+        "I_L3": {
+            "unit": "A",
+            "words": 2,
+            "datatype": "uint32",
+            "register": 4106,
+            "multiplier": 0.001,
+            "description": "Phase 3 : current"
+        },
+        "V_L1": {
+            "unit": "V",
+            "words": 2,
+            "datatype": "uint32",
+            "register": 4096,
+            "multiplier": 0.001,
+            "description": "Phase 1 : phase voltage"
+        },
+        "V_L2": {
+            "unit": "V",
+            "words": 2,
+            "datatype": "uint32",
+            "register": 4098,
+            "multiplier": 0.001,
+            "description": "Phase 2 : phase voltage"
+        },
+        "V_L3": {
+            "unit": "V",
+            "words": 2,
+            "datatype": "uint32",
+            "register": 4100,
+            "multiplier": 0.001,
+            "description": "Phase 3 : phase voltage"
+        },
+        "freq": {
+            "unit": "Hz",
+            "words": 1,
+            "datatype": "uint16",
+            "register": 4134,
+            "multiplier": 0.1,
+            "description": "3-phase : Frequency"
+        },
+        "pf_total": {
+            "words": 1,
+            "datatype": "uint16",
+            "register": 4132,
+            "multiplier": 0.01,
+            "description": "3-phase : power factor"
+        },
+        "P_L1_sign": {
+            "words": 1,
+            "datatype": "uint16",
+            "register": 4146,
+            "typecast": "int",
+            "description": "Phase 1 : sign of active power (0=positive, 1=negative)"
+        },
+        "P_L2_sign": {
+            "words": 1,
+            "datatype": "uint16",
+            "register": 4147,
+            "typecast": "int",
+            "description": "Phase 2 : sign of active power (0=positive, 1=negative)"
+        },
+        "P_L3_sign": {
+            "words": 1,
+            "datatype": "uint16",
+            "register": 4148,
+            "typecast": "int",
+            "description": "Phase 3 : sign of active power (0=positive, 1=negative)"
+        },
+        "P_L1_raw": {
+            "words": 2,
+            "datatype": "uint32",
+            "register": 4140,
+            "multiplier": 1,
+            "description": "Phase 1 : active power (see protocol docs)"
+        },
+        "P_L2_raw": {
+            "words": 2,
+            "datatype": "uint32",
+            "register": 4142,
+            "multiplier": 1,
+            "description": "Phase 2 : active power (see protocol docs)"
+        },
+        "P_L3_raw": {
+            "words": 2,
+            "datatype": "uint32",
+            "register": 4144,
+            "multiplier": 1,
+            "description": "Phase 3 : active power (see protocol docs)"
+        },
+        "P_total_sign": {
+            "words": 1,
+            "datatype": "uint16",
+            "register": 4122,
+            "typecast": "int",
+            "description": "3-phase : sign of active power (0=positive, 1=negative)"
+        },
+        "P_total_raw": {
+            "words": 2,
+            "datatype": "uint32",
+            "register": 4116,
+            "multiplier": 1,
+            "description": "3-phase : active power (see protocol docs)"
+        },
+        "S_total_raw": {
+            "words": 2,
+            "datatype": "uint32",
+            "register": 4120,
+            "multiplier": 1,
+            "description": "3-phase : apparent power (see protocol docs)"
+        },
+        "pf_total_sector": {
+            "words": 1,
+            "datatype": "uint16",
+            "register": 4133,
+            "typecast": "int",
+            "description": "3-phase : sector of power factor"
+        },
+        "E_exported_direct_raw": {
+            "words": 2,
+            "datatype": "uint32",
+            "register": 4128,
+            "multiplier": 1,
+            "description": "3-phase : direct positive active energy (see protocol docs)"
+        },
+        "E_exported_indirect_raw": {
+            "unit": "Wh (metrological)",
+            "words": 2,
+            "datatype": "uint32",
+            "register": 4124,
+            "multiplier": 10,
+            "description": "3-phase : indirect positive active energy (see protocol docs)"
+        }
+    }
+}
