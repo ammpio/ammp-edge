@@ -14,7 +14,7 @@ MQTT_CLEAN_SESSION = False
 MQTT_QOS = 1
 MQTT_RETAIN = False
 MQTT_CONN_SUCCESS = 0
-MQTT_PUB_SUCCESS = 0
+MQTT_PUB_TIMEOUT = 5
 
 MQTT_DATA_TOPIC = 'u/data'
 
@@ -30,34 +30,26 @@ class MQTTPublisher():
 
         client.on_connect = self.__on_connect
         client.on_disconnect = self.__on_disconnect
-        client.connect_async(host=MQTT_HOST, port=MQTT_PORT)
+        client.connect(host=MQTT_HOST, port=MQTT_PORT)
         client.loop_start()
 
         self._client = client
         self._connected = False
 
     def publish(self, payload: Dict, topic: str) -> bool:
-        if not self._connected:
-            logger.warning("MQTT client not yet connected; not publishing")
+        try:
+            self._client.publish(
+                topic,
+                self.__get_mqtt_payload(payload),
+                qos=MQTT_QOS, retain=MQTT_RETAIN
+            ).wait_for_publish(timeout=MQTT_PUB_TIMEOUT)
+        except RuntimeError:
+            # Client is likely not connected (see wait_for_publish() docs)
+            logger.exception('Publish unsuccessful; attempting to reconnect')
+            self._client.reconnect()
             return False
-        rc = self._client.publish(
-            topic,
-            self.__get_mqtt_payload(payload),
-            qos=MQTT_QOS, retain=MQTT_RETAIN
-        )
-        logger.debug(f"PUSH [mqtt] Published with response code: {rc}")
-
-        # TODO: Use an onpublish callback to ascertain whether the message
-        # was actually published, rather than the "fire and forget" approach.
-        # The latter only results in an error if the MQTT module's internal
-        # queue is full (this is parameterized above)
-
-        if rc[0] == MQTT_PUB_SUCCESS:
-            logger.debug("PUSH [mqtt] Successfully published")
-            return True
-        else:
-            logger.debug("PUSH [mqtt] Error - Message not published")
-            return False
+        logger.debug(f"MQTT message published successfully")
+        return True
 
     def publish_data(self, payload: Dict) -> bool:
         return self.publish(payload, MQTT_DATA_TOPIC)
