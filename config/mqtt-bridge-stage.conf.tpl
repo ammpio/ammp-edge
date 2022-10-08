@@ -13,7 +13,7 @@ remote_clientid $NODE_ID-brg-stage
 start_type automatic
 
 notifications true
-notification_topic u/bridge_state
+notification_topic a/$NODE_ID/bridge_state
 
 remote_username $NODE_ID
 remote_password $ACCESS_KEY
