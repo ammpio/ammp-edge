@@ -1,6 +1,6 @@
 connection $NODE_ID-brg
 
-address mqtt.ammp.io:8883
+address mqtt.ammp.io:8883 10.255.255.254:8883
 
 topic d/# in 1 "" a/$NODE_ID/
 topic u/# out 1 "" a/$NODE_ID/
