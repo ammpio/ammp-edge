@@ -1,4 +1,5 @@
 use std::env;
+use std::thread::sleep;
 use std::time::Duration;
 
 use anyhow::Result;
@@ -45,7 +46,8 @@ fn construct_meta_msg() -> Vec<MqttMessage> {
 pub fn mqtt_pub_meta() -> Result<()> {
     let messages = construct_meta_msg();
     log::info!("Publishing metadata: {:?}", messages);
-    let res = mqtt::publish_msgs(&messages, Some(true), Some("local-pub-meta".into()));
+    sleep(Duration::from_secs(2));
+    let res = mqtt::publish_msgs(&messages, Some(false), Some("local-pub-meta".into()));
     if let Err(e) = res {
         log::error!(
             "Error while publishing to MQTT: {e}\nMessages: {:?}",
