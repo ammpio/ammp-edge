@@ -8,7 +8,7 @@ use sysinfo::{System, SystemExt};
 
 use crate::envvars::{SNAP_ARCH, SNAP_REVISION};
 use crate::helpers::{get_ssh_fingerprint, now_epoch};
-use crate::interfaces::mqtt::{self, MqttMessage};
+use crate::interfaces::mqtt::{publish_msgs, MqttMessage};
 
 fn construct_meta_msg() -> Vec<MqttMessage> {
     let mut msgs = vec![
@@ -47,7 +47,7 @@ pub fn mqtt_pub_meta() -> Result<()> {
     let messages = construct_meta_msg();
     log::info!("Publishing metadata: {:?}", messages);
     sleep(Duration::from_secs(2));
-    let res = mqtt::publish_msgs(&messages, Some(false), Some("local-pub-meta".into()));
+    let res = publish_msgs(&messages, Some(false), Some("local-pub-meta".into()));
     if let Err(e) = res {
         log::error!(
             "Error while publishing to MQTT: {e}\nMessages: {:?}",
@@ -65,8 +65,7 @@ pub fn mqtt_pub_meta_persistent() -> Result<()> {
     let messages = construct_meta_msg();
 
     let publish_msgs = || {
-        mqtt::publish_msgs(&messages, Some(true), Some("local-pub-meta".into()))
-            .map_err(Error::transient)
+        publish_msgs(&messages, Some(true), Some("local-pub-meta".into())).map_err(Error::transient)
     };
 
     let notify = |err, dur: Duration| {

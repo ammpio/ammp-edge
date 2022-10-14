@@ -1,4 +1,5 @@
 use std::env;
+use std::str::from_utf8;
 
 use anyhow::Result;
 use getrandom::getrandom;
@@ -100,6 +101,35 @@ pub fn publish_msgs(
         }
         if expected_msg_acks == 0 {
             break;
+        }
+    }
+    client.disconnect()?;
+    Ok(())
+}
+
+pub fn sub_topics<F>(topics: &[String], client_prefix: Option<String>, func: F) -> Result<()>
+where
+    F: Fn(MqttMessage),
+{
+    let (mut client, mut connection) = client_conn(get_rand_client_id(client_prefix), None);
+
+    for topic in topics.iter() {
+        log::info!("Subscribing to {}", topic);
+        client.subscribe(topic, QoS::ExactlyOnce)?;
+    }
+
+    for (_, notification) in connection.iter().enumerate() {
+        log::trace!("Notification = {:?}", notification);
+        match notification {
+            Ok(Event::Incoming(Packet::Publish(r))) => {
+                let msg = MqttMessage {
+                    topic: r.topic,
+                    payload: from_utf8(&r.payload).unwrap().into(),
+                };
+                func(msg);
+            }
+            Err(e) => return Err(e.into()),
+            _ => (),
         }
     }
     client.disconnect()?;

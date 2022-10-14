@@ -1,20 +1,15 @@
-use rumqttc::{MqttOptions, Client, QoS};
-use std::time::Duration;
-use std::thread;
+use anyhow::Result;
 
-pub fn mqtt_sub() {
-    let mut mqttoptions = MqttOptions::new("rumqtt-sync", "localhost", 1883);
-    mqttoptions.set_keep_alive(Duration::from_secs(5));
+use crate::interfaces::mqtt::{sub_topics, MqttMessage};
 
-    let (mut client, mut connection) = Client::new(mqttoptions, 10);
-    client.subscribe("hello/rumqtt", QoS::AtMostOnce).unwrap();
-    thread::spawn(move || for i in 0..10 {
-        client.publish("hello/rumqtt", QoS::AtLeastOnce, false, vec![i; i as usize]).unwrap();
-    thread::sleep(Duration::from_millis(100));
-    });
+fn process_msg(msg: MqttMessage) {
+    log::debug!("Received {:?}", msg);
+}
 
-    // Iterate to poll the eventloop for connection progress
-    for (_i, notification) in connection.iter().enumerate() {
-        println!("Notification = {:?}", notification);
-    }
+pub fn mqtt_sub_cfg() -> Result<()> {
+    sub_topics(
+        &["d/config".into(), "d/command".into()],
+        Some("local-sub-cfg".into()),
+        process_msg,
+    )
 }
