@@ -1,10 +1,8 @@
-use std::time::Duration;
-
 use anyhow::Result;
-use backoff::{retry_notify, Error, ExponentialBackoff};
 use kvstore::KVDb;
 
 use crate::constants::topics;
+use crate::helpers::backoff_retry;
 use crate::interfaces::kvpath;
 use crate::interfaces::mqtt::{sub_topics, MqttMessage};
 use crate::node_mgmt;
@@ -16,16 +14,12 @@ fn try_set_config(config_payload: String) {
     let set_config = || {
         let config = node_mgmt::config::from_string(&config_payload)
             .map_err(Into::into)
-            .map_err(Error::permanent)?;
-        let kvs = KVDb::new(kvpath::SQLITE_STORE.as_path()).map_err(Error::transient)?;
-        node_mgmt::config::set(kvs, config).map_err(Error::transient)
+            .map_err(backoff::Error::permanent)?;
+        let kvs = KVDb::new(kvpath::SQLITE_STORE.as_path()).map_err(backoff::Error::transient)?;
+        node_mgmt::config::set(kvs, config).map_err(backoff::Error::transient)
     };
 
-    let notify = |err, dur: Duration| {
-        log::error!("Temporary error setting config, after {:.1}s: {}", dur.as_secs_f32(), err);
-    };
-
-    match retry_notify(ExponentialBackoff::default(), set_config, notify) {
+    match backoff_retry(set_config) {
         Ok(()) => log::info!("Successfully set new config"),
         Err(err) => log::error!("Permanent error setting config: {:?}", err),
     }

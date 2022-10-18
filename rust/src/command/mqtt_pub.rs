@@ -3,11 +3,10 @@ use std::thread::sleep;
 use std::time::Duration;
 
 use anyhow::Result;
-use backoff::{retry_notify, Error, ExponentialBackoff};
 use sysinfo::{System, SystemExt};
 
 use crate::envvars::{SNAP_ARCH, SNAP_REVISION};
-use crate::helpers::{get_ssh_fingerprint, now_epoch};
+use crate::helpers::{backoff_retry, get_ssh_fingerprint, now_epoch};
 use crate::interfaces::mqtt::{publish_msgs, MqttMessage};
 
 fn construct_meta_msg() -> Vec<MqttMessage> {
@@ -65,17 +64,10 @@ pub fn mqtt_pub_meta_persistent() -> Result<()> {
     let messages = construct_meta_msg();
 
     let publish_msgs = || {
-        publish_msgs(&messages, Some(true), Some("local-pub-meta".into())).map_err(Error::transient)
+        publish_msgs(&messages, Some(true), Some("local-pub-meta".into()))
+            .map_err(backoff::Error::transient)
     };
 
-    let notify = |err, dur: Duration| {
-        log::error!(
-            "MQTT publish error after {:.1}s: {}",
-            dur.as_secs_f32(),
-            err
-        );
-    };
-
-    retry_notify(ExponentialBackoff::default(), publish_msgs, notify).unwrap();
+    backoff_retry(publish_msgs).unwrap();
     Ok(())
 }
