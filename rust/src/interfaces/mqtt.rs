@@ -32,11 +32,11 @@ pub struct MqttMessage {
 #[derive(Error, Debug)]
 pub enum MqttError {
     #[error(transparent)]
-    Utf8Error(#[from] Utf8Error),
+    Utf8(#[from] Utf8Error),
     #[error(transparent)]
-    ClientError(#[from] rumqttc::ClientError),
+    MqttClient(#[from] rumqttc::ClientError),
     #[error(transparent)]
-    ConnectionError(#[from] rumqttc::ConnectionError),
+    MqttConnection(#[from] rumqttc::ConnectionError),
 }
 
 pub fn get_rand_client_id(prefix: Option<String>) -> String {

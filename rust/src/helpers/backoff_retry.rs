@@ -9,11 +9,7 @@ where
     E: Display,
 {
     let notify = |err, dur: Duration| {
-        log::error!(
-            "Temporary error after {:.1}s: {}",
-            dur.as_secs_f32(),
-            err
-        );
+        log::error!("Temporary error after {:.1}s: {}", dur.as_secs_f32(), err);
     };
 
     retry_notify(ExponentialBackoff::default(), fn_to_try, notify)

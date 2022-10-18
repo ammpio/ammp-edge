@@ -1,5 +1,5 @@
-use std::{error::Error, fmt};
 use std::path::Path;
+use std::{error::Error, fmt};
 
 use rusqlite::{params, Connection, OptionalExtension};
 use serde::de::DeserializeOwned;
@@ -91,7 +91,10 @@ impl KVDb {
         Ok(())
     }
 
-    pub fn get<T: DeserializeOwned>(&self, key: impl AsRef<str>) -> Result<Option<T>, KVStoreError> {
+    pub fn get<T: DeserializeOwned>(
+        &self,
+        key: impl AsRef<str>,
+    ) -> Result<Option<T>, KVStoreError> {
         self.select(key)?
             .map(|v| serde_json::from_slice::<T>(&v))
             .transpose()
@@ -108,7 +111,11 @@ impl KVDb {
         self.select(key)
     }
 
-    pub fn set_raw<K: AsRef<str>, V: AsRef<[u8]>>(&self, key: K, value: V) -> Result<(), KVStoreError> {
+    pub fn set_raw<K: AsRef<str>, V: AsRef<[u8]>>(
+        &self,
+        key: K,
+        value: V,
+    ) -> Result<(), KVStoreError> {
         self.upsert(key, &value)?;
         Ok(())
     }
