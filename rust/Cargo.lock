@@ -51,6 +51,7 @@ dependencies = [
  "sysinfo",
  "temp-env",
  "tempfile",
+ "thiserror",
  "ureq",
 ]
 

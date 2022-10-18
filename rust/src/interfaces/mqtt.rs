@@ -1,10 +1,10 @@
 use std::env;
-use std::str::from_utf8;
+use std::str::{from_utf8, Utf8Error};
 
-use anyhow::Result;
 use getrandom::getrandom;
 use once_cell::sync::Lazy;
 use rumqttc::{Client, Connection, Event, MqttOptions, Packet, QoS};
+use thiserror::Error;
 
 use crate::constants::{defaults, envvars};
 
@@ -27,6 +27,16 @@ static MQTT_BRIDGE_PORT: Lazy<u16> = Lazy::new(|| {
 pub struct MqttMessage {
     pub topic: String,
     pub payload: String,
+}
+
+#[derive(Error, Debug)]
+pub enum MqttError {
+    #[error(transparent)]
+    Utf8Error(#[from] Utf8Error),
+    #[error(transparent)]
+    ClientError(#[from] rumqttc::ClientError),
+    #[error(transparent)]
+    ConnectionError(#[from] rumqttc::ConnectionError),
 }
 
 pub fn get_rand_client_id(prefix: Option<String>) -> String {
@@ -59,24 +69,23 @@ pub fn publish(
     msg: MqttMessage,
     retain: Option<bool>,
     qos: Option<QoS>,
-) -> Result<()> {
+) -> Result<(), MqttError> {
     log::debug!("Publishing to {}: {}", msg.topic, msg.payload);
 
-    client
-        .publish(
-            msg.topic,
-            qos.unwrap_or(QoS::AtLeastOnce),
-            retain.unwrap_or(false),
-            msg.payload.as_bytes(),
-        )
-        .map_err(Into::into)
+    client.publish(
+        msg.topic,
+        qos.unwrap_or(QoS::AtLeastOnce),
+        retain.unwrap_or(false),
+        msg.payload.as_bytes(),
+    )?;
+    Ok(())
 }
 
 pub fn publish_msgs(
     messages: &Vec<MqttMessage>,
     retain: Option<bool>,
     client_prefix: Option<String>,
-) -> Result<()> {
+) -> Result<(), MqttError> {
     let (mut client, mut connection) = client_conn(get_rand_client_id(client_prefix), None);
 
     let mut expected_msg_acks = messages.len();
@@ -107,7 +116,11 @@ pub fn publish_msgs(
     Ok(())
 }
 
-pub fn sub_topics<F>(topics: &[String], client_prefix: Option<String>, func: F) -> Result<()>
+pub fn sub_topics<F>(
+    topics: &[String],
+    client_prefix: Option<String>,
+    func: F,
+) -> Result<(), MqttError>
 where
     F: Fn(MqttMessage),
 {
@@ -124,7 +137,7 @@ where
             Ok(Event::Incoming(Packet::Publish(r))) => {
                 let msg = MqttMessage {
                     topic: r.topic,
-                    payload: from_utf8(&r.payload).unwrap().into(),
+                    payload: from_utf8(&r.payload)?.into(),
                 };
                 func(msg);
             }
