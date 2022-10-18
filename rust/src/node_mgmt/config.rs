@@ -1,6 +1,6 @@
 use std::{error::Error, fmt};
 
-use kvstore::KVDb;
+use kvstore::{KVDb, KVStoreError};
 
 use crate::constants::keys;
 
@@ -27,12 +27,10 @@ impl From<serde_json::Error> for ConfigError {
     }
 }
 
-pub type Result<T> = std::result::Result<T, ConfigError>;
-
-pub fn from_string(config_raw: &str) -> Result<Config> {
+pub fn from_string(config_raw: &str) -> Result<Config, ConfigError> {
     serde_json::from_str::<Config>(config_raw).map_err(Into::into)
 }
 
-pub fn set(kvs: KVDb, config: Config) -> anyhow::Result<()> {
+pub fn set(kvs: KVDb, config: Config) -> Result<(), KVStoreError> {
     kvs.set(keys::CONFIG, config)
 }
