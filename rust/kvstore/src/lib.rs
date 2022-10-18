@@ -1,17 +1,55 @@
-use anyhow::Result;
+use std::{error::Error, fmt};
+use std::path::Path;
+
 use rusqlite::{params, Connection, OptionalExtension};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
-use std::path::Path;
 
 const TABLENAME: &str = "kvstore";
 const KEY_FIELD: &str = "key";
 const VALUE_FIELD: &str = "value";
 
+#[derive(Debug)]
+pub enum KVStoreError {
+    IOError(std::io::Error),
+    SqlError(rusqlite::Error),
+    JsonError(serde_json::Error),
+}
+
+impl Error for KVStoreError {}
+
+impl fmt::Display for KVStoreError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            KVStoreError::IOError(ref err) => err.fmt(f),
+            KVStoreError::SqlError(ref err) => err.fmt(f),
+            KVStoreError::JsonError(ref err) => err.fmt(f),
+        }
+    }
+}
+
+impl From<std::io::Error> for KVStoreError {
+    fn from(err: std::io::Error) -> KVStoreError {
+        KVStoreError::IOError(err)
+    }
+}
+
+impl From<serde_json::Error> for KVStoreError {
+    fn from(err: serde_json::Error) -> KVStoreError {
+        KVStoreError::JsonError(err)
+    }
+}
+
+impl From<rusqlite::Error> for KVStoreError {
+    fn from(err: rusqlite::Error) -> KVStoreError {
+        KVStoreError::SqlError(err)
+    }
+}
+
 pub struct KVDb(Connection);
 
 impl KVDb {
-    pub fn new(path: impl AsRef<Path>) -> Result<Self> {
+    pub fn new(path: impl AsRef<Path>) -> Result<Self, KVStoreError> {
         // Create directory for DB if it doesn't already exist
         std::fs::create_dir_all(path.as_ref().parent().unwrap_or_else(|| Path::new("")))?;
         let connection = Connection::open(&path)?;
@@ -32,7 +70,7 @@ impl KVDb {
         Ok(KVDb(connection))
     }
 
-    fn select<K: AsRef<str>>(&self, key: K) -> Result<Option<Vec<u8>>> {
+    fn select<K: AsRef<str>>(&self, key: K) -> Result<Option<Vec<u8>>, KVStoreError> {
         self.0
             .query_row(
                 &format!("SELECT {VALUE_FIELD} FROM '{TABLENAME}' WHERE {KEY_FIELD} = ?1"),
@@ -43,7 +81,7 @@ impl KVDb {
             .map_err(Into::into)
     }
 
-    fn upsert<K: AsRef<str>, V: AsRef<[u8]>>(&self, key: K, value: V) -> Result<()> {
+    fn upsert<K: AsRef<str>, V: AsRef<[u8]>>(&self, key: K, value: V) -> Result<(), KVStoreError> {
         let mut stmt = self.0.prepare(&format!(
             "INSERT INTO '{TABLENAME}' ({KEY_FIELD}, {VALUE_FIELD}) values (?1, ?2)
             ON CONFLICT({KEY_FIELD}) DO UPDATE SET {VALUE_FIELD}=?2",
@@ -53,24 +91,24 @@ impl KVDb {
         Ok(())
     }
 
-    pub fn get<T: DeserializeOwned>(&self, key: impl AsRef<str>) -> Result<Option<T>> {
+    pub fn get<T: DeserializeOwned>(&self, key: impl AsRef<str>) -> Result<Option<T>, KVStoreError> {
         self.select(key)?
             .map(|v| serde_json::from_slice::<T>(&v))
             .transpose()
             .map_err(Into::into)
     }
 
-    pub fn set<K: AsRef<str>, V: Serialize>(&self, key: K, value: V) -> Result<()> {
+    pub fn set<K: AsRef<str>, V: Serialize>(&self, key: K, value: V) -> Result<(), KVStoreError> {
         self.upsert(&key, serde_json::to_vec(&value)?)?;
         // log::debug!("Set {}={:?}", key.as_ref(), serde_json::to_vec(&value)?);
         Ok(())
     }
 
-    pub fn get_raw<K: AsRef<str>>(&self, key: K) -> Result<Option<Vec<u8>>> {
+    pub fn get_raw<K: AsRef<str>>(&self, key: K) -> Result<Option<Vec<u8>>, KVStoreError> {
         self.select(key)
     }
 
-    pub fn set_raw<K: AsRef<str>, V: AsRef<[u8]>>(&self, key: K, value: V) -> Result<()> {
+    pub fn set_raw<K: AsRef<str>, V: AsRef<[u8]>>(&self, key: K, value: V) -> Result<(), KVStoreError> {
         self.upsert(key, &value)?;
         Ok(())
     }
@@ -84,7 +122,7 @@ mod tests {
     const TEST_VALUE: &[u8] = b"somevalue";
 
     #[test]
-    fn open_db_read_and_write() -> Result<()> {
+    fn open_db_read_and_write() -> Result<(), KVStoreError> {
         let db = KVDb::new(&IN_MEMORY)?;
         db.upsert(TEST_KEY, TEST_VALUE)?;
         assert_eq!(TEST_VALUE, db.select(TEST_KEY).unwrap().unwrap());
@@ -92,7 +130,7 @@ mod tests {
     }
 
     #[test]
-    fn open_db_read_empty() -> Result<()> {
+    fn open_db_read_empty() -> Result<(), KVStoreError> {
         let db = KVDb::new(&IN_MEMORY)?;
         assert!(db.select(TEST_KEY)?.is_none());
         Ok(())
