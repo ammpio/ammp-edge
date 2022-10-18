@@ -1,8 +1,7 @@
-use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use tempfile::tempdir;
 
-use kvstore::KVDb;
+use kvstore::{KVDb, KVStoreError};
 
 #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct Cat {
@@ -12,7 +11,7 @@ pub struct Cat {
 }
 
 #[test]
-fn write_and_read_object() -> Result<()> {
+fn write_and_read_object() -> Result<(), KVStoreError> {
     env_logger::init();
 
     let sqlite_db = tempdir()?.path().join("kvstore.db");
