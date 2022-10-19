@@ -1,7 +1,6 @@
-use std::time::Duration;
-
 use kvstore::KVDb;
 
+use crate::constants::defaults::DB_WRITE_TIMEOUT;
 use crate::constants::topics;
 use crate::helpers::backoff_retry;
 use crate::interfaces::kvpath;
@@ -10,15 +9,14 @@ use crate::node_mgmt;
 
 fn try_set_config(config_payload: String) {
     if let Ok(config) = node_mgmt::config::from_string(&config_payload) {
-        // A databse connection or write error is transient and would lead toa retry
-        // TODO: Set maximum number of retries, once https://github.com/ihrwein/backoff/pull/60 is merged
+        // A databse connection or write error is transient and would lead to a retry
         let set_config = || {
             let kvs = KVDb::new(kvpath::SQLITE_STORE.as_path())?;
             node_mgmt::config::set(kvs, config.clone())?;
             Ok(())
         };
 
-        match backoff_retry(set_config, Some(Duration::from_secs(120))) {
+        match backoff_retry(set_config, Some(DB_WRITE_TIMEOUT)) {
             Ok(()) => log::info!("Successfully set new config"),
             Err(e) => log::error!("Permanent error setting config: {:?}", e),
         }
