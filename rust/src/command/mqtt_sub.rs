@@ -29,7 +29,7 @@ fn try_set_config(config_payload: String) {
 }
 
 fn process_msg(msg: MqttMessage) {
-    log::debug!("Received {} on {}", msg.payload, msg.topic);
+    log::info!("Received {} on {}", msg.payload, msg.topic);
     match msg.topic.as_str() {
         topics::CONFIG => try_set_config(msg.payload),
         topics::COMMAND => todo!("Set command"),
