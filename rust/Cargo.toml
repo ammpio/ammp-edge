@@ -20,7 +20,6 @@ native-tls = "*"
 nix = { version = "*", features = ["socket"] }
 once_cell = "*"
 pico-args = "*"
-rouille = { version = "*", default-features = false }
 rumqttc = { version = "*", default-features = false }
 rusqlite = { version = "*", features = ["serde_json"] }
 serde = {version = "*", features = ["derive"] }
