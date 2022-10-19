@@ -68,6 +68,6 @@ pub fn mqtt_pub_meta_persistent() -> Result<()> {
             .map_err(backoff::Error::transient)
     };
 
-    backoff_retry(publish_msgs).unwrap();
+    backoff_retry(publish_msgs, None).unwrap();
     Ok(())
 }

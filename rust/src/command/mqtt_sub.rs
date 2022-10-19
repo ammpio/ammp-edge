@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use kvstore::KVDb;
 
 use crate::constants::topics;
@@ -16,7 +18,7 @@ fn try_set_config(config_payload: String) {
             Ok(())
         };
 
-        match backoff_retry(set_config) {
+        match backoff_retry(set_config, Some(Duration::from_secs(120))) {
             Ok(()) => log::info!("Successfully set new config"),
             Err(e) => log::error!("Permanent error setting config: {:?}", e),
         }
@@ -46,6 +48,6 @@ pub fn mqtt_sub_cfg() -> anyhow::Result<()> {
         )
         .map_err(backoff::Error::transient)
     };
-    backoff_retry(sub_loop)?;
+    backoff_retry(sub_loop, None)?;
     Ok(())
 }

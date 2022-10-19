@@ -44,7 +44,7 @@ fn activation_step_1(agent: &ureq::Agent, api_root: &str, node_id: &str) -> Resu
             .map_err(backoff::Error::transient)
     };
 
-    let resp1: R1 = backoff_retry(request_step1)?.into_json()?;
+    let resp1: R1 = backoff_retry(request_step1, None)?.into_json()?;
     let access_key = resp1.access_key;
 
     log::debug!(
@@ -71,7 +71,7 @@ fn activation_step_2(
             .map_err(backoff::Error::transient)
     };
 
-    let resp2: R2 = backoff_retry(request_step2)?.into_json()?;
+    let resp2: R2 = backoff_retry(request_step2, None)?.into_json()?;
     log::debug!(
         "Carried out second step of activation. Message: {}",
         resp2.message

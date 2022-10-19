@@ -3,7 +3,7 @@ use std::time::Duration;
 
 use backoff::{retry_notify, Error, ExponentialBackoffBuilder};
 
-pub fn backoff_retry<F, T, E>(fn_to_try: F) -> Result<T, Error<E>>
+pub fn backoff_retry<F, T, E>(fn_to_try: F, timeout: Option<Duration>) -> Result<T, Error<E>>
 where
     F: FnMut() -> Result<T, Error<E>>,
     E: Display,
@@ -14,6 +14,8 @@ where
 
     // Set to retry forever, rather than give up after 15 minutes.
     // See https://github.com/ihrwein/backoff/issues/39
-    let backoff = ExponentialBackoffBuilder::new().with_max_elapsed_time(None).build();
+    let backoff = ExponentialBackoffBuilder::new()
+        .with_max_elapsed_time(timeout)
+        .build();
     retry_notify(backoff, fn_to_try, notify)
 }
