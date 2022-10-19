@@ -53,7 +53,9 @@ class ConfigWatch(Thread):
                                 logger.error(f"No config obtained from API; retrying in {API_RETRY_DELAY} seconds")
                                 time.sleep(API_RETRY_DELAY)
 
-                        # Update config definition, save it to DB, and load any custom drivers from it
+                        # We don't want the 'config_id' key to be present, as it messes with the digest matching
+                        config.pop('config_id', None)
+                        # Update config definition, and save it to DB
                         self._node.config = config
 
                         self._node.events.getting_config.notify_all()
