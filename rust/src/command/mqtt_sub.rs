@@ -32,12 +32,12 @@ fn process_msg(msg: MqttMessage) {
     log::debug!("Received {} on {}", msg.payload, msg.topic);
     match msg.topic.as_str() {
         topics::CONFIG => try_set_config(msg.payload),
-        topics::COMMAND => todo!("Set config"),
-        _ => log::info!("Message received on unrecognized topic {}", msg.topic),
+        topics::COMMAND => todo!("Set command"),
+        _ => log::warn!("Message received on unrecognized topic {}", msg.topic),
     }
 }
 
-pub fn mqtt_sub_cfg() -> anyhow::Result<()> {
+pub fn mqtt_sub_cfg_cmd() -> anyhow::Result<()> {
     let sub_loop = || {
         sub_topics(
             &[topics::CONFIG.into(), topics::COMMAND.into()],
