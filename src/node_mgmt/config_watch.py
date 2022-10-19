@@ -47,7 +47,6 @@ class ConfigWatch(Thread):
 
                         # Update config definition, save it to DB, and load any custom drivers from it
                         self._node.config = config
-                        self._node.update_drv_from_config()
 
                         self._node.events.getting_config.notify_all()
 
