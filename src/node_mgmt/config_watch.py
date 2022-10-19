@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 # If API endpoint doesn't return config, wait API_RETRY_DELAY seconds before retrying
 API_RETRY_DELAY = 10
 # Even if this is not explicitly requested, carry out a configuration check every CONFIG_REFRESH_DELAY seconds
-CONFIG_REFRESH_DELAY = 60
+CONFIG_REFRESH_DELAY = 3600
 
 
 class ConfigWatch(Thread):
