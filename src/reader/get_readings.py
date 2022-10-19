@@ -86,7 +86,7 @@ def get_readings(config: dict, drivers: dict):
 
 
 def get_readout(config: dict, drivers: dict):
-    # 'readout' is a dict formatted for device-based readings. It also contains a timestamp, snap_rev and config_id
+    # 'readout' is a dict formatted for device-based readings. It also contains a timestamp, and snap_rev
     try:
         snap_rev = int(os.getenv('SNAP_REVISION', 0))
     except ValueError:  # Occurs if it's a devel snap with revision prefixed in 'x'
@@ -97,7 +97,6 @@ def get_readout(config: dict, drivers: dict):
         'r': [],
         'm': {
             'snap_rev': snap_rev,
-            'config_id': config.get('config_id', '0')
         }
     }
 
