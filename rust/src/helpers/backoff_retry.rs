@@ -1,7 +1,7 @@
 use std::fmt::Display;
 use std::time::Duration;
 
-use backoff::{retry_notify, Error, ExponentialBackoff, ExponentialBackoffBuilder};
+use backoff::{retry_notify, Error, ExponentialBackoffBuilder};
 
 pub fn backoff_retry<F, T, E>(fn_to_try: F) -> Result<T, Error<E>>
 where
