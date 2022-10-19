@@ -1,5 +1,6 @@
 use std::env;
 use std::str::{from_utf8, Utf8Error};
+use std::thread;
 
 use getrandom::getrandom;
 use once_cell::sync::Lazy;
@@ -119,10 +120,10 @@ pub fn publish_msgs(
 pub fn sub_topics<F>(
     topics: &[String],
     client_prefix: Option<String>,
-    func: F,
+    msg_processor: F,
 ) -> Result<(), MqttError>
 where
-    F: Fn(MqttMessage),
+    F: Fn(MqttMessage) + Copy + Send + Sync + 'static,
 {
     let (mut client, mut connection) = client_conn(get_rand_client_id(client_prefix), None);
 
@@ -139,7 +140,7 @@ where
                     topic: r.topic,
                     payload: from_utf8(&r.payload)?.into(),
                 };
-                func(msg);
+                thread::spawn(move || msg_processor(msg));
             }
             Err(e) => return Err(e.into()),
             _ => (),
