@@ -24,7 +24,7 @@ rumqttc = { version = "*", default-features = false }
 rusqlite = { version = "*", features = ["serde_json"] }
 serde = {version = "*", features = ["derive"] }
 serde_json = "*"
-sysinfo = "*"
+sysinfo = { version = "*", default-features = false }
 thiserror = "*"
 ureq = { version = "*", default-features = false, features = ["json", "native-tls"] }
 
