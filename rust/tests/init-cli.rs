@@ -1,5 +1,3 @@
-#![feature(explicit_generic_args_with_impl_trait)]
-
 use std::ffi::OsStr;
 
 use assert_cmd::{assert::Assert, Command};

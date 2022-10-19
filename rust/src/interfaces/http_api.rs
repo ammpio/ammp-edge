@@ -1,12 +1,11 @@
 use std::sync::Arc;
-use std::time::Duration;
 
 use anyhow::Result;
-use backoff::{retry_notify, Error, ExponentialBackoff};
 use kvstore::KVDb;
 use serde::{Deserialize, Serialize};
 
 use crate::constants::{defaults, keys, REMOTE_DEFAULTS};
+use crate::helpers::backoff_retry;
 
 #[derive(Debug, Deserialize, Serialize)]
 struct R1 {
@@ -42,15 +41,10 @@ fn activation_step_1(agent: &ureq::Agent, api_root: &str, node_id: &str) -> Resu
         agent
             .get(&format!("{api_root}/nodes/{node_id}/activate"))
             .call()
-            .map_err(Error::transient)
+            .map_err(backoff::Error::transient)
     };
 
-    let notify = |err, dur: Duration| {
-        log::error!("Request error after {:.1}s: {}", dur.as_secs_f32(), err);
-    };
-
-    let resp1: R1 =
-        retry_notify(ExponentialBackoff::default(), request_step1, notify)?.into_json()?;
+    let resp1: R1 = backoff_retry(request_step1, None)?.into_json()?;
     let access_key = resp1.access_key;
 
     log::debug!(
@@ -74,15 +68,10 @@ fn activation_step_2(
             .post(&format!("{api_root}/nodes/{node_id}/activate"))
             .set("Authorization", access_key)
             .call()
-            .map_err(Error::transient)
+            .map_err(backoff::Error::transient)
     };
 
-    let notify = |err, dur: Duration| {
-        log::error!("Request error after {:.1}s: {}", dur.as_secs_f32(), err);
-    };
-
-    let resp2: R2 =
-        retry_notify(ExponentialBackoff::default(), request_step2, notify)?.into_json()?;
+    let resp2: R2 = backoff_retry(request_step2, None)?.into_json()?;
     log::debug!(
         "Carried out second step of activation. Message: {}",
         resp2.message

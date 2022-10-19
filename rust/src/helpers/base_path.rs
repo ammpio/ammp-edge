@@ -14,7 +14,7 @@ pub static ROOT_DIR: Lazy<PathBuf> = Lazy::new(|| {
     PathBuf::from(".")
 });
 
-pub static DATA_DIR:Lazy<PathBuf> = Lazy::new(|| {
+pub static DATA_DIR: Lazy<PathBuf> = Lazy::new(|| {
     if let Ok(ae_data_dir) = env::var(envvars::DATA_DIR) {
         return ae_data_dir.into();
     }
@@ -52,7 +52,7 @@ mod tests {
                 assert_eq!(ROOT_DIR.as_os_str(), SAMPLE_ROOT_DIR);
                 assert_eq!(DATA_DIR.as_os_str(), SAMPLE_DATA_DIR);
                 assert_eq!(TEMP_DIR.as_os_str(), SAMPLE_TEMP_DIR);
-            }
+            },
         );
     }
 
@@ -70,7 +70,7 @@ mod tests {
             || {
                 assert_eq!(ROOT_DIR.as_os_str(), SAMPLE_ROOT_DIR);
                 assert_eq!(DATA_DIR.as_os_str(), SAMPLE_DATA_DIR);
-            }
+            },
         );
     }
 

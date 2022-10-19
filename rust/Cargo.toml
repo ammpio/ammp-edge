@@ -26,6 +26,7 @@ rusqlite = { version = "*", features = ["serde_json"] }
 serde = {version = "*", features = ["derive"] }
 serde_json = "*"
 sysinfo = "*"
+thiserror = "*"
 ureq = { version = "*", default-features = false, features = ["json", "native-tls"] }
 
 [dev-dependencies]

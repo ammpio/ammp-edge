@@ -1,20 +1,51 @@
-use rumqttc::{MqttOptions, Client, QoS};
-use std::time::Duration;
-use std::thread;
+use kvstore::KVDb;
 
-pub fn mqtt_sub() {
-    let mut mqttoptions = MqttOptions::new("rumqtt-sync", "localhost", 1883);
-    mqttoptions.set_keep_alive(Duration::from_secs(5));
+use crate::constants::defaults::DB_WRITE_TIMEOUT;
+use crate::constants::topics;
+use crate::helpers::backoff_retry;
+use crate::interfaces::kvpath;
+use crate::interfaces::mqtt::{sub_topics, MqttMessage};
+use crate::node_mgmt;
 
-    let (mut client, mut connection) = Client::new(mqttoptions, 10);
-    client.subscribe("hello/rumqtt", QoS::AtMostOnce).unwrap();
-    thread::spawn(move || for i in 0..10 {
-        client.publish("hello/rumqtt", QoS::AtLeastOnce, false, vec![i; i as usize]).unwrap();
-    thread::sleep(Duration::from_millis(100));
-    });
+fn try_set_config(config_payload: String) {
+    if let Ok(config) = node_mgmt::config::from_string(&config_payload) {
+        // A databse connection or write error is transient and would lead to a retry
+        let set_config = || {
+            let kvs = KVDb::new(kvpath::SQLITE_STORE.as_path())?;
+            node_mgmt::config::set(kvs, config.clone())?;
+            Ok(())
+        };
 
-    // Iterate to poll the eventloop for connection progress
-    for (_i, notification) in connection.iter().enumerate() {
-        println!("Notification = {:?}", notification);
+        match backoff_retry(set_config, Some(DB_WRITE_TIMEOUT)) {
+            Ok(()) => log::info!("Successfully set new config"),
+            Err(e) => log::error!("Permanent error setting config: {:?}", e),
+        }
+    } else {
+        log::error!(
+            "Could not parse received payload as valid config: {:?}",
+            &config_payload
+        );
     }
+}
+
+fn process_msg(msg: MqttMessage) {
+    log::debug!("Received {} on {}", msg.payload, msg.topic);
+    match msg.topic.as_str() {
+        topics::CONFIG => try_set_config(msg.payload),
+        topics::COMMAND => todo!("Set command"),
+        _ => log::warn!("Message received on unrecognized topic {}", msg.topic),
+    }
+}
+
+pub fn mqtt_sub_cfg_cmd() -> anyhow::Result<()> {
+    let sub_loop = || {
+        sub_topics(
+            &[topics::CONFIG.into(), topics::COMMAND.into()],
+            Some("local-sub-cfg".into()),
+            process_msg,
+        )
+        .map_err(backoff::Error::transient)
+    };
+    backoff_retry(sub_loop, None)?;
+    Ok(())
 }

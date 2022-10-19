@@ -1,3 +1,5 @@
+import hashlib
+import json
 import logging
 import time
 from threading import Thread
@@ -7,7 +9,13 @@ logger = logging.getLogger(__name__)
 # If API endpoint doesn't return config, wait API_RETRY_DELAY seconds before retrying
 API_RETRY_DELAY = 10
 # Even if this is not explicitly requested, carry out a configuration check every CONFIG_REFRESH_DELAY seconds
-CONFIG_REFRESH_DELAY = 60
+CONFIG_REFRESH_DELAY = 3600
+
+
+def get_digest(obj: dict, length: int = 7) -> str:
+    s = json.dumps(obj, sort_keys=True).encode('utf-8')
+    h = hashlib.sha1(s).hexdigest()
+    return h[:length]
 
 
 class ConfigWatch(Thread):
@@ -47,7 +55,6 @@ class ConfigWatch(Thread):
 
                         # Update config definition, save it to DB, and load any custom drivers from it
                         self._node.config = config
-                        self._node.update_drv_from_config()
 
                         self._node.events.getting_config.notify_all()
 
@@ -75,7 +82,7 @@ class ConfigWatch(Thread):
                         logger.debug("Local configuration is not available, but remote config is.")
                         return True
 
-                    if available_config.get('config_id') == node_meta['config_id']:
+                    if get_digest(available_config) == node_meta['config_id']:
                         logger.info('Latest remote configuration is in use locally')
                         return False
                     else:

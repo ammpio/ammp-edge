@@ -14,9 +14,7 @@ fn get_interface_priority(interface_name: &String) -> Option<usize> {
     // Try to get MAC address based on interface list (in order)
     const IFN_PRIORITY: &[&str] = &["eth0", "en0", "eth1", "en1", "wlan0", "wlan1"];
 
-    IFN_PRIORITY
-        .iter()
-        .position(|&x| x == interface_name)
+    IFN_PRIORITY.iter().position(|&x| x == interface_name)
 }
 
 fn get_primary_mac() -> Option<[u8; 6]> {

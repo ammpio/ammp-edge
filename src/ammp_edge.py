@@ -52,6 +52,7 @@ def reading_cycle(node: Node, pusher: DataPusher, sc=None):
             sc.enter(config['read_interval'], 1, reading_cycle, (node, pusher, sc))
 
     try:
+        node.update_drv_from_config()
         readout = get_readout(config, node.drivers)
         pusher.push_readout(readout)
 

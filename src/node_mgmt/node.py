@@ -54,7 +54,6 @@ class Node(object):
 
         # Load drivers from files, and also add any from the config
         self.drivers = self.__get_drivers()
-        self.update_drv_from_config()
 
     @property
     def config(self) -> dict:

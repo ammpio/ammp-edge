@@ -68,18 +68,18 @@ mod tests {
     use once_cell::sync::Lazy;
 
     use rusqlite::{params, Connection};
-    use serde_json::{Value, json};
+    use serde_json::{json, Value};
 
     const IN_MEMORY: &str = ":memory:";
     const SAMPLE_NODE_ID: &str = "abcdef123456";
     const SAMPLE_ACCESS_KEY: &str = "secret";
-    static SAMPLE_CONFIG: Lazy<Value> = Lazy::new(||
+    static SAMPLE_CONFIG: Lazy<Value> = Lazy::new(|| {
         json!({
             "devices": {"blah": "blah"},
             "readings": ["a", "b"],
             "timestamp": "2000-01-01T00:00:00Z"
         })
-    );
+    });
 
     fn create_kvs_initialized(path: impl AsRef<Path>) -> Result<KVDb> {
         let kvs = KVDb::new(path)?;
@@ -133,9 +133,18 @@ mod tests {
         let legacy_configdb_path = tempdir.path().join(LEGACY_CONFIG_FILENAME);
         create_legacy_configdb(&legacy_configdb_path)?;
         assert!(can_import_legacy_config(&legacy_configdb_path, &blank_kvs)?);
-        assert_eq!(blank_kvs.get::<String>(keys::NODE_ID)?.unwrap(), SAMPLE_NODE_ID);
-        assert_eq!(blank_kvs.get::<String>(keys::ACCESS_KEY)?.unwrap(), SAMPLE_ACCESS_KEY);
-        assert_eq!(blank_kvs.get::<Value>(keys::CONFIG)?.unwrap(), *SAMPLE_CONFIG);
+        assert_eq!(
+            blank_kvs.get::<String>(keys::NODE_ID)?.unwrap(),
+            SAMPLE_NODE_ID
+        );
+        assert_eq!(
+            blank_kvs.get::<String>(keys::ACCESS_KEY)?.unwrap(),
+            SAMPLE_ACCESS_KEY
+        );
+        assert_eq!(
+            blank_kvs.get::<Value>(keys::CONFIG)?.unwrap(),
+            *SAMPLE_CONFIG
+        );
         Ok(())
     }
 
@@ -144,7 +153,10 @@ mod tests {
         let blank_kvs = KVDb::new(IN_MEMORY)?;
         let tempdir = tempfile::tempdir()?;
         let legacy_configdb_path = tempdir.path().join(LEGACY_CONFIG_FILENAME);
-        assert!(!can_import_legacy_config(&legacy_configdb_path, &blank_kvs)?);
+        assert!(!can_import_legacy_config(
+            &legacy_configdb_path,
+            &blank_kvs
+        )?);
         Ok(())
     }
 
