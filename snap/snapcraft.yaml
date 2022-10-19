@@ -32,12 +32,24 @@ apps:
     restart-delay: 2s
     after: [ae-init]
     plugs: [network, network-bind]
+  ae-pub-meta:
+    command: bin/ae mqtt-pub-meta
+    daemon: oneshot
+    after: [ae-init, mosquitto]
+    plugs: [network]
+  ae-sub-cfg-cmd:
+    command: bin/ae mqtt-sub-cfg-cmd
+    daemon: simple
+    restart-condition: always
+    restart-delay: 2s
+    after: [ae-init, mosquitto]
+    plugs: [network]
   ammp-edge:
     command: bin/ammp_edge
     daemon: simple
     restart-condition: always
     restart-delay: 2s
-    after: [ae-init]
+    after: [ae-init, mosquitto]
     plugs:
       - network
       - network-bind
@@ -80,11 +92,6 @@ apps:
     timer: 0:00~24:00/36
     environment:
       LD_LIBRARY_PATH: "$LD_LIBRARY_PATH:$SNAP/usr/lib/$CRAFT_ARCH_TRIPLET/blas"
-  ae-pub-meta:
-    command: bin/ae mqtt-pub-meta
-    daemon: oneshot
-    after: [mosquitto]
-    plugs: [network]
 
 parts:
   ammp-edge:
