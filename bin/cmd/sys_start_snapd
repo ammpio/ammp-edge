@@ -1,0 +1,3 @@
+#!/bin/sh
+
+busctl call org.freedesktop.systemd1 /org/freedesktop/systemd1 org.freedesktop.systemd1.Manager StartUnit ss "snapd.service" "replace"

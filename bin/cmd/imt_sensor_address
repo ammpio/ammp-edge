@@ -1,0 +1,9 @@
+#!/usr/bin/env python3
+
+import logging
+
+from node_mgmt.commands import imt_sensor_address
+
+logging.basicConfig(level=logging.INFO)
+
+imt_sensor_address()
