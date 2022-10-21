@@ -1,34 +1,35 @@
+use std::collections::HashSet;
+use std::ffi::OsString;
+use std::fs::read_dir;
+use std::path::PathBuf;
 use std::process::Command;
+
+use once_cell::sync::Lazy;
 
 use crate::helpers::base_path;
 
-const ALLOWED_COMMANDS: &[&str] = &[
-    "snap_refresh",
-    "snap_refresh_stable",
-    "snap_refresh_beta",
-    "snap_refresh_edge",
-    "trigger_config_generation",
-    "imt_sensor_address",
-    "holykell_sensor_address_7",
-    "holykell_sensor_address_8",
-    "sys_reboot",
-    "sys_start_snapd",
-    "sys_stop_snapd",
-    "sys_remount_rw",
-    "sys_remount_ro",
-];
+static CMD_BASE_DIR: Lazy<PathBuf> = Lazy::new(|| base_path::ROOT_DIR.join("bin/cmd"));
+
+static VALID_COMMANDS: Lazy<HashSet<OsString>> = Lazy::new(|| {
+    read_dir(CMD_BASE_DIR.as_path())
+        .unwrap()
+        .map(|res| res.map(|e| e.file_name()).unwrap())
+        .collect()
+});
 
 pub fn run_command(cmd: String) -> String {
-    if !ALLOWED_COMMANDS.contains(&cmd.as_str()) {
+    if !VALID_COMMANDS.contains(&OsString::from(&cmd)) {
         let message = format!("Unrecognized command: {cmd}");
         log::error!("{}", message);
         return message;
     }
-    let cmd_path = base_path::ROOT_DIR.join("bin/cmd").join(&cmd);
+
+    let cmd_path = CMD_BASE_DIR.join(&cmd);
+
     match Command::new(cmd_path).output() {
         Ok(output) => {
             let message = format!(
-                "Command: {}\n{}\nstdout: {}stderr: {}",
+                "Command: {}\n{}\nstdout: {}\nstderr: {}",
                 cmd,
                 output.status,
                 String::from_utf8_lossy(&output.stdout),
