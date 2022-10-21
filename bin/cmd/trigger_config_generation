@@ -1,0 +1,10 @@
+#!/usr/bin/env python3
+
+import logging
+
+from node_mgmt import Node
+from node_mgmt.commands import trigger_config_generation
+
+logging.basicConfig(level=logging.INFO)
+
+trigger_config_generation(Node())

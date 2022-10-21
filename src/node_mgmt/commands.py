@@ -1,5 +1,4 @@
 import logging
-import os
 from time import sleep
 from kvstore import keys, KVCache
 import serial
@@ -21,23 +20,19 @@ GENERATE_NEW_CONFIG_FLAG = 'generate_new_config'
 INPUT_PARAMETERS = 'input_parameters'
 
 
-def snap_refresh(node):
+def snap_refresh():
     __snapd_socket_post({'action': 'refresh'})
 
 
-def snap_switch_stable(node):
+def snap_refresh_stable():
     __snapd_socket_post({'action': 'refresh', 'channel': 'stable'})
 
 
-def snap_switch_candidate(node):
-    __snapd_socket_post({'action': 'refresh', 'channel': 'candidate'})
-
-
-def snap_switch_beta(node):
+def snap_refresh_beta():
     __snapd_socket_post({'action': 'refresh', 'channel': 'beta'})
 
 
-def snap_switch_edge(node):
+def snap_refresh_edge():
     __snapd_socket_post({'action': 'refresh', 'channel': 'edge'})
 
 
@@ -85,7 +80,7 @@ def trigger_config_generation(node, tank_dimensions=None):
         logger.warning(f"ENV_SCAN [mqtt]: Push failed")
 
 
-def imt_sensor_address(node):
+def imt_sensor_address():
     # Note: unlike the other commands here, this one is normally triggered from the Web UI
     # Ideally this will be placed elsewhere in future, within a more systematic
     # action/command framework
@@ -125,11 +120,11 @@ def imt_sensor_address(node):
     return result
 
 
-def holykell_sensor_address_7(node):
+def holykell_sensor_address_7():
     return _change_address_holykell(original_slave_id=1, target_slave_id=7)
 
 
-def holykell_sensor_address_8(node):
+def holykell_sensor_address_8():
     return _change_address_holykell(original_slave_id=1, target_slave_id=8)
 
 
@@ -183,36 +178,3 @@ def _set_address_holykell(mod: minimalmodbus.Instrument, result: dict,
 def _read_holykell(mod: minimalmodbus.Instrument, slave_id: int):
     mod.address = slave_id
     return mod.read_registers(registeraddress=0, number_of_registers=40, functioncode=3)
-
-
-def sys_reboot(node):
-    os.system(
-        'busctl call org.freedesktop.login1 /org/freedesktop/login1 org.freedesktop.login1.Manager Reboot b "false"')
-
-
-def sys_start_snapd(node):
-    os.system(
-        'busctl call org.freedesktop.systemd1 /org/freedesktop/systemd1 org.freedesktop.systemd1.Manager StartUnit ss '
-        '"snapd.service" "replace"'
-    )
-
-
-def sys_stop_snapd(node):
-    os.system(
-        'busctl call org.freedesktop.systemd1 /org/freedesktop/systemd1 org.freedesktop.systemd1.Manager StopUnit ss '
-        '"snapd.service" "replace"'
-    )
-
-
-def sys_remount_rw(node):
-    os.system(
-        'busctl call org.freedesktop.systemd1 /org/freedesktop/systemd1 org.freedesktop.systemd1.Manager StartUnit ss '
-        '"remount-rw.service" "replace"'
-    )
-
-
-def sys_remount_ro(node):
-    os.system(
-        'busctl call org.freedesktop.systemd1 /org/freedesktop/systemd1 org.freedesktop.systemd1.Manager StopUnit ss '
-        '"remount-rw.service" "replace"'
-    )

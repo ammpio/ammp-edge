@@ -46,7 +46,7 @@ pub fn mqtt_pub_meta() -> Result<()> {
     let messages = construct_meta_msg();
     log::info!("Publishing metadata: {:?}", messages);
     sleep(Duration::from_secs(2));
-    let res = publish_msgs(&messages, Some(false), Some("local-pub-meta".into()));
+    let res = publish_msgs(&messages, Some("local-pub-meta".into()));
     if let Err(e) = res {
         log::error!(
             "Error while publishing to MQTT: {e}\nMessages: {:?}",
@@ -64,7 +64,7 @@ pub fn mqtt_pub_meta_persistent() -> Result<()> {
     let messages = construct_meta_msg();
 
     let publish_msgs = || {
-        publish_msgs(&messages, Some(true), Some("local-pub-meta".into()))
+        publish_msgs(&messages, Some("local-pub-meta".into()))
             .map_err(backoff::Error::transient)
     };
 

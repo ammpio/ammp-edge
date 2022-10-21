@@ -213,7 +213,7 @@ def wifi_ap_status():
 
     # Carry out action command if set
     if args['action'] in ACTIONS:
-        action_result = ACTIONS[args['action']](None)
+        action_result = ACTIONS[args['action']]()
     else:
         action_result = {'Error': 'Unknown action'}
 

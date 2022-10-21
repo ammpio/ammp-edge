@@ -43,7 +43,7 @@ apps:
     restart-condition: always
     restart-delay: 2s
     after: [ae-init, mosquitto]
-    plugs: [network]
+    plugs: [network, network-bind, serial-port]
   ammp-edge:
     command: bin/ammp_edge
     daemon: simple
