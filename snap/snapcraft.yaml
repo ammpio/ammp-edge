@@ -44,6 +44,9 @@ apps:
     restart-delay: 2s
     after: [ae-init, mosquitto]
     plugs: [network, network-bind, serial-port]
+    environment:
+    # The following is required in order to make libblas3 visible to nmap
+      LD_LIBRARY_PATH: "$LD_LIBRARY_PATH:$SNAP/usr/lib/$CRAFT_ARCH_TRIPLET/blas"
   ammp-edge:
     command: bin/ammp_edge
     daemon: simple
@@ -58,7 +61,6 @@ apps:
       - network-observe
       - serial-port
       - log-observe
-    # The following is required in order to make libblas3 visible to nmap
     environment:
       LD_LIBRARY_PATH: "$LD_LIBRARY_PATH:$SNAP/usr/lib/$CRAFT_ARCH_TRIPLET/blas"
   web-ui:
