@@ -4,9 +4,9 @@ use crate::helpers::base_path;
 
 const ALLOWED_COMMANDS: &[&str] = &[
     "snap_refresh",
-    "snap_switch_stable",
-    "snap_switch_beta",
-    "snap_switch_edge",
+    "snap_refresh_stable",
+    "snap_refresh_beta",
+    "snap_refresh_edge",
     "trigger_config_generation",
     "imt_sensor_address",
     "holykell_sensor_address_7",
