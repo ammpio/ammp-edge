@@ -2,9 +2,9 @@ use kvstore::KVDb;
 
 use crate::constants::defaults::DB_WRITE_TIMEOUT;
 use crate::constants::topics;
-use crate::helpers::backoff_retry;
+use crate::helpers::{backoff_retry, run_command};
 use crate::interfaces::kvpath;
-use crate::interfaces::mqtt::{sub_topics, MqttMessage};
+use crate::interfaces::mqtt::{publish_msgs, sub_topics, MqttMessage};
 use crate::node_mgmt;
 
 fn try_set_config(config_payload: String) {
@@ -32,7 +32,16 @@ fn process_msg(msg: MqttMessage) {
     log::info!("Received {} on {}", msg.payload, msg.topic);
     match msg.topic.as_str() {
         topics::CONFIG => try_set_config(msg.payload),
-        topics::COMMAND => todo!("Set command"),
+        topics::COMMAND => {
+            let response = run_command(msg.payload);
+            publish_msgs(
+                &vec!(MqttMessage {
+                    topic: topics::COMMAND_RESPONSE.into(),
+                    payload: response,
+                }),
+                Some("local-pub-cmd-resp".into()),
+            ).unwrap();
+        }
         _ => log::warn!("Message received on unrecognized topic {}", msg.topic),
     }
 }
