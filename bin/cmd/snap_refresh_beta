@@ -1,0 +1,9 @@
+#!/usr/bin/env python3
+
+import logging
+
+from node_mgmt.commands import snap_refresh_beta
+
+logging.basicConfig(level=logging.INFO)
+
+snap_refresh_beta()

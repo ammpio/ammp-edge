@@ -39,7 +39,7 @@ fn main() -> Result<()> {
         Some(CMD_MQTT_PUB_META) => command::mqtt_pub_meta(),
         Some(CMD_MQTT_SUB_CFG_CMD) => command::mqtt_sub_cfg_cmd(),
         _ => Err(anyhow!(
-            "Subcommand must be one of '{CMD_INIT}', '{CMD_KVS_GET}', '{CMD_KVS_SET}', '{CMD_MQTT_PUB_META}', '{CMD_MQTT_SUB_CFG_CMD}"
+            "Subcommand must be one of '{CMD_INIT}', '{CMD_KVS_GET}', '{CMD_KVS_SET}', '{CMD_MQTT_PUB_META}', '{CMD_MQTT_SUB_CFG_CMD}'"
         )),
     }
 }

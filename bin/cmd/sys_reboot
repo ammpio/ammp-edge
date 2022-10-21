@@ -1,0 +1,3 @@
+#!/bin/sh
+
+busctl call org.freedesktop.login1 /org/freedesktop/login1 org.freedesktop.login1.Manager Reboot b "false"
