@@ -13,7 +13,6 @@ import node_mgmt
 from data_mgmt import DataPusher
 from node_mgmt.node import Node
 from node_mgmt.config_watch import ConfigWatch
-from node_mgmt.command_watch import CommandWatch
 from reader import get_readout
 
 # Set up logging
@@ -71,9 +70,6 @@ def main():
 
     config_watch = ConfigWatch(node)
     config_watch.start()
-
-    command_watch = CommandWatch(node)
-    command_watch.start()
 
     # If we still have not got a config, wait for one to be provided
     if node.config is None:
