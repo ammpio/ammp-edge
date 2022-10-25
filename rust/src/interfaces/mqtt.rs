@@ -9,6 +9,8 @@ use thiserror::Error;
 
 use crate::constants::{defaults, envvars};
 
+const MAX_PACKET_SIZE: usize = 16777216;  // 16 MB
+
 static MQTT_BRIDGE_HOST: Lazy<String> = Lazy::new(|| {
     if let Ok(host) = env::var(envvars::MQTT_BRIDGE_HOST) {
         return host;
@@ -60,6 +62,7 @@ pub fn client_conn(client_id: String, clean_session: Option<bool>) -> (Client, C
 
     let mut mqttoptions = MqttOptions::new(client_id, host, port);
     mqttoptions.set_clean_session(clean_session.unwrap_or(true));
+    mqttoptions.set_max_packet_size(MAX_PACKET_SIZE, MAX_PACKET_SIZE);
 
     Client::new(mqttoptions, 10)
 }
