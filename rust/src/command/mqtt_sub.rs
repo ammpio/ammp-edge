@@ -1,3 +1,6 @@
+use std::thread::sleep;
+use std::time::Duration;
+
 use kvstore::KVDb;
 
 use crate::constants::defaults::DB_WRITE_TIMEOUT;
@@ -28,20 +31,32 @@ fn try_set_config(config_payload: String) {
     }
 }
 
+fn run_commands(command_payload: String) {
+    match serde_json::from_str::<Vec<String>>(&command_payload) {
+        Ok(commands) => {
+            for cmd in commands {
+                let response = run_command(cmd);
+                if let Err(e) = publish_msgs(
+                    &vec!(MqttMessage {
+                        topic: topics::COMMAND_RESPONSE.into(),
+                        payload: response,
+                    }),
+                    Some("local-pub-cmd-resp".into()),
+                ) {
+                    log::error!("Could not publish command response; error: {e}");
+                }
+                sleep(Duration::from_secs(5));
+            }
+        },
+        Err(e) => log::error!("Could not parse payload as JSON list; error: {e}")
+    }
+}
+
 fn process_msg(msg: MqttMessage) {
     log::info!("Received {} on {}", msg.payload, msg.topic);
     match msg.topic.as_str() {
         topics::CONFIG => try_set_config(msg.payload),
-        topics::COMMAND => {
-            let response = run_command(msg.payload);
-            publish_msgs(
-                &vec!(MqttMessage {
-                    topic: topics::COMMAND_RESPONSE.into(),
-                    payload: response,
-                }),
-                Some("local-pub-cmd-resp".into()),
-            ).unwrap();
-        }
+        topics::COMMAND => run_commands(msg.payload),
         _ => log::warn!("Message received on unrecognized topic {}", msg.topic),
     }
 }
