@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
 
 import logging
-import sys
 import os
 import sched
 import time
-import signal
 
 from dotenv import load_dotenv
 
@@ -73,9 +71,9 @@ def main():
 
     # If we still have not got a config, wait for one to be provided
     if node.config is None:
-        logger.info('No stored configuration available')
-        with node.events.getting_config:
-            node.events.getting_config.wait_for(lambda: node.config is not None)
+        logger.info('No stored configuration available; waiting until available')
+        while node.config is None:
+            time.sleep(15)
 
     # Create data pusher
     pusher = DataPusher(node)
