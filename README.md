@@ -71,7 +71,7 @@ The MQTT bridge is used for the majority of interfacing with the cloud, such as:
 
 ## Local development without Docker
 
-The following approaches can be used for convenience during development. Note that you some [#environment-variables](environment variables) may need to be set in order to ensure proper operation.
+The following approaches can be used for convenience during development. Note that you some (#environment-variables)[environment variables] may need to be set in order to ensure proper operation.
 
 ### Running Python code
 
@@ -82,7 +82,7 @@ python -m venv venv
 cd src
 pip install -U . --extra-index-url https://ammplipy.ammp.io/
 ```
-The extra index is currently needed to obtain builds of [https://pypi.org/project/pyjsonata/](pyjsonata) for relevant architectures/Python versions.
+The extra index is currently needed to obtain builds of (https://pypi.org/project/pyjsonata/)[pyjsonata] for relevant architectures/Python versions.
 
 See the `setup.py` file for the available entrypoints.
 
