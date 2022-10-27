@@ -4,9 +4,15 @@ ammp-edge is a component of AMMP, the Asset Monitoring and Management Platform: 
 
 ## Installing and running for production use
 
-For production, ammp-edge is designed to be installed and run as [a snap](https://snapcraft.io). Commits to the `main` branch are automatically built and released to the snap store under the `edge` channel, and promoted to the `beta`/`stable` channels after testing.
+For production, ammp-edge is designed to be installed and run as [a snap](https://snapcraft.io). See https://snapcraft.io/ammp-edge for details, including installation instructions for the relevant environment.
 
-See the Snapcraft documentation for further information on snap setup and service execution.
+CI/CD is set up so that commits to the `main` branch are automatically built and released to the snap store under the `edge` channel. After testing, the snap is promoted to the `beta`/`stable` channels as appropriate.
+
+## Usage documentation
+
+This is available the [AMMP Platform Documentation](https://ammpio.atlassian.net/wiki/spaces/APD).
+
+If you are a third party who would like to use this software and access the documentation, please reach out to contact@ammp.io.
 
 ## Running locally for development
 
@@ -23,6 +29,12 @@ The following Docker containers are run:
 - The `ammp-edge-web-ui` user interface, which can be accessed on port 8000
 - A `mosquitto` container with an MQTT broker used for local interfacing between different parts of the application (in a testing environment this is not bridged to the AMMP broker)
 - A `mock-sma-stp` container that emulates the ModbusTCP interface on an SMA PV inverter, and is used for testing
+
+### Drivers and driver development
+
+Readings from supported devices are based on drivers for the relevant devices. The [drivers](drivers) directory contains a number of JSON files, each being such a device driver. These are used to map a particular variable to be read to the underlying method of reading it from the device.
+
+Drivers can be either built-in (when present in this repo) or add-ons (when supplied via a configuration). In general, drivers are initially tested as add-ons, before being finalized and incorporated into the repository.
 
 ## Overview of codebase and operation
 
