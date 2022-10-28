@@ -1,0 +1,9 @@
+#!/usr/bin/env python3
+
+import logging
+
+from node_mgmt.commands import snap_proxy_on
+
+logging.basicConfig(level=logging.INFO)
+
+snap_proxy_on()

@@ -21,25 +21,42 @@ INPUT_PARAMETERS = 'input_parameters'
 
 
 def snap_refresh():
-    __snapd_socket_post({'action': 'refresh'})
+    __snapd_socket_post('snaps/ammp-edge', {'action': 'refresh'})
 
 
 def snap_refresh_stable():
-    __snapd_socket_post({'action': 'refresh', 'channel': 'stable'})
+    __snapd_socket_post('snaps/ammp-edge', {'action': 'refresh', 'channel': 'stable'})
 
 
 def snap_refresh_beta():
-    __snapd_socket_post({'action': 'refresh', 'channel': 'beta'})
+    __snapd_socket_post('snaps/ammp-edge', {'action': 'refresh', 'channel': 'beta'})
 
 
 def snap_refresh_edge():
-    __snapd_socket_post({'action': 'refresh', 'channel': 'edge'})
+    __snapd_socket_post('snaps/ammp-edge', {'action': 'refresh', 'channel': 'edge'})
 
 
-def __snapd_socket_post(payload):
+def snap_proxy_on():
+    __snapd_socket_put('snaps/core/conf', {'proxy.https': 'http://10.255.255.254:8888'})
+
+
+def snap_proxy_off():
+    __snapd_socket_put('snaps/core/conf', {'proxy.https': None})
+
+
+def __snapd_socket_post(path: str, payload: dict):
     try:
         with requests_unixsocket.Session() as s:
-            res = s.post('http+unix://%2Frun%2Fsnapd.socket/v2/snaps/ammp-edge', json=payload)
+            res = s.post(f'http+unix://%2Frun%2Fsnapd.socket/v2/{path}', json=payload)
+        logger.info(f"Response from snapd API: Status {res.status_code} / {res.text}")
+    except Exception:
+        logger.exception('Exception while doing snapd API socket request')
+
+
+def __snapd_socket_put(path: str, payload: dict):
+    try:
+        with requests_unixsocket.Session() as s:
+            res = s.put(f'http+unix://%2Frun%2Fsnapd.socket/v2/{path}', json=payload)
         logger.info(f"Response from snapd API: Status {res.status_code} / {res.text}")
     except Exception:
         logger.exception('Exception while doing snapd API socket request')
