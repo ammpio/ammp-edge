@@ -5,8 +5,8 @@ use std::time::Duration;
 use anyhow::Result;
 use sysinfo::{System, SystemExt};
 
-use crate::envvars::{SNAP_ARCH, SNAP_REVISION};
-use crate::helpers::{backoff_retry, get_ssh_fingerprint, now_epoch};
+use crate::envvars::SNAP_REVISION;
+use crate::helpers::{backoff_retry, get_node_arch, get_ssh_fingerprint, now_epoch};
 use crate::interfaces::mqtt::{publish_msgs, MqttMessage};
 
 fn construct_meta_msg() -> Vec<MqttMessage> {
@@ -27,7 +27,7 @@ fn construct_meta_msg() -> Vec<MqttMessage> {
             payload: snap_revision,
         })
     }
-    if let Ok(arch) = env::var(SNAP_ARCH) {
+    if let Ok(arch) = get_node_arch() {
         msgs.push(MqttMessage {
             topic: "u/meta/arch".into(),
             payload: arch,

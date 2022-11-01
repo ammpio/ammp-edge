@@ -12,3 +12,10 @@ pub fn get_ssh_fingerprint() -> Result<String> {
     let fingerprint = String::from_utf8(output.stdout)?;
     Ok(strip_optional_newline(fingerprint))
 }
+
+pub fn get_node_arch() -> Result<String> {
+    let output = Command::new("uname").arg("-srvm").output()?;
+
+    let arch = String::from_utf8(output.stdout)?;
+    Ok(strip_optional_newline(arch))
+}
