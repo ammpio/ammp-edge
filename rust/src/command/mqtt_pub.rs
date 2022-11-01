@@ -1,5 +1,4 @@
 use std::env;
-use std::thread::sleep;
 use std::time::Duration;
 
 use anyhow::Result;
@@ -8,6 +7,8 @@ use sysinfo::{System, SystemExt};
 use crate::envvars::SNAP_REVISION;
 use crate::helpers::{backoff_retry, get_node_arch, get_ssh_fingerprint, now_epoch};
 use crate::interfaces::mqtt::{publish_msgs, MqttMessage};
+
+const PUBLISH_TIMEOUT: Duration = Duration::from_secs(30);
 
 fn construct_meta_msg() -> Vec<MqttMessage> {
     let mut msgs = vec![
@@ -45,29 +46,14 @@ fn construct_meta_msg() -> Vec<MqttMessage> {
 pub fn mqtt_pub_meta() -> Result<()> {
     let messages = construct_meta_msg();
     log::info!("Publishing metadata: {:?}", messages);
-    sleep(Duration::from_secs(2));
-    let res = publish_msgs(&messages, Some("local-pub-meta".into()));
-    if let Err(e) = res {
-        log::error!(
-            "Error while publishing to MQTT: {e}\nMessages: {:?}",
-            messages
-        );
-    }
-    // The command will log and ignore errors, and always return a success exit code.
-    // This is a temporary workaround since snapd will try to run this by itself, without Mosquitto running
-    // See https://forum.snapcraft.io/t/bug-refreshing-snap-with-new-service-doesnt-respect-dependencies/31890
-    Ok(())
-}
-
-#[allow(dead_code)]
-pub fn mqtt_pub_meta_persistent() -> Result<()> {
-    let messages = construct_meta_msg();
 
     let publish_msgs = || {
-        publish_msgs(&messages, Some("local-pub-meta".into()))
-            .map_err(backoff::Error::transient)
+        publish_msgs(&messages, Some("local-pub-meta".into())).map_err(backoff::Error::transient)
     };
 
-    backoff_retry(publish_msgs, None).unwrap();
+    match backoff_retry(publish_msgs, Some(PUBLISH_TIMEOUT)) {
+        Ok(()) => log::info!("Successfully published"),
+        Err(e) => log::error!("Error while publishing to MQTT: {e}"),
+    }
     Ok(())
 }
