@@ -44,8 +44,20 @@ fn construct_meta_msg() -> Vec<MqttMessage> {
     msgs
 }
 
+fn construct_clean_msg(original_msg: &[MqttMessage]) -> Vec<MqttMessage> {
+    original_msg
+        .iter()
+        .map(|m| MqttMessage {
+            topic: m.topic.clone(),
+            payload: "".to_string(),
+        })
+        .collect()
+}
+
 pub fn mqtt_pub_meta() -> Result<()> {
-    let messages = construct_meta_msg();
+    let mut meta_messages = construct_meta_msg();
+    let mut messages = construct_clean_msg(&meta_messages);
+    messages.append(&mut meta_messages);
     log::info!("Publishing metadata: {:?}", messages);
 
     let publish_msgs = || {
