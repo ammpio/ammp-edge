@@ -1,73 +1,72 @@
 use std::env;
-use std::thread::sleep;
 use std::time::Duration;
 
 use anyhow::Result;
 use sysinfo::{System, SystemExt};
 
-use crate::envvars::{SNAP_ARCH, SNAP_REVISION};
-use crate::helpers::{backoff_retry, get_ssh_fingerprint, now_epoch};
+use crate::constants::topics;
+use crate::envvars::SNAP_REVISION;
+use crate::helpers::{backoff_retry, get_node_arch, get_ssh_fingerprint, now_epoch};
 use crate::interfaces::mqtt::{publish_msgs, MqttMessage};
+
+const PUBLISH_TIMEOUT: Duration = Duration::from_secs(30);
 
 fn construct_meta_msg() -> Vec<MqttMessage> {
     let mut msgs = vec![
         MqttMessage {
-            topic: "u/meta/boot_time".into(),
+            topic: topics::META_BOOT_TIME.to_string(),
             payload: System::new().boot_time().to_string(),
         },
         MqttMessage {
-            topic: "u/meta/start_time".into(),
+            topic: topics::META_START_TIME.to_string(),
             payload: now_epoch().to_string(),
         },
     ];
 
     if let Ok(snap_revision) = env::var(SNAP_REVISION) {
         msgs.push(MqttMessage {
-            topic: "u/meta/snap_rev".into(),
+            topic: topics::META_SNAP_REV.to_string(),
             payload: snap_revision,
         })
     }
-    if let Ok(arch) = env::var(SNAP_ARCH) {
+    if let Ok(arch) = get_node_arch() {
         msgs.push(MqttMessage {
-            topic: "u/meta/arch".into(),
+            topic: topics::META_ARCH.to_string(),
             payload: arch,
         })
     }
     if let Ok(ssh_fingerprint) = get_ssh_fingerprint() {
         msgs.push(MqttMessage {
-            topic: "u/meta/ssh_fingerprint".into(),
+            topic: topics::META_SSH_FINGERPRINT.to_string(),
             payload: ssh_fingerprint,
         });
     }
     msgs
 }
 
-pub fn mqtt_pub_meta() -> Result<()> {
-    let messages = construct_meta_msg();
-    log::info!("Publishing metadata: {:?}", messages);
-    sleep(Duration::from_secs(2));
-    let res = publish_msgs(&messages, Some("local-pub-meta".into()));
-    if let Err(e) = res {
-        log::error!(
-            "Error while publishing to MQTT: {e}\nMessages: {:?}",
-            messages
-        );
-    }
-    // The command will log and ignore errors, and always return a success exit code.
-    // This is a temporary workaround since snapd will try to run this by itself, without Mosquitto running
-    // See https://forum.snapcraft.io/t/bug-refreshing-snap-with-new-service-doesnt-respect-dependencies/31890
-    Ok(())
+fn construct_clean_msg(original_msg: &[MqttMessage]) -> Vec<MqttMessage> {
+    original_msg
+        .iter()
+        .map(|m| MqttMessage {
+            topic: m.topic.clone(),
+            payload: "".to_string(),
+        })
+        .collect()
 }
 
-#[allow(dead_code)]
-pub fn mqtt_pub_meta_persistent() -> Result<()> {
-    let messages = construct_meta_msg();
+pub fn mqtt_pub_meta() -> Result<()> {
+    let mut meta_messages = construct_meta_msg();
+    let mut messages = construct_clean_msg(&meta_messages);
+    messages.append(&mut meta_messages);
+    log::info!("Publishing metadata: {:?}", messages);
 
     let publish_msgs = || {
-        publish_msgs(&messages, Some("local-pub-meta".into()))
-            .map_err(backoff::Error::transient)
+        publish_msgs(&messages, Some("local-pub-meta".into())).map_err(backoff::Error::transient)
     };
 
-    backoff_retry(publish_msgs, None).unwrap();
+    match backoff_retry(publish_msgs, Some(PUBLISH_TIMEOUT)) {
+        Ok(()) => log::info!("Successfully published"),
+        Err(e) => log::error!("Error while publishing to MQTT: {e}"),
+    }
     Ok(())
 }

@@ -19,6 +19,7 @@ MQTT_STATE_TOPIC = 'u/state/env_scan'
 GENERATE_NEW_CONFIG_FLAG = 'generate_new_config'
 INPUT_PARAMETERS = 'input_parameters'
 
+# For snap API docs see https://snapcraft.io/docs/snapd-api
 
 def snap_refresh():
     __snapd_socket_post('snaps/ammp-edge', {'action': 'refresh'})
