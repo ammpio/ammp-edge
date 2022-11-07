@@ -37,18 +37,18 @@ fn run_commands(command_payload: String) {
             for cmd in commands {
                 let response = run_command(cmd);
                 if let Err(e) = publish_msgs(
-                    &vec!(MqttMessage {
+                    &vec![MqttMessage {
                         topic: topics::COMMAND_RESPONSE.into(),
                         payload: response,
-                    }),
+                    }],
                     Some("local-pub-cmd-resp".into()),
                 ) {
                     log::error!("Could not publish command response; error: {e}");
                 }
                 sleep(Duration::from_secs(5));
             }
-        },
-        Err(e) => log::error!("Could not parse payload as JSON list; error: {e}")
+        }
+        Err(e) => log::error!("Could not parse payload as JSON list; error: {e}"),
     }
 }
 

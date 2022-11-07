@@ -9,7 +9,7 @@ use thiserror::Error;
 
 use crate::constants::{defaults, envvars};
 
-const MAX_PACKET_SIZE: usize = 16777216;  // 16 MB
+const MAX_PACKET_SIZE: usize = 16777216; // 16 MB
 
 static MQTT_BRIDGE_HOST: Lazy<String> = Lazy::new(|| {
     if let Ok(host) = env::var(envvars::MQTT_BRIDGE_HOST) {
