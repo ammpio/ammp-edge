@@ -123,5 +123,4 @@ This service is a `Flask` application that uses Jinja2 as template engine and Py
 *Testing the newly updated page(s)*
 
 - Locally, the application runs on port `8000`. Simply navigate to `localhost:8000` to checkout the Web UI application. 
-
 - To test the Web UI on datalogger, follow the instruction from the article [Accessing a datalogger's local Web UI remotely](https://ammpio.atlassian.net/wiki/spaces/APD/pages/2463399969/Accessing+a+datalogger+s+local+Web+UI+remotely)
