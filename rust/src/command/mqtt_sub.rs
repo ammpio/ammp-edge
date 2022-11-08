@@ -42,6 +42,7 @@ fn run_commands(command_payload: String) {
                         payload: response,
                     }),
                     Some("local-pub-cmd-resp".into()),
+                    false,
                 ) {
                     log::error!("Could not publish command response; error: {e}");
                 }
