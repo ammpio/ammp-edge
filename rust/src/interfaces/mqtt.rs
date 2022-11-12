@@ -88,6 +88,7 @@ pub fn publish(
 pub fn publish_msgs(
     messages: &Vec<MqttMessage>,
     client_prefix: Option<String>,
+    retain: bool,
 ) -> Result<(), MqttError> {
     let (mut client, mut connection) = client_conn(get_rand_client_id(client_prefix), None);
 
@@ -99,7 +100,7 @@ pub fn publish_msgs(
         client.publish(
             msg.topic.clone(),
             QoS::AtLeastOnce,
-            false,
+            retain,
             msg.payload.as_bytes(),
         )?;
     }

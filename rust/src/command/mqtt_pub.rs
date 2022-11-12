@@ -55,13 +55,13 @@ fn construct_clean_msg(original_msg: &[MqttMessage]) -> Vec<MqttMessage> {
 }
 
 pub fn mqtt_pub_meta() -> Result<()> {
-    let mut meta_messages = construct_meta_msg();
-    let mut messages = construct_clean_msg(&meta_messages);
-    messages.append(&mut meta_messages);
+    let messages = construct_meta_msg();
+    let clean_messages = construct_clean_msg(&messages);
     log::info!("Publishing metadata: {:?}", messages);
 
     let publish_msgs = || {
-        publish_msgs(&messages, Some("local-pub-meta".into())).map_err(backoff::Error::transient)
+        publish_msgs(&clean_messages, Some("local-pub-meta".into()), true)?;
+        publish_msgs(&messages, Some("local-pub-meta".into()), false).map_err(backoff::Error::transient)
     };
 
     match backoff_retry(publish_msgs, Some(PUBLISH_TIMEOUT)) {
