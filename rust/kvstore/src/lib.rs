@@ -130,7 +130,7 @@ mod tests {
 
     #[test]
     fn open_db_read_and_write() -> Result<(), KVStoreError> {
-        let db = KVDb::new(&IN_MEMORY)?;
+        let db = KVDb::new(IN_MEMORY)?;
         db.upsert(TEST_KEY, TEST_VALUE)?;
         assert_eq!(TEST_VALUE, db.select(TEST_KEY).unwrap().unwrap());
         Ok(())
@@ -138,7 +138,7 @@ mod tests {
 
     #[test]
     fn open_db_read_empty() -> Result<(), KVStoreError> {
-        let db = KVDb::new(&IN_MEMORY)?;
+        let db = KVDb::new(IN_MEMORY)?;
         assert!(db.select(TEST_KEY)?.is_none());
         Ok(())
     }
