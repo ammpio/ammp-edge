@@ -158,3 +158,57 @@ where
     client.disconnect()?;
     Ok(())
 }
+
+#[cfg(test)]
+mod test {
+    use std::thread::sleep;
+    use std::time::Duration;
+
+    use super::*;
+
+    const SAMPLE_TOPIC: &str = "test_topic";
+    const SAMPLE_PAYLOAD: &str = "test_payload";
+    static SAMPLE_MQTT_MESSAGES: Lazy<Vec<MqttMessage>> =
+        Lazy::new(|| vec![MqttMessage::new(SAMPLE_TOPIC, SAMPLE_PAYLOAD)]);
+
+    fn process_msg(msg: &MqttMessage) {
+        log::info!("Received {} on {}", msg.payload, msg.topic);
+        assert_eq!(msg.topic, SAMPLE_TOPIC);
+        assert_eq!(msg.payload, SAMPLE_PAYLOAD);
+    }
+
+    #[test]
+    fn test_client_conn() {
+        ()
+    }
+
+    #[test]
+    fn test_publish_single_msg() {
+        let (mut client, mut connection) = client_conn("pub-test-subscriber", Some(true));
+
+        thread::spawn(move || {
+            sleep(Duration::from_secs(1));
+            publish_msgs(&SAMPLE_MQTT_MESSAGES, Some("pub-test"), false).unwrap()
+        });
+
+        for (_, notification) in connection.iter().enumerate() {
+            println!("Notification = {:?}", notification);
+            let evt = notification.unwrap();
+            if let Event::Incoming(Packet::Publish(r)) = evt {
+                assert_eq!(r.topic, SAMPLE_TOPIC);
+                assert_eq!(from_utf8(&r.payload).unwrap(), SAMPLE_PAYLOAD);
+                break;
+            }
+        }
+    }
+
+    #[test]
+    fn test_receive_single_msg() {
+        thread::spawn(move || {
+            sleep(Duration::from_secs(1));
+            publish_msgs(&SAMPLE_MQTT_MESSAGES, Some("sub-test-publisher"), false).unwrap();
+        });
+
+        sub_topics(&[SAMPLE_TOPIC], Some("sub-test"), process_msg);
+    }
+}
