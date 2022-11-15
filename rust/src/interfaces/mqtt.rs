@@ -32,6 +32,15 @@ pub struct MqttMessage {
     pub payload: String,
 }
 
+impl MqttMessage {
+    pub fn new<S: Into<String>, T: Into<String>>(topic: S, payload: T) -> MqttMessage {
+        MqttMessage {
+            topic: topic.into(),
+            payload: payload.into(),
+        }
+    }
+}
+
 #[derive(Error, Debug)]
 pub enum MqttError {
     #[error(transparent)]
@@ -42,7 +51,7 @@ pub enum MqttError {
     MqttConnection(#[from] rumqttc::ConnectionError),
 }
 
-pub fn get_rand_client_id(prefix: Option<String>) -> String {
+pub fn get_rand_client_id(prefix: Option<&str>) -> String {
     const RAND_ID_BYTES: usize = 3;
     let mut rand = [0u8; RAND_ID_BYTES];
     getrandom(&mut rand).unwrap();
@@ -55,7 +64,7 @@ pub fn get_rand_client_id(prefix: Option<String>) -> String {
     }
 }
 
-pub fn client_conn(client_id: String, clean_session: Option<bool>) -> (Client, Connection) {
+pub fn client_conn(client_id: &str, clean_session: Option<bool>) -> (Client, Connection) {
     let host = MQTT_BRIDGE_HOST.clone();
     let port = *MQTT_BRIDGE_PORT;
     log::info!("Establishing MQTT connection to {host}:{port} as {client_id}");
@@ -87,10 +96,10 @@ pub fn publish(
 
 pub fn publish_msgs(
     messages: &Vec<MqttMessage>,
-    client_prefix: Option<String>,
+    client_prefix: Option<&str>,
     retain: bool,
 ) -> Result<(), MqttError> {
-    let (mut client, mut connection) = client_conn(get_rand_client_id(client_prefix), None);
+    let (mut client, mut connection) = client_conn(&get_rand_client_id(client_prefix), None);
 
     let mut expected_msg_acks = messages.len();
 
@@ -121,29 +130,26 @@ pub fn publish_msgs(
 }
 
 pub fn sub_topics<F>(
-    topics: &[String],
-    client_prefix: Option<String>,
+    topics: &[&str],
+    client_prefix: Option<&str>,
     msg_processor: F,
 ) -> Result<(), MqttError>
 where
-    F: Fn(MqttMessage) + Copy + Send + Sync + 'static,
+    F: Fn(&MqttMessage) + Copy + Send + Sync + 'static,
 {
-    let (mut client, mut connection) = client_conn(get_rand_client_id(client_prefix), None);
+    let (mut client, mut connection) = client_conn(&get_rand_client_id(client_prefix), None);
 
     for topic in topics.iter() {
         log::info!("Subscribing to {}", topic);
-        client.subscribe(topic, QoS::ExactlyOnce)?;
+        client.subscribe(*topic, QoS::ExactlyOnce)?;
     }
 
     for (_, notification) in connection.iter().enumerate() {
         log::trace!("Notification = {:?}", notification);
         match notification {
             Ok(Event::Incoming(Packet::Publish(r))) => {
-                let msg = MqttMessage {
-                    topic: r.topic,
-                    payload: from_utf8(&r.payload)?.into(),
-                };
-                thread::spawn(move || msg_processor(msg));
+                let msg = MqttMessage::new(&r.topic, from_utf8(&r.payload)?);
+                thread::spawn(move || msg_processor(&msg));
             }
             Err(e) => return Err(e.into()),
             _ => (),

@@ -10,7 +10,7 @@ fn mac_is_non_zero(mac: &[u8; 6]) -> bool {
     mac.iter().any(|&x| x != 0)
 }
 
-fn get_interface_priority(interface_name: &String) -> Option<usize> {
+fn get_interface_priority(interface_name: &str) -> Option<usize> {
     // Try to get MAC address based on interface list (in order)
     const IFN_PRIORITY: &[&str] = &["eth0", "en0", "eth1", "en1", "wlan0", "wlan1"];
 
@@ -70,9 +70,9 @@ mod tests {
 
     #[test]
     fn interface_priorities() {
-        assert_eq!(get_interface_priority(&"eth0".to_string()), Some(0));
-        assert_eq!(get_interface_priority(&"wlan0".to_string()), Some(4));
-        assert_eq!(get_interface_priority(&"en3".to_string()), None);
+        assert_eq!(get_interface_priority("eth0"), Some(0));
+        assert_eq!(get_interface_priority("wlan0"), Some(4));
+        assert_eq!(get_interface_priority("en3"), None);
     }
 
     #[test]

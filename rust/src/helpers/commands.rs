@@ -17,14 +17,14 @@ static VALID_COMMANDS: Lazy<HashSet<OsString>> = Lazy::new(|| {
         .collect()
 });
 
-pub fn run_command(cmd: String) -> String {
-    if !VALID_COMMANDS.contains(&OsString::from(&cmd)) {
+pub fn run_command(cmd: &str) -> String {
+    if !VALID_COMMANDS.contains(&OsString::from(cmd)) {
         let message = format!("Unrecognized command: {cmd}");
         log::error!("{}", message);
         return message;
     }
 
-    let cmd_path = CMD_BASE_DIR.join(&cmd);
+    let cmd_path = CMD_BASE_DIR.join(cmd);
 
     match Command::new(cmd_path).output() {
         Ok(output) => {
