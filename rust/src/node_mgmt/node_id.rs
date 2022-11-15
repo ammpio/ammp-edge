@@ -1,5 +1,6 @@
-use getrandom::getrandom;
 use nix::ifaddrs::getifaddrs;
+
+use crate::helpers::rand_hex;
 
 // Uses the `getifaddrs` call to retrieve a list of network interfaces on the
 // host device. Iterates over them and returns the MAC address corresponding to
@@ -50,9 +51,8 @@ pub fn generate_node_id() -> String {
     } else {
         // If not available, generate random node ID with "ff" prefix
         log::warn!("Could not obtain node ID based on network interface; generating random");
-        let mut randmac = [0u8; 5];
-        getrandom(&mut randmac).unwrap();
-        format!("ff{}", hex::encode(randmac))
+        let randmac = rand_hex(5);
+        format!("ff{randmac}")
     }
 }
 
