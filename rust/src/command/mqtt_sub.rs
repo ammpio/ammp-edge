@@ -1,6 +1,7 @@
-use std::thread::sleep;
+use std::thread;
 use std::time::Duration;
 
+use flume::unbounded;
 use kvstore::KVDb;
 
 use crate::constants::defaults::DB_WRITE_TIMEOUT;
@@ -43,7 +44,7 @@ fn run_commands(command_payload: &str) {
                 ) {
                     log::error!("Could not publish command response; error: {e}");
                 }
-                sleep(Duration::from_secs(5));
+                thread::sleep(Duration::from_secs(5));
             }
         }
         Err(e) => log::error!("Could not parse payload as JSON list; error: {e}"),
@@ -61,10 +62,19 @@ fn process_msg(msg: &MqttMessage) {
 
 pub fn mqtt_sub_cfg_cmd() -> anyhow::Result<()> {
     let sub_loop = || {
+        let (tx, rx) = unbounded();
+
+        thread::spawn(move || {
+            for msg in rx.iter() {
+                process_msg(&msg);
+            }
+        });
+
         sub_topics(
             &[topics::CONFIG, topics::COMMAND],
             Some("local-sub-cfg"),
-            process_msg,
+            tx,
+            None,
         )
         .map_err(backoff::Error::transient)
     };

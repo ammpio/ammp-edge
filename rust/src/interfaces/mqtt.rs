@@ -124,7 +124,7 @@ pub fn sub_topics(
     let mut num_messages: usize = 0;
 
     for (_, notification) in connection.iter().enumerate() {
-        println!("Notification = {:?}", notification);
+        log::trace!("Notification = {:?}", notification);
         match notification {
             Ok(Event::Incoming(Packet::Publish(r))) => {
                 let msg = MqttMessage::new(&r.topic, from_utf8(&r.payload)?);
