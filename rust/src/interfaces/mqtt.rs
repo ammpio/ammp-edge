@@ -176,7 +176,7 @@ mod test {
         let (tx, rx) = unbounded();
 
         thread::spawn(move || {
-            thread::sleep(Duration::from_secs(1));
+            thread::sleep(Duration::from_millis(200));
             publish_msgs(&SAMPLE_MQTT_MESSAGES, Some("sub-test-publisher"), false).unwrap();
         });
 
