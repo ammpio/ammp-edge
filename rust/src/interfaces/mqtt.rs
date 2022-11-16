@@ -175,7 +175,7 @@ mod test {
 
         let (tx, rx) = unbounded();
 
-        thread::spawn(move || {
+        let publisher_thread = thread::spawn(move || {
             thread::sleep(Duration::from_millis(200));
             publish_msgs(&SAMPLE_MQTT_MESSAGES, Some("sub-test-publisher"), false).unwrap();
         });
@@ -191,5 +191,6 @@ mod test {
         for msg in &*SAMPLE_MQTT_MESSAGES {
             assert_eq!(rx.recv().unwrap(), *msg);
         }
+        publisher_thread.join().unwrap();
     }
 }
