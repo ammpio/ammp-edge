@@ -1,13 +1,13 @@
 use std::env;
 use std::str::{from_utf8, Utf8Error};
-use std::thread;
 
-use getrandom::getrandom;
+use flume::Sender;
 use once_cell::sync::Lazy;
 use rumqttc::{Client, Connection, Event, MqttOptions, Packet, QoS};
 use thiserror::Error;
 
 use crate::constants::{defaults, envvars};
+use crate::helpers::rand_hex;
 
 const MAX_PACKET_SIZE: usize = 16777216; // 16 MB
 
@@ -26,7 +26,7 @@ static MQTT_BRIDGE_PORT: Lazy<u16> = Lazy::new(|| {
     defaults::MQTT_BRIDGE_PORT
 });
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct MqttMessage {
     pub topic: String,
     pub payload: String,
@@ -51,11 +51,8 @@ pub enum MqttError {
     MqttConnection(#[from] rumqttc::ConnectionError),
 }
 
-pub fn get_rand_client_id(prefix: Option<&str>) -> String {
-    const RAND_ID_BYTES: usize = 3;
-    let mut rand = [0u8; RAND_ID_BYTES];
-    getrandom(&mut rand).unwrap();
-    let randhex = hex::encode(rand);
+pub fn rand_client_id(prefix: Option<&str>) -> String {
+    let randhex = rand_hex(3);
 
     if let Some(pref) = prefix {
         format!("{pref}-{randhex}")
@@ -64,34 +61,16 @@ pub fn get_rand_client_id(prefix: Option<&str>) -> String {
     }
 }
 
-pub fn client_conn(client_id: &str, clean_session: Option<bool>) -> (Client, Connection) {
+pub fn client_conn(client_id: &str, clean_session: bool) -> (Client, Connection) {
     let host = MQTT_BRIDGE_HOST.clone();
     let port = *MQTT_BRIDGE_PORT;
     log::info!("Establishing MQTT connection to {host}:{port} as {client_id}");
 
     let mut mqttoptions = MqttOptions::new(client_id, host, port);
-    mqttoptions.set_clean_session(clean_session.unwrap_or(true));
+    mqttoptions.set_clean_session(clean_session);
     mqttoptions.set_max_packet_size(MAX_PACKET_SIZE, MAX_PACKET_SIZE);
 
     Client::new(mqttoptions, 10)
-}
-
-#[allow(dead_code)]
-pub fn publish(
-    mut client: Client,
-    msg: MqttMessage,
-    retain: Option<bool>,
-    qos: Option<QoS>,
-) -> Result<(), MqttError> {
-    log::debug!("Publishing to {}: {}", msg.topic, msg.payload);
-
-    client.publish(
-        msg.topic,
-        qos.unwrap_or(QoS::AtLeastOnce),
-        retain.unwrap_or(false),
-        msg.payload.as_bytes(),
-    )?;
-    Ok(())
 }
 
 pub fn publish_msgs(
@@ -99,7 +78,7 @@ pub fn publish_msgs(
     client_prefix: Option<&str>,
     retain: bool,
 ) -> Result<(), MqttError> {
-    let (mut client, mut connection) = client_conn(&get_rand_client_id(client_prefix), None);
+    let (mut client, mut connection) = client_conn(&rand_client_id(client_prefix), true);
 
     let mut expected_msg_acks = messages.len();
 
@@ -129,27 +108,34 @@ pub fn publish_msgs(
     Ok(())
 }
 
-pub fn sub_topics<F>(
+pub fn sub_topics(
     topics: &[&str],
     client_prefix: Option<&str>,
-    msg_processor: F,
-) -> Result<(), MqttError>
-where
-    F: Fn(&MqttMessage) + Copy + Send + Sync + 'static,
-{
-    let (mut client, mut connection) = client_conn(&get_rand_client_id(client_prefix), None);
+    tx: Sender<MqttMessage>,
+    max_messages: Option<usize>,
+) -> Result<(), MqttError> {
+    let (mut client, mut connection) = client_conn(&rand_client_id(client_prefix), true);
 
     for topic in topics.iter() {
         log::info!("Subscribing to {}", topic);
         client.subscribe(*topic, QoS::ExactlyOnce)?;
     }
 
+    let mut num_messages: usize = 0;
+
     for (_, notification) in connection.iter().enumerate() {
-        log::trace!("Notification = {:?}", notification);
+        println!("Notification = {:?}", notification);
         match notification {
             Ok(Event::Incoming(Packet::Publish(r))) => {
                 let msg = MqttMessage::new(&r.topic, from_utf8(&r.payload)?);
-                thread::spawn(move || msg_processor(&msg));
+                if let Err(e) = tx.send(msg) {
+                    log::error!("Failed to submit message for processing: {e}");
+                }
+
+                num_messages += 1;
+                if let Some(mm) = max_messages && num_messages == mm {
+                    break;
+                }
             }
             Err(e) => return Err(e.into()),
             _ => (),
@@ -161,54 +147,49 @@ where
 
 #[cfg(test)]
 mod test {
-    use std::thread::sleep;
+    use std::thread;
     use std::time::Duration;
+
+    use flume::unbounded;
 
     use super::*;
 
-    const SAMPLE_TOPIC: &str = "test_topic";
-    const SAMPLE_PAYLOAD: &str = "test_payload";
-    static SAMPLE_MQTT_MESSAGES: Lazy<Vec<MqttMessage>> =
-        Lazy::new(|| vec![MqttMessage::new(SAMPLE_TOPIC, SAMPLE_PAYLOAD)]);
+    const CLIENT_PREFIX: &str = "test_client";
+    const SAMPLE_TOPICS: [&str; 3] = ["test_topic_1", "test_topic_2", "test_topic_3"];
+    static SAMPLE_MQTT_MESSAGES: Lazy<Vec<MqttMessage>> = Lazy::new(|| {
+        SAMPLE_TOPICS.iter().map(|topic| MqttMessage::new(*topic, rand_hex(6))).collect()
+    });
 
-    fn process_msg(msg: &MqttMessage) {
-        log::info!("Received {} on {}", msg.payload, msg.topic);
-        assert_eq!(msg.topic, SAMPLE_TOPIC);
-        assert_eq!(msg.payload, SAMPLE_PAYLOAD);
+    #[test]
+    fn test_rand_client_id() {
+        let bare_client_id = rand_client_id(None);
+        assert_eq!(bare_client_id.len(), 6);
+
+        let prefixed_client_id = rand_client_id(Some(CLIENT_PREFIX));
+        assert_eq!(prefixed_client_id.len(), CLIENT_PREFIX.len() + 1 + 6);
     }
 
     #[test]
-    fn test_client_conn() {
-        ()
-    }
+    fn test_publist_and_receive_msgs() {
+        assert!(SAMPLE_MQTT_MESSAGES.len() > 0);
 
-    #[test]
-    fn test_publish_single_msg() {
-        let (mut client, mut connection) = client_conn("pub-test-subscriber", Some(true));
+        let (tx, rx) = unbounded();
 
         thread::spawn(move || {
-            sleep(Duration::from_secs(1));
-            publish_msgs(&SAMPLE_MQTT_MESSAGES, Some("pub-test"), false).unwrap()
-        });
-
-        for (_, notification) in connection.iter().enumerate() {
-            println!("Notification = {:?}", notification);
-            let evt = notification.unwrap();
-            if let Event::Incoming(Packet::Publish(r)) = evt {
-                assert_eq!(r.topic, SAMPLE_TOPIC);
-                assert_eq!(from_utf8(&r.payload).unwrap(), SAMPLE_PAYLOAD);
-                break;
-            }
-        }
-    }
-
-    #[test]
-    fn test_receive_single_msg() {
-        thread::spawn(move || {
-            sleep(Duration::from_secs(1));
+            thread::sleep(Duration::from_secs(1));
             publish_msgs(&SAMPLE_MQTT_MESSAGES, Some("sub-test-publisher"), false).unwrap();
         });
 
-        sub_topics(&[SAMPLE_TOPIC], Some("sub-test"), process_msg);
+        sub_topics(
+            &SAMPLE_TOPICS,
+            Some("sub-test"),
+            tx,
+            Some(SAMPLE_MQTT_MESSAGES.len()),
+        )
+        .unwrap();
+
+        for msg in &*SAMPLE_MQTT_MESSAGES {
+            assert_eq!(rx.recv().unwrap(), *msg);
+        }
     }
 }

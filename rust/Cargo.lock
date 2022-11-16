@@ -32,6 +32,7 @@ dependencies = [
  "chrono",
  "dotenv",
  "env_logger",
+ "flume",
  "getrandom",
  "hex",
  "kvstore",
