@@ -40,9 +40,9 @@ fn do_fresh_initialization(kvs: &KVDb) -> Result<()> {
     log::info!("Node ID: {}. Initializing...", node_id);
 
     let access_key = node_mgmt::activate(kvs, &node_id)?;
-    kvs.set(keys::NODE_ID, &node_id)?;
-    kvs.set(keys::ACCESS_KEY, &access_key)?;
-    kvs.set(keys::ACTIVATED, &now_iso())?;
+    kvs.set(keys::NODE_ID, node_id)?;
+    kvs.set(keys::ACCESS_KEY, access_key)?;
+    kvs.set(keys::ACTIVATED, now_iso())?;
     log::info!("Activation successfully completed");
     Ok(())
 }
@@ -153,10 +153,7 @@ mod tests {
         let blank_kvs = KVDb::new(IN_MEMORY)?;
         let tempdir = tempfile::tempdir()?;
         let legacy_configdb_path = tempdir.path().join(LEGACY_CONFIG_FILENAME);
-        assert!(!can_import_legacy_config(
-            &legacy_configdb_path,
-            &blank_kvs
-        )?);
+        assert!(!can_import_legacy_config(legacy_configdb_path, &blank_kvs)?);
         Ok(())
     }
 
