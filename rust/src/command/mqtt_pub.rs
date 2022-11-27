@@ -5,7 +5,7 @@ use anyhow::Result;
 use sysinfo::{System, SystemExt};
 
 use crate::constants::topics;
-use crate::envvars::SNAP_REVISION;
+use crate::constants::envvars;
 use crate::helpers::{backoff_retry, get_node_arch, get_ssh_fingerprint, now_epoch};
 use crate::interfaces::mqtt::{publish_msgs, MqttMessage};
 
@@ -20,7 +20,7 @@ fn construct_meta_msg() -> Vec<MqttMessage> {
         MqttMessage::new(topics::META_START_TIME, now_epoch().to_string()),
     ];
 
-    if let Ok(snap_revision) = env::var(SNAP_REVISION) {
+    if let Ok(snap_revision) = env::var(envvars::SNAP_REVISION) {
         msgs.push(MqttMessage::new(topics::META_SNAP_REV, snap_revision));
     }
     if let Ok(arch) = get_node_arch() {

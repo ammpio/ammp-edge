@@ -41,6 +41,10 @@ tempfile = "3.3.0"
 name = "ae"
 path = "src/main.rs"
 
+[lib]
+name = "ae"
+path = "src/lib.rs"
+
 [workspace]
 members = [
     "kvstore"
