@@ -1,6 +1,6 @@
 use std::ffi::OsStr;
 use std::os::unix::process::ExitStatusExt;
-use std::str::from_utf8;
+use std::str;
 use std::thread;
 use std::time::Duration;
 
@@ -113,7 +113,7 @@ fn mqtt_publish_meta() {
         println!("Notification = {:?}", notification);
         let event = notification.unwrap();
         if let Event::Incoming(Packet::Publish(msg)) = event {
-            let payload = from_utf8(&msg.payload).unwrap();
+            let payload = str::from_utf8(&msg.payload).unwrap();
             match msg.topic.as_str() {
                 "u/meta/snap_rev" => assert_eq!(payload, SNAP_REV.to_string()),
                 "u/meta/boot_time" => assert!(payload.parse::<u32>().unwrap() > 0),

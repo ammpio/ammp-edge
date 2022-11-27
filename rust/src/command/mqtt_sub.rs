@@ -6,9 +6,8 @@ use kvstore::KVDb;
 
 use crate::constants::defaults::DB_WRITE_TIMEOUT;
 use crate::constants::topics;
-use crate::helpers::{backoff_retry, run_command};
-use crate::interfaces::kvpath;
-use crate::interfaces::mqtt::{publish_msgs, sub_topics, MqttMessage};
+use crate::helpers;
+use crate::interfaces::{kvpath, mqtt, mqtt::MqttMessage};
 use crate::node_mgmt;
 
 fn try_set_config(config_payload: &str) {
@@ -20,7 +19,7 @@ fn try_set_config(config_payload: &str) {
             Ok(())
         };
 
-        match backoff_retry(set_config, Some(DB_WRITE_TIMEOUT)) {
+        match helpers::backoff_retry(set_config, Some(DB_WRITE_TIMEOUT)) {
             Ok(()) => log::info!("Successfully set new config"),
             Err(e) => log::error!("Permanent error setting config: {:?}", e),
         }
@@ -36,8 +35,8 @@ fn run_commands(command_payload: &str) {
     match serde_json::from_str::<Vec<String>>(command_payload) {
         Ok(commands) => {
             for cmd in commands {
-                let response = run_command(&cmd);
-                if let Err(e) = publish_msgs(
+                let response = helpers::run_command(&cmd);
+                if let Err(e) = mqtt::publish_msgs(
                     &vec![MqttMessage::new(topics::COMMAND_RESPONSE, response)],
                     Some("local-pub-cmd-resp"),
                     false,
@@ -70,7 +69,7 @@ pub fn mqtt_sub_cfg_cmd() -> anyhow::Result<()> {
             }
         });
 
-        sub_topics(
+        mqtt::sub_topics(
             &[topics::CONFIG, topics::COMMAND],
             Some("local-sub-cfg"),
             tx,
@@ -78,6 +77,6 @@ pub fn mqtt_sub_cfg_cmd() -> anyhow::Result<()> {
         )
         .map_err(backoff::Error::transient)
     };
-    backoff_retry(sub_loop, None)?;
+    helpers::backoff_retry(sub_loop, None)?;
     Ok(())
 }

@@ -1,5 +1,6 @@
 use std::env;
-use std::str::{from_utf8, Utf8Error};
+use std::str;
+use std::str::Utf8Error;
 
 use flume::Sender;
 use once_cell::sync::Lazy;
@@ -7,7 +8,7 @@ use rumqttc::{Client, Connection, Event, MqttOptions, Packet, QoS};
 use thiserror::Error;
 
 use crate::constants::{defaults, envvars};
-use crate::helpers::rand_hex;
+use crate::helpers;
 
 const MAX_PACKET_SIZE: usize = 16777216; // 16 MB
 
@@ -52,7 +53,7 @@ pub enum MqttError {
 }
 
 pub fn rand_client_id(prefix: Option<&str>) -> String {
-    let randhex = rand_hex(3);
+    let randhex = helpers::rand_hex(3);
 
     if let Some(pref) = prefix {
         format!("{pref}-{randhex}")
@@ -127,7 +128,7 @@ pub fn sub_topics(
         log::trace!("Notification = {:?}", notification);
         match notification {
             Ok(Event::Incoming(Packet::Publish(r))) => {
-                let msg = MqttMessage::new(&r.topic, from_utf8(&r.payload)?);
+                let msg = MqttMessage::new(&r.topic, str::from_utf8(&r.payload)?);
                 if let Err(e) = tx.send(msg) {
                     log::error!("Failed to submit message for processing: {e}");
                 }
@@ -157,7 +158,10 @@ mod test {
     const CLIENT_PREFIX: &str = "test_client";
     const SAMPLE_TOPICS: [&str; 3] = ["test_topic_1", "test_topic_2", "test_topic_3"];
     static SAMPLE_MQTT_MESSAGES: Lazy<Vec<MqttMessage>> = Lazy::new(|| {
-        SAMPLE_TOPICS.iter().map(|topic| MqttMessage::new(*topic, rand_hex(6))).collect()
+        SAMPLE_TOPICS
+            .iter()
+            .map(|topic| MqttMessage::new(*topic, helpers::rand_hex(6)))
+            .collect()
     });
 
     #[test]

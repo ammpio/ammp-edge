@@ -1,6 +1,6 @@
-use nix::ifaddrs::getifaddrs;
+use nix::ifaddrs;
 
-use crate::helpers::rand_hex;
+use crate::helpers;
 
 // Uses the `getifaddrs` call to retrieve a list of network interfaces on the
 // host device. Iterates over them and returns the MAC address corresponding to
@@ -22,7 +22,7 @@ fn get_primary_mac() -> Option<[u8; 6]> {
     let mut best_prio = 99;
     let mut best_mac: Option<[u8; 6]> = None;
 
-    if let Ok(ifiter) = getifaddrs() {
+    if let Ok(ifiter) = ifaddrs::getifaddrs() {
         for interface in ifiter {
             if let Some(link) = interface.address
             && let Some(link_addr) = link.as_link_addr()
@@ -51,7 +51,7 @@ pub fn generate_node_id() -> String {
     } else {
         // If not available, generate random node ID with "ff" prefix
         log::warn!("Could not obtain node ID based on network interface; generating random");
-        let randmac = rand_hex(5);
+        let randmac = helpers::rand_hex(5);
         format!("ff{randmac}")
     }
 }
