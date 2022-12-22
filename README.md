@@ -107,3 +107,20 @@ After installing Rust, enter the `rust` directory and run
 cargo run
 ```
 This will output the available subcommands (which can be viewed as entry points); you can run any of them with e.g. `cargo run mqtt-pub-meta`.
+
+### Web UI service
+
+The Web UI service provides an interface to setup the dataloggers.
+
+This service is a `Flask` application that uses Jinja2 as template engine and Python 3.10.
+
+*Create a new page within `web-ui` service*
+
+1. Create a new route endpoint in `web_ui/__init__.py` for the new page
+2. Create a template file for this new endpoint in `web_ui/templates/`. Make sure to extend the `base.html` so that the new page can inherit the `style` or `scripts` from `base` page
+3. Depending on the user flow, add link to this new page either in `templates/index.html` or other pages.
+
+*Testing the newly updated page(s)*
+
+- Locally, the application runs on port `8000`. Simply navigate to `localhost:8000` to checkout the Web UI application. 
+- To test the Web UI on datalogger, follow the instruction from the article [Accessing a datalogger's local Web UI remotely](https://ammpio.atlassian.net/wiki/spaces/APD/pages/2463399969/Accessing+a+datalogger+s+local+Web+UI+remotely)

@@ -1,6 +1,7 @@
-use std::thread::sleep;
+use std::thread;
 use std::time::Duration;
 
+use flume::unbounded;
 use kvstore::KVDb;
 
 use crate::constants::defaults::DB_WRITE_TIMEOUT;
@@ -10,12 +11,12 @@ use crate::interfaces::kvpath;
 use crate::interfaces::mqtt::{publish_msgs, sub_topics, MqttMessage};
 use crate::node_mgmt;
 
-fn try_set_config(config_payload: String) {
-    if let Ok(config) = node_mgmt::config::from_string(&config_payload) {
+fn try_set_config(config_payload: &str) {
+    if let Ok(config) = node_mgmt::config::from_string(config_payload) {
         // A databse connection or write error is transient and would lead to a retry
         let set_config = || {
             let kvs = KVDb::new(kvpath::SQLITE_STORE.as_path())?;
-            node_mgmt::config::set(kvs, config.clone())?;
+            node_mgmt::config::set(kvs, &config)?;
             Ok(())
         };
 
@@ -31,43 +32,49 @@ fn try_set_config(config_payload: String) {
     }
 }
 
-fn run_commands(command_payload: String) {
-    match serde_json::from_str::<Vec<String>>(&command_payload) {
+fn run_commands(command_payload: &str) {
+    match serde_json::from_str::<Vec<String>>(command_payload) {
         Ok(commands) => {
             for cmd in commands {
-                let response = run_command(cmd);
+                let response = run_command(&cmd);
                 if let Err(e) = publish_msgs(
-                    &vec!(MqttMessage {
-                        topic: topics::COMMAND_RESPONSE.into(),
-                        payload: response,
-                    }),
-                    Some("local-pub-cmd-resp".into()),
+                    &vec![MqttMessage::new(topics::COMMAND_RESPONSE, response)],
+                    Some("local-pub-cmd-resp"),
                     false,
                 ) {
                     log::error!("Could not publish command response; error: {e}");
                 }
-                sleep(Duration::from_secs(5));
+                thread::sleep(Duration::from_secs(5));
             }
-        },
-        Err(e) => log::error!("Could not parse payload as JSON list; error: {e}")
+        }
+        Err(e) => log::error!("Could not parse payload as JSON list; error: {e}"),
     }
 }
 
-fn process_msg(msg: MqttMessage) {
+fn process_msg(msg: &MqttMessage) {
     log::info!("Received {} on {}", msg.payload, msg.topic);
     match msg.topic.as_str() {
-        topics::CONFIG => try_set_config(msg.payload),
-        topics::COMMAND => run_commands(msg.payload),
+        topics::CONFIG => try_set_config(&msg.payload),
+        topics::COMMAND => run_commands(&msg.payload),
         _ => log::warn!("Message received on unrecognized topic {}", msg.topic),
     }
 }
 
 pub fn mqtt_sub_cfg_cmd() -> anyhow::Result<()> {
     let sub_loop = || {
+        let (tx, rx) = unbounded();
+
+        thread::spawn(move || {
+            for msg in rx.iter() {
+                process_msg(&msg);
+            }
+        });
+
         sub_topics(
-            &[topics::CONFIG.into(), topics::COMMAND.into()],
-            Some("local-sub-cfg".into()),
-            process_msg,
+            &[topics::CONFIG, topics::COMMAND],
+            Some("local-sub-cfg"),
+            tx,
+            None,
         )
         .map_err(backoff::Error::transient)
     };

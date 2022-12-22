@@ -28,9 +28,9 @@
         <div style="height: 30px"></div>
         <h3 class="h4 mb-3">Configuration options</h3>
           {% if wifi_ap_cfg.get('disabled') %}
-            <p><a href="/wifi_ap?disabled=0">Enable Wifi access point</a></p>
+            <p><a href="/wifi-ap?disabled=0">Enable Wifi access point</a></p>
           {% else %}
-            <p><a href="/wifi_ap?disabled=1" style="color: red">Disable Wifi access point</a></p>
+            <p><a href="/wifi-ap?disabled=1" style="color: red">Disable Wifi access point</a></p>
           {% endif %}
       {% else %}
         <p>Wifi access point not available on device.</p>
