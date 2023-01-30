@@ -4,6 +4,11 @@
   Environment scan - AMMP Edge {{ node_id }}
 {% endblock title %}
 
+{% block extra_script_src %}
+  <script src="{{ url_for('static', filename='css/jquery-3.6.3.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='css/bootstrap.bundle.min.js') }}"></script>
+{% endblock extra_script_src %}
+
 {% block content %}
 <div class="text-center mb-4">
   {% if scan_result %}
