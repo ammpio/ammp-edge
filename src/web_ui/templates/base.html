@@ -10,6 +10,8 @@
     {% endblock style_src %}
     {% block extra_script_src %}{% endblock extra_script_src %}
     <!-- Bootstrap core CSS -->
+    <script src="{{ url_for('static', filename='css/jquery-3.6.3.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='css/bootstrap.bundle.min.js') }}"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
   </head>
   <body>
