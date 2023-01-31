@@ -1,7 +1,7 @@
 use std::thread;
 use std::time::Duration;
 
-use flume::unbounded;
+use flume;
 use kvstore::KVDb;
 
 use crate::constants::defaults::DB_WRITE_TIMEOUT;
@@ -61,7 +61,7 @@ fn process_msg(msg: &MqttMessage) {
 
 pub fn mqtt_sub_cfg_cmd() -> anyhow::Result<()> {
     let sub_loop = || {
-        let (tx, rx) = unbounded();
+        let (tx, rx) = flume::unbounded();
 
         thread::spawn(move || {
             for msg in rx.iter() {
