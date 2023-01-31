@@ -138,7 +138,6 @@
     let useScanResultBtn = document.getElementById("toggleAutoConfig")
     useScanResultBtn.addEventListener('click', (e) => {
       let active = useScanResultBtn.attributes['aria-expanded'].value
-      console.log("active ", active)
       if (active == 'false'){
         useScanResultBtn.classList.replace("btn-light", "btn-primary")
       } else {
