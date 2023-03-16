@@ -226,7 +226,7 @@ def wifi_ap_status():
 
 
 def test_online():
-    TEST_URL = 'http://www.google.com/'
+    TEST_URL = 'http://edge.ammp.io/'
     try:
         urlopen(TEST_URL, timeout=30)
         return True
