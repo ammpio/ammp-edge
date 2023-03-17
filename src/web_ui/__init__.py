@@ -2,7 +2,7 @@
 import datetime
 import logging
 import os
-from urllib.request import urlopen
+import socket
 
 from flask import Flask, render_template, request
 
@@ -226,9 +226,10 @@ def wifi_ap_status():
 
 
 def test_online():
-    TEST_URL = 'http://www.google.com/'
+    TEST_HOST_PORT = ('edge.ammp.io', 80)
     try:
-        urlopen(TEST_URL, timeout=30)
+        conn = socket.create_connection(TEST_HOST_PORT, timeout=15)
+        conn.close()
         return True
     except Exception as e:
         logger.error(f"Error {e} while checking internet connectivity")
