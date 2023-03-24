@@ -1,6 +1,6 @@
 [package]
-name = "ammp-edge"
-version = "0.1.1"
+name = "ae"
+version = "0.1.2"
 authors = ["AMMP Technologies B.V. <dev@ammp.io>"]
 edition = "2021"
 description = "Edge application for AMMP"
@@ -36,10 +36,6 @@ regex = "1.7.0"
 predicates = "2.1.3"
 temp-env = "0.3.1"
 tempfile = "3.3.0"
-
-[[bin]]
-name = "ae"
-path = "src/main.rs"
 
 [workspace]
 members = [

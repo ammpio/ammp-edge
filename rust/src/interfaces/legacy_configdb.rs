@@ -11,7 +11,7 @@ pub struct LegacyConfig {
     pub config: Value,
 }
 
-pub fn get_legacy_config(path: impl AsRef<Path>) -> Result<Option<LegacyConfig>> {
+pub fn legacy_config(path: impl AsRef<Path>) -> Result<Option<LegacyConfig>> {
     let conn = Connection::open_with_flags(path, OpenFlags::SQLITE_OPEN_READ_ONLY)?;
 
     conn.query_row(

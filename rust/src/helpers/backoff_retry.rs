@@ -1,11 +1,14 @@
 use std::fmt::Display;
 use std::time::Duration;
 
-use backoff::{retry_notify, Error, ExponentialBackoffBuilder};
+use backoff;
 
-pub fn backoff_retry<F, T, E>(fn_to_try: F, timeout: Option<Duration>) -> Result<T, Error<E>>
+pub fn backoff_retry<F, T, E>(
+    fn_to_try: F,
+    timeout: Option<Duration>,
+) -> Result<T, backoff::Error<E>>
 where
-    F: FnMut() -> Result<T, Error<E>>,
+    F: FnMut() -> Result<T, backoff::Error<E>>,
     E: Display,
 {
     let notify = |err, dur: Duration| {
@@ -14,8 +17,8 @@ where
 
     // Set to retry forever, rather than give up after 15 minutes.
     // See https://github.com/ihrwein/backoff/issues/39
-    let backoff = ExponentialBackoffBuilder::new()
+    let backoff = backoff::ExponentialBackoffBuilder::new()
         .with_max_elapsed_time(timeout)
         .build();
-    retry_notify(backoff, fn_to_try, notify)
+    backoff::retry_notify(backoff, fn_to_try, notify)
 }
