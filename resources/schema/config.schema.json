@@ -198,7 +198,7 @@
                     },
                     "reading_type": {
                         "type": "string",
-                        "enum": ["sys", "modbusrtu", "modbustcp", "mqtt", "rawserial", "rawtcp", "sma_speedwire", "snmp"],
+                        "enum": ["sys", "modbusrtu", "modbustcp", "mqtt", "rawserial", "rawtcp", "sma_hycon_csv", "sma_speedwire", "snmp"],
                         "title": "Type of reading",
                         "examples": [
                             "modbustcp"
