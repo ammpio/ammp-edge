@@ -1,0 +1,2 @@
+USERS=testuser|testpwd|/ftp/data
+ADDRESS=mock-sma-hycon
