@@ -363,7 +363,6 @@
         },
         "push_timeout": {
             "type": "integer",
-            "default": 60,
             "deprecated": true,
             "title": "Timeout for data push (seconds) [deprecated]",
             "examples": [
@@ -396,7 +395,6 @@
         },
         "push_throttle_delay": {
             "type": "integer",
-            "default": 15,
             "deprecated": true,
             "title": "Delay to throttle data push if unsuccessful [deprecated]",
             "examples": [
