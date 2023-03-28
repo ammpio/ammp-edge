@@ -4,7 +4,9 @@ use kvstore::{KVDb, KVStoreError};
 
 use crate::constants::keys;
 
-pub type Config = serde_json::Value;
+use super::config_schema;
+
+pub type Config = config_schema::AmmpEdgeConfiguration;
 
 #[derive(Debug)]
 pub enum ConfigError {

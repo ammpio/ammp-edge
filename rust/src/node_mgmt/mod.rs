@@ -1,4 +1,5 @@
 mod activate;
+mod config_schema;
 mod node_id;
 
 pub use activate::activate;
