@@ -306,7 +306,6 @@
                     "var": "temp_ext"
                 }]
             },
-            "minProperties": 1,
             "examples": [{
                 "sens_2_irradiance": {
                     "device": "sens_2",
