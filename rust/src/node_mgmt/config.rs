@@ -3,10 +3,13 @@ use std::{error::Error, fmt};
 use kvstore::{KVDb, KVStoreError};
 
 use crate::constants::keys;
+use serde::{Deserialize, Serialize};
 
-use super::config_schema;
+use typify::import_types;
 
-pub type Config = config_schema::AmmpEdgeConfiguration;
+import_types!(schema = "../resources/schema/config.schema.json");
+
+pub type Config = AmmpEdgeConfiguration;
 
 #[derive(Debug)]
 pub enum ConfigError {
