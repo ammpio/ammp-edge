@@ -97,7 +97,7 @@ fn mqtt_receive_config() {
                 "d/config",
                 QoS::AtLeastOnce,
                 false,
-                stubs::CONFIG_PAYLOAD.as_bytes(),
+                stubs::config::PAYLOAD_1.as_bytes(),
             )
             .unwrap();
 
@@ -120,7 +120,7 @@ fn mqtt_receive_config() {
     assert_eq!(cmd.get_output().status.code(), None);
 
     let kvs = KVDb::new(tempdir.path().join("kvs-db/kvstore.db")).unwrap();
-    let target_config = serde_json::from_str::<Value>(stubs::CONFIG_PAYLOAD).unwrap();
+    let target_config = serde_json::from_str::<Value>(stubs::config::PAYLOAD_1).unwrap();
     let applied_config: Value = kvs.get("config").unwrap().unwrap();
     assert_eq!(applied_config, target_config);
 
@@ -141,7 +141,7 @@ fn mqtt_receive_bad_config() {
                 "d/config",
                 QoS::AtLeastOnce,
                 false,
-                stubs::BAD_CONFIG_PAYLOAD.as_bytes(),
+                stubs::config::BAD_PAYLOAD.as_bytes(),
             )
             .unwrap();
 

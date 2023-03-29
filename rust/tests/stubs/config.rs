@@ -1,4 +1,4 @@
-pub const CONFIG_PAYLOAD: &str = r#"
+pub const PAYLOAD_1: &str = r#"
 {
     "name": "Basic config",
     "devices": {
@@ -50,4 +50,4 @@ pub const CONFIG_PAYLOAD: &str = r#"
 }
 "#;
 
-pub const BAD_CONFIG_PAYLOAD: &str = "blah";
+pub const BAD_PAYLOAD: &str = "blah";
