@@ -1,3 +1,7 @@
+#![allow(dead_code)]
+// This is infuriating, but rust-analyzer seems to arbitrarily think
+// that some of these are unused; hence the warning suppression
+
 pub const VALID_PAYLOAD_1: &str = r#"
 {
     "name": "Basic config",
@@ -33,6 +37,20 @@ pub const VALID_PAYLOAD_1: &str = r#"
           "host": "mock-sma-stp",
           "unit_id": 100
         }
+      },
+      "sma_hycon_csv": {
+        "name": "SMA Hybrid Controller - CSV backfill",
+        "driver": "sma_hycon_csv",
+        "address": {
+          "base_url": "ftp://localhost/fsc/log/DataFast/",
+          "user": "testuser",
+          "password": "testpwd",
+          "timezone": "Europe/Amsterdam"
+        },
+        "enabled": true,
+        "vendor_id": "sma-hycon-1",
+        "device_model": "gen_control_sma_hycon",
+        "reading_type": "sma_hycon_csv"
       }
     },
     "readings": {
@@ -72,7 +90,4 @@ pub const INVALID_PAYLOAD_1: &str = r#"
 }
 "#;
 
-// This is infuriating, but rust-analyzer seems to think this is unused
-// - so next line is to suppress warning
-#[allow(dead_code)]
 pub const INVALID_JSON: &str = "blah";
