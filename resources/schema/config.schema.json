@@ -167,6 +167,32 @@
                                 "examples": [
                                     9600
                                 ]
+                            },
+                            "base_url": {
+                                "type": "string",
+                                "title": "Base URL",
+                                "examples": [
+                                    "ftp://172.16.1.21/fsc/log/DataFast/"
+                                ]
+                            },
+                            "user": {
+                                "type": "string",
+                                "title": "User name",
+                                "examples": [
+                                    "User"
+                                ]
+                            },
+                            "password": {
+                                "type": "string",
+                                "title": "Password"
+                            },
+                            "timezone": {
+                                "type": "string",
+                                "title": "Timezone",
+                                "examples": [
+                                    "Europe/Amsterdam",
+                                    "Africa/Lagos"
+                                ]
                             }
                         },
                         "examples": [{
