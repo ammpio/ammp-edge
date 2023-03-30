@@ -1,11 +1,11 @@
-use crate::node_mgmt::config::Config;
+use crate::node_mgmt::config;
 
-pub fn run_acquisition(config: &Config) {
+pub fn run_acquisition(config: &config::Config) {
     ()
 }
 
-fn should_run(config: &Config) -> bool {
-    false
+fn select_devices_to_read(config: &config::Config) -> Vec<config::Device> {
+    vec![]
 }
 
 #[cfg(test)]
@@ -17,7 +17,8 @@ mod tests {
     use once_cell::sync::Lazy;
 
     static SAMPLE_CONFIG_WITH_HYCON_CSV: Lazy<config::Config> = Lazy::new(|| {
-        config::from_str(r#"
+        config::from_str(
+            r#"
         {
             "devices": {
                 "sma_hycon_csv": {
@@ -37,11 +38,14 @@ mod tests {
             "readings": {},
             "timestamp": "1970-01-01T00:00:00Z"
         }
-        "#).unwrap()
+        "#,
+        )
+        .unwrap()
     });
 
     static SAMPLE_CONFIG_NO_HYCON_CSV: Lazy<config::Config> = Lazy::new(|| {
-        config::from_str(r#"
+        config::from_str(
+            r#"
         {
             "devices": {
                 "sma_stp_1": {
@@ -60,13 +64,17 @@ mod tests {
             "readings": {},
             "timestamp": "1970-01-01T00:00:00Z"
         }
-        "#).unwrap()
+        "#,
+        )
+        .unwrap()
     });
 
     #[test]
-    fn check_if_should_run() {
-        assert!(!should_run(&SAMPLE_CONFIG_NO_HYCON_CSV));
-        assert!(should_run(&SAMPLE_CONFIG_WITH_HYCON_CSV));
+    fn check_selected_devices() {
+        assert!(select_devices_to_read(&SAMPLE_CONFIG_NO_HYCON_CSV).is_empty());
+        assert_eq!(
+            select_devices_to_read(&SAMPLE_CONFIG_WITH_HYCON_CSV)[0],
+            SAMPLE_CONFIG_WITH_HYCON_CSV.devices["sma_hycon_csv"]
+        );
     }
-
 }
