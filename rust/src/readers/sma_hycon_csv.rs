@@ -5,7 +5,12 @@ pub fn run_acquisition(config: &config::Config) {
 }
 
 fn select_devices_to_read(config: &config::Config) -> Vec<config::Device> {
-    vec![]
+    config
+        .devices
+        .values()
+        .filter(|d| d.reading_type == config::ReadingType::SmaHyconCsv)
+        .cloned()
+        .collect()
 }
 
 #[cfg(test)]
