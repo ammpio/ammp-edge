@@ -11,7 +11,7 @@ pub type Config = AmmpEdgeConfiguration;
 
 #[derive(Error, Debug)]
 pub enum ConfigError {
-    #[error(transparent)]
+    #[error("could not parse config JSON: {0}")]
     ParseJson(#[from] serde_json::Error),
 }
 
