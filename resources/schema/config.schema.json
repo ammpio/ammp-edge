@@ -11,7 +11,7 @@
     "properties": {
         "name": {
             "type": "string",
-            "title": "Name of the config",
+            "title": "Config Name",
             "examples": [
                 "Auto-generated"
             ]
@@ -50,14 +50,16 @@
                     },
                     "source": {
                         "type": "string",
-                        "title": "JSONata expression for source of calculation",
+                        "title": "Calculation source",
+                        "description": "JSONata expression for source of calculation",
                         "examples": [
                             "em210_grid[var = \"P_L1\"].value + em210_grid[var = \"P_L2\"].value + em210_grid[var = \"P_L3\"].value"
                         ]
                     },
                     "typecast": {
                         "type": "string",
-                        "title": "Typecast of output",
+                        "title": "Typecast",
+                        "description": "Typecast of output",
                         "enum": ["int", "float", "str", "bool"],
                         "examples": [
                             "int",
@@ -108,7 +110,7 @@
                     },
                     "address": {
                         "type": "object",
-                        "title": "Address of the device",
+                        "title": "Device address",
                         "properties": {
                             "host": {
                                 "type": "string",
@@ -151,7 +153,7 @@
                             },
                             "slaveaddr": {
                                 "type": "integer",
-                                "title": "Unit ID for serial device",
+                                "title": "Serial device unit ID",
                                 "min": 1,
                                 "max": 255,
                                 "examples": [
@@ -160,7 +162,7 @@
                             },
                             "baudrate": {
                                 "type": "integer",
-                                "title": "Baud rate for serial device",
+                                "title": "Serial device baud rate",
                                 "enum": [2400, 9600, 115200],
                                 "examples": [
                                     9600
@@ -177,20 +179,22 @@
                     "enabled": {
                         "type": "boolean",
                         "default": true,
-                        "title": "Whether device is enabled",
+                        "title": "Enabled",
                         "examples": [
                             true
                         ]
                     },
                     "vendor_id": {
                         "type": "string",
-                        "title": "Vendor ID of device. Must match vendor_id in device table",
+                        "title": "Vendor ID",
+                        "desription": "Vendor ID of device. Must match vendor_id in device table",
                         "examples": [
                             "strato-1"
                         ]
                     },
                     "device_model": {
                         "type": "string",
+                        "description": "Device model",
                         "title": "Device model. Must match device_model_key in device_model table",
                         "examples": [
                             "gateway_ammp"
@@ -199,7 +203,7 @@
                     "reading_type": {
                         "type": "string",
                         "enum": ["sys", "modbusrtu", "modbustcp", "mqtt", "rawserial", "rawtcp", "sma_hycon_csv", "sma_speedwire", "snmp"],
-                        "title": "Type of reading",
+                        "title": "Reading type",
                         "examples": [
                             "modbustcp"
                         ]
@@ -348,7 +352,8 @@
         },
         "timestamp": {
             "type": "string",
-            "title": "Timestamp of config",
+            "title": "Timestamp",
+            "description": "Timestamp of config",
             "examples": [
                 "2022-07-30T06:07:48Z"
             ]
@@ -387,7 +392,8 @@
         "volatile_q_size": {
             "type": "integer",
             "deprecated": true,
-            "title": "Size of volatile queue for data push [deprecated]",
+            "title": "Volatile queue size",
+            "description": "Size of volatile queue for data push [deprecated]",
             "examples": [
                 5
             ]
@@ -395,7 +401,8 @@
         "push_throttle_delay": {
             "type": "integer",
             "deprecated": true,
-            "title": "Delay to throttle data push if unsuccessful [deprecated]",
+            "title": "Push throttle delay",
+            "description": "Delay to throttle data push if unsuccessful [deprecated]",
             "examples": [
                 15
             ]
