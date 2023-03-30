@@ -1,14 +1,18 @@
-use crate::node_mgmt::config;
+use crate::node_mgmt::{Config, config::Device, config::ReadingType};
 
-pub fn run_acquisition(config: &config::Config) {
+pub fn run_acquisition(config: &Config) {
     ()
 }
 
-fn select_devices_to_read(config: &config::Config) -> Vec<config::Device> {
+fn download_latest_csv(device: &Device) -> String {
+    "aaa".to_string()
+}
+
+fn select_devices_to_read(config: &Config) -> Vec<Device> {
     config
         .devices
         .values()
-        .filter(|d| d.reading_type == config::ReadingType::SmaHyconCsv)
+        .filter(|d| d.reading_type == ReadingType::SmaHyconCsv)
         .cloned()
         .collect()
 }
@@ -17,17 +21,17 @@ fn select_devices_to_read(config: &config::Config) -> Vec<config::Device> {
 mod tests {
     use super::*;
 
-    use crate::node_mgmt::config;
-
     use once_cell::sync::Lazy;
+    use std::str::FromStr;
 
-    static SAMPLE_CONFIG_WITH_HYCON_CSV: Lazy<config::Config> = Lazy::new(|| {
-        config::from_str(
+    use crate::node_mgmt::config::{Config, Device};
+
+    static SAMPLE_CONFIG_WITH_HYCON_CSV: Lazy<Config> = Lazy::new(|| {
+        Config::from_str(
             r#"
         {
             "devices": {
                 "sma_hycon_csv": {
-                    "desc": "SMA hybrid Controller - CSV backfill",
                     "driver": "sma_hycon_csv",
                     "address": {
                         "base_url": "ftp://172.16.1.21/fsc/log/DataFast/",
@@ -48,8 +52,8 @@ mod tests {
         .unwrap()
     });
 
-    static SAMPLE_CONFIG_NO_HYCON_CSV: Lazy<config::Config> = Lazy::new(|| {
-        config::from_str(
+    static SAMPLE_CONFIG_NO_HYCON_CSV: Lazy<Config> = Lazy::new(|| {
+        Config::from_str(
             r#"
         {
             "devices": {
@@ -74,6 +78,26 @@ mod tests {
         .unwrap()
     });
 
+    static LOCAL_HYCON_DEVICE: Lazy<Device> = Lazy::new(|| {
+        serde_json::from_str::<Device>(
+            r#"
+        {
+            "driver": "sma_hycon_csv",
+            "address": {
+                "base_url": "ftp://localhost/fsc/log/DataFast/",
+                "user": "testuser",
+                "password": "testpass"
+            },
+            "enabled": true,
+            "vendor_id": "sma-hycon-1",
+            "device_model": "gen_control_sma_hycon",
+            "reading_type": "sma_hycon_csv"
+        }
+        "#,
+        )
+        .unwrap()
+    });
+
     #[test]
     fn check_selected_devices() {
         assert!(select_devices_to_read(&SAMPLE_CONFIG_NO_HYCON_CSV).is_empty());
@@ -82,4 +106,9 @@ mod tests {
             SAMPLE_CONFIG_WITH_HYCON_CSV.devices["sma_hycon_csv"]
         );
     }
+
+    // #[test]
+    // fn test_select_right_file() {
+
+    // }
 }

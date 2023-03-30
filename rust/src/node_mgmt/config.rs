@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use kvstore::{KVDb, KVStoreError};
 
 use crate::constants::keys;
@@ -15,8 +17,11 @@ pub enum ConfigError {
     ParseJson(#[from] serde_json::Error),
 }
 
-pub fn from_str(config_raw: &str) -> Result<Config, ConfigError> {
-    serde_json::from_str::<Config>(config_raw).map_err(Into::into)
+impl FromStr for Config {
+    type Err = ConfigError;
+    fn from_str(config_raw: &str) -> Result<Self, Self::Err> {
+        serde_json::from_str::<Config>(config_raw).map_err(Into::into)
+    }
 }
 
 pub fn set(kvs: KVDb, config: &Config) -> Result<(), KVStoreError> {
