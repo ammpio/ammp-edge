@@ -1,4 +1,4 @@
-pub const PAYLOAD_1: &str = r#"
+pub const VALID_PAYLOAD_1: &str = r#"
 {
     "name": "Basic config",
     "devices": {
@@ -50,4 +50,26 @@ pub const PAYLOAD_1: &str = r#"
 }
 "#;
 
-pub const BAD_PAYLOAD: &str = "blah";
+pub const INVALID_PAYLOAD_1: &str = r#"
+{
+    "name": "Basic config",
+    "devices": {
+      "logger": {
+        "name": "Logger",
+        "driver": "sys_generic",
+        "enabled": true,
+        "device_model": "gateway_ammp",
+        "vendor_id": "strato-1",
+        "reading_type": "NOT VALID"
+      }
+    },
+    "readings": {
+      "comms_lggr_boot_time": {"device": "logger", "var": "boot_time"},
+    },
+    "timestamp": "2022-08-15T13:03:17Z",
+    "read_interval": 15,
+    "read_roundtime": true
+}
+"#;
+
+pub const INVALID_JSON: &str = "blah";

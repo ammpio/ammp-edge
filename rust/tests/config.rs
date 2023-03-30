@@ -1,13 +1,14 @@
-use ae::node_mgmt::config::Config;
+use ae::node_mgmt::config;
 
 mod stubs;
 
 #[test]
 fn test_parse_example_config() {
-    assert!(serde_json::from_str::<Config>(stubs::config::PAYLOAD_1).is_ok());
+    assert!(config::from_str(stubs::config::VALID_PAYLOAD_1).is_ok());
 }
 
 #[test]
-fn test_parse_bad_config() {
-    assert!(serde_json::from_str::<Config>(stubs::config::BAD_PAYLOAD).is_err());
+fn test_parse_bad_configs() {
+    assert!(config::from_str(stubs::config::INVALID_JSON).is_err());
+    assert!(config::from_str(stubs::config::INVALID_PAYLOAD_1).is_err());
 }

@@ -11,23 +11,23 @@ use crate::interfaces::{kvpath, mqtt, mqtt::MqttMessage};
 use crate::node_mgmt;
 
 fn try_set_config(config_payload: &str) {
-    if let Ok(config) = node_mgmt::config::from_string(config_payload) {
-        // A databse connection or write error is transient and would lead to a retry
-        let set_config = || {
-            let kvs = KVDb::new(kvpath::SQLITE_STORE.as_path())?;
-            node_mgmt::config::set(kvs, &config)?;
-            Ok(())
-        };
+    match node_mgmt::config::from_str(config_payload) {
+        Ok(config) => {
+            // A databse connection or write error is transient and would lead to a retry
+            let set_config = || {
+                let kvs = KVDb::new(kvpath::SQLITE_STORE.as_path())?;
+                node_mgmt::config::set(kvs, &config)?;
+                Ok(())
+            };
 
-        match helpers::backoff_retry(set_config, Some(DB_WRITE_TIMEOUT)) {
-            Ok(()) => log::info!("Successfully set new config"),
-            Err(e) => log::error!("Permanent error setting config: {:?}", e),
+            match helpers::backoff_retry(set_config, Some(DB_WRITE_TIMEOUT)) {
+                Ok(()) => log::info!("Successfully set new config"),
+                Err(e) => log::error!("Permanent error setting config: {:?}", e),
+            }
         }
-    } else {
-        log::error!(
-            "Could not parse received payload as valid config: {:?}",
-            &config_payload
-        );
+        Err(e) => {
+            log::error!("Error \"{e}\" while trying to parse received payload:\n{config_payload}");
+        }
     }
 }
 
