@@ -72,4 +72,7 @@ pub const INVALID_PAYLOAD_1: &str = r#"
 }
 "#;
 
+// This is infuriating, but rust-analyzer seems to think this is unused
+// - so next line is to suppress warning
+#[allow(dead_code)]
 pub const INVALID_JSON: &str = "blah";
