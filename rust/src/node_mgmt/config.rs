@@ -1,13 +1,16 @@
 use std::str::FromStr;
 
 use kvstore::{KVDb, KVStoreError};
-
-use crate::constants::keys;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use typify::import_types;
 
-import_types!(schema = "../resources/schema/config.schema.json", derives = [PartialEq]);
+use crate::constants::keys;
+
+import_types!(
+    schema = "../resources/schema/config.schema.json",
+    derives = [PartialEq]
+);
 
 pub type Config = AmmpEdgeConfiguration;
 
