@@ -1,3 +1,4 @@
+pub mod ftp;
 pub mod http_api;
 pub mod kvpath;
 mod legacy_configdb;

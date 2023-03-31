@@ -42,9 +42,7 @@ pub const VALID_PAYLOAD_1: &str = r#"
         "name": "SMA Hybrid Controller - CSV backfill",
         "driver": "sma_hycon_csv",
         "address": {
-          "base_url": "ftp://localhost/fsc/log/DataFast/",
-          "user": "testuser",
-          "password": "testpwd",
+          "base_url": "ftp://testuser:testpwd@localhost/fsc/log/DataFast/",
           "timezone": "Europe/Amsterdam"
         },
         "enabled": true,

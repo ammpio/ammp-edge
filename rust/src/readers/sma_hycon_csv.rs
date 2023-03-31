@@ -1,11 +1,30 @@
-use crate::node_mgmt::{Config, config::Device, config::ReadingType};
+#![allow(unused)]
+use std::io::Cursor;
+use std::str;
+
+use url::Url;
+
+use crate::interfaces::ftp::{self, FtpConnError};
+use crate::node_mgmt::{config::Device, config::ReadingType, Config};
 
 pub fn run_acquisition(config: &Config) {
     ()
 }
 
-fn download_latest_csv(device: &Device) -> String {
-    "aaa".to_string()
+fn download_last_day_csv(device: &Device) -> Result<Vec<u8>, FtpConnError> {
+    let addr = &device
+        .address
+        .clone()
+        .ok_or(FtpConnError::PathError("missing device address".into()))?
+        .base_url
+        .ok_or(FtpConnError::PathError("missing base URL".into()))?;
+
+    let mut ftp_conn = ftp::FtpConnection::new(addr);
+    ftp_conn.connect()?;
+    Ok(ftp_conn
+        .download_file("LogDataFast_2023-03-10.csv")
+        .unwrap()
+        .into_inner())
 }
 
 fn select_devices_to_read(config: &Config) -> Vec<Device> {
@@ -34,9 +53,7 @@ mod tests {
                 "sma_hycon_csv": {
                     "driver": "sma_hycon_csv",
                     "address": {
-                        "base_url": "ftp://172.16.1.21/fsc/log/DataFast/",
-                        "user": "User",
-                        "password": "pwd"
+                        "base_url": "ftp://User:pwd@172.16.1.21:900/fsc/log/DataFast/"
                     },
                     "enabled": true,
                     "vendor_id": "sma-hycon-1",
@@ -84,9 +101,8 @@ mod tests {
         {
             "driver": "sma_hycon_csv",
             "address": {
-                "base_url": "ftp://localhost/fsc/log/DataFast/",
-                "user": "testuser",
-                "password": "testpass"
+                "base_url": "ftp://testuser:testpwd@localhost:21/fsc/log/DataFast/",
+                "timezone": "Europe/Amsterdam"
             },
             "enabled": true,
             "vendor_id": "sma-hycon-1",
@@ -107,8 +123,15 @@ mod tests {
         );
     }
 
-    // #[test]
-    // fn test_select_right_file() {
+    #[test]
+    fn test_csv_download() {
+        let csv = download_last_day_csv(&LOCAL_HYCON_DEVICE);
+        assert!(csv.unwrap().starts_with(b"Version"))
+    }
 
+    // #[test]
+    // fn test_csv_download() {
+    //     let csv = download_latest_csv(&LOCAL_HYCON_DEVICE);
+    //     assert!(csv.unwrap().starts_with("Version"))
     // }
 }
