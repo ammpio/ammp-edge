@@ -51,7 +51,7 @@ impl FtpConnection {
         }
     }
 
-    pub fn connect(&mut self) -> FtpResult<()> {
+    pub fn connect(&mut self) -> Result<(), FtpConnError> {
         let addr = &format!("{}:{}", self.host, self.port);
         let mut ftp_stream = match self.secure {
             false => Self::init_plain_stream(addr)?,
@@ -75,7 +75,7 @@ impl FtpConnection {
     // }
     
 
-    pub fn disconnect(&mut self) -> FtpResult<()> {
+    pub fn disconnect(&mut self) -> Result<(), FtpConnError> {
         if let Some(ftp_stream) = self.ftp_stream.as_mut() {
             ftp_stream.quit()?;
         }

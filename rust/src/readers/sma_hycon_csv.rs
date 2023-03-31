@@ -2,29 +2,52 @@
 use std::io::Cursor;
 use std::str;
 
-use url::Url;
+use thiserror::Error;
 
 use crate::interfaces::ftp::{self, FtpConnError};
 use crate::node_mgmt::{config::Device, config::ReadingType, Config};
+
+#[derive(Error, Debug)]
+pub enum SmaHyconCsvError {
+    #[error(transparent)]
+    FtpConn(#[from] FtpConnError),
+    #[error("device address error: {0}")]
+    Address(String),
+    #[error("file error: {0}")]
+    File(String),
+}
 
 pub fn run_acquisition(config: &Config) {
     ()
 }
 
-fn download_last_day_csv(device: &Device) -> Result<Vec<u8>, FtpConnError> {
+fn download_last_day_zip(device: &Device) -> Result<Vec<u8>, SmaHyconCsvError> {
     let addr = &device
         .address
         .clone()
-        .ok_or(FtpConnError::PathError("missing device address".into()))?
+        .ok_or(SmaHyconCsvError::Address("missing address".into()))?
         .base_url
-        .ok_or(FtpConnError::PathError("missing base URL".into()))?;
+        .ok_or(SmaHyconCsvError::Address("missing base URL".into()))?;
 
     let mut ftp_conn = ftp::FtpConnection::new(addr);
     ftp_conn.connect()?;
+
+    let filename = select_last_day_zip(ftp_conn.list_files()?).ok_or(
+        SmaHyconCsvError::File("no zip files found".into()),
+    )?;
+
     Ok(ftp_conn
-        .download_file("LogDataFast_2023-03-10.csv")
+        .download_file(&filename)
         .unwrap()
         .into_inner())
+}
+
+fn select_last_day_zip(filenames: Vec<String>) -> Option<String> {
+    filenames
+        .iter()
+        .filter(|f| f.ends_with(".zip"))
+        .max()
+        .cloned()
 }
 
 fn select_devices_to_read(config: &Config) -> Vec<Device> {
