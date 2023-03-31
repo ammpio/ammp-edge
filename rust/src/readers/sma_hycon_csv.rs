@@ -1,8 +1,11 @@
 #![allow(unused)]
-use std::io::Cursor;
+use std::io::{Cursor, Read};
 use std::str;
 
 use thiserror::Error;
+use zip::read::ZipFile;
+use zip::result::{ZipError, ZipResult};
+use zip::ZipArchive;
 
 use crate::interfaces::ftp::{self, FtpConnError};
 use crate::node_mgmt::{config::Device, config::ReadingType, Config};
@@ -13,6 +16,8 @@ pub enum SmaHyconCsvError {
     FtpConn(#[from] FtpConnError),
     #[error("device address error: {0}")]
     Address(String),
+    #[error(transparent)]
+    Zip(#[from] ZipError),
     #[error("file error: {0}")]
     File(String),
 }
@@ -21,7 +26,14 @@ pub fn run_acquisition(config: &Config) {
     ()
 }
 
-fn download_last_day_zip(device: &Device) -> Result<Vec<u8>, SmaHyconCsvError> {
+fn read_csv_from_device(device: &Device) -> Result<String, SmaHyconCsvError> {
+    let zip_file = download_last_day_zip(device)?;
+    let csv_file = extract_file_from_zip(zip_file)?;
+    let csv = str::from_utf8(&csv_file).unwrap();
+    Ok(csv.to_string())
+}
+
+fn download_last_day_zip(device: &Device) -> Result<Cursor<Vec<u8>>, SmaHyconCsvError> {
     let addr = &device
         .address
         .clone()
@@ -32,14 +44,29 @@ fn download_last_day_zip(device: &Device) -> Result<Vec<u8>, SmaHyconCsvError> {
     let mut ftp_conn = ftp::FtpConnection::new(addr);
     ftp_conn.connect()?;
 
-    let filename = select_last_day_zip(ftp_conn.list_files()?).ok_or(
-        SmaHyconCsvError::File("no zip files found".into()),
-    )?;
+    let filename = select_last_day_zip(ftp_conn.list_files()?)
+        .ok_or(SmaHyconCsvError::File("no ZIP files found".into()))?;
 
-    Ok(ftp_conn
-        .download_file(&filename)
-        .unwrap()
-        .into_inner())
+    let file = ftp_conn.download_file(&filename)?;
+    ftp_conn.disconnect();
+    Ok(file)
+}
+
+fn extract_file_from_zip(cursor: Cursor<Vec<u8>>) -> ZipResult<Vec<u8>> {
+    let mut zip_archive = ZipArchive::new(cursor)?;
+
+    for i in 0..zip_archive.len() {
+        let mut zip_file = zip_archive.by_index(i)?;
+
+        if zip_file.is_file() && zip_file.name().ends_with(".csv") {
+            let mut file_data = Vec::new();
+            zip_file.read_to_end(&mut file_data)?;
+
+            return Ok(file_data);
+        }
+    }
+    // This isn't quite the right error but does the job for now...
+    Err(ZipError::FileNotFound)
 }
 
 fn select_last_day_zip(filenames: Vec<String>) -> Option<String> {
@@ -148,8 +175,8 @@ mod tests {
 
     #[test]
     fn test_csv_download() {
-        let csv = download_last_day_csv(&LOCAL_HYCON_DEVICE);
-        assert!(csv.unwrap().starts_with(b"Version"))
+        let csv = read_csv_from_device(&LOCAL_HYCON_DEVICE).unwrap();
+        assert!(csv.starts_with::<&str>("Version"))
     }
 
     // #[test]
