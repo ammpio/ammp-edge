@@ -68,12 +68,11 @@ impl FtpConnection {
     fn init_plain_stream(addr: &str) -> FtpResult<FtpStream> {
         FtpStream::connect(addr)
     }
-    
+
     // fn init_secure_stream(addr: &str, host: &str) -> FtpResult<NativeTlsFtpStream> {
     //     NativeTlsFtpStream::connect(addr)?
     //         .into_secure(NativeTlsConnector::from(TlsConnector::new().unwrap()), host)
     // }
-    
 
     pub fn disconnect(&mut self) -> Result<(), FtpConnError> {
         if let Some(ftp_stream) = self.ftp_stream.as_mut() {
@@ -86,8 +85,8 @@ impl FtpConnection {
         self.ftp_stream
             .as_mut()
             .ok_or(FtpConnError::NotConnected)?
-            .nlst(None).map_err(Into::into)
-            // .map(|list| list.iter().map(|entry| entry.name.clone()).collect())
+            .nlst(None)
+            .map_err(Into::into)
     }
 
     pub fn download_file(&mut self, filename: &str) -> Result<Cursor<Vec<u8>>, FtpConnError> {
