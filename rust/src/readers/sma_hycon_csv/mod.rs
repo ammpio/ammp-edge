@@ -1,14 +1,19 @@
 #![allow(unused)]
-use std::io::{Cursor, Read};
-use std::str;
+use std::collections::HashMap;
+use std::io::Cursor;
 
+use chrono::offset::Utc;
+use chrono::DateTime;
+use csv;
+use serde_json::Value;
 use thiserror::Error;
-use zip::read::ZipFile;
-use zip::result::{ZipError, ZipResult};
-use zip::ZipArchive;
+use zip::result::ZipError;
 
-use crate::interfaces::ftp::{self, FtpConnError};
+use crate::interfaces::ftp::FtpConnError;
 use crate::node_mgmt::{config::Device, config::ReadingType, Config};
+
+mod download_handler;
+mod driver;
 
 #[derive(Error, Debug)]
 pub enum SmaHyconCsvError {
@@ -20,61 +25,66 @@ pub enum SmaHyconCsvError {
     Zip(#[from] ZipError),
     #[error("file error: {0}")]
     File(String),
+    #[error(transparent)]
+    Csv(#[from] csv::Error),
+    #[error(transparent)]
+    Chrono(#[from] chrono::ParseError),
 }
+
+type CsvRecord = HashMap<String, Value>;
 
 pub fn run_acquisition(config: &Config) {
     ()
 }
 
-fn read_csv_from_device(device: &Device) -> Result<String, SmaHyconCsvError> {
-    let zip_file = download_last_day_zip(device)?;
-    let csv_file = extract_file_from_zip(zip_file)?;
-    let csv = str::from_utf8(&csv_file).unwrap();
-    Ok(csv.to_string())
+fn read_csv_from_device(device: &Device) -> Result<Vec<Record>, SmaHyconCsvError> {
+    let zip_file = download_handler::download_last_day_zip(device)?;
+    let csv_file = download_handler::extract_file_from_zip(zip_file)?;
+    let records = parse_csv(csv_file)?;
+    println!("{:?}", records);
+    // let csv = str::from_utf8(&csv_file).unwrap();
+    Ok(records)
 }
 
-fn download_last_day_zip(device: &Device) -> Result<Cursor<Vec<u8>>, SmaHyconCsvError> {
-    let addr = &device
-        .address
-        .clone()
-        .ok_or(SmaHyconCsvError::Address("missing address".into()))?
-        .base_url
-        .ok_or(SmaHyconCsvError::Address("missing base URL".into()))?;
-
-    let mut ftp_conn = ftp::FtpConnection::new(addr);
-    ftp_conn.connect()?;
-
-    let filename = select_last_day_zip(ftp_conn.list_files()?)
-        .ok_or(SmaHyconCsvError::File("no ZIP files found".into()))?;
-
-    let file = ftp_conn.download_file(&filename)?;
-    ftp_conn.disconnect();
-    Ok(file)
+#[derive(Debug)]
+struct Record {
+    timestamp: DateTime<Utc>,
+    values: HashMap<String, f64>,
 }
 
-fn extract_file_from_zip(cursor: Cursor<Vec<u8>>) -> ZipResult<Vec<u8>> {
-    let mut zip_archive = ZipArchive::new(cursor)?;
+fn parse_csv(csv: Cursor<Vec<u8>>) -> Result<Vec<Record>, SmaHyconCsvError> {
+    let mut rdr = csv::ReaderBuilder::new()
+        .delimiter(b';')
+        .flexible(true)
+        .from_reader(csv);
 
-    for i in 0..zip_archive.len() {
-        let mut zip_file = zip_archive.by_index(i)?;
+    let headers = rdr.headers()?.clone();
+    let mut records: Vec<Record> = Vec::new();
 
-        if zip_file.is_file() && zip_file.name().ends_with(".csv") {
-            let mut file_data = Vec::new();
-            zip_file.read_to_end(&mut file_data)?;
+    for result in rdr.records() {
+        let record = result?;
+        let mut map = HashMap::new();
+        let mut timestamp = None;
 
-            return Ok(file_data);
+        for (i, field) in record.iter().enumerate() {
+            if i == 0 {
+                timestamp = Some(DateTime::parse_from_rfc3339(field)?.with_timezone(&Utc));
+            } else if let Ok(value) = field.parse::<f64>() {
+                map.insert(headers[i].to_owned(), value);
+            }
+        }
+
+        if let Some(timestamp) = timestamp {
+            records.push(Record {
+                timestamp,
+                values: map,
+            });
         }
     }
-    // This isn't quite the right error but does the job for now...
-    Err(ZipError::FileNotFound)
-}
 
-fn select_last_day_zip(filenames: Vec<String>) -> Option<String> {
-    filenames
-        .iter()
-        .filter(|f| f.ends_with(".zip"))
-        .max()
-        .cloned()
+    println!("{:?}", records);
+
+    Ok(records)
 }
 
 fn select_devices_to_read(config: &Config) -> Vec<Device> {
@@ -175,13 +185,14 @@ mod tests {
 
     #[test]
     fn test_csv_download() {
-        let csv = read_csv_from_device(&LOCAL_HYCON_DEVICE).unwrap();
-        assert!(csv.starts_with::<&str>("Version"))
+        let zip_file = download_handler::download_last_day_zip(&LOCAL_HYCON_DEVICE).unwrap();
+        let csv_file = download_handler::extract_file_from_zip(zip_file).unwrap();
+        assert!(csv_file.into_inner().starts_with(b"Version"))
     }
 
-    // #[test]
-    // fn test_csv_download() {
-    //     let csv = download_latest_csv(&LOCAL_HYCON_DEVICE);
-    //     assert!(csv.unwrap().starts_with("Version"))
-    // }
+    #[test]
+    fn test_driver() {
+        println!("{:?}", driver::SMA_HYCON_CSV["grid_out_P"]);
+        // assert!(csv.unwrap().starts_with("Version"))
+    }
 }
