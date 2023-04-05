@@ -47,6 +47,8 @@ mod tests {
     #[test]
     fn test_sma_hycon_csv_driver() {
         assert_eq!(SMA_HYCON_CSV.len(), 4);
+        assert_eq!(SMA_HYCON_CSV["grid_out_P"].multiplier, Some(1000.0));
+        assert_eq!(SMA_HYCON_CSV["grid_in_P"].column, "GridPwrAtTot");
         assert_eq!(SMA_HYCON_CSV["grid_in_P"].column, "GridPwrAtTot");
     }
 }
