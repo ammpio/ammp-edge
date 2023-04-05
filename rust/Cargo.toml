@@ -10,6 +10,7 @@ repository = "https://github.com/ammpio/ammp-edge"
 anyhow = "1.0.66"
 backoff = "0.4.0"
 chrono = "0.4.23"
+chrono-tz = "0.8.1"
 dotenv = "0.15.0"
 env_logger = { version = "0.9.3", default-features = false }
 flume = "0.10"

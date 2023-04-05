@@ -19,15 +19,15 @@ pub enum Typecast {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct DriverField {
-    column: String,
-    description: String,
-    unit: String,
-    typecast: Typecast,
-    multiplier: Option<f64>,
-    offset: Option<f64>,
+    pub column: String,
+    pub description: String,
+    pub unit: String,
+    pub typecast: Typecast,
+    pub multiplier: Option<f64>,
+    pub offset: Option<f64>,
 }
 
-type Driver = HashMap<String, DriverField>;
+pub type Driver = HashMap<String, DriverField>;
 
 pub static SMA_HYCON_CSV: Lazy<Driver> = Lazy::new(|| {
     serde_json::from_str::<Driver>(r#"

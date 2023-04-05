@@ -1,19 +1,14 @@
-#![allow(unused)]
-use std::collections::HashMap;
-use std::io::Cursor;
-
-use chrono::offset::Utc;
-use chrono::DateTime;
-use csv;
-use serde_json::Value;
+use chrono_tz::Tz;
 use thiserror::Error;
 use zip::result::ZipError;
 
+use crate::data_mgmt::models::Record;
 use crate::interfaces::ftp::FtpConnError;
 use crate::node_mgmt::{config::Device, config::ReadingType, Config};
 
-mod download_handler;
+mod download;
 mod driver;
+mod parse;
 
 #[derive(Error, Debug)]
 pub enum SmaHyconCsvError {
@@ -26,64 +21,21 @@ pub enum SmaHyconCsvError {
     #[error("file error: {0}")]
     File(String),
     #[error(transparent)]
-    Csv(#[from] csv::Error),
-    #[error(transparent)]
-    Chrono(#[from] chrono::ParseError),
+    Parse(#[from] parse::ParseError),
 }
-
-type CsvRecord = HashMap<String, Value>;
 
 pub fn run_acquisition(config: &Config) {
     ()
 }
 
 fn read_csv_from_device(device: &Device) -> Result<Vec<Record>, SmaHyconCsvError> {
-    let zip_file = download_handler::download_last_day_zip(device)?;
-    let csv_file = download_handler::extract_file_from_zip(zip_file)?;
-    let records = parse_csv(csv_file)?;
-    println!("{:?}", records);
-    // let csv = str::from_utf8(&csv_file).unwrap();
-    Ok(records)
-}
+    
+    let zip_file = download::download_last_day_zip(device)?;
+    let csv_file = download::extract_file_from_zip(zip_file)?;
 
-#[derive(Debug)]
-struct Record {
-    timestamp: DateTime<Utc>,
-    values: HashMap<String, f64>,
-}
-
-fn parse_csv(csv: Cursor<Vec<u8>>) -> Result<Vec<Record>, SmaHyconCsvError> {
-    let mut rdr = csv::ReaderBuilder::new()
-        .delimiter(b';')
-        .flexible(true)
-        .from_reader(csv);
-
-    let headers = rdr.headers()?.clone();
-    let mut records: Vec<Record> = Vec::new();
-
-    for result in rdr.records() {
-        let record = result?;
-        let mut map = HashMap::new();
-        let mut timestamp = None;
-
-        for (i, field) in record.iter().enumerate() {
-            if i == 0 {
-                timestamp = Some(DateTime::parse_from_rfc3339(field)?.with_timezone(&Utc));
-            } else if let Ok(value) = field.parse::<f64>() {
-                map.insert(headers[i].to_owned(), value);
-            }
-        }
-
-        if let Some(timestamp) = timestamp {
-            records.push(Record {
-                timestamp,
-                values: map,
-            });
-        }
-    }
-
-    println!("{:?}", records);
-
+    let timezone_str = device.address.as_ref().ok_or(SmaHyconCsvError::Address("missing device address".into()))?.timezone.as_ref().ok_or(SmaHyconCsvError::Address("missing timezone".into()))?;
+    let timezone = timezone_str.parse::<Tz>().map_err(|e| SmaHyconCsvError::Address(format!("invalid timezone: {e}")))?;
+    let records = parse::parse_csv(csv_file, &driver::SMA_HYCON_CSV, timezone)?;
     Ok(records)
 }
 
@@ -162,7 +114,7 @@ mod tests {
             "driver": "sma_hycon_csv",
             "address": {
                 "base_url": "ftp://testuser:testpwd@localhost:21/fsc/log/DataFast/",
-                "timezone": "Europe/Amsterdam"
+                "timezone": "Africa/Johannesburg"
             },
             "enabled": true,
             "vendor_id": "sma-hycon-1",
@@ -185,14 +137,14 @@ mod tests {
 
     #[test]
     fn test_csv_download() {
-        let zip_file = download_handler::download_last_day_zip(&LOCAL_HYCON_DEVICE).unwrap();
-        let csv_file = download_handler::extract_file_from_zip(zip_file).unwrap();
+        let zip_file = download::download_last_day_zip(&LOCAL_HYCON_DEVICE).unwrap();
+        let csv_file = download::extract_file_from_zip(zip_file).unwrap();
         assert!(csv_file.into_inner().starts_with(b"Version"))
     }
 
     #[test]
-    fn test_driver() {
-        println!("{:?}", driver::SMA_HYCON_CSV["grid_out_P"]);
-        // assert!(csv.unwrap().starts_with("Version"))
+    fn test_read_and_parse_csv() {
+        let records = read_csv_from_device(&LOCAL_HYCON_DEVICE).unwrap();
+        assert!(records.len() >= 8640);
     }
 }
