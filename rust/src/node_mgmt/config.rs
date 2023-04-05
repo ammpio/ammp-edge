@@ -9,15 +9,19 @@ use crate::constants::keys;
 
 import_types!(
     schema = "../resources/schema/config.schema.json",
-    derives = [PartialEq]
+    derives = [Eq, PartialEq]
 );
 
 pub type Config = AmmpEdgeConfiguration;
 
 #[derive(Error, Debug)]
 pub enum ConfigError {
+    #[error(transparent)]
+    KvStore(#[from] KVStoreError),
     #[error("could not parse config JSON: {0}")]
     ParseJson(#[from] serde_json::Error),
+    #[error("no config set")]
+    NoConfigSet,
 }
 
 impl FromStr for Config {
@@ -27,6 +31,10 @@ impl FromStr for Config {
     }
 }
 
-pub fn set(kvs: KVDb, config: &Config) -> Result<(), KVStoreError> {
-    kvs.set(keys::CONFIG, config)
+pub fn get(kvs: KVDb) -> Result<Config, ConfigError> {
+    kvs.get(keys::CONFIG)?.ok_or(ConfigError::NoConfigSet)
+}
+
+pub fn set(kvs: KVDb, config: &Config) -> Result<(), ConfigError> {
+    kvs.set(keys::CONFIG, config).map_err(Into::into)
 }

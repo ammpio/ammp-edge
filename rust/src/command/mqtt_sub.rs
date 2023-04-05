@@ -9,6 +9,7 @@ use crate::constants::defaults::DB_WRITE_TIMEOUT;
 use crate::constants::topics;
 use crate::helpers;
 use crate::interfaces::{kvpath, mqtt, mqtt::MqttMessage};
+use crate::node_mgmt::config::ConfigError;
 use crate::node_mgmt::{self, Config};
 
 fn try_set_config(config_payload: &str) {
@@ -16,7 +17,8 @@ fn try_set_config(config_payload: &str) {
         Ok(config) => {
             // A databse connection or write error is transient and would lead to a retry
             let set_config = || {
-                let kvs = KVDb::new(kvpath::SQLITE_STORE.as_path())?;
+                let kvs =
+                    KVDb::new(kvpath::SQLITE_STORE.as_path()).map_err(ConfigError::KvStore)?;
                 node_mgmt::config::set(kvs, &config)?;
                 Ok(())
             };

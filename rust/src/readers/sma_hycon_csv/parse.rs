@@ -40,16 +40,12 @@ pub fn parse_csv(
         ))??;
 
     let headers = headers_line.split(SEPARATOR).collect();
-    println!("headers: {:#?}", headers);
-
     let column_map = map_column_to_driver_field(headers, driver);
 
     for line in lines.skip(LINES_AFTER_HEADER_BEFORE_DATA) {
         let rec = parse_line(&line?, &column_map, timezone)?;
         records.push(rec);
     }
-
-    println!("{:?}", &records[0..5]);
 
     Ok(records)
 }
@@ -72,7 +68,6 @@ fn parse_line(
 ) -> Result<Record, ParseError> {
     let mut rec = Record::new();
     let values: Vec<&str> = line.split(SEPARATOR).collect();
-    println!("values: {:#?}", values);
 
     rec.set_timestamp(parse_timestamp(
         values

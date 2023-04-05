@@ -1,14 +1,14 @@
-
 use std::collections::HashMap;
 
-use chrono::{DateTime, offset::Utc};
+use chrono::{offset::Utc, DateTime};
 use serde::{Deserialize, Serialize};
 
+use crate::node_mgmt::config::Device;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 
 pub enum RtValue {
-    Bool(bool),    
+    Bool(bool),
     Float(f64),
     Int(i64),
     String(String),
@@ -46,4 +46,16 @@ impl Record {
     pub fn get_field(&self, key: &str) -> Option<&RtValue> {
         self.fields.get(key)
     }
+}
+
+impl Default for Record {
+    fn default() -> Self {
+        Record::new()
+    }
+}
+
+#[derive(Debug)]
+pub struct DeviceReading {
+    pub device: Device,
+    pub records: Vec<Record>,
 }

@@ -31,7 +31,7 @@ pub fn download_last_day_zip(device: &Device) -> Result<Cursor<Vec<u8>>, SmaHyco
         .ok_or(SmaHyconCsvError::File("no ZIP files found".into()))?;
 
     let file = ftp_conn.download_file(&filename)?;
-    ftp_conn.disconnect();
+    ftp_conn.disconnect().ok();
     Ok(file)
 }
 

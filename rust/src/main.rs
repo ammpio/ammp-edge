@@ -14,6 +14,7 @@ const CMD_KVS_GET: &str = "kvs-get";
 const CMD_KVS_SET: &str = "kvs-set";
 const CMD_MQTT_PUB_META: &str = "mqtt-pub-meta";
 const CMD_MQTT_SUB_CFG_CMD: &str = "mqtt-sub-cfg-cmd";
+const CMS_READ_SMA_HYCON_CSV: &str = "read-sma-hycon-csv";
 
 fn main() -> Result<()> {
     load_dotenv();
@@ -34,6 +35,7 @@ fn main() -> Result<()> {
         }),
         Some(CMD_MQTT_PUB_META) => command::mqtt_pub_meta(),
         Some(CMD_MQTT_SUB_CFG_CMD) => command::mqtt_sub_cfg_cmd(),
+        Some(CMS_READ_SMA_HYCON_CSV) => command::read_sma_hycon_csv(),
         _ => Err(anyhow!(
             "Subcommand must be one of '{CMD_INIT}', '{CMD_KVS_GET}', '{CMD_KVS_SET}', '{CMD_MQTT_PUB_META}', '{CMD_MQTT_SUB_CFG_CMD}'"
         )),
