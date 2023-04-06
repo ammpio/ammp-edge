@@ -9,7 +9,7 @@ use crate::constants::keys;
 
 import_types!(
     schema = "../resources/schema/config.schema.json",
-    derives = [Eq, PartialEq]
+    derives = [Clone, Eq, PartialEq]
 );
 
 pub type Config = AmmpEdgeConfiguration;

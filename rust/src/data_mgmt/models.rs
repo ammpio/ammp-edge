@@ -5,6 +5,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::node_mgmt::config::Device;
 
+use super::payload::DeviceDataExtraExtra;
+
 #[derive(Clone, Debug, Deserialize, Serialize)]
 
 pub enum RtValue {
@@ -46,6 +48,22 @@ impl Record {
     pub fn get_field(&self, key: &str) -> Option<&RtValue> {
         self.fields.get(key)
     }
+
+    pub fn all_fields(&self) -> &HashMap<String, RtValue> {
+        &self.fields
+    }
+
+    pub fn all_fields_as_device_data_extra(&self) -> HashMap<String, DeviceDataExtraExtra> {
+        self.fields.iter().map(|(k, v)| {
+            let value = match v {
+                RtValue::Bool(b) => DeviceDataExtraExtra::Boolean(*b),
+                RtValue::Float(f) => DeviceDataExtraExtra::Number(*f),
+                RtValue::Int(i) => DeviceDataExtraExtra::Integer(*i),
+                RtValue::String(s) => DeviceDataExtraExtra::String(s.to_string()),
+            };
+            (k.clone(), value)
+        }).collect()
+    }
 }
 
 impl Default for Record {
@@ -57,5 +75,11 @@ impl Default for Record {
 #[derive(Debug)]
 pub struct DeviceReading {
     pub device: Device,
-    pub records: Vec<Record>,
+    pub record: Record,
 }
+
+// #[derive(Debug)]
+// pub struct DeviceReadings {
+//     pub device: Device,
+//     pub records: Vec<Record>,
+// }

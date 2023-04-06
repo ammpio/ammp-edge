@@ -16,6 +16,7 @@ env_logger = { version = "0.9.3", default-features = false }
 flume = "0.10"
 getrandom = "0.2.8"
 hex = "0.4.3"
+itertools = "0.10.5"
 kvstore = { path = "kvstore" }
 log = "0.4.17"
 native-tls = "0.2.11"

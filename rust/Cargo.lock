@@ -22,6 +22,7 @@ dependencies = [
  "flume",
  "getrandom",
  "hex",
+ "itertools",
  "kvstore",
  "log",
  "mockito",
