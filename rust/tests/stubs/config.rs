@@ -5,6 +5,19 @@
 pub const VALID_PAYLOAD_1: &str = r#"
 {
     "name": "Basic config",
+    "output": [
+      {
+        "field": "P_total",
+        "device": "sma_stp_1",
+        "source": "sma_stp_1[var = \"P_L1\"].value + sma_stp_1[var = \"P_L2\"].value + sma_stp_1[var = \"P_L3\"].value",
+        "typecast": "float"
+      },
+      {
+        "field": "genset_P_total",
+        "source": "sma_hycon_csv[var = \"genset_P\"].value",
+        "typecast": "float"
+      }
+    ],
     "devices": {
       "logger": {
         "name": "Logger",
@@ -62,7 +75,8 @@ pub const VALID_PAYLOAD_1: &str = r#"
     },
     "timestamp": "2022-08-15T13:03:17Z",
     "read_interval": 15,
-    "read_roundtime": true
+    "read_roundtime": true,
+    "calc_vendor_id": "_asset"
 }
 "#;
 

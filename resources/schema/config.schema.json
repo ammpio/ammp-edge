@@ -19,10 +19,10 @@
         "output": {
             "type": "array",
             "default": [],
-            "title": "The output Schema",
+            "title": "Outputs",
             "items": {
                 "type": "object",
-                "title": "A Schema",
+                "title": "Output",
                 "required": [
                     "field",
                     "source",
@@ -42,7 +42,8 @@
                     },
                     "device": {
                         "type": "string",
-                        "title": "The device with which to associate the output",
+                        "title": "Output device",
+                        "description": "The device with which to associate the output",
                         "examples": [
                             "dse855_1",
                             "sens_1"
@@ -50,7 +51,7 @@
                     },
                     "source": {
                         "type": "string",
-                        "title": "Calculation source",
+                        "title": "Source",
                         "description": "JSONata expression for source of calculation",
                         "examples": [
                             "em210_grid[var = \"P_L1\"].value + em210_grid[var = \"P_L2\"].value + em210_grid[var = \"P_L3\"].value"
