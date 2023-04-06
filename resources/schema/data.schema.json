@@ -1,8 +1,9 @@
 {
     "$schema": "https://json-schema.org/draft/2019-09/schema",
     "$id": "https://github.com/ammpio/ammp-edge/blob/main/resources/schema/data.schema.json",
+    "title": "Data payload",
+    "description": "This is the structure of data payloads submitted to the MQTT broker.",
     "type": "object",
-    "title": "Data payload schema",
     "required": [
         "t",
         "r",
@@ -21,7 +22,7 @@
             "title": "Readings",
             "items": {
                 "type": "object",
-                "title": "Reading from device",
+                "title": "Device reading",
                 "required": [
                     "_vid"
                 ],
@@ -48,7 +49,7 @@
                     }
                 },
                 "additionalProperties": {
-                    "type": ["integer", "float", "string", "null"]
+                    "type": ["integer", "number", "string", "boolean", "null"]
                 },
                 "examples": [{
                     "_d": "logger",
@@ -70,11 +71,6 @@
         "m": {
             "type": "object",
             "title": "Metadata",
-            "required": [
-                "snap_rev",
-                "config_id",
-                "reading_duration"
-            ],
             "properties": {
                 "snap_rev": {
                     "type": "integer",
@@ -96,20 +92,12 @@
                     "examples": [
                         93.77299094200134
                     ]
-                },
-                "reading_offset": {
-                    "type": "integer",
-                    "title": "Offset of reading",
-                    "examples": [
-                        0
-                    ]
                 }
             },
             "examples": [{
                 "snap_rev": 721,
                 "config_id": "3e43652",
-                "reading_duration": 93.77299094200134,
-                "reading_offset": 0
+                "reading_duration": 93.77299094200134
             }]
         }
     }
