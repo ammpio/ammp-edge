@@ -40,7 +40,7 @@ fn run_commands(command_payload: &str) {
             for cmd in commands {
                 let response = helpers::run_command(&cmd);
                 if let Err(e) = mqtt::publish_msgs(
-                    &vec![MqttMessage::new(topics::COMMAND_RESPONSE, response)],
+                    &[MqttMessage::new(topics::COMMAND_RESPONSE, response)],
                     Some("local-pub-cmd-resp"),
                     false,
                 ) {
