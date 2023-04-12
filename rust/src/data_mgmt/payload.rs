@@ -10,7 +10,11 @@ import_types!(
     derives = [PartialEq]
 );
 
-const BLANK_METADATA: Metadata = Metadata { config_id: None, reading_duration: None, snap_rev: None };
+const BLANK_METADATA: Metadata = Metadata {
+    config_id: None,
+    reading_duration: None,
+    snap_rev: None,
+};
 
 #[derive(Error, Debug)]
 pub enum DataPayloadError {

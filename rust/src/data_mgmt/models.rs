@@ -54,15 +54,18 @@ impl Record {
     }
 
     pub fn all_fields_as_device_data_extra(&self) -> HashMap<String, DeviceDataExtraExtra> {
-        self.fields.iter().map(|(k, v)| {
-            let value = match v {
-                RtValue::Bool(b) => DeviceDataExtraExtra::Boolean(*b),
-                RtValue::Float(f) => DeviceDataExtraExtra::Number(*f),
-                RtValue::Int(i) => DeviceDataExtraExtra::Integer(*i),
-                RtValue::String(s) => DeviceDataExtraExtra::String(s.to_string()),
-            };
-            (k.clone(), value)
-        }).collect()
+        self.fields
+            .iter()
+            .map(|(k, v)| {
+                let value = match v {
+                    RtValue::Bool(b) => DeviceDataExtraExtra::Boolean(*b),
+                    RtValue::Float(f) => DeviceDataExtraExtra::Number(*f),
+                    RtValue::Int(i) => DeviceDataExtraExtra::Integer(*i),
+                    RtValue::String(s) => DeviceDataExtraExtra::String(s.to_string()),
+                };
+                (k.clone(), value)
+            })
+            .collect()
     }
 }
 

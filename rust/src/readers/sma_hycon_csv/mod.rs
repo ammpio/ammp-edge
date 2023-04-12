@@ -30,7 +30,12 @@ pub fn run_acquisition(config: &Config) -> Vec<DeviceReading> {
         match read_csv_from_device(&device) {
             Ok(records) => {
                 log::trace!("Readings: {:#?}", &records);
-                records.into_iter().for_each(|r| readings.push(DeviceReading { device: device.clone(), record: r }));
+                records.into_iter().for_each(|r| {
+                    readings.push(DeviceReading {
+                        device: device.clone(),
+                        record: r,
+                    })
+                });
             }
             Err(e) => {
                 log::error!("Error reading CSV from device {:?}: {:#?}", device, e);

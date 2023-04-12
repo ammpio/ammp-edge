@@ -83,7 +83,6 @@ pub fn publish_msgs(
     let (mut client, mut connection) = client_conn(&rand_client_id(client_prefix), true);
 
     for msg_batch in messages.chunks(MQTT_QUEUE_CAPACITY) {
-
         let mut expected_msg_acks = msg_batch.len();
         log::debug!("Publishing batch of {} messages", msg_batch.len());
 

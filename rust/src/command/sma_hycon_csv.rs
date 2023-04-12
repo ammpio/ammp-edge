@@ -1,7 +1,7 @@
 use kvstore::KVDb;
 
 use crate::interfaces::kvpath;
-use crate::{node_mgmt, readers, data_mgmt};
+use crate::{data_mgmt, node_mgmt, readers};
 
 pub fn read_sma_hycon_csv() -> anyhow::Result<()> {
     let kvs = KVDb::new(kvpath::SQLITE_STORE.as_path())?;

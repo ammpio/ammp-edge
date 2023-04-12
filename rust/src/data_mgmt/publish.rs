@@ -13,14 +13,9 @@ pub enum PublishError {
     MqttError(#[from] mqtt::MqttError),
 }
 
-pub fn publish_readings(
-    readings: Vec<DeviceReading>,
-) -> anyhow::Result<(), PublishError> {
+pub fn publish_readings(readings: Vec<DeviceReading>) -> anyhow::Result<(), PublishError> {
     let messages = construct_payloads(readings);
-    log::trace!(
-        "Publishing messages: {:?}",
-        &messages
-    );
+    log::trace!("Publishing messages: {:?}", &messages);
 
     // mqtt::publish_msgs(&vec![MqttMessage::new("hello", "there")], Some("local-pub-data"), false)?;
     mqtt::publish_msgs(&messages, Some("local-pub-data"), false)?;
