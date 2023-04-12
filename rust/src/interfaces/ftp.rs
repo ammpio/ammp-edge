@@ -1,8 +1,7 @@
 use std::io::Cursor;
 
-// use suppaftp::native_tls::{TlsConnector, TlsStream};
-use suppaftp::{FtpError, FtpResult, FtpStream};
-// use suppaftp::{NativeTlsConnector, NativeTlsFtpStream};
+use native_tls::TlsConnector;
+use suppaftp::{FtpError, FtpStream, NativeTlsConnector, NativeTlsFtpStream};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -17,6 +16,11 @@ pub enum FtpConnError {
     UrlParse(#[from] url::ParseError),
 }
 
+pub enum Stream {
+    Plain(FtpStream),
+    NativeTls(NativeTlsFtpStream),
+}
+
 pub struct FtpConnection {
     host: String,
     port: u16,
@@ -24,11 +28,11 @@ pub struct FtpConnection {
     password: String,
     secure: bool,
     base_path: String,
-    ftp_stream: Option<FtpStream>,
+    ftp_stream: Option<Stream>,
 }
 
 impl FtpConnection {
-    pub fn new(url: &str) -> FtpConnection {
+    pub fn new(url: &str) -> Self {
         let url = url::Url::parse(url).unwrap();
         let host = url.host_str().unwrap().to_string();
         let port = url.port().unwrap_or(21);
@@ -53,48 +57,54 @@ impl FtpConnection {
 
     pub fn connect(&mut self) -> Result<(), FtpConnError> {
         let addr = &format!("{}:{}", self.host, self.port);
-        let mut ftp_stream = match self.secure {
-            false => Self::init_plain_stream(addr)?,
-            // TODO: true => self.init_plain_stream(addr)?,
-            true => Self::init_plain_stream(addr)?,
-        };
-        ftp_stream.login(&self.user, &self.password)?;
-        ftp_stream.set_passive_nat_workaround(true);
-        ftp_stream.cwd(&self.base_path)?;
-        self.ftp_stream = Some(ftp_stream);
-        Ok(())
-    }
-
-    fn init_plain_stream(addr: &str) -> FtpResult<FtpStream> {
-        FtpStream::connect(addr)
-    }
-
-    // fn init_secure_stream(addr: &str, host: &str) -> FtpResult<NativeTlsFtpStream> {
-    //     NativeTlsFtpStream::connect(addr)?
-    //         .into_secure(NativeTlsConnector::from(TlsConnector::new().unwrap()), host)
-    // }
-
-    pub fn disconnect(&mut self) -> Result<(), FtpConnError> {
-        if let Some(ftp_stream) = self.ftp_stream.as_mut() {
-            ftp_stream.quit()?;
+        match self.secure {
+            false => {
+                let mut ftp_stream = FtpStream::connect(addr)?;
+                ftp_stream.login(&self.user, &self.password)?;
+                ftp_stream.set_passive_nat_workaround(true);
+                ftp_stream.cwd(&self.base_path)?;
+                self.ftp_stream = Some(Stream::Plain(ftp_stream));
+            }
+            true => {
+                let mut ftp_stream = NativeTlsFtpStream::connect(addr)?.into_secure(
+                    NativeTlsConnector::from(TlsConnector::new().unwrap()),
+                    &self.host,
+                )?;
+                ftp_stream.login(&self.user, &self.password)?;
+                ftp_stream.set_passive_nat_workaround(true);
+                ftp_stream.cwd(&self.base_path)?;
+                self.ftp_stream = Some(Stream::NativeTls(ftp_stream));
+            }
         }
         Ok(())
     }
 
+    pub fn disconnect(&mut self) -> Result<(), FtpConnError> {
+        match &mut self.ftp_stream {
+            Some(Stream::Plain(ftp_stream)) => ftp_stream.quit().map_err(Into::into),
+            Some(Stream::NativeTls(ftp_stream)) => ftp_stream.quit().map_err(Into::into),
+            None => Ok(()),
+        }
+    }
+
     pub fn list_files(&mut self) -> Result<Vec<String>, FtpConnError> {
-        self.ftp_stream
-            .as_mut()
-            .ok_or(FtpConnError::NotConnected)?
-            .nlst(None)
-            .map_err(Into::into)
+        match &mut self.ftp_stream {
+            Some(Stream::Plain(ftp_stream)) => ftp_stream.nlst(None).map_err(Into::into),
+            Some(Stream::NativeTls(ftp_stream)) => ftp_stream.nlst(None).map_err(Into::into),
+            None => Err(FtpConnError::NotConnected),
+        }
     }
 
     pub fn download_file(&mut self, filename: &str) -> Result<Cursor<Vec<u8>>, FtpConnError> {
-        self.ftp_stream
-            .as_mut()
-            .ok_or(FtpConnError::NotConnected)?
-            .retr_as_buffer(filename)
-            .map_err(Into::into)
+        match &mut self.ftp_stream {
+            Some(Stream::Plain(ftp_stream)) => {
+                ftp_stream.retr_as_buffer(filename).map_err(Into::into)
+            }
+            Some(Stream::NativeTls(ftp_stream)) => {
+                ftp_stream.retr_as_buffer(filename).map_err(Into::into)
+            }
+            None => Err(FtpConnError::NotConnected),
+        }
     }
 }
 
