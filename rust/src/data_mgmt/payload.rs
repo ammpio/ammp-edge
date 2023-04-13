@@ -10,10 +10,11 @@ import_types!(
     derives = [PartialEq]
 );
 
-const BLANK_METADATA: Metadata = Metadata {
+pub const BLANK_METADATA: Metadata = Metadata {
     config_id: None,
     reading_duration: None,
     snap_rev: None,
+    data_provider: None,
 };
 
 #[derive(Error, Debug)]
@@ -23,7 +24,7 @@ pub enum DataPayloadError {
     ParseJson(#[from] serde_json::Error),
 }
 
-pub fn payloads_from_device_readings(device_readings: Vec<DeviceReading>) -> Vec<DataPayload> {
+pub fn payloads_from_device_readings(device_readings: Vec<DeviceReading>, metadata: Option<Metadata>) -> Vec<DataPayload> {
     let mut payloads = Vec::new();
     for (timestamp, dev_rdgs) in &device_readings
         .into_iter()
@@ -34,7 +35,7 @@ pub fn payloads_from_device_readings(device_readings: Vec<DeviceReading>) -> Vec
             payloads.push(DataPayload {
                 t: ts.timestamp(),
                 r: dev_rdgs.map(device_data_from_device_reading).collect(),
-                m: BLANK_METADATA,
+                m: metadata.as_ref().unwrap_or(&BLANK_METADATA).into(),
             });
         }
     }

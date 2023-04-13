@@ -69,7 +69,7 @@ fn select_devices_to_read(config: &Config) -> Vec<Device> {
     config
         .devices
         .values()
-        .filter(|d| d.reading_type == ReadingType::SmaHyconCsv)
+        .filter(|d| d.reading_type == ReadingType::SmaHyconCsv && d.enabled)
         .cloned()
         .collect()
 }
