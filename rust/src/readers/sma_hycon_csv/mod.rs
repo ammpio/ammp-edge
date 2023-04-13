@@ -70,7 +70,6 @@ fn select_devices_to_read(config: &Config) -> Vec<Device> {
         .devices.iter()
         .map(|(k, d)| Device { key: k.into(), ..d.clone()})
         .filter(|d| d.reading_type == ReadingType::SmaHyconCsv && d.enabled)
-        // .cloned()
         .collect()
 }
 
@@ -89,6 +88,7 @@ mod tests {
         {
             "devices": {
                 "sma_hycon_csv": {
+                    "key": "sma_hycon_csv",
                     "driver": "sma_hycon_csv",
                     "address": {
                         "base_url": "ftp://User:pwd@172.16.1.21:900/fsc/log/DataFast/"
@@ -113,6 +113,7 @@ mod tests {
         {
             "devices": {
                 "sma_stp_1": {
+                    "key": "sma_stp_1",
                     "name": "SMA STP-25000",
                     "driver": "sma_stp25000",
                     "enabled": true,
@@ -157,7 +158,7 @@ mod tests {
         assert!(select_devices_to_read(&SAMPLE_CONFIG_NO_HYCON_CSV).is_empty());
         assert_eq!(
             select_devices_to_read(&SAMPLE_CONFIG_WITH_HYCON_CSV)[0],
-            Device { key: "sma_hycon_csv".into(), ..SAMPLE_CONFIG_WITH_HYCON_CSV.devices["sma_hycon_csv"].clone() }
+            SAMPLE_CONFIG_WITH_HYCON_CSV.devices["sma_hycon_csv"]
         );
     }
 
