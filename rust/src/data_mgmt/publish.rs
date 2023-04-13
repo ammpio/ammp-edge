@@ -5,7 +5,10 @@ use crate::{
     interfaces::mqtt::{self, MqttMessage},
 };
 
-use super::{models::DeviceReading, payload::{payloads_from_device_readings, Metadata}};
+use super::{
+    models::DeviceReading,
+    payload::{payloads_from_device_readings, Metadata},
+};
 
 #[derive(Error, Debug)]
 pub enum PublishError {
@@ -13,7 +16,10 @@ pub enum PublishError {
     MqttError(#[from] mqtt::MqttError),
 }
 
-pub fn publish_readings(readings: Vec<DeviceReading>, metadata: Option<Metadata>) -> anyhow::Result<(), PublishError> {
+pub fn publish_readings(
+    readings: Vec<DeviceReading>,
+    metadata: Option<Metadata>,
+) -> anyhow::Result<(), PublishError> {
     let messages = construct_payloads(readings, metadata);
     log::trace!("Publishing messages: {:?}", &messages);
 
@@ -22,7 +28,10 @@ pub fn publish_readings(readings: Vec<DeviceReading>, metadata: Option<Metadata>
     Ok(())
 }
 
-fn construct_payloads(readings: Vec<DeviceReading>, metadata: Option<Metadata>) -> Vec<MqttMessage> {
+fn construct_payloads(
+    readings: Vec<DeviceReading>,
+    metadata: Option<Metadata>,
+) -> Vec<MqttMessage> {
     payloads_from_device_readings(readings, metadata)
         .into_iter()
         .map(|p| MqttMessage::new(topics::DATA, serde_json::to_string(&p).unwrap()))

@@ -16,7 +16,10 @@ pub fn read_sma_hycon_csv() -> anyhow::Result<()> {
     );
     if !readings.is_empty() {
         log::info!("Publishing readings to MQTT");
-        let metadata = Some(Metadata { data_provider: Some(DATA_PROVIDER.into()), ..BLANK_METADATA });
+        let metadata = Some(Metadata {
+            data_provider: Some(DATA_PROVIDER.into()),
+            ..BLANK_METADATA
+        });
         data_mgmt::publish::publish_readings(readings, metadata)?;
         log::info!("Finished publishing readings to MQTT");
     }
