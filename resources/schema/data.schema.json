@@ -22,7 +22,7 @@
             "title": "Readings",
             "items": {
                 "type": "object",
-                "title": "Device reading",
+                "title": "Device data",
                 "required": [
                     "_vid"
                 ],
