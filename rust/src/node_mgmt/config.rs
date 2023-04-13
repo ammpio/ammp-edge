@@ -1,36 +1,40 @@
-use std::{error::Error, fmt};
+use std::str::FromStr;
 
 use kvstore::{KVDb, KVStoreError};
+use serde::{Deserialize, Serialize};
+use thiserror::Error;
+use typify::import_types;
 
 use crate::constants::keys;
 
-pub type Config = serde_json::Value;
+import_types!(
+    schema = "json-schema/config.schema.json",
+    derives = [Clone, Eq, PartialEq]
+);
 
-#[derive(Debug)]
+pub type Config = AmmpEdgeConfiguration;
+
+#[derive(Error, Debug)]
 pub enum ConfigError {
-    JsonParse(serde_json::Error),
+    #[error(transparent)]
+    KvStore(#[from] KVStoreError),
+    #[error("could not parse config JSON: {0}")]
+    ParseJson(#[from] serde_json::Error),
+    #[error("no config set")]
+    NoConfigSet,
 }
 
-impl Error for ConfigError {}
-
-impl fmt::Display for ConfigError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            ConfigError::JsonParse(ref err) => write!(f, "Cannot parse config as JSON: {:?}", err),
-        }
+impl FromStr for Config {
+    type Err = ConfigError;
+    fn from_str(config_raw: &str) -> Result<Self, Self::Err> {
+        serde_json::from_str::<Config>(config_raw).map_err(Into::into)
     }
 }
 
-impl From<serde_json::Error> for ConfigError {
-    fn from(err: serde_json::Error) -> ConfigError {
-        ConfigError::JsonParse(err)
-    }
+pub fn get(kvs: KVDb) -> Result<Config, ConfigError> {
+    kvs.get(keys::CONFIG)?.ok_or(ConfigError::NoConfigSet)
 }
 
-pub fn from_string(config_raw: &str) -> Result<Config, ConfigError> {
-    serde_json::from_str::<Config>(config_raw).map_err(Into::into)
-}
-
-pub fn set(kvs: KVDb, config: &Config) -> Result<(), KVStoreError> {
-    kvs.set(keys::CONFIG, config)
+pub fn set(kvs: KVDb, config: &Config) -> Result<(), ConfigError> {
+    kvs.set(keys::CONFIG, config).map_err(Into::into)
 }

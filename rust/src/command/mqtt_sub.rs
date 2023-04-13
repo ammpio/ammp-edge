@@ -1,3 +1,4 @@
+use std::str::FromStr;
 use std::thread;
 use std::time::Duration;
 
@@ -8,26 +9,28 @@ use crate::constants::defaults::DB_WRITE_TIMEOUT;
 use crate::constants::topics;
 use crate::helpers;
 use crate::interfaces::{kvpath, mqtt, mqtt::MqttMessage};
-use crate::node_mgmt;
+use crate::node_mgmt::config::ConfigError;
+use crate::node_mgmt::{self, Config};
 
 fn try_set_config(config_payload: &str) {
-    if let Ok(config) = node_mgmt::config::from_string(config_payload) {
-        // A databse connection or write error is transient and would lead to a retry
-        let set_config = || {
-            let kvs = KVDb::new(kvpath::SQLITE_STORE.as_path())?;
-            node_mgmt::config::set(kvs, &config)?;
-            Ok(())
-        };
+    match Config::from_str(config_payload) {
+        Ok(config) => {
+            // A databse connection or write error is transient and would lead to a retry
+            let set_config = || {
+                let kvs =
+                    KVDb::new(kvpath::SQLITE_STORE.as_path()).map_err(ConfigError::KvStore)?;
+                node_mgmt::config::set(kvs, &config)?;
+                Ok(())
+            };
 
-        match helpers::backoff_retry(set_config, Some(DB_WRITE_TIMEOUT)) {
-            Ok(()) => log::info!("Successfully set new config"),
-            Err(e) => log::error!("Permanent error setting config: {:?}", e),
+            match helpers::backoff_retry(set_config, Some(DB_WRITE_TIMEOUT)) {
+                Ok(()) => log::info!("Successfully set new config"),
+                Err(e) => log::error!("Permanent error setting config: {:?}", e),
+            }
         }
-    } else {
-        log::error!(
-            "Could not parse received payload as valid config: {:?}",
-            &config_payload
-        );
+        Err(e) => {
+            log::error!("Error \"{e}\" while trying to parse received payload:\n{config_payload}");
+        }
     }
 }
 
@@ -37,7 +40,7 @@ fn run_commands(command_payload: &str) {
             for cmd in commands {
                 let response = helpers::run_command(&cmd);
                 if let Err(e) = mqtt::publish_msgs(
-                    &vec![MqttMessage::new(topics::COMMAND_RESPONSE, response)],
+                    &[MqttMessage::new(topics::COMMAND_RESPONSE, response)],
                     Some("local-pub-cmd-resp"),
                     false,
                 ) {

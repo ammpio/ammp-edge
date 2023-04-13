@@ -11,6 +11,7 @@ use crate::constants::{defaults, envvars};
 use crate::helpers;
 
 const MAX_PACKET_SIZE: usize = 16777216; // 16 MB
+const MQTT_QUEUE_CAPACITY: usize = 10;
 
 static MQTT_BRIDGE_HOST: Lazy<String> = Lazy::new(|| {
     if let Ok(host) = env::var(envvars::MQTT_BRIDGE_HOST) {
@@ -71,38 +72,41 @@ pub fn client_conn(client_id: &str, clean_session: bool) -> (Client, Connection)
     mqttoptions.set_clean_session(clean_session);
     mqttoptions.set_max_packet_size(MAX_PACKET_SIZE, MAX_PACKET_SIZE);
 
-    Client::new(mqttoptions, 10)
+    Client::new(mqttoptions, MQTT_QUEUE_CAPACITY)
 }
 
 pub fn publish_msgs(
-    messages: &Vec<MqttMessage>,
+    messages: &[MqttMessage],
     client_prefix: Option<&str>,
     retain: bool,
 ) -> Result<(), MqttError> {
     let (mut client, mut connection) = client_conn(&rand_client_id(client_prefix), true);
 
-    let mut expected_msg_acks = messages.len();
+    for msg_batch in messages.chunks(MQTT_QUEUE_CAPACITY) {
+        let mut expected_msg_acks = msg_batch.len();
+        log::debug!("Publishing batch of {} messages", msg_batch.len());
 
-    for msg in messages.iter() {
-        log::debug!("Publishing to {}: {}", msg.topic, msg.payload);
+        for msg in msg_batch.iter() {
+            log::debug!("Publishing to {}: {}", msg.topic, msg.payload);
 
-        client.publish(
-            msg.topic.clone(),
-            QoS::AtLeastOnce,
-            retain,
-            msg.payload.as_bytes(),
-        )?;
-    }
-
-    for (_, notification) in connection.iter().enumerate() {
-        log::debug!("Notification = {:?}", notification);
-        match notification {
-            Ok(Event::Incoming(Packet::PubAck(_))) => expected_msg_acks -= 1,
-            Err(e) => return Err(e.into()),
-            _ => (),
+            client.publish(
+                msg.topic.clone(),
+                QoS::AtLeastOnce,
+                retain,
+                msg.payload.as_bytes(),
+            )?;
         }
-        if expected_msg_acks == 0 {
-            break;
+
+        for (_, notification) in connection.iter().enumerate() {
+            log::debug!("Notification = {:?}", notification);
+            match notification {
+                Ok(Event::Incoming(Packet::PubAck(_))) => expected_msg_acks -= 1,
+                Err(e) => return Err(e.into()),
+                _ => (),
+            }
+            if expected_msg_acks == 0 {
+                break;
+            }
         }
     }
     client.disconnect()?;
