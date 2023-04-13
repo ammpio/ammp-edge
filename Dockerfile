@@ -2,6 +2,7 @@ FROM rust:bullseye as rust-builder
 
 WORKDIR /code
 COPY rust .
+COPY resources resources
 
 RUN cargo build --release
 

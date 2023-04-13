@@ -8,7 +8,7 @@ use typify::import_types;
 use crate::constants::keys;
 
 import_types!(
-    schema = "../resources/schema/config.schema.json",
+    schema = "resources/schema/config.schema.json",
     derives = [Clone, Eq, PartialEq]
 );
 
