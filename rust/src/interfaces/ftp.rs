@@ -52,12 +52,18 @@ impl FtpConnection {
 
     pub fn connect(&mut self) -> Result<(), FtpConnError> {
         let addr = &format!("{}:{}", self.host, self.port);
-        let mut ftp_stream = NativeTlsFtpStream::connect(addr)?;
+        let mut ftp_stream;
         if self.secure {
-            ftp_stream = ftp_stream.into_secure(
-                NativeTlsConnector::from(TlsConnector::new().unwrap()),
-                &self.host,
-            )?;
+            let ctx = NativeTlsConnector::from(
+                TlsConnector::builder()
+                    .danger_accept_invalid_certs(true)
+                    .danger_accept_invalid_hostnames(true)
+                    .build()
+                    .unwrap(),
+            );
+            ftp_stream = NativeTlsFtpStream::connect_secure_implicit(addr, ctx, &self.host)?;
+        } else {
+            ftp_stream = NativeTlsFtpStream::connect(addr)?;
         }
 
         ftp_stream.login(&self.user, &self.password)?;
