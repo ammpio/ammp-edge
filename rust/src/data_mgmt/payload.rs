@@ -6,7 +6,7 @@ use typify::import_types;
 use super::models::DeviceReading;
 
 import_types!(
-    schema = "resources/schema/data.schema.json",
+    schema = "json-schema/data.schema.json",
     derives = [PartialEq]
 );
 
