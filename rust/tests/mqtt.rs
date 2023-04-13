@@ -1,6 +1,6 @@
 use std::ffi::OsStr;
 use std::os::unix::process::ExitStatusExt;
-use std::str::from_utf8;
+use std::str;
 use std::thread;
 use std::time::Duration;
 
@@ -9,57 +9,9 @@ use kvstore::KVDb;
 use rumqttc::{Client, Event, MqttOptions, Packet, QoS};
 use serde_json::Value;
 
-const SNAP_REV: u16 = 500;
-const CONFIG_PAYLOAD: &str = r#"
-{
-    "name": "Basic config",
-    "devices": {
-      "logger": {
-        "name": "Logger",
-        "driver": "sys_generic",
-        "enabled": true,
-        "vendor_id": "strato-1",
-        "reading_type": "sys"
-      },
-      "sma_stp_1": {
-        "name": "SMA STP-25000 (good)",
-        "driver": "sma_stp25000",
-        "enabled": true,
-        "vendor_id": "1234567890",
-        "reading_type": "modbustcp",
-        "address": {
-          "host": "mock-sma-stp",
-          "unit_id": 3
-        }
-      },
-      "sma_stp_2": {
-        "name": "SMA STP-25000 (bad)",
-        "driver": "sma_stp25000",
-        "enabled": true,
-        "vendor_id": "000",
-        "reading_type": "modbustcp",
-        "address": {
-          "host": "mock-sma-stp",
-          "unit_id": 100
-        }
-      }
-    },
-    "readings": {
-      "comms_lggr_boot_time": {"device": "logger", "var": "boot_time"},
-      "comms_lggr_cpu_load": {"device": "logger", "var": "cpu_load"},
-      "comms_lggr_disk_usage": {"device": "logger", "var": "disk_usage"},
-      "comms_lggr_mem_usage": {"device": "logger", "var": "memory_usage"},
-      "pv_P_1": {"device": "sma_stp_1", "var": "P_total"},
-      "pv_E_1": {"device": "sma_stp_1", "var": "total_yield"},
-      "pv_P_2": {"device": "sma_stp_2", "var": "P_total"}
-    },
-    "timestamp": "2022-08-15T13:03:17Z",
-    "read_interval": 15,
-    "read_roundtime": true
-  }
-"#;
+mod stubs;
 
-const BAD_CONFIG_PAYLOAD: &str = "blah";
+const SNAP_REV: u16 = 500;
 
 fn mqtt_pub_assert(snap_rev: u16) -> Assert {
     let mut cmd = Command::cargo_bin("ae").unwrap();
@@ -113,7 +65,7 @@ fn mqtt_publish_meta() {
         println!("Notification = {:?}", notification);
         let event = notification.unwrap();
         if let Event::Incoming(Packet::Publish(msg)) = event {
-            let payload = from_utf8(&msg.payload).unwrap();
+            let payload = str::from_utf8(&msg.payload).unwrap();
             match msg.topic.as_str() {
                 "u/meta/snap_rev" => assert_eq!(payload, SNAP_REV.to_string()),
                 "u/meta/boot_time" => assert!(payload.parse::<u32>().unwrap() > 0),
@@ -145,7 +97,7 @@ fn mqtt_receive_config() {
                 "d/config",
                 QoS::AtLeastOnce,
                 false,
-                CONFIG_PAYLOAD.as_bytes(),
+                stubs::config::VALID_PAYLOAD_1.as_bytes(),
             )
             .unwrap();
 
@@ -168,7 +120,7 @@ fn mqtt_receive_config() {
     assert_eq!(cmd.get_output().status.code(), None);
 
     let kvs = KVDb::new(tempdir.path().join("kvs-db/kvstore.db")).unwrap();
-    let target_config = serde_json::from_str::<Value>(CONFIG_PAYLOAD).unwrap();
+    let target_config = serde_json::from_str::<Value>(stubs::config::VALID_PAYLOAD_1).unwrap();
     let applied_config: Value = kvs.get("config").unwrap().unwrap();
     assert_eq!(applied_config, target_config);
 
@@ -189,7 +141,7 @@ fn mqtt_receive_bad_config() {
                 "d/config",
                 QoS::AtLeastOnce,
                 false,
-                BAD_CONFIG_PAYLOAD.as_bytes(),
+                stubs::config::INVALID_PAYLOAD_1.as_bytes(),
             )
             .unwrap();
 

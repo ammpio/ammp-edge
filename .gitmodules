@@ -1,0 +1,3 @@
+[submodule "rust/json-schema"]
+	path = rust/json-schema
+	url = git@github.com:ammpio/edge-schema.git

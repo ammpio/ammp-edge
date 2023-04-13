@@ -1,5 +1,6 @@
 use std::env;
-use std::str::{from_utf8, Utf8Error};
+use std::str;
+use std::str::Utf8Error;
 
 use flume::Sender;
 use once_cell::sync::Lazy;
@@ -7,9 +8,10 @@ use rumqttc::{Client, Connection, Event, MqttOptions, Packet, QoS};
 use thiserror::Error;
 
 use crate::constants::{defaults, envvars};
-use crate::helpers::rand_hex;
+use crate::helpers;
 
 const MAX_PACKET_SIZE: usize = 16777216; // 16 MB
+const MQTT_QUEUE_CAPACITY: usize = 10;
 
 static MQTT_BRIDGE_HOST: Lazy<String> = Lazy::new(|| {
     if let Ok(host) = env::var(envvars::MQTT_BRIDGE_HOST) {
@@ -52,7 +54,7 @@ pub enum MqttError {
 }
 
 pub fn rand_client_id(prefix: Option<&str>) -> String {
-    let randhex = rand_hex(3);
+    let randhex = helpers::rand_hex(3);
 
     if let Some(pref) = prefix {
         format!("{pref}-{randhex}")
@@ -70,38 +72,41 @@ pub fn client_conn(client_id: &str, clean_session: bool) -> (Client, Connection)
     mqttoptions.set_clean_session(clean_session);
     mqttoptions.set_max_packet_size(MAX_PACKET_SIZE, MAX_PACKET_SIZE);
 
-    Client::new(mqttoptions, 10)
+    Client::new(mqttoptions, MQTT_QUEUE_CAPACITY)
 }
 
 pub fn publish_msgs(
-    messages: &Vec<MqttMessage>,
+    messages: &[MqttMessage],
     client_prefix: Option<&str>,
     retain: bool,
 ) -> Result<(), MqttError> {
     let (mut client, mut connection) = client_conn(&rand_client_id(client_prefix), true);
 
-    let mut expected_msg_acks = messages.len();
+    for msg_batch in messages.chunks(MQTT_QUEUE_CAPACITY) {
+        let mut expected_msg_acks = msg_batch.len();
+        log::debug!("Publishing batch of {} messages", msg_batch.len());
 
-    for msg in messages.iter() {
-        log::debug!("Publishing to {}: {}", msg.topic, msg.payload);
+        for msg in msg_batch.iter() {
+            log::debug!("Publishing to {}: {}", msg.topic, msg.payload);
 
-        client.publish(
-            msg.topic.clone(),
-            QoS::AtLeastOnce,
-            retain,
-            msg.payload.as_bytes(),
-        )?;
-    }
-
-    for (_, notification) in connection.iter().enumerate() {
-        log::debug!("Notification = {:?}", notification);
-        match notification {
-            Ok(Event::Incoming(Packet::PubAck(_))) => expected_msg_acks -= 1,
-            Err(e) => return Err(e.into()),
-            _ => (),
+            client.publish(
+                msg.topic.clone(),
+                QoS::AtLeastOnce,
+                retain,
+                msg.payload.as_bytes(),
+            )?;
         }
-        if expected_msg_acks == 0 {
-            break;
+
+        for (_, notification) in connection.iter().enumerate() {
+            log::debug!("Notification = {:?}", notification);
+            match notification {
+                Ok(Event::Incoming(Packet::PubAck(_))) => expected_msg_acks -= 1,
+                Err(e) => return Err(e.into()),
+                _ => (),
+            }
+            if expected_msg_acks == 0 {
+                break;
+            }
         }
     }
     client.disconnect()?;
@@ -127,7 +132,7 @@ pub fn sub_topics(
         log::trace!("Notification = {:?}", notification);
         match notification {
             Ok(Event::Incoming(Packet::Publish(r))) => {
-                let msg = MqttMessage::new(&r.topic, from_utf8(&r.payload)?);
+                let msg = MqttMessage::new(&r.topic, str::from_utf8(&r.payload)?);
                 if let Err(e) = tx.send(msg) {
                     log::error!("Failed to submit message for processing: {e}");
                 }
@@ -157,7 +162,10 @@ mod test {
     const CLIENT_PREFIX: &str = "test_client";
     const SAMPLE_TOPICS: [&str; 3] = ["test_topic_1", "test_topic_2", "test_topic_3"];
     static SAMPLE_MQTT_MESSAGES: Lazy<Vec<MqttMessage>> = Lazy::new(|| {
-        SAMPLE_TOPICS.iter().map(|topic| MqttMessage::new(*topic, rand_hex(6))).collect()
+        SAMPLE_TOPICS
+            .iter()
+            .map(|topic| MqttMessage::new(*topic, helpers::rand_hex(6)))
+            .collect()
     });
 
     #[test]

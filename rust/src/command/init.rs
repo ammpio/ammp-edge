@@ -5,7 +5,8 @@ use kvstore::KVDb;
 
 use crate::constants::keys;
 use crate::helpers::{base_path, now_iso};
-use crate::interfaces::{get_legacy_config, kvpath};
+use crate::interfaces;
+use crate::interfaces::kvpath;
 use crate::node_mgmt;
 
 const LEGACY_CONFIG_FILENAME: &str = "config.db";
@@ -20,7 +21,7 @@ fn is_already_initialized(kvs: &KVDb) -> Result<bool> {
 }
 
 fn can_import_legacy_config(legacy_config_path: impl AsRef<Path>, kvs: &KVDb) -> Result<bool> {
-    match get_legacy_config(legacy_config_path) {
+    match interfaces::legacy_config(legacy_config_path) {
         Ok(Some(legacy_conf)) => {
             log::info!("Legacy config found: {:?}; migrating...", legacy_conf);
             kvs.set(keys::NODE_ID, legacy_conf.node_id)?;

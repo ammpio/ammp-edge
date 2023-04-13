@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 use std::ffi::OsString;
-use std::fs::read_dir;
+use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
 
@@ -11,7 +11,7 @@ use crate::helpers::base_path;
 static CMD_BASE_DIR: Lazy<PathBuf> = Lazy::new(|| base_path::ROOT_DIR.join("bin/cmd"));
 
 static VALID_COMMANDS: Lazy<HashSet<OsString>> = Lazy::new(|| {
-    read_dir(CMD_BASE_DIR.as_path())
+    fs::read_dir(CMD_BASE_DIR.as_path())
         .unwrap()
         .map(|res| res.map(|e| e.file_name()).unwrap())
         .collect()

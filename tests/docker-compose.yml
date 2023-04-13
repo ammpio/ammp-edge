@@ -48,3 +48,13 @@ services:
     ports:
       - "0.0.0.0:502:502"
     command: bash -c "pip install umodbus && python -u /srv/mockdev/modtcp_server.py -b 0.0.0.0:502"
+  mock_sma_hycon_ftp:
+    container_name: mock-sma-hycon
+    image: delfer/alpine-ftp-server
+    env_file:
+      - ftp_server-env.local
+    ports:
+      - "21:21"
+      - "21000-21010:21000-21010"
+    volumes:
+      - ./mock_devices/sma_hycon_ftp:/ftp/data
