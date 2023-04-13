@@ -26,6 +26,8 @@ pub enum SmaHyconCsvError {
 
 pub fn run_acquisition(config: &Config) -> Vec<DeviceReading> {
     let mut readings = Vec::new();
+    let devices_to_read = select_devices_to_read(config);
+    log::info!("Reading from {} devices", devices_to_read.len());
     for device in select_devices_to_read(config) {
         match read_csv_from_device(&device) {
             Ok(records) => {
