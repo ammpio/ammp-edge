@@ -11,8 +11,10 @@ pub fn read_sma_hycon_csv() -> anyhow::Result<()> {
         "Finished SMA Hycon CSV downloads; obtained {} readings",
         readings.len()
     );
-    log::info!("Publishing readings to MQTT");
-    data_mgmt::publish::publish_readings(readings)?;
-    log::info!("Finished publishing readings to MQTT");
+    if !readings.is_empty() {
+        log::info!("Publishing readings to MQTT");
+        data_mgmt::publish::publish_readings(readings)?;
+        log::info!("Finished publishing readings to MQTT");
+    }
     Ok(())
 }
