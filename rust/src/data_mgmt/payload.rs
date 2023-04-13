@@ -24,7 +24,10 @@ pub enum DataPayloadError {
     ParseJson(#[from] serde_json::Error),
 }
 
-pub fn payloads_from_device_readings(device_readings: Vec<DeviceReading>, metadata: Option<Metadata>) -> Vec<DataPayload> {
+pub fn payloads_from_device_readings(
+    device_readings: Vec<DeviceReading>,
+    metadata: Option<Metadata>,
+) -> Vec<DataPayload> {
     let mut payloads = Vec::new();
     for (timestamp, dev_rdgs) in &device_readings
         .into_iter()
