@@ -100,7 +100,7 @@ apps:
     command: bin/ae read-sma-hycon-csv
     daemon: oneshot
     plugs: [network]
-    timer: 00:00-24:00/96
+    timer: 03:00
 
 parts:
   ammp-edge:
