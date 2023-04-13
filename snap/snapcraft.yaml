@@ -96,6 +96,11 @@ apps:
     timer: 0:00~24:00/36
     environment:
       LD_LIBRARY_PATH: "$LD_LIBRARY_PATH:$SNAP/usr/lib/$CRAFT_ARCH_TRIPLET/blas"
+  read-sma-hycon-csv:
+    command: bin/ae read-sma-hycon-csv
+    daemon: oneshot
+    plugs: [network]
+    timer: 00:00-24:00/24
 
 parts:
   ammp-edge:
