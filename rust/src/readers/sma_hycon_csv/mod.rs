@@ -67,10 +67,10 @@ fn read_csv_from_device(device: &Device) -> Result<Vec<Record>, SmaHyconCsvError
 
 fn select_devices_to_read(config: &Config) -> Vec<Device> {
     config
-        .devices
-        .values()
+        .devices.iter()
+        .map(|(k, d)| Device { key: k.into(), ..d.clone()})
         .filter(|d| d.reading_type == ReadingType::SmaHyconCsv && d.enabled)
-        .cloned()
+        // .cloned()
         .collect()
 }
 
@@ -157,7 +157,7 @@ mod tests {
         assert!(select_devices_to_read(&SAMPLE_CONFIG_NO_HYCON_CSV).is_empty());
         assert_eq!(
             select_devices_to_read(&SAMPLE_CONFIG_WITH_HYCON_CSV)[0],
-            SAMPLE_CONFIG_WITH_HYCON_CSV.devices["sma_hycon_csv"]
+            Device { key: "sma_hycon_csv".into(), ..SAMPLE_CONFIG_WITH_HYCON_CSV.devices["sma_hycon_csv"].clone() }
         );
     }
 
