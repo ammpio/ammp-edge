@@ -20,6 +20,7 @@ pub const VALID_PAYLOAD_1: &str = r#"
     ],
     "devices": {
       "logger": {
+        "key": "logger",
         "name": "Logger",
         "driver": "sys_generic",
         "enabled": true,
@@ -28,6 +29,7 @@ pub const VALID_PAYLOAD_1: &str = r#"
         "reading_type": "sys"
       },
       "sma_stp_1": {
+        "key": "sma_stp_1",
         "name": "SMA STP-25000 (good)",
         "driver": "sma_stp25000",
         "enabled": true,
@@ -40,6 +42,7 @@ pub const VALID_PAYLOAD_1: &str = r#"
         }
       },
       "sma_stp_2": {
+        "key": "sma_stp_2",
         "name": "SMA STP-25000 (bad)",
         "driver": "sma_stp25000",
         "enabled": true,
@@ -52,6 +55,7 @@ pub const VALID_PAYLOAD_1: &str = r#"
         }
       },
       "sma_hycon_csv": {
+        "key": "sma_hycon_csv",
         "name": "SMA Hybrid Controller - CSV backfill",
         "driver": "sma_hycon_csv",
         "address": {

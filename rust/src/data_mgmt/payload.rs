@@ -47,7 +47,7 @@ pub fn payloads_from_device_readings(
 
 fn device_data_from_device_reading(dev_rdg: DeviceReading) -> DeviceData {
     DeviceData {
-        d: None,
+        d: dev_rdg.device.key,
         vid: dev_rdg.device.vendor_id,
         extra: dev_rdg.record.all_fields_as_device_data_extra(),
     }
