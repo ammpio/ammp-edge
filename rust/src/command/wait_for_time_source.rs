@@ -14,20 +14,23 @@ fn into_permanent_err<E: Display>(err: E) -> backoff::Error<String> {
 pub fn wait_for_time_source() -> anyhow::Result<()> {
     let check_time_sync = || {
         let timedatectl_output = run_timedatectl_show().map_err(into_permanent_err)?;
-
         let (rtc_time_0, ntp_sync) = rtc_time_and_ntp_status(&timedatectl_output);
 
         if ntp_sync {
-            log::info!("NTP synchronized");
+            // We're good. No need to check the RTC.
+            log::info!("NTP synchronized; proceeding");
             return Ok(());
         }
 
-        thread::sleep(time::Duration::from_secs(2));
+        // In some cases with malfuncitoning RTC, it appears "stuck" at a fixed time, so here we check
+        // that it's actually advancing.
+        thread::sleep(time::Duration::from_secs(1));
         let timedatectl_output = run_timedatectl_show().map_err(into_permanent_err)?;
         let (rtc_time_1, _) = rtc_time_and_ntp_status(&timedatectl_output);
 
+        // If RTC is advancing then we're probably good. Otherwise we keep retrying.
         if rtc_time_1 != rtc_time_0 {
-            log::info!("RTC appears functional");
+            log::info!("RTC appears functional; proceeding");
             Ok(())
         } else {
             let err_msg = format!(
