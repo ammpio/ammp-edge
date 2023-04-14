@@ -28,7 +28,7 @@ apps:
     daemon: oneshot
     plugs: [network]
   ae-wait-for-time-source:
-    command: bin/ae ae-wait-for-time-source
+    command: bin/ae wait-for-time-source
     daemon: oneshot
   mosquitto:
     command: bin/mosquitto_svc.sh
