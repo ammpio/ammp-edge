@@ -17,7 +17,7 @@ pub enum Typecast {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct DriverField {
-    pub field: String,
+    pub name: String,
     pub column: String,
     pub description: String,
     pub unit: String,
@@ -35,10 +35,10 @@ pub static SMA_HYCON_CSV: Lazy<Driver> = Lazy::new(|| {
     serde_json::from_str::<Driver>(r#"
     {
         "fields": [
-            {"field": "grid_out_P", "column": "LoadPwrAtTot", "description": "Load power", "unit": "W", "multiplier": 1000, "typecast": "float"},
-            {"field": "genset_P", "column": "GenPwrAtTot", "description": "Genset power", "unit": "W", "multiplier": 1000, "typecast": "float"},
-            {"field": "pvinv_P_total", "column": "PvPwrAtTot", "description": "PV power", "unit": "W", "multiplier": 1000, "typecast": "float"},
-            {"field": "grid_in_P", "column": "GridPwrAtTot", "description": "Grid power", "unit": "W", "multiplier": 1000, "typecast": "float"}
+            {"name": "grid_out_P", "column": "LoadPwrAtTot", "description": "Load power", "unit": "W", "multiplier": 1000, "typecast": "float"},
+            {"name": "genset_P", "column": "GenPwrAtTot", "description": "Genset power", "unit": "W", "multiplier": 1000, "typecast": "float"},
+            {"name": "pvinv_P_total", "column": "PvPwrAtTot", "description": "PV power", "unit": "W", "multiplier": 1000, "typecast": "float"},
+            {"name": "grid_in_P", "column": "GridPwrAtTot", "description": "Grid power", "unit": "W", "multiplier": 1000, "typecast": "float"}
         ]
     }
     "#).unwrap()
@@ -55,7 +55,7 @@ mod tests {
             SMA_HYCON_CSV
                 .fields
                 .iter()
-                .find(|d| d.field == "grid_out_P")
+                .find(|d| d.name == "grid_out_P")
                 .unwrap()
                 .multiplier,
             Some(1000.0)
@@ -64,7 +64,7 @@ mod tests {
             SMA_HYCON_CSV
                 .fields
                 .iter()
-                .find(|d| d.field == "grid_in_P")
+                .find(|d| d.name == "grid_in_P")
                 .unwrap()
                 .column,
             "GridPwrAtTot"
