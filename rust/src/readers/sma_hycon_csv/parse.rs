@@ -43,8 +43,10 @@ pub fn parse_csv(
     let column_map = map_column_to_driver_field(headers, driver);
 
     for line in lines.skip(LINES_AFTER_HEADER_BEFORE_DATA) {
-        let rec = parse_line(&line?, &column_map, timezone)?;
-        records.push(rec);
+        match parse_line(&line?, &column_map, timezone) {
+            Ok(rec) => records.push(rec),
+            Err(e) => log::warn!("error parsing CSV line: {:?}", e),
+        }
     }
 
     Ok(records)
