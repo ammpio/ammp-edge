@@ -7,6 +7,7 @@ use once_cell::sync::Lazy;
 use rumqttc::{Client, Connection, Event, MqttOptions, Packet, QoS};
 use thiserror::Error;
 
+use crate::constants::topics;
 use crate::constants::{defaults, envvars};
 use crate::helpers;
 
@@ -111,6 +112,17 @@ pub fn publish_msgs(
     }
     client.disconnect()?;
     Ok(())
+}
+
+pub fn publish_log_msg(log_msg: &str) -> Result<(), MqttError> {
+    publish_msgs(
+        &[MqttMessage {
+            topic: topics::LOG_MSG.into(),
+            payload: log_msg.into(),
+        }],
+        "local-pub-log-msg".into(),
+        false,
+    )
 }
 
 pub fn sub_topics(
