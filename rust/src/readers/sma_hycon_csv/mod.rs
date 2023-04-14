@@ -48,8 +48,12 @@ pub fn run_acquisition(config: &Config) -> Vec<DeviceReading> {
 }
 
 fn read_csv_from_device(device: &Device) -> Result<Vec<Record>, SmaHyconCsvError> {
-    let zip_file = download::download_last_day_zip(device)?;
-    let csv_file = download::extract_file_from_zip(zip_file)?;
+    let (filename, data_file) = download::download_last_day_file(device)?;
+    let csv_file = if filename.ends_with(download::ZIP_EXT) {
+        download::extract_file_from_zip(data_file)?
+    } else {
+        data_file
+    };
 
     let timezone_str = device
         .address
@@ -67,8 +71,12 @@ fn read_csv_from_device(device: &Device) -> Result<Vec<Record>, SmaHyconCsvError
 
 fn select_devices_to_read(config: &Config) -> Vec<Device> {
     config
-        .devices.iter()
-        .map(|(k, d)| Device { key: k.into(), ..d.clone()})
+        .devices
+        .iter()
+        .map(|(k, d)| Device {
+            key: k.into(),
+            ..d.clone()
+        })
         .filter(|d| d.reading_type == ReadingType::SmaHyconCsv && d.enabled)
         .collect()
 }
@@ -164,7 +172,9 @@ mod tests {
 
     #[test]
     fn test_csv_download() {
-        let zip_file = download::download_last_day_zip(&LOCAL_HYCON_DEVICE).unwrap();
+        let zip_file = download::download_last_day_file(&LOCAL_HYCON_DEVICE)
+            .unwrap()
+            .1;
         let csv_file = download::extract_file_from_zip(zip_file).unwrap();
         assert!(csv_file.into_inner().starts_with(b"Version"))
     }

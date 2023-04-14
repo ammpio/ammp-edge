@@ -27,6 +27,9 @@ apps:
     command: bin/ae init
     daemon: oneshot
     plugs: [network]
+  ae-wait-for-time-source:
+    command: bin/ae wait-for-time-source
+    daemon: oneshot
   mosquitto:
     command: bin/mosquitto_svc.sh
     daemon: simple
@@ -54,7 +57,7 @@ apps:
     daemon: simple
     restart-condition: always
     restart-delay: 2s
-    after: [ae-init, mosquitto]
+    after: [ae-init, ae-wait-for-time-source, mosquitto]
     plugs:
       - network
       - network-bind
@@ -99,8 +102,9 @@ apps:
   read-sma-hycon-csv:
     command: bin/ae read-sma-hycon-csv
     daemon: oneshot
-    plugs: [network]
     timer: 03:00
+    after: [ae-init, ae-wait-for-time-source, mosquitto]
+    plugs: [network]
 
 parts:
   ammp-edge:
