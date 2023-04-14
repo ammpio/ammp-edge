@@ -7,7 +7,7 @@ use thiserror::Error;
 
 use crate::data_mgmt::models::{Record, RtValue};
 
-use super::driver::Driver;
+use super::driver::{Driver, DriverField};
 
 #[derive(Error, Debug)]
 pub enum ParseError {
@@ -52,11 +52,11 @@ pub fn parse_csv(
     Ok(records)
 }
 
-fn map_column_to_driver_field(headers: Vec<&str>, driver: &Driver) -> HashMap<usize, String> {
+fn map_column_to_driver_field(headers: Vec<&str>, driver: &Driver) -> HashMap<usize, DriverField> {
     let mut map = HashMap::new();
 
-    for (field, source) in driver.iter() {
-        if let Some(index) = headers.iter().position(|&s| s == source.column) {
+    for field in driver.fields.iter() {
+        if let Some(index) = headers.iter().position(|&s| s == field.column) {
             map.insert(index, field.clone());
         }
     }
@@ -65,7 +65,7 @@ fn map_column_to_driver_field(headers: Vec<&str>, driver: &Driver) -> HashMap<us
 
 fn parse_line(
     line: &str,
-    column_map: &HashMap<usize, String>,
+    column_map: &HashMap<usize, DriverField>,
     timezone: Tz,
 ) -> Result<Record, ParseError> {
     let mut rec = Record::new();
@@ -80,12 +80,18 @@ fn parse_line(
 
     for (col_num, field) in column_map.iter() {
         let value = values.get(*col_num).ok_or(ParseError::FileFormat(format!(
-            "cannot read value for {field}"
+            "cannot read value for {}", field.name
         )))?;
 
-        // TODO: handle data type according to driver
+        // TODO: handle non-float data type according to driver
+        // Also break this functionality out into dedicated module
         if let Ok(value) = value.parse::<f64>() {
-            rec.set_field(field.clone(), RtValue::Float(value));
+            let ret_value = if let Some(mult) = field.multiplier {
+                RtValue::Float(value * mult)
+            } else {
+                RtValue::Float(value)
+            };
+            rec.set_field(field.name.clone(), ret_value);
         }
     }
 

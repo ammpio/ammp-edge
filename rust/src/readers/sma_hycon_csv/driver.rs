@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 
@@ -19,6 +17,7 @@ pub enum Typecast {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct DriverField {
+    pub name: String,
     pub column: String,
     pub description: String,
     pub unit: String,
@@ -27,15 +26,20 @@ pub struct DriverField {
     pub offset: Option<f64>,
 }
 
-pub type Driver = HashMap<String, DriverField>;
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct Driver {
+    pub fields: Vec<DriverField>,
+}
 
 pub static SMA_HYCON_CSV: Lazy<Driver> = Lazy::new(|| {
     serde_json::from_str::<Driver>(r#"
     {
-        "grid_out_P": {"column": "LoadPwrAtTot", "description": "Load power", "unit": "W", "multiplier": 1000, "typecast": "float"},
-        "genset_P": {"column": "GenPwrAtTot", "description": "Genset power", "unit": "W", "multiplier": 1000, "typecast": "float"},
-        "pvinv_P_total": {"column": "PvPwrAtTot", "description": "PV power", "unit": "W", "multiplier": 1000, "typecast": "float"},
-        "grid_in_P": {"column": "GridPwrAtTot", "description": "Grid power", "unit": "W", "multiplier": 1000, "typecast": "float"}
+        "fields": [
+            {"name": "grid_out_P", "column": "LoadPwrAtTot", "description": "Load power", "unit": "W", "multiplier": 1000, "typecast": "float"},
+            {"name": "genset_P", "column": "GenPwrAtTot", "description": "Genset power", "unit": "W", "multiplier": 1000, "typecast": "float"},
+            {"name": "pvinv_P_total", "column": "PvPwrAtTot", "description": "PV power", "unit": "W", "multiplier": 1000, "typecast": "float"},
+            {"name": "grid_in_P", "column": "GridPwrAtTot", "description": "Grid power", "unit": "W", "multiplier": 1000, "typecast": "float"}
+        ]
     }
     "#).unwrap()
 });
@@ -46,9 +50,24 @@ mod tests {
 
     #[test]
     fn test_sma_hycon_csv_driver() {
-        assert_eq!(SMA_HYCON_CSV.len(), 4);
-        assert_eq!(SMA_HYCON_CSV["grid_out_P"].multiplier, Some(1000.0));
-        assert_eq!(SMA_HYCON_CSV["grid_in_P"].column, "GridPwrAtTot");
-        assert_eq!(SMA_HYCON_CSV["grid_in_P"].column, "GridPwrAtTot");
+        assert_eq!(SMA_HYCON_CSV.fields.len(), 4);
+        assert_eq!(
+            SMA_HYCON_CSV
+                .fields
+                .iter()
+                .find(|d| d.name == "grid_out_P")
+                .unwrap()
+                .multiplier,
+            Some(1000.0)
+        );
+        assert_eq!(
+            SMA_HYCON_CSV
+                .fields
+                .iter()
+                .find(|d| d.name == "grid_in_P")
+                .unwrap()
+                .column,
+            "GridPwrAtTot"
+        );
     }
 }
