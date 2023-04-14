@@ -9,3 +9,5 @@ pub const META_BOOT_TIME: &str = "u/meta/boot_time";
 pub const META_START_TIME: &str = "u/meta/start_time";
 pub const META_SNAP_REV: &str = "u/meta/snap_rev";
 pub const META_SSH_FINGERPRINT: &str = "u/meta/ssh_fingerprint";
+
+pub const LOG_MSG: &str = "u/log/msg";

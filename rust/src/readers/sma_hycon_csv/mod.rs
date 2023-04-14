@@ -67,8 +67,12 @@ fn read_csv_from_device(device: &Device) -> Result<Vec<Record>, SmaHyconCsvError
 
 fn select_devices_to_read(config: &Config) -> Vec<Device> {
     config
-        .devices.iter()
-        .map(|(k, d)| Device { key: k.into(), ..d.clone()})
+        .devices
+        .iter()
+        .map(|(k, d)| Device {
+            key: k.into(),
+            ..d.clone()
+        })
         .filter(|d| d.reading_type == ReadingType::SmaHyconCsv && d.enabled)
         .collect()
 }
