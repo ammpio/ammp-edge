@@ -13,12 +13,13 @@ pub const ZIP_EXT: &str = ".zip";
 
 fn select_yesterdays_file(filenames: Vec<String>) -> Option<String> {
     // Note that yesterday is the last day for which data will be complete
-    filenames
+    let mut filenames = filenames
         .iter()
         .filter(|f| f.ends_with(ZIP_EXT) || f.ends_with(CSV_EXT))
-        .rev() // Reverse the order of filenames
-        .nth(1) // Take the second filename
-        .cloned()
+        .cloned() // Convert the filtered references to owned strings
+        .collect::<Vec<String>>(); // Collect the owned strings into a vector
+    filenames.sort(); // Sort the vector in alphabetical order
+    filenames.get(filenames.len() - 2).cloned() // Get the second-to-last filename
 }
 
 pub fn download_last_day_file(
