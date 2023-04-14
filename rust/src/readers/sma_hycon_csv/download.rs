@@ -8,15 +8,22 @@ use crate::node_mgmt::config::Device;
 
 use super::SmaHyconCsvError;
 
-fn select_last_day_zip(filenames: Vec<String>) -> Option<String> {
+pub const CSV_EXT: &str = ".csv";
+pub const ZIP_EXT: &str = ".zip";
+
+fn select_yesterdays_file(filenames: Vec<String>) -> Option<String> {
+    // Note that yesterday is the last day for which data will be complete
     filenames
         .iter()
-        .filter(|f| f.ends_with(".zip"))
-        .max() // The filenames are alphabetical by date so we can take the "largest"
+        .filter(|f| f.ends_with(ZIP_EXT) || f.ends_with(CSV_EXT))
+        .rev() // Reverse the order of filenames
+        .nth(1) // Take the second filename
         .cloned()
 }
 
-pub fn download_last_day_zip(device: &Device) -> Result<Cursor<Vec<u8>>, SmaHyconCsvError> {
+pub fn download_last_day_file(
+    device: &Device,
+) -> Result<(String, Cursor<Vec<u8>>), SmaHyconCsvError> {
     let addr = &device
         .address
         .clone()
@@ -27,12 +34,13 @@ pub fn download_last_day_zip(device: &Device) -> Result<Cursor<Vec<u8>>, SmaHyco
     let mut ftp_conn = ftp::FtpConnection::new(addr);
     ftp_conn.connect()?;
 
-    let filename = select_last_day_zip(ftp_conn.list_files()?)
-        .ok_or(SmaHyconCsvError::File("no ZIP files found".into()))?;
+    let filename = select_yesterdays_file(ftp_conn.list_files()?).ok_or(SmaHyconCsvError::File(
+        "no ZIP or CSV data files found".into(),
+    ))?;
 
     let file = ftp_conn.download_file(&filename)?;
     ftp_conn.disconnect().ok();
-    Ok(file)
+    Ok((filename, file))
 }
 
 pub fn extract_file_from_zip(cursor: Cursor<Vec<u8>>) -> ZipResult<Cursor<Vec<u8>>> {
