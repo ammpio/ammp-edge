@@ -90,7 +90,6 @@ pub fn activate(api_root: &str, node_id: &str) -> Result<String> {
 mod tests {
     use super::*;
 
-    use mockito::mock;
     use once_cell::sync::Lazy;
 
     const SAMPLE_NODE_ID: &str = "abcdef123456";
@@ -109,12 +108,13 @@ mod tests {
 
     #[test]
     fn test_activation_successful() {
-        let api_base_url = mockito::server_url();
-        let m1 = mock("GET", &**ACTIVATION_PATH)
+        let mut server = mockito::Server::new();
+        let api_base_url = server.url();
+        let m1 = server.mock("GET", &**ACTIVATION_PATH)
             .with_body(serde_json::to_vec(&*SAMPLE_RESP_1).unwrap())
             .expect(1)
             .create();
-        let m2 = mock("POST", &**ACTIVATION_PATH)
+        let m2 = server.mock("POST", &**ACTIVATION_PATH)
             .match_header("Authorization", SAMPLE_ACCESS_KEY)
             .with_body(serde_json::to_vec(&*SAMPLE_RESP_2).unwrap())
             .expect(1)
@@ -132,13 +132,14 @@ mod tests {
     fn test_activation_after_error() {
         use std::thread;
 
-        let api_base_url = mockito::server_url();
-        let m1_error = mock("GET", &**ACTIVATION_PATH)
+        let mut server = mockito::Server::new();
+        let api_base_url = server.url();
+        let m1_error = server.mock("GET", &**ACTIVATION_PATH)
             .with_status(400)
             .expect(2)
             .create();
 
-        let m1_success = mock("GET", &**ACTIVATION_PATH)
+        let m1_success = server.mock("GET", &**ACTIVATION_PATH)
             .with_body(serde_json::to_vec(&*SAMPLE_RESP_1).unwrap())
             .expect(1)
             .create();

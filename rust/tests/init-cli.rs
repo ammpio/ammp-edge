@@ -1,7 +1,7 @@
 use std::ffi::OsStr;
 
 use assert_cmd::{assert::Assert, Command};
-use mockito::{mock, Matcher};
+use mockito::Matcher;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 
@@ -27,7 +27,8 @@ fn cmd_init_assert(data_dir: impl AsRef<OsStr>) -> Assert {
 fn do_init_via_cli() {
     let tempdir = tempfile::tempdir().unwrap();
 
-    let api_base_url = mockito::server_url();
+    let mut server = mockito::Server::new();
+    let api_base_url = server.url();
 
     let kvs = KVDb::new(tempdir.path().join("kvs-db/kvstore.db")).unwrap();
     kvs.set("http_api_base_url", api_base_url).ok();
@@ -42,11 +43,11 @@ fn do_init_via_cli() {
         message: "Node abcdef123456 successfully activated".to_string(),
     };
 
-    let _m1 = mock("GET", activation_path.clone())
+    let _m1 = server.mock("GET", activation_path.clone())
         .with_body(serde_json::to_vec(&sample_resp_1).unwrap())
         .expect(1)
         .create();
-    let _m2 = mock("POST", activation_path)
+    let _m2 = server.mock("POST", activation_path)
         .match_header("Authorization", SAMPLE_ACCESS_KEY)
         .with_body(serde_json::to_vec(&sample_resp_2).unwrap())
         .expect(1)
