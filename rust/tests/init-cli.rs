@@ -43,11 +43,13 @@ fn do_init_via_cli() {
         message: "Node abcdef123456 successfully activated".to_string(),
     };
 
-    let _m1 = server.mock("GET", activation_path.clone())
+    let _m1 = server
+        .mock("GET", activation_path.clone())
         .with_body(serde_json::to_vec(&sample_resp_1).unwrap())
         .expect(1)
         .create();
-    let _m2 = server.mock("POST", activation_path)
+    let _m2 = server
+        .mock("POST", activation_path)
         .match_header("Authorization", SAMPLE_ACCESS_KEY)
         .with_body(serde_json::to_vec(&sample_resp_2).unwrap())
         .expect(1)

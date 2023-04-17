@@ -80,7 +80,8 @@ fn parse_line(
 
     for (col_num, field) in column_map.iter() {
         let value = values.get(*col_num).ok_or(ParseError::FileFormat(format!(
-            "cannot read value for {}", field.name
+            "cannot read value for {}",
+            field.name
         )))?;
 
         // TODO: handle non-float data type according to driver
