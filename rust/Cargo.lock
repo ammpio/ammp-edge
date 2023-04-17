@@ -36,6 +36,7 @@ dependencies = [
  "rusqlite",
  "serde",
  "serde_json",
+ "sntpc",
  "suppaftp",
  "sysinfo",
  "temp-env",
@@ -1010,6 +1011,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "no-std-net"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1bcece43b12349917e096cddfa66107277f123e6c96a5aea78711dc601a47152"
+
+[[package]]
 name = "normalize-line-endings"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1583,6 +1590,16 @@ name = "smallvec"
 version = "1.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a507befe795404456341dfab10cef66ead4c041f62b8b11bbb92bffe5d0953e0"
+
+[[package]]
+name = "sntpc"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f89bbd9c220f1b4bc27f94aa4d1cfd0a614b6001955f7c7ce1d818e08f18981b"
+dependencies = [
+ "log",
+ "no-std-net",
+]
 
 [[package]]
 name = "socket2"

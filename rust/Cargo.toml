@@ -27,6 +27,7 @@ rumqttc = { version = "*", default-features = false }
 rusqlite = { version = "*", features = ["serde_json"] }
 serde = { version = "*", features = ["derive"] }
 serde_json = "*"
+sntpc = { version = "*", features = ["log"] }
 suppaftp = { version = "*", features = ["default", "deprecated", "native-tls"] }
 sysinfo = { version = "*", default-features = false }
 thiserror = "*"
