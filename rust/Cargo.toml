@@ -1,47 +1,47 @@
 [package]
 name = "ae"
-version = "0.2.0"
+version = "0.2.1"
 authors = ["AMMP Technologies B.V. <dev@ammp.io>"]
 edition = "2021"
 description = "Edge application for AMMP"
 repository = "https://github.com/ammpio/ammp-edge"
 
 [dependencies]
-anyhow = "1.0.66"
-backoff = "0.4.0"
-chrono = "0.4.23"
-chrono-tz = "0.8.1"
-dotenv = "0.15.0"
-env_logger = { version = "0.9.3", default-features = false }
-flume = "0.10"
-getrandom = "0.2.8"
-hex = "0.4.3"
-itertools = "0.10.5"
+anyhow = "*"
+backoff = "*"
+chrono = "*"
+chrono-tz = "*"
+dotenv = "*"
+env_logger = { version = "*", default-features = false }
+flume = "*"
+getrandom = "*"
+hex = "*"
+itertools = "*"
 kvstore = { path = "kvstore" }
-log = "0.4.17"
-native-tls = "0.2.11"
-nix = { version = "0.25.0", features = ["socket"] }
-once_cell = "1.16.0"
-pico-args = "0.5.0"
-rumqttc = { version = "0.17.0", default-features = false }
-rusqlite = { version = "0.28.0", features = ["serde_json"] }
-serde = { version = "1.0.147", features = ["derive"] }
-serde_json = "1.0.87"
-suppaftp = { version = "5.1.0", features = ["default", "deprecated", "native-tls"] }
-sysinfo = { version = "0.26.7", default-features = false }
-thiserror = "1.0.37"
-typify = "0.0.11"
-ureq = { version = "2.5.0", default-features = false, features = ["json", "native-tls"] }
-url = "2.3.1"
-zip = "0.6.4"
+log = "*"
+native-tls = "*"
+nix = { version = "*", features = ["socket"] }
+once_cell = "*"
+pico-args = "*"
+rumqttc = { version = "*", default-features = false }
+rusqlite = { version = "*", features = ["serde_json"] }
+serde = { version = "*", features = ["derive"] }
+serde_json = "*"
+suppaftp = { version = "*", features = ["default", "deprecated", "native-tls"] }
+sysinfo = { version = "*", default-features = false }
+thiserror = "*"
+typify = "*"
+ureq = { version = "*", default-features = false, features = ["json", "native-tls"] }
+url = "*"
+zip = { version = "*", default-features = false, features = ["deflate"] }
 
 [dev-dependencies]
-assert_cmd = "2.0.6"
-mockito = "0.31.0"
-regex = "1.7.0"
-predicates = "2.1.3"
-temp-env = "0.3.1"
-tempfile = "3.3.0"
+assert_cmd = "*"
+mockito = "*"
+regex = "*"
+predicates = "*"
+temp-env = "*"
+tempfile = "*"
 
 [workspace]
 members = [
