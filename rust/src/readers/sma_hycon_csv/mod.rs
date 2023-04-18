@@ -1,4 +1,3 @@
-use chrono_tz::Tz;
 use thiserror::Error;
 use zip::result::ZipError;
 
@@ -10,6 +9,7 @@ use crate::node_mgmt::{config::Device, config::ReadingType, Config};
 mod download;
 mod driver;
 mod parse;
+mod timezone;
 
 #[derive(Error, Debug)]
 pub enum SmaHyconCsvError {
@@ -23,6 +23,8 @@ pub enum SmaHyconCsvError {
     File(String),
     #[error(transparent)]
     Parse(#[from] parse::ParseError),
+    #[error(transparent)]
+    Ntp(#[from] ntp::NtpError),
 }
 
 pub fn run_acquisition(config: &Config) -> Vec<DeviceReading> {
@@ -61,17 +63,9 @@ fn read_csv_from_device(device: &Device) -> Result<Vec<Record>, SmaHyconCsvError
         data_file
     };
 
-    let timezone_str = device
-        .address
-        .as_ref()
-        .ok_or(SmaHyconCsvError::Address("missing device address".into()))?
-        .timezone
-        .as_ref()
-        .ok_or(SmaHyconCsvError::Address("missing timezone".into()))?;
-    let timezone = timezone_str
-        .parse::<Tz>()
-        .map_err(|e| SmaHyconCsvError::Address(format!("invalid timezone: {e}")))?;
-    let records = parse::parse_csv(csv_file, &driver::SMA_HYCON_CSV, timezone)?;
+    let timezone = timezone::get_timezone(device)?;
+    let clock_offset = timezone::get_clock_offset(device)?;
+    let records = parse::parse_csv(csv_file, &driver::SMA_HYCON_CSV, timezone, clock_offset)?;
     Ok(records)
 }
 
