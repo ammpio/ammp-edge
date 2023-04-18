@@ -61,7 +61,5 @@ services:
   mock_sma_hycon_ntp:
     container_name: mock-sma-hycon-ntp
     image: cturra/ntp
-    environment:
-      - TZ=Europe/Amsterdam
     ports:
       - "123:123/udp"
