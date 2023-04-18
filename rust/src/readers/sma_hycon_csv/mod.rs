@@ -4,6 +4,7 @@ use zip::result::ZipError;
 
 use crate::data_mgmt::models::{DeviceReading, Record};
 use crate::interfaces::ftp::FtpConnError;
+use crate::interfaces::ntp;
 use crate::node_mgmt::{config::Device, config::ReadingType, Config};
 
 mod download;
@@ -29,22 +30,27 @@ pub fn run_acquisition(config: &Config) -> Vec<DeviceReading> {
     let devices_to_read = select_devices_to_read(config);
     log::info!("Reading from {} devices", devices_to_read.len());
     for device in select_devices_to_read(config) {
-        match read_csv_from_device(&device) {
-            Ok(records) => {
-                log::trace!("Readings: {:#?}", &records);
-                records.into_iter().for_each(|r| {
-                    readings.push(DeviceReading {
-                        device: device.clone(),
-                        record: r,
-                    })
-                });
-            }
-            Err(e) => {
-                log::error!("Error reading CSV from device {:?}: {:#?}", device, e);
-            }
-        }
+        read_device(&device, &mut readings).ok();
     }
     readings
+}
+
+fn read_device(device: &Device, readings: &mut Vec<DeviceReading>) -> Result<(), SmaHyconCsvError> {
+    match read_csv_from_device(device) {
+        Ok(records) => {
+            log::trace!("Readings: {:#?}", &records);
+            records.into_iter().for_each(|r| {
+                readings.push(DeviceReading {
+                    device: device.clone(),
+                    record: r,
+                })
+            });
+        }
+        Err(e) => {
+            log::error!("Error reading CSV from device {:?}: {:#?}", device, e);
+        }
+    }
+    Ok(())
 }
 
 fn read_csv_from_device(device: &Device) -> Result<Vec<Record>, SmaHyconCsvError> {
