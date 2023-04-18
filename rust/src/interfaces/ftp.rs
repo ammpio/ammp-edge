@@ -33,7 +33,10 @@ pub struct FtpConnection {
 impl FtpConnection {
     pub fn new(url: &str) -> Result<Self, FtpConnError> {
         let url = url::Url::parse(url)?;
-        let host = url.host_str().ok_or_else(|| FtpConnError::Address("hostname missing from URL".into()))?.to_string();
+        let host = url
+            .host_str()
+            .ok_or_else(|| FtpConnError::Address("hostname missing from URL".into()))?
+            .to_string();
         let port = url.port().unwrap_or(DEFAULT_FTP_PORT);
         let user = url.username().to_string();
         let password = url.password().unwrap_or("").to_string();

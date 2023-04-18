@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::io::{BufRead, BufReader, Cursor};
 
-use chrono::{DateTime, TimeZone, Utc, Duration};
+use chrono::{DateTime, Duration, TimeZone, Utc};
 use chrono_tz::Tz;
 use thiserror::Error;
 
@@ -83,7 +83,8 @@ fn parse_line(
 
     for (col_num, field) in column_map.iter() {
         let value = values.get(*col_num).ok_or(ParseError::FileFormat(format!(
-            "cannot read value for {}", field.name
+            "cannot read value for {}",
+            field.name
         )))?;
 
         // TODO: handle non-float data type according to driver
@@ -101,9 +102,13 @@ fn parse_line(
     Ok(rec)
 }
 
-fn parse_timestamp(timestamp: &str, timezone: Tz, clock_offset: Duration) -> Result<DateTime<Utc>, ParseError> {
+fn parse_timestamp(
+    timestamp: &str,
+    timezone: Tz,
+    clock_offset: Duration,
+) -> Result<DateTime<Utc>, ParseError> {
     Ok(timezone
         .datetime_from_str(timestamp, TIMESTAMP_FORMAT)?
-        .with_timezone(&Utc) - clock_offset
-    )
+        .with_timezone(&Utc)
+        - clock_offset)
 }
