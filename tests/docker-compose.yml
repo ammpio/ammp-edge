@@ -58,3 +58,8 @@ services:
       - "21000-21010:21000-21010"
     volumes:
       - ./mock_devices/sma_hycon_ftp:/ftp/data
+  mock_sma_hycon_ntp:
+    container_name: mock-sma-hycon-ntp
+    image: cturra/ntp
+    ports:
+      - "123:123/udp"

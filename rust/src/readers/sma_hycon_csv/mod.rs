@@ -1,14 +1,15 @@
-use chrono_tz::Tz;
 use thiserror::Error;
 use zip::result::ZipError;
 
 use crate::data_mgmt::models::{DeviceReading, Record};
 use crate::interfaces::ftp::FtpConnError;
+use crate::interfaces::ntp;
 use crate::node_mgmt::{config::Device, config::ReadingType, Config};
 
 mod download;
 mod driver;
 mod parse;
+mod timezone;
 
 #[derive(Error, Debug)]
 pub enum SmaHyconCsvError {
@@ -22,6 +23,8 @@ pub enum SmaHyconCsvError {
     File(String),
     #[error(transparent)]
     Parse(#[from] parse::ParseError),
+    #[error(transparent)]
+    Ntp(#[from] ntp::NtpError),
 }
 
 pub fn run_acquisition(config: &Config) -> Vec<DeviceReading> {
@@ -29,22 +32,27 @@ pub fn run_acquisition(config: &Config) -> Vec<DeviceReading> {
     let devices_to_read = select_devices_to_read(config);
     log::info!("Reading from {} devices", devices_to_read.len());
     for device in select_devices_to_read(config) {
-        match read_csv_from_device(&device) {
-            Ok(records) => {
-                log::trace!("Readings: {:#?}", &records);
-                records.into_iter().for_each(|r| {
-                    readings.push(DeviceReading {
-                        device: device.clone(),
-                        record: r,
-                    })
-                });
-            }
-            Err(e) => {
-                log::error!("Error reading CSV from device {:?}: {:#?}", device, e);
-            }
-        }
+        read_device(&device, &mut readings).ok();
     }
     readings
+}
+
+fn read_device(device: &Device, readings: &mut Vec<DeviceReading>) -> Result<(), SmaHyconCsvError> {
+    match read_csv_from_device(device) {
+        Ok(records) => {
+            log::trace!("Readings: {:#?}", &records);
+            records.into_iter().for_each(|r| {
+                readings.push(DeviceReading {
+                    device: device.clone(),
+                    record: r,
+                })
+            });
+        }
+        Err(e) => {
+            log::error!("Error reading CSV from device {:?}: {:#?}", device, e);
+        }
+    }
+    Ok(())
 }
 
 fn read_csv_from_device(device: &Device) -> Result<Vec<Record>, SmaHyconCsvError> {
@@ -55,17 +63,21 @@ fn read_csv_from_device(device: &Device) -> Result<Vec<Record>, SmaHyconCsvError
         data_file
     };
 
-    let timezone_str = device
-        .address
-        .as_ref()
-        .ok_or(SmaHyconCsvError::Address("missing device address".into()))?
-        .timezone
-        .as_ref()
-        .ok_or(SmaHyconCsvError::Address("missing timezone".into()))?;
-    let timezone = timezone_str
-        .parse::<Tz>()
-        .map_err(|e| SmaHyconCsvError::Address(format!("invalid timezone: {e}")))?;
-    let records = parse::parse_csv(csv_file, &driver::SMA_HYCON_CSV, timezone)?;
+    let timezone = timezone::get_timezone(device)?;
+    let clock_offset = timezone::get_clock_offset(device).unwrap_or_else(|err| {
+        log::warn!(
+            "Error {} while getting clock offset for device {:?}; assuming zero offset",
+            err,
+            device
+        );
+        chrono::Duration::zero()
+    });
+    log::info!(
+        "HyCon timezone: {:?}; clock offset: {:?}",
+        timezone,
+        clock_offset
+    );
+    let records = parse::parse_csv(csv_file, &driver::SMA_HYCON_CSV, timezone, clock_offset)?;
     Ok(records)
 }
 
