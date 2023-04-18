@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::io::{BufRead, BufReader, Cursor};
 
-use chrono::{DateTime, TimeZone, Utc};
+use chrono::{DateTime, Duration, TimeZone, Utc};
 use chrono_tz::Tz;
 use thiserror::Error;
 
@@ -28,6 +28,7 @@ pub fn parse_csv(
     csv: Cursor<Vec<u8>>,
     driver: &Driver,
     timezone: Tz,
+    clock_offset: Duration,
 ) -> Result<Vec<Record>, ParseError> {
     let mut records = vec![];
     let mut reader = BufReader::new(csv).lines();
@@ -43,7 +44,7 @@ pub fn parse_csv(
     let column_map = map_column_to_driver_field(headers, driver);
 
     for line in lines.skip(LINES_AFTER_HEADER_BEFORE_DATA) {
-        match parse_line(&line?, &column_map, timezone) {
+        match parse_line(&line?, &column_map, timezone, clock_offset) {
             Ok(rec) => records.push(rec),
             Err(e) => log::warn!("error parsing CSV line: {:?}", e),
         }
@@ -67,6 +68,7 @@ fn parse_line(
     line: &str,
     column_map: &HashMap<usize, DriverField>,
     timezone: Tz,
+    clock_offset: Duration,
 ) -> Result<Record, ParseError> {
     let mut rec = Record::new();
     let values: Vec<&str> = line.split(SEPARATOR).collect();
@@ -76,6 +78,7 @@ fn parse_line(
             .first()
             .ok_or(ParseError::FileFormat("timestamp value not present".into()))?,
         timezone,
+        clock_offset,
     )?);
 
     for (col_num, field) in column_map.iter() {
@@ -99,8 +102,13 @@ fn parse_line(
     Ok(rec)
 }
 
-fn parse_timestamp(timestamp: &str, timezone: Tz) -> Result<DateTime<Utc>, ParseError> {
+fn parse_timestamp(
+    timestamp: &str,
+    timezone: Tz,
+    clock_offset: Duration,
+) -> Result<DateTime<Utc>, ParseError> {
     Ok(timezone
         .datetime_from_str(timestamp, TIMESTAMP_FORMAT)?
-        .with_timezone(&Utc))
+        .with_timezone(&Utc)
+        - clock_offset)
 }

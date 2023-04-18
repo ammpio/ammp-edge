@@ -22,17 +22,21 @@ fn select_yesterdays_file(filenames: Vec<String>) -> Option<String> {
     filenames.get(filenames.len() - 2).cloned() // Get the second-to-last filename
 }
 
-pub fn download_last_day_file(
-    device: &Device,
-) -> Result<(String, Cursor<Vec<u8>>), SmaHyconCsvError> {
-    let addr = &device
+pub fn get_base_url(device: &Device) -> Result<String, SmaHyconCsvError> {
+    device
         .address
         .clone()
         .ok_or(SmaHyconCsvError::Address("missing address".into()))?
         .base_url
-        .ok_or(SmaHyconCsvError::Address("missing base URL".into()))?;
+        .ok_or(SmaHyconCsvError::Address("missing base URL".into()))
+}
 
-    let mut ftp_conn = ftp::FtpConnection::new(addr);
+pub fn download_last_day_file(
+    device: &Device,
+) -> Result<(String, Cursor<Vec<u8>>), SmaHyconCsvError> {
+    let addr = get_base_url(device)?;
+
+    let mut ftp_conn = ftp::FtpConnection::new(&addr)?;
     ftp_conn.connect()?;
 
     let filename = select_yesterdays_file(ftp_conn.list_files()?).ok_or(SmaHyconCsvError::File(
