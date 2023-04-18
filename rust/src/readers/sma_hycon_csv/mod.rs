@@ -65,6 +65,7 @@ fn read_csv_from_device(device: &Device) -> Result<Vec<Record>, SmaHyconCsvError
 
     let timezone = timezone::get_timezone(device)?;
     let clock_offset = timezone::get_clock_offset(device)?;
+    log::info!("HyCon timezone: {:?}; clock offset: {:?}", timezone, clock_offset);
     let records = parse::parse_csv(csv_file, &driver::SMA_HYCON_CSV, timezone, clock_offset)?;
     Ok(records)
 }
