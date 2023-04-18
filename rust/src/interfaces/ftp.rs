@@ -4,6 +4,8 @@ use native_tls::TlsConnector;
 use suppaftp::{FtpError, NativeTlsConnector, NativeTlsFtpStream};
 use thiserror::Error;
 
+const DEFAULT_FTP_PORT: u16 = 21;
+
 #[derive(Error, Debug)]
 pub enum FtpConnError {
     #[error(transparent)]
@@ -14,6 +16,8 @@ pub enum FtpConnError {
     NotConnected,
     #[error(transparent)]
     UrlParse(#[from] url::ParseError),
+    #[error("address error: {0}")]
+    Address(String),
 }
 
 pub struct FtpConnection {
@@ -27,10 +31,10 @@ pub struct FtpConnection {
 }
 
 impl FtpConnection {
-    pub fn new(url: &str) -> Self {
-        let url = url::Url::parse(url).unwrap();
-        let host = url.host_str().unwrap().to_string();
-        let port = url.port().unwrap_or(21);
+    pub fn new(url: &str) -> Result<Self, FtpConnError> {
+        let url = url::Url::parse(url)?;
+        let host = url.host_str().ok_or_else(|| FtpConnError::Address("hostname missing from URL".into()))?.to_string();
+        let port = url.port().unwrap_or(DEFAULT_FTP_PORT);
         let user = url.username().to_string();
         let password = url.password().unwrap_or("").to_string();
         let secure = url.scheme() == "ftps";
@@ -39,7 +43,7 @@ impl FtpConnection {
             .strip_prefix('/')
             .unwrap_or_else(|| url.path())
             .to_owned();
-        FtpConnection {
+        Ok(FtpConnection {
             host,
             port,
             user,
@@ -47,7 +51,7 @@ impl FtpConnection {
             secure,
             base_path,
             ftp_stream: None,
-        }
+        })
     }
 
     pub fn connect(&mut self) -> Result<(), FtpConnError> {
@@ -114,7 +118,7 @@ mod test {
 
     #[test]
     fn test_url_parse() {
-        let conn = FtpConnection::new(BASE_URL);
+        let conn = FtpConnection::new(BASE_URL).unwrap();
         assert_eq!(conn.host, HOST);
         assert_eq!(conn.port, PORT);
         assert_eq!(conn.user, USER);
@@ -125,14 +129,14 @@ mod test {
 
     #[test]
     fn test_connect() {
-        let mut conn = FtpConnection::new(BASE_URL);
+        let mut conn = FtpConnection::new(BASE_URL).unwrap();
         assert!(conn.connect().is_ok());
         assert!(conn.disconnect().is_ok());
     }
 
     #[test]
     fn test_download_file() {
-        let mut conn = FtpConnection::new(BASE_URL);
+        let mut conn = FtpConnection::new(BASE_URL).unwrap();
         assert!(conn.connect().is_ok());
         let cursor = conn.download_file(CSV_FILENAME).unwrap();
         assert!(cursor.into_inner().starts_with(CSV_FILE_START));
@@ -141,7 +145,7 @@ mod test {
 
     #[test]
     fn test_get_directory_listing() {
-        let mut conn = FtpConnection::new(BASE_URL);
+        let mut conn = FtpConnection::new(BASE_URL).unwrap();
         assert!(conn.connect().is_ok());
         assert!(conn.list_files().unwrap().len() == NUM_FILES_IN_CSV_DIR);
         assert!(conn.disconnect().is_ok());
