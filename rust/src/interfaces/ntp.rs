@@ -1,6 +1,7 @@
 use std::net::{SocketAddr, ToSocketAddrs, UdpSocket};
-use std::time::{Duration, SystemTime};
+use std::time::SystemTime;
 
+use chrono::Duration;
 use sntpc::{self, NtpResult};
 use sntpc::{NtpContext, NtpTimestampGenerator, NtpUdpSocket};
 use thiserror::Error;
@@ -17,7 +18,7 @@ pub enum NtpError {
 
 #[derive(Copy, Clone, Default)]
 struct StdTimestampGen {
-    duration: Duration,
+    duration: std::time::Duration,
 }
 
 impl NtpTimestampGenerator for StdTimestampGen {
@@ -59,10 +60,10 @@ fn map_sntpc_error(e: sntpc::Error) -> NtpError {
     NtpError::Client(format!("{:?}", e))
 }
 
-fn run_ntp_query(hostname: String, port: Option<u16>) -> Result<NtpResult, NtpError> {
+fn run_ntp_query(hostname: &str, port: Option<u16>) -> Result<NtpResult, NtpError> {
     let socket = UdpSocket::bind("0.0.0.0:0").expect("Unable to crate UDP socket");
     socket
-        .set_read_timeout(Some(Duration::from_secs(5)))
+        .set_read_timeout(Some(std::time::Duration::from_secs(5)))
         .expect("Unable to set UDP socket read timeout");
     let sock_wrapper = UdpSocketWrapper(socket);
     let ntp_context = NtpContext::new(StdTimestampGen::default());
@@ -75,28 +76,21 @@ fn run_ntp_query(hostname: String, port: Option<u16>) -> Result<NtpResult, NtpEr
     .map_err(map_sntpc_error)
 }
 
-pub fn query_epoch(hostname: String, port: Option<u16>) -> Result<Duration, NtpError> {
+pub fn query_epoch(hostname: &str, port: Option<u16>) -> Result<Duration, NtpError> {
     let ntp_result = run_ntp_query(hostname, port)?;
+    println!("ntp_result: {:?}", ntp_result);
     match ntp_result.sec() {
         0 => Err(NtpError::InvalidTime),
-        _ => Ok(Duration::from_secs_f64(
-            ntp_result.sec() as f64 + ntp_result.sec_fraction() as f64 / u32::MAX as f64,
-        )),
+        _ => Ok(Duration::seconds(ntp_result.sec() as i64)
+            + Duration::nanoseconds(
+                ntp_result.sec_fraction() as i64 * 1_000_000_000 / u32::MAX as i64,
+            )),
     }
 }
 
-pub fn query_delta_wrt_systime_micros(
-    hostname: String,
-    port: Option<u16>,
-) -> Result<i64, NtpError> {
+pub fn query_offset_wrt_systime(hostname: &str, port: Option<u16>) -> Result<Duration, NtpError> {
     let ntp_result = run_ntp_query(hostname, port)?;
-    // This returns offset in microseconds
-    Ok(ntp_result.offset())
-}
-
-pub fn query_delta_wrt_systime_secs(hostname: String, port: Option<u16>) -> Result<i64, NtpError> {
-    let offset_micros = query_delta_wrt_systime_micros(hostname, port)?;
-    Ok(offset_micros / 1_000_000)
+    Ok(Duration::microseconds(ntp_result.offset()))
 }
 
 #[cfg(test)]
@@ -105,20 +99,23 @@ mod tests {
 
     #[test]
     fn test_ntp_time_from_localhost() {
-        let epoch_from_ntp = query_epoch("localhost".to_string(), None).unwrap();
-        let epoch_from_sys = SystemTime::now()
-            .duration_since(SystemTime::UNIX_EPOCH)
-            .unwrap();
+        let epoch_from_ntp = query_epoch("localhost", None).unwrap();
+        let epoch_from_sys = Duration::from_std(
+            SystemTime::now()
+                .duration_since(SystemTime::UNIX_EPOCH)
+                .unwrap(),
+        )
+        .unwrap();
 
         println!("epoch_from_ntp: {:?}", epoch_from_ntp);
         println!("epoch_from_sys: {:?}", epoch_from_sys);
-        assert!((epoch_from_ntp.as_millis() - epoch_from_sys.as_millis()) < 1000);
+        assert!((epoch_from_ntp - epoch_from_sys).num_seconds().abs() < 1);
     }
 
     #[test]
     fn test_ntp_delta_from_localhost() {
-        let delta = query_delta_wrt_systime_micros("localhost".to_string(), None).unwrap();
-        println!("delta: {:?}", delta);
-        assert!(delta < 1_000_000);
+        let offset = query_offset_wrt_systime("localhost", None).unwrap();
+        println!("offset: {:?}", offset);
+        assert!(offset.num_seconds().abs() < 1);
     }
 }
