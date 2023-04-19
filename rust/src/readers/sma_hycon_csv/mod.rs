@@ -51,7 +51,7 @@ fn read_device(device: &Device, readings: &mut Vec<DeviceReading>) -> Result<(),
 
     match records {
         Ok(records) => {
-            log::trace!("Readings: {:#?}", &records);
+            log::trace!("readings: {:?}", &records);
             records.into_iter().for_each(|r| {
                 readings.push(DeviceReading {
                     device: device.clone(),
@@ -60,7 +60,7 @@ fn read_device(device: &Device, readings: &mut Vec<DeviceReading>) -> Result<(),
             });
         }
         Err(e) => {
-            log::error!("Error reading CSV from device {:?}: {:#?}", device, e);
+            log::error!("error reading CSV from device {:?}: {}", device, e);
         }
     }
     Ok(())
