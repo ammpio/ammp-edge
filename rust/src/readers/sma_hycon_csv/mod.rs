@@ -1,7 +1,10 @@
+use std::time::Duration;
+
 use thiserror::Error;
 use zip::result::ZipError;
 
 use crate::data_mgmt::models::{DeviceReading, Record};
+use crate::helpers::backoff_retry;
 use crate::interfaces::ftp::FtpConnError;
 use crate::interfaces::ntp;
 use crate::node_mgmt::{config::Device, config::ReadingType, Config};
@@ -10,6 +13,8 @@ mod download;
 mod driver;
 mod parse;
 mod timezone;
+
+const READING_TIMEOUT: Option<Duration> = Some(Duration::from_secs(30 * 60));
 
 #[derive(Error, Debug)]
 pub enum SmaHyconCsvError {
@@ -38,9 +43,15 @@ pub fn run_acquisition(config: &Config) -> Vec<DeviceReading> {
 }
 
 fn read_device(device: &Device, readings: &mut Vec<DeviceReading>) -> Result<(), SmaHyconCsvError> {
-    match read_csv_from_device(device) {
+    // TODO: maybe run this multi-threaded? Only relevant if multiple devices, with some failing
+    let records = backoff_retry(
+        || read_csv_from_device(device).map_err(backoff::Error::transient),
+        READING_TIMEOUT,
+    );
+
+    match records {
         Ok(records) => {
-            log::trace!("Readings: {:#?}", &records);
+            log::trace!("readings: {:?}", &records);
             records.into_iter().for_each(|r| {
                 readings.push(DeviceReading {
                     device: device.clone(),
@@ -49,7 +60,7 @@ fn read_device(device: &Device, readings: &mut Vec<DeviceReading>) -> Result<(),
             });
         }
         Err(e) => {
-            log::error!("Error reading CSV from device {:?}: {:#?}", device, e);
+            log::error!("error reading CSV from device {:?}: {}", device, e);
         }
     }
     Ok(())
@@ -64,18 +75,11 @@ fn read_csv_from_device(device: &Device) -> Result<Vec<Record>, SmaHyconCsvError
     };
 
     let timezone = timezone::get_timezone(device)?;
-    let clock_offset = timezone::get_clock_offset(device).unwrap_or_else(|err| {
-        log::warn!(
-            "Error {} while getting clock offset for device {:?}; assuming zero offset",
-            err,
-            device
-        );
-        chrono::Duration::zero()
-    });
+    let clock_offset = timezone::try_get_clock_offset(device);
     log::info!(
-        "HyCon timezone: {:?}; clock offset: {:?}",
+        "HyCon timezone: {}; clock offset: {}s",
         timezone,
-        clock_offset
+        clock_offset.num_seconds()
     );
     let records = parse::parse_csv(csv_file, &driver::SMA_HYCON_CSV, timezone, clock_offset)?;
     Ok(records)
