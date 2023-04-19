@@ -1,7 +1,10 @@
+use std::time::Duration;
+
 use thiserror::Error;
 use zip::result::ZipError;
 
 use crate::data_mgmt::models::{DeviceReading, Record};
+use crate::helpers::backoff_retry;
 use crate::interfaces::ftp::FtpConnError;
 use crate::interfaces::ntp;
 use crate::node_mgmt::{config::Device, config::ReadingType, Config};
@@ -10,6 +13,8 @@ mod download;
 mod driver;
 mod parse;
 mod timezone;
+
+const READING_TIMEOUT: Option<Duration> = Some(Duration::from_secs(30 * 60));
 
 #[derive(Error, Debug)]
 pub enum SmaHyconCsvError {
@@ -38,7 +43,13 @@ pub fn run_acquisition(config: &Config) -> Vec<DeviceReading> {
 }
 
 fn read_device(device: &Device, readings: &mut Vec<DeviceReading>) -> Result<(), SmaHyconCsvError> {
-    match read_csv_from_device(device) {
+    // TODO: maybe run this multi-threaded? Only relevant if multiple devices, with some failing
+    let records = backoff_retry(
+        || read_csv_from_device(device).map_err(backoff::Error::transient),
+        READING_TIMEOUT,
+    );
+
+    match records {
         Ok(records) => {
             log::trace!("Readings: {:#?}", &records);
             records.into_iter().for_each(|r| {
@@ -66,7 +77,7 @@ fn read_csv_from_device(device: &Device) -> Result<Vec<Record>, SmaHyconCsvError
     let timezone = timezone::get_timezone(device)?;
     let clock_offset = timezone::get_clock_offset(device).unwrap_or_else(|err| {
         log::warn!(
-            "Error {} while getting clock offset for device {:?}; assuming zero offset",
+            "Error '{}' while getting clock offset for device {:?}; assuming zero offset",
             err,
             device
         );
