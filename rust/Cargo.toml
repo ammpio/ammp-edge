@@ -9,7 +9,7 @@ repository = "https://github.com/ammpio/ammp-edge"
 [dependencies]
 anyhow = "1.0.70"
 backoff = "0.4.0"
-chrono = "0.4.24"
+chrono = { version = "0.4.24", default-features = false, features = ["std", "clock"] }
 chrono-tz = "0.8.2"
 dotenv = "0.15.0"
 env_logger = { version = "0.10.0", default-features = false }
@@ -39,9 +39,9 @@ zip = { version = "0.6.4", default-features = false, features = ["deflate"] }
 [dev-dependencies]
 assert_cmd = "2.0.11"
 mockito = "1.0.2"
-regex = "1.7.3"
+regex = "1.8.1"
 predicates = "3.0.3"
-temp-env = "0.3.3"
+temp-env = "0.3.4"
 tempfile = "3.5.0"
 
 [workspace]
