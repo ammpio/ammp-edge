@@ -1,7 +1,5 @@
 use std::{fmt::Display, io, process::Command, thread, time};
 
-use anyhow::anyhow;
-
 use crate::{helpers, interfaces::mqtt};
 
 const TIMEDATECTL_CMD: &str = "/usr/bin/timedatectl";
