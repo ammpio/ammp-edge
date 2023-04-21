@@ -41,7 +41,9 @@ pub fn wait_for_time_source() -> anyhow::Result<()> {
     };
 
     if let Err(e) = helpers::backoff_retry(check_time_sync, None) {
-        log::error!("unable to check time sources: {}", e)
+        let err_msg = format!("unable to check time sources: {}", e);
+        mqtt::publish_log_msg(&err_msg).ok();
+        log::error!("{}", err_msg);
     }
     // If there is a terminal error here, we should still return exit code 0,
     // so that readings can proceed.
