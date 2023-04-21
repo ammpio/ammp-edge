@@ -42,18 +42,12 @@ pub fn wait_for_time_source() -> anyhow::Result<()> {
         }
     };
 
-    match helpers::backoff_retry(check_time_sync, None) {
-        Ok(_) => Ok(()),
-        Err(backoff::Error::Permanent(e)) => Err(anyhow!("unable to check time sources: {}", e)),
-        // In principle transient errors would be retried infinitely, so this should never happen, but needs to be handled...
-        Err(backoff::Error::Transient {
-            err: e,
-            retry_after: _,
-        }) => Err(anyhow!(
-            "transient error while checking time sources: {}",
-            e
-        )),
+    if let Err(e) = helpers::backoff_retry(check_time_sync, None) {
+        log::error!("unable to check time sources: {}", e)
     }
+    // If there is a terminal error here, we should still return exit code 0,
+    // so that readings can proceed.
+    Ok(())
 }
 
 fn run_timedatectl_show() -> Result<String, io::Error> {
