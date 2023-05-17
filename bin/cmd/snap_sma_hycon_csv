@@ -1,3 +1,0 @@
-#!/bin/sh
-
-sudo snap run ammp-edge.read-sma-hycon-csv
