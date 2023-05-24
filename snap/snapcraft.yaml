@@ -102,7 +102,7 @@ apps:
   read-sma-hycon-csv:
     command: bin/ae read-sma-hycon-csv
     daemon: oneshot
-    timer: 2:00~6:00
+    timer: 2:00~12:00
     after: [ae-init, ae-wait-for-time-source, mosquitto]
     plugs: [network]
 
