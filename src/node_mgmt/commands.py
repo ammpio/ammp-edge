@@ -179,7 +179,7 @@ def _set_address_holykell(mod: minimalmodbus.Instrument, result: dict,
         mod.address = original_slave_id
         try:
             mod.write_register(80, target_slave_id, 0, 6)
-        except minimalmodbus.IllegalRequestError as e:
+        except minimalmodbus.IllegalRequestError:
             result['Warning'] = f'Unable to assign slave ID to {target_slave_id} with registeraddress 80. Retry with registeraddress 18'
             logger.warning(f'Unable to assign slave ID to {target_slave_id} with registeraddress 80. Retry with registeraddress 18')
             mod.write_register(18, target_slave_id, 0, 6)
