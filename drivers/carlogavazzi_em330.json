@@ -1,0 +1,197 @@
+{
+    "common": {
+        "fncode": 3,
+        "order": "lsr"
+    },
+    "fields": {
+        "E_exported": {
+            "datatype": "int32",
+            "description": "Total export energy",
+            "multiplier": 0.1,
+            "register": 52,
+            "unit": "kWh",
+            "words": 2
+        },
+        "E_imported": {
+            "datatype": "int32",
+            "description": "Total import energy",
+            "multiplier": 0.1,
+            "register": 78,
+            "unit": "kWh",
+            "words": 2
+        },
+        "freq": {
+            "datatype": "int16",
+            "description": "Frequency",
+            "multiplier": 0.1,
+            "register": 51,
+            "unit": "Hz",
+            "words": 1
+        },
+        "I_L1": {
+            "datatype": "int32",
+            "description": "Phase 1 current",
+            "multiplier": 0.001,
+            "register": 12,
+            "unit": "A",
+            "words": 2
+        },
+        "I_L2": {
+            "datatype": "int32",
+            "description": "Phase 2 current",
+            "multiplier": 0.001,
+            "register": 14,
+            "unit": "A",
+            "words": 2
+        },
+        "I_L3": {
+            "datatype": "int32",
+            "description": "Phase 3 current",
+            "multiplier": 0.001,
+            "register": 16,
+            "unit": "A",
+            "words": 2
+        },
+        "P_L1": {
+            "datatype": "int32",
+            "description": "Phase 1 active power",
+            "multiplier": 0.1,
+            "register": 18,
+            "unit": "W",
+            "words": 2
+        },
+        "P_L2": {
+            "datatype": "int32",
+            "description": "Phase 2 active power",
+            "multiplier": 0.1,
+            "register": 20,
+            "unit": "W",
+            "words": 2
+        },
+        "P_L3": {
+            "datatype": "int32",
+            "description": "Phase 3 active power",
+            "multiplier": 0.1,
+            "register": 22,
+            "unit": "W",
+            "words": 2
+        },
+        "P_total": {
+            "datatype": "int32",
+            "description": "Total active power",
+            "multiplier": 0.1,
+            "register": 40,
+            "unit": "W",
+            "words": 2
+        },
+        "pf_L1": {
+            "datatype": "int16",
+            "description": "Phase 1 power factor",
+            "multiplier": 0.001,
+            "register": 46,
+            "words": 1
+        },
+        "pf_L2": {
+            "datatype": "int16",
+            "description": "Phase 2 power factor",
+            "multiplier": 0.001,
+            "register": 47,
+            "words": 1
+        },
+        "pf_L3": {
+            "datatype": "int16",
+            "description": "Phase 3 power factor",
+            "multiplier": 0.001,
+            "register": 48,
+            "words": 1
+        },
+        "Q_L1": {
+            "datatype": "int32",
+            "description": "Phase 1 reactive power",
+            "multiplier": 0.1,
+            "register": 30,
+            "unit": "VAr",
+            "words": 2
+        },
+        "Q_L2": {
+            "datatype": "int32",
+            "description": "Phase 2 reactive power",
+            "multiplier": 0.1,
+            "register": 32,
+            "unit": "VAr",
+            "words": 2
+        },
+        "Q_L3": {
+            "datatype": "int32",
+            "description": "Phase 3 reactive power",
+            "multiplier": 0.1,
+            "register": 34,
+            "unit": "VAr",
+            "words": 2
+        },
+        "Q_total": {
+            "datatype": "int32",
+            "description": "Total reactive power",
+            "multiplier": 0.1,
+            "register": 44,
+            "unit": "VAr",
+            "words": 2
+        },
+        "S_L1": {
+            "datatype": "int32",
+            "description": "Phase 1 apparent power",
+            "multiplier": 0.1,
+            "register": 24,
+            "unit": "VA",
+            "words": 2
+        },
+        "S_L2": {
+            "datatype": "int32",
+            "description": "Phase 2 apparent power",
+            "multiplier": 0.1,
+            "register": 26,
+            "unit": "VA",
+            "words": 2
+        },
+        "S_L3": {
+            "datatype": "int32",
+            "description": "Phase 3 apparent power",
+            "multiplier": 0.1,
+            "register": 28,
+            "unit": "VA",
+            "words": 2
+        },
+        "S_total": {
+            "datatype": "int32",
+            "description": "Total apparent power",
+            "multiplier": 0.1,
+            "register": 42,
+            "unit": "VA",
+            "words": 2
+        },
+        "V_L1": {
+            "datatype": "int32",
+            "description": "Phase 1 line to neutral volts",
+            "multiplier": 0.1,
+            "register": 0,
+            "unit": "V",
+            "words": 2
+        },
+        "V_L2": {
+            "datatype": "int32",
+            "description": "Phase 2 line to neutral volts",
+            "multiplier": 0.1,
+            "register": 2,
+            "unit": "V",
+            "words": 2
+        },
+        "V_L3": {
+            "datatype": "int32",
+            "description": "Phase 3 line to neutral volts",
+            "multiplier": 0.1,
+            "register": 4,
+            "unit": "V",
+            "words": 2
+        }
+    }
+}
