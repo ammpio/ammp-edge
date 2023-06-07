@@ -1,0 +1,15 @@
+{
+  "common": {
+    "words": 2,
+    "datatype": "float",
+    "fncode": 3
+  },
+  "fields": {
+    "level": {
+      "register": 2,
+      "description": "Fuel level",
+      "unit": "m",
+      "multiplier": 0.001
+    }
+  }
+}

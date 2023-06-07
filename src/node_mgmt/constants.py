@@ -117,6 +117,22 @@ SERIAL_SCAN_SIGNATURES = [{
     'datatype': 'uint16',
     'fncode': 3
 }, {
+    'name': 'Holykell HPT604-LT',
+    'slave_id': 7,
+    'reading': 'fuel level (distance from sensor (mm))',
+    'register': 2,
+    'words': 2,
+    'datatype': 'float',
+    'fncode': 3
+}, {
+    'name': 'Holykell HPT604-LT',
+    'slave_id': 8,
+    'reading': 'fuel level (distance from sensor (mm))',
+    'register': 2,
+    'words': 2,
+    'datatype': 'float',
+    'fncode': 3
+}, {
     'name': 'Carlo Gavazzi meter EM24',
     'slave_id': 9,
     'reading': 'Frequency (Hz*10)',
