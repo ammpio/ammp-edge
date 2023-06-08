@@ -19,6 +19,7 @@ from node_mgmt.constants import (
     DEFAULT_SERIAL_DEV,
     DSE_MODTCP_SCAN_ITEMS,
     DSE_MODTCP_UNIT_IDS,
+    HOLYKELL_HPT604_MAX_FUEL_LEVEL,
     HOST_IP_KEY,
     HOST_MAC_KEY,
     HOST_PORTS_KEY,
@@ -309,6 +310,8 @@ class SerialEnv():
                                                       fncode=sig['fncode']), datatype=sig['datatype'])
                     res = f"Got test response for {sig['reading']} = {response}"
                     if response is not None:
+                        if 'Holykell' in sig['name'] and response > HOLYKELL_HPT604_MAX_FUEL_LEVEL:
+                            raise Exception("No communication with the instrument (no answer)")
                         res += f" ==> SUCCESS: Device {sig['name']} present as ID {sig['slave_id']} " \
                                f"at baud rate = {DEFAULT_SERIAL_BAUD_RATE}"
                 except Exception as e:
