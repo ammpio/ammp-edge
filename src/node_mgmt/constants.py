@@ -144,7 +144,7 @@ SERIAL_SCAN_SIGNATURES = [{
     'name': 'Carlo Gavazzi meter EM330',
     'slave_id': 10,
     'reading': 'Frequency (Hz*10)',
-    'register': 51,
+    'register': 55,
     'words': 1,
     'datatype': 'int16',
     'fncode': 3
