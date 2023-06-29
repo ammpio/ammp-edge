@@ -11,15 +11,15 @@ use super::SmaHyconCsvError;
 pub const CSV_EXT: &str = ".csv";
 pub const ZIP_EXT: &str = ".zip";
 
-fn select_2_days_ago_file(filenames: Vec<String>) -> Option<String> {
-    // Note: it appears that yesterday data is not always complete, so we run the backfill with data from 2 days ago
+fn select_yesterdays_file(filenames: Vec<String>) -> Option<String> {
+    // Note that yesterday is the last day for which data will be complete
     let mut filenames = filenames
         .iter()
         .filter(|f| f.ends_with(ZIP_EXT) || f.ends_with(CSV_EXT))
         .cloned() // Convert the filtered references to owned strings
         .collect::<Vec<String>>(); // Collect the owned strings into a vector
     filenames.sort(); // Sort the vector in alphabetical order
-    filenames.get(filenames.len() - 3).cloned() // Get the third-to-last filename
+    filenames.get(filenames.len() - 2).cloned() // Get the second-to-last filename
 }
 
 pub fn get_base_url(device: &Device) -> Result<String, SmaHyconCsvError> {
@@ -39,7 +39,7 @@ pub fn download_last_day_file(
     let mut ftp_conn = ftp::FtpConnection::new(&addr)?;
     ftp_conn.connect()?;
 
-    let filename = select_2_days_ago_file(ftp_conn.list_files()?).ok_or(SmaHyconCsvError::File(
+    let filename = select_yesterdays_file(ftp_conn.list_files()?).ok_or(SmaHyconCsvError::File(
         "no ZIP or CSV data files found".into(),
     ))?;
 
