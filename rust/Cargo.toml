@@ -39,7 +39,7 @@ zip = { version = "0.6.4", default-features = false, features = ["deflate"] }
 
 [dev-dependencies]
 assert_cmd = "2.0.11"
-mockito = "1.0.2"
+mockito = { version = "1.4.0", default-features = false }
 regex = "1.8.1"
 predicates = "3.0.3"
 temp-env = "0.3.4"
