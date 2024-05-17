@@ -25,7 +25,7 @@ class MQTTPublisher():
             client_id = f'{node_id}-{"%06x" % randrange(16**6)}'
         else:
             client_id = f'{node_id}-{client_id_suffix}-{"%06x" % randrange(16**6)}'
-        client = mqtt.Client(client_id=client_id, clean_session=MQTT_CLEAN_SESSION)
+        client = mqtt.Client(callback_api_version=mqtt.CallbackAPIVersion.VERSION1, client_id=client_id, clean_session=MQTT_CLEAN_SESSION)
         client.enable_logger(logger)
 
         client.on_connect = self.__on_connect
