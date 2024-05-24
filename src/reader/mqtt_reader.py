@@ -28,7 +28,7 @@ class Reader(object):
         # A timeout for connection is not supported by the Paho MQTT library
         self._timeout = timeout
 
-        self._client = mqtt.Client(client_id=CLIENT_ID, clean_session=False, **kwargs)
+        self._client = mqtt.Client(callback_api_version=mqtt.CallbackAPIVersion.VERSION1, client_id=CLIENT_ID, clean_session=False, **kwargs)
 
         self._client.enable_logger(logger=logger)
 
