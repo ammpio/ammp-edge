@@ -51,7 +51,7 @@ apps:
     plugs: [network, network-bind, serial-port]
     environment:
     # The following is required in order to make libblas3 visible to nmap
-      LD_LIBRARY_PATH: "$LD_LIBRARY_PATH:$SNAP/usr/lib/$CRAFT_ARCH_TRIPLET/blas"
+      LD_LIBRARY_PATH: "$LD_LIBRARY_PATH:$SNAP/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/blas"
   ammp-edge:
     command: bin/ammp_edge
     daemon: simple
@@ -67,7 +67,7 @@ apps:
       - serial-port
       - log-observe
     environment:
-      LD_LIBRARY_PATH: "$LD_LIBRARY_PATH:$SNAP/usr/lib/$CRAFT_ARCH_TRIPLET/blas"
+      LD_LIBRARY_PATH: "$LD_LIBRARY_PATH:$SNAP/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/blas"
   web-ui:
     command: bin/python3 -m flask run
     daemon: simple
@@ -81,11 +81,11 @@ apps:
       FLASK_RUN_PORT: 8000
       LC_ALL: C.UTF-8
       LANG: C.UTF-8
-      LD_LIBRARY_PATH: "$LD_LIBRARY_PATH:$SNAP/usr/lib/$CRAFT_ARCH_TRIPLET/blas"
+      LD_LIBRARY_PATH: "$LD_LIBRARY_PATH:$SNAP/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/blas"
   nmap:
     command: usr/bin/nmap
     environment:
-      LD_LIBRARY_PATH: "$LD_LIBRARY_PATH:$SNAP/usr/lib/$CRAFT_ARCH_TRIPLET/blas"
+      LD_LIBRARY_PATH: "$LD_LIBRARY_PATH:$SNAP/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/blas"
     plugs: [network, network-bind, network-control]
   wifi-ap-control:
     command: bin/wifi_ap_control
@@ -98,7 +98,7 @@ apps:
     plugs: [network, network-observe]
     timer: 0:00~24:00/36
     environment:
-      LD_LIBRARY_PATH: "$LD_LIBRARY_PATH:$SNAP/usr/lib/$CRAFT_ARCH_TRIPLET/blas"
+      LD_LIBRARY_PATH: "$LD_LIBRARY_PATH:$SNAP/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/blas"
   read-sma-hycon-csv:
     command: bin/ae read-sma-hycon-csv
     daemon: oneshot
