@@ -102,15 +102,18 @@ class Reader(object):
             if type(register) is str:
                 register = int(register, 16)
 
+            register_to_read = self._register_offset + register
+            logger.debug(f"Reading {register_to_read=} with {fncode=}")
+
             if fncode == 3:  # Default is fncode 3
-                val_i = self._conn.read_holding_registers(register + self._register_offset, words)
+                val_i = self._conn.read_holding_registers(register_to_read, words)
             elif fncode == 4:
-                val_i = self._conn.read_input_registers(register + self._register_offset, words)
+                val_i = self._conn.read_input_registers(register_to_read, words)
             else:
                 logger.warn(f"Unrecognized Modbus function code '{fncode}'")
                 val_i = None
         except Exception:
-            logger.error(f"Exception while processing register {register}")
+            logger.error(f"Exception while reading register {register_to_read}")
             raise
 
         if val_i is None:
