@@ -266,6 +266,8 @@ def read_device(dev, readings, readout_q, dev_lock=None):
         reader_config = {}
         from reader.sys_reader import Reader
 
+    logger.debug(f"Setting up reader of type {dev['reading_type']} with config {reader_config}")
+
     try:
         with Reader(**reader_config) as reader:
             if not reader:
