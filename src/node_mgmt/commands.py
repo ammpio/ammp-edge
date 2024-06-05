@@ -180,14 +180,17 @@ def _set_address_holykell(mod: minimalmodbus.Instrument, result: dict,
         try:
             mod.write_register(80, target_slave_id, 0, 6)
             sleep(1)
+            # command to save changes
+            mod.address = target_slave_id
+            mod.write_register(64, 49087, 0, 6)
         except minimalmodbus.IllegalRequestError:
             result['Warning'] = f'Unable to assign slave ID to {target_slave_id} with registeraddress 80. Retry with registeraddress 18'
             logger.warning(f'Unable to assign slave ID to {target_slave_id} with registeraddress 80. Retry with registeraddress 18')
             mod.write_register(18, target_slave_id, 0, 6)
             sleep(1)
-        # command to save changes
-        mod.address = target_slave_id
-        mod.write_register(64, 49087, 0, 6)
+            # command to save changes
+            mod.address = target_slave_id
+            mod.write_register(78, 1, 0, 6)
         sleep(1)
         # confirmation that data can be read after change
         result[f'Success, fuel level read from slave {target_slave_id} (mm)'] = mod.read_registers(2, 1, 3)
