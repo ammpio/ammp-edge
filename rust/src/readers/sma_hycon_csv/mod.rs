@@ -164,7 +164,7 @@ mod tests {
         {
             "driver": "sma_hycon_csv",
             "address": {
-                "base_url": "ftp://testuser:testpwd@localhost:21/fsc/log/DataFast/",
+                "base_url": "ftp://testuser:TestPWD123!@localhost:21/fsc/log/DataFast/",
                 "timezone": "Africa/Johannesburg"
             },
             "enabled": true,
