@@ -1,4 +1,4 @@
-FROM rust:bullseye as rust-builder
+FROM rust:bullseye AS rust-builder
 
 WORKDIR /code
 COPY rust .

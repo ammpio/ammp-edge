@@ -8,7 +8,6 @@ docker-build:
 	docker-compose -f ${COMPOSE_FILE} build  # --progress=plain
 
 docker-run:
-	$(MAKE) docker-build
 	docker-compose -f ${COMPOSE_FILE} up -d
 
 docker-clean:
