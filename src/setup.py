@@ -61,6 +61,6 @@ setup(
         'requests-unixsocket2',
         'flask',
         'paho-mqtt',
-        'pyjsonata>=0.0.1a9',
+        'jsonata-python',
     ],
 )
