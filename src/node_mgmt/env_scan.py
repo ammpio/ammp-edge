@@ -1,21 +1,18 @@
 import logging
-import socket
-import arrow
-import subprocess
 import os
-from psutil import net_if_addrs
-import serial.tools.list_ports
-import xmltodict
+import socket
+import subprocess
 from collections import defaultdict
 
-from kvstore import KVCache, keys
-from reader.modbusrtu_reader import Reader as ModbusRTUReader
-from reader.modbustcp_reader import Reader as ModbusTCPReader
-from reader.sma_speedwire_reader import Reader as SpeedWireReader
-from processor import process_reading
+import arrow
+import serial.tools.list_ports
+import xmltodict
+from psutil import net_if_addrs
 
+from kvstore import KVCache, keys
 from node_mgmt.constants import (
     DEFAULT_NMAP_SCAN_OPTS,
+    DEFAULT_SERIAL_BAUD_RATE,
     DEFAULT_SERIAL_DEV,
     DSE_MODTCP_SCAN_ITEMS,
     DSE_MODTCP_UNIT_IDS,
@@ -40,33 +37,36 @@ from node_mgmt.constants import (
     NMAP_PORTID_KEY,
     NMAP_PORTS_KEY,
     NMAP_VENDOR_KEY,
-    DEFAULT_SERIAL_BAUD_RATE,
     SERIAL_SCAN_SIGNATURES,
     SMA_MODTCP_SCAN_ITEMS,
-    SMA_MODTCP_UNIT_IDS
+    SMA_MODTCP_UNIT_IDS,
 )
+from processor import process_reading
+from reader.modbusrtu_reader import Reader as ModbusRTUReader
+from reader.modbustcp_reader import Reader as ModbusTCPReader
+from reader.sma_speedwire_reader import Reader as SpeedWireReader
 
 logger = logging.getLogger(__name__)
 
 
-class NetworkEnv():
+class NetworkEnv:
     def __init__(self, default_ifname=None, default_ip=None, default_netmask_bits=None):
 
         # Define the socket address families that may contain MAC addresses
         self.__mac_socket_family = []
-        if hasattr(socket, 'AF_PACKET'):
+        if hasattr(socket, "AF_PACKET"):
             self.__mac_socket_family.append(socket.AF_PACKET)
-        if hasattr(socket, 'AF_LINK'):
+        if hasattr(socket, "AF_LINK"):
             self.__mac_socket_family.append(socket.AF_LINK)
 
         self.interfaces = self.get_interfaces()
 
         if default_ifname is not None:
             self.default_ifname = default_ifname
-            self.default_ip = default_ip or \
-                self.interfaces.get(self.default_ifname, {}).get('ip')
-            self.default_netmask_bits = default_netmask_bits or \
-                self.interfaces.get(self.default_ifname, {}).get('netmask_bits')
+            self.default_ip = default_ip or self.interfaces.get(self.default_ifname, {}).get("ip")
+            self.default_netmask_bits = default_netmask_bits or self.interfaces.get(self.default_ifname, {}).get(
+                "netmask_bits"
+            )
 
             # If we've obtained an IP and netmask for the selected interface, then we can stop here
             if self.default_ip is not None and self.default_netmask_bits is not None:
@@ -76,9 +76,10 @@ class NetworkEnv():
         # Note that in this case the provided interface name will be overridden
         self.default_ip = self.get_default_ip()
         self.default_ifname = self.get_interface_from_ip(self.default_ip)
-        self.default_netmask_bits = self.interfaces[self.default_ifname].get('netmask_bits')
+        self.default_netmask_bits = self.interfaces[self.default_ifname].get("netmask_bits")
         logger.info(
-            f"Initialized network env on {self.default_ifname} with IP {self.default_ip}/{self.default_netmask_bits}")
+            f"Initialized network env on {self.default_ifname} with IP {self.default_ip}/{self.default_netmask_bits}"
+        )
 
     def get_interfaces(self):
 
@@ -86,7 +87,7 @@ class NetworkEnv():
         interfaces = defaultdict(dict)
         for if_name, if_addrs in all_interfaces.items():
             # Skip loopback interface(s)
-            if if_name[:2] == 'lo':
+            if if_name[:2] == "lo":
                 continue
 
             # Note: in the below, the last available address will be used for each interface.
@@ -95,15 +96,15 @@ class NetworkEnv():
             for addr in if_addrs:
                 if addr.family == socket.AF_INET:
                     # It's an IPv4 address
-                    interfaces[if_name]['ip'] = addr.address
-                    interfaces[if_name]['netmask'] = addr.netmask
-                    interfaces[if_name]['netmask_bits'] = self.get_netmask_bits_from_string(addr.netmask)
+                    interfaces[if_name]["ip"] = addr.address
+                    interfaces[if_name]["netmask"] = addr.netmask
+                    interfaces[if_name]["netmask_bits"] = self.get_netmask_bits_from_string(addr.netmask)
                 elif addr.family == socket.AF_INET6:
                     # It's an IPv6 address
-                    interfaces[if_name]['ipv6'] = addr.address
+                    interfaces[if_name]["ipv6"] = addr.address
                 elif addr.family in self.__mac_socket_family:
                     # It's a MAC address
-                    interfaces[if_name]['mac'] = addr.address
+                    interfaces[if_name]["mac"] = addr.address
 
         return interfaces
 
@@ -112,13 +113,13 @@ class NetworkEnv():
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
             # Note that no actual connection is made here - we're just opening a socket
             # in order to identify the local source IP that's used to reach a public IP
-            s.connect(('1.1.1.1', 1))
+            s.connect(("1.1.1.1", 1))
             ip_addr = s.getsockname()[0]
         return ip_addr
 
     def get_interface_from_ip(self, ip):
         # Get the first interface with an address matching the requested one
-        if_name = [name for name, addrs in self.interfaces.items() if addrs.get('ip') == ip][0]
+        if_name = [name for name, addrs in self.interfaces.items() if addrs.get("ip") == ip][0]
         return if_name
 
     @staticmethod
@@ -127,17 +128,19 @@ class NetworkEnv():
             return None
 
         try:
-            netmask_bits = sum(bin(int(x)).count('1') for x in netmask_str.split('.'))
+            netmask_bits = sum(bin(int(x)).count("1") for x in netmask_str.split("."))
         except Exception:
             return None
 
         return netmask_bits
 
-    def network_scan(self,
-                     this_ip_addr: str = None,
-                     netmask_bits: int = None,
-                     nmap_scan_opts: list = DEFAULT_NMAP_SCAN_OPTS,
-                     save_to_kvc: bool = True) -> dict:
+    def network_scan(
+        self,
+        this_ip_addr: str = None,
+        netmask_bits: int = None,
+        nmap_scan_opts: list = DEFAULT_NMAP_SCAN_OPTS,
+        save_to_kvc: bool = True,
+    ) -> dict:
         if not this_ip_addr:
             this_ip_addr = self.default_ip
         if not netmask_bits:
@@ -145,7 +148,7 @@ class NetworkEnv():
         if netmask_bits < MIN_NETMASK_BITS_TO_SCAN:
             netmask_bits = MIN_NETMASK_BITS_TO_SCAN
 
-        net_to_scan = this_ip_addr + '/' + str(netmask_bits)
+        net_to_scan = this_ip_addr + "/" + str(netmask_bits)
 
         nmap_args = [net_to_scan] + nmap_scan_opts
         logger.info(f"Running nmap scan on {' '.join(nmap_args)}")
@@ -156,11 +159,11 @@ class NetworkEnv():
             return
 
         hosts = []
-        for h in scan_res['nmaprun'].get('host', []):
-            if h['status']['state'] == 'up':
+        for h in scan_res["nmaprun"].get("host", []):
+            if h["status"]["state"] == "up":
                 this_host = {}
 
-                for a in h['address']:
+                for a in h["address"]:
                     if a.get(NMAP_ADDR_TYPE_KEY) == NMAP_IP_ADDR_TYPE:
                         this_host[HOST_IP_KEY] = a.get(NMAP_ADDR_KEY)
                     elif a.get(NMAP_ADDR_TYPE_KEY) == NMAP_MAC_ADDR_TYPE:
@@ -168,8 +171,8 @@ class NetworkEnv():
                         if NMAP_VENDOR_KEY in a:
                             this_host[HOST_VENDOR_KEY] = a[NMAP_VENDOR_KEY]
 
-                if h['hostnames']:
-                    this_host['hostname'] = h['hostnames']['hostname'][0].get('name')
+                if h["hostnames"]:
+                    this_host["hostname"] = h["hostnames"]["hostname"][0].get("name")
 
                 if NMAP_PORTS_KEY in h:
                     this_host[HOST_PORTS_KEY] = []
@@ -185,8 +188,8 @@ class NetworkEnv():
             try:
                 kvc = KVCache()
                 for h in hosts:
-                    if h.get('mac'):  # Skip any hosts without MAC addresses
-                        this_mac = h['mac'].lower()
+                    if h.get("mac"):  # Skip any hosts without MAC addresses
+                        this_mac = h["mac"].lower()
                         kvc.set(f"{keys.ENV_NET_MAC_PFX}/{this_mac}", h)
             except Exception as e:
                 logger.error(f"Cannot save scan results to key-value cache: {e}")
@@ -202,9 +205,9 @@ class NetworkEnv():
         if not isinstance(args, list):
             args = [args]
 
-        nmap_path = 'nmap'
+        nmap_path = "nmap"
 
-        cmd = [nmap_path, '-oX', '-'] + args
+        cmd = [nmap_path, "-oX", "-"] + args
 
         try:
             res = subprocess.run(cmd, stdout=subprocess.PIPE)
@@ -212,23 +215,23 @@ class NetworkEnv():
             logger.error(f"Executable {cmd[0]} not found. Ensure that nmap is installed")
             return None
 
-        res_str = res.stdout.decode('utf-8').rstrip()
+        res_str = res.stdout.decode("utf-8").rstrip()
 
         if not res_str:
             return None
         else:
             try:
-                return xmltodict.parse(res_str, attr_prefix='', force_list=('host', 'address', 'hostname', 'port'))
+                return xmltodict.parse(res_str, attr_prefix="", force_list=("host", "address", "hostname", "port"))
             except Exception:
                 logger.error(f"Nmap did not return valid XML: {res_str}")
                 return None
 
     @staticmethod
     def modbus_read(host_vendor, host_ip):
-        if 'SMA' in host_vendor:
+        if "SMA" in host_vendor:
             unit_ids = SMA_MODTCP_UNIT_IDS
             modtcp_scan_items = SMA_MODTCP_SCAN_ITEMS
-        elif 'Deep Sea Electronics' in host_vendor:
+        elif "Deep Sea Electronics" in host_vendor:
             unit_ids = DSE_MODTCP_UNIT_IDS
             modtcp_scan_items = DSE_MODTCP_SCAN_ITEMS
         else:
@@ -239,10 +242,10 @@ class NetworkEnv():
             }
             try:
                 with ModbusTCPReader(
-                        host=host_ip,
-                        port=MODTCP_PORT,
-                        unit_id=u_id,
-                        timeout=MODTCP_TIMEOUT,
+                    host=host_ip,
+                    port=MODTCP_PORT,
+                    unit_id=u_id,
+                    timeout=MODTCP_TIMEOUT,
                 ) as r:
                     for rdg in modtcp_scan_items:
                         val_b = r.read(**rdg)
@@ -264,9 +267,7 @@ class NetworkEnv():
             return
 
         for h in hosts:
-            if HOST_IP_KEY not in h \
-                or MODTCP_PORT not in \
-                    [int(p) for p in h.get(HOST_PORTS_KEY, [])]:
+            if HOST_IP_KEY not in h or MODTCP_PORT not in [int(p) for p in h.get(HOST_PORTS_KEY, [])]:
                 continue
             host_vendor = h[HOST_VENDOR_KEY]
             host_ip = h[HOST_IP_KEY]
@@ -275,7 +276,7 @@ class NetworkEnv():
             h[MODTCP_RESULT_KEY].append(result_for_unit)
 
 
-class SerialEnv():
+class SerialEnv:
     def __init__(self, default_serial_dev=None):
         self.serial_devices = self.get_serial_devices()
 
@@ -304,20 +305,26 @@ class SerialEnv():
 
         for sig in SERIAL_SCAN_SIGNATURES:
             test = f"Testing slave ID {sig['slave_id']} for {sig['name']} at baud rate {DEFAULT_SERIAL_BAUD_RATE}"
-            with ModbusRTUReader(device, sig['slave_id'], DEFAULT_SERIAL_BAUD_RATE, timeout=1, debug=True) as r:
+            with ModbusRTUReader(device, sig["slave_id"], DEFAULT_SERIAL_BAUD_RATE, timeout=1, debug=True) as r:
                 try:
-                    response = process_reading(r.read(register=sig['register'], words=sig['words'],
-                                                      fncode=sig['fncode']), datatype=sig['datatype'])
+                    response = process_reading(
+                        r.read(register=sig["register"], words=sig["words"], fncode=sig["fncode"]),
+                        datatype=sig["datatype"],
+                    )
                     res = f"Got test response for {sig['reading']} = {response}"
                     if response is not None:
-                        if 'Holykell' in sig['name'] and response > HOLYKELL_HPT604_MAX_FUEL_LEVEL:
+                        if "Holykell" in sig["name"] and response > HOLYKELL_HPT604_MAX_FUEL_LEVEL:
                             raise Exception("No communication with the instrument (no answer)")
-                        res += f" ==> SUCCESS: Device {sig['name']} present as ID {sig['slave_id']} " \
-                               f"at baud rate = {DEFAULT_SERIAL_BAUD_RATE}"
+                        res += (
+                            f" ==> SUCCESS: Device {sig['name']} present as ID {sig['slave_id']} "
+                            f"at baud rate = {DEFAULT_SERIAL_BAUD_RATE}"
+                        )
                 except Exception as e:
                     res = f"Error: {e}"
-                    res += f". {sig['name']} doesn't show up, make sure the configuration is correct:" \
-                           f" slave id = {sig['slave_id']}, baud rate = {DEFAULT_SERIAL_BAUD_RATE}"
+                    res += (
+                        f". {sig['name']} doesn't show up, make sure the configuration is correct:"
+                        f" slave id = {sig['slave_id']}, baud rate = {DEFAULT_SERIAL_BAUD_RATE}"
+                    )
             result.append([test, res])
         return result
 
@@ -340,16 +347,17 @@ class EnvScanner(object):
             speedwire_serials = self.speedwire_env.scan_serials()
 
         scan_result = {
-            'time':
-            arrow.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),
-            'network_scan': [{
-                'ifname': self.net_env.default_ifname,
-                HOST_IP_KEY: self.net_env.default_ip,
-                'netmask': self.net_env.default_netmask_bits,
-                'hosts': network_hosts
-            }],
-            'serial_scan': serial_devices,
-            'speedwire_serials': speedwire_serials
+            "time": arrow.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "network_scan": [
+                {
+                    "ifname": self.net_env.default_ifname,
+                    HOST_IP_KEY: self.net_env.default_ip,
+                    "netmask": self.net_env.default_netmask_bits,
+                    "hosts": network_hosts,
+                }
+            ],
+            "serial_scan": serial_devices,
+            "speedwire_serials": speedwire_serials,
         }
         with KVCache() as kvc:
             kvc.set(keys.LAST_ENV_SCAN, scan_result)
@@ -358,10 +366,10 @@ class EnvScanner(object):
 
 
 def get_ssh_fingerprint():
-    if os.getenv('SNAP'):
-        cmd = os.path.join(os.getenv('SNAP'), 'bin', 'get_ssh_fingerprint.sh')
+    if os.getenv("SNAP"):
+        cmd = os.path.join(os.getenv("SNAP"), "bin", "get_ssh_fingerprint.sh")
     else:
-        cmd = 'get_ssh_fingerprint.sh'
+        cmd = "get_ssh_fingerprint.sh"
 
     try:
         res = subprocess.run([cmd], stdout=subprocess.PIPE)
@@ -369,7 +377,7 @@ def get_ssh_fingerprint():
         logger.error(f"Executable {cmd} not found. Ensure that it is available")
         return None
 
-    res_str = res.stdout.decode('utf-8').rstrip()
+    res_str = res.stdout.decode("utf-8").rstrip()
 
     return res_str
 
@@ -377,4 +385,4 @@ def get_ssh_fingerprint():
 def serial_scan():
     SE = SerialEnv()
     res = SE.serial_scan()
-    print('\n'.join(res))
+    print("\n".join(res))

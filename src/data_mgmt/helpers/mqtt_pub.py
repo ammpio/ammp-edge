@@ -1,13 +1,14 @@
-import logging
 import json
+import logging
 from os import getenv
-import paho.mqtt.client as mqtt
 from random import randrange
 from typing import Dict, List, Optional
 
+import paho.mqtt.client as mqtt
+
 logger = logging.getLogger(__name__)
 
-MQTT_HOST = getenv('MQTT_BRIDGE_HOST', 'localhost')
+MQTT_HOST = getenv("MQTT_BRIDGE_HOST", "localhost")
 MQTT_PORT = 1883
 
 MQTT_CLEAN_SESSION = False
@@ -16,16 +17,18 @@ MQTT_RETAIN = False
 MQTT_CONN_SUCCESS = 0
 MQTT_PUB_TIMEOUT = 5
 
-MQTT_DATA_TOPIC = 'u/data'
+MQTT_DATA_TOPIC = "u/data"
 
 
-class MQTTPublisher():
+class MQTTPublisher:
     def __init__(self, node_id: str, client_id_suffix: Optional[str] = None) -> None:
         if client_id_suffix is None:
             client_id = f'{node_id}-{"%06x" % randrange(16**6)}'
         else:
             client_id = f'{node_id}-{client_id_suffix}-{"%06x" % randrange(16**6)}'
-        client = mqtt.Client(callback_api_version=mqtt.CallbackAPIVersion.VERSION1, client_id=client_id, clean_session=MQTT_CLEAN_SESSION)
+        client = mqtt.Client(
+            callback_api_version=mqtt.CallbackAPIVersion.VERSION1, client_id=client_id, clean_session=MQTT_CLEAN_SESSION
+        )
         client.enable_logger(logger)
 
         client.on_connect = self.__on_connect
@@ -39,13 +42,11 @@ class MQTTPublisher():
     def publish(self, payload: Dict, topic: str) -> bool:
         try:
             self._client.publish(
-                topic,
-                self.__get_mqtt_payload(payload),
-                qos=MQTT_QOS, retain=MQTT_RETAIN
+                topic, self.__get_mqtt_payload(payload), qos=MQTT_QOS, retain=MQTT_RETAIN
             ).wait_for_publish(timeout=MQTT_PUB_TIMEOUT)
         except RuntimeError:
             # Client is likely not connected (see wait_for_publish() docs)
-            logger.exception('Publish unsuccessful; attempting to reconnect')
+            logger.exception("Publish unsuccessful; attempting to reconnect")
             self._client.reconnect()
             return False
         logger.debug(f"MQTT message published successfully")
@@ -56,7 +57,7 @@ class MQTTPublisher():
 
     @staticmethod
     def __get_mqtt_payload(payload: dict) -> str:
-        mqtt_payload = json.dumps(payload, separators=(',', ':'))
+        mqtt_payload = json.dumps(payload, separators=(",", ":"))
         return mqtt_payload
 
     def __on_connect(self, client: mqtt.Client, userdata, flags, rc: List) -> None:

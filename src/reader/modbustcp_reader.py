@@ -1,15 +1,17 @@
 import logging
-
-from pyModbusTCP.client import ModbusClient
 import os
 import socket
 import struct
+
+from pyModbusTCP.client import ModbusClient
 
 logger = logging.getLogger(__name__)
 
 
 class Reader(object):
-    def __init__(self, host, port=502, unit_id=1, register_offset=0, timeout=10, conn_check=False, conn_retry=10, **kwargs):
+    def __init__(
+        self, host, port=502, unit_id=1, register_offset=0, timeout=10, conn_check=False, conn_retry=10, **kwargs
+    ):
 
         self._host = host
         self._port = port
@@ -28,7 +30,7 @@ class Reader(object):
                 unit_id=self._unit_id,
                 timeout=self._timeout,
                 auto_open=False,
-                auto_close=False
+                auto_close=False,
             )
         except Exception:
             logger.exception("Attempting to create ModbusTCP client raised exception:")
@@ -48,7 +50,7 @@ class Reader(object):
         return self
 
     def __exit__(self, type, value, traceback):
-        if not hasattr(self, '_conn'):
+        if not hasattr(self, "_conn"):
             return
 
         try:
@@ -61,7 +63,7 @@ class Reader(object):
         if not self._conn.is_open:
             if self._conn_check:
                 # Do a quick ping check
-                r = os.system('ping -c 1 %s' % self._host)
+                r = os.system("ping -c 1 %s" % self._host)
                 if r == 0:
                     logger.debug(f"Host {self._host} appears to be up")
                 else:
@@ -122,10 +124,10 @@ class Reader(object):
             # it's best to first convert it back to binary. We assume big-endian order - unless 'order'
             # parameter is set to 'lsr' = least significant register, in which case we reverse the order
             # of the registers.
-            if kwargs.get('order') == 'lsr':
+            if kwargs.get("order") == "lsr":
                 val_i.reverse()
 
-            val_b = struct.pack('>%sH' % len(val_i), *val_i)
+            val_b = struct.pack(">%sH" % len(val_i), *val_i)
 
         except Exception:
             logger.error(f"Exception while processing register {register}")

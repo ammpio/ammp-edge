@@ -1,15 +1,15 @@
-import logging
 import json
+import logging
 import os
 
-from kvstore import keys, KVStore
-from edge_api import EdgeAPI
-from node_mgmt.events import NodeEvents
 from data_mgmt.helpers.mqtt_pub import MQTTPublisher
+from edge_api import EdgeAPI
+from kvstore import KVStore, keys
+from node_mgmt.events import NodeEvents
 
 logger = logging.getLogger(__name__)
 
-MQTT_CLIENT_ID_SUFFIX = 'meta'
+MQTT_CLIENT_ID_SUFFIX = "meta"
 
 
 class Node(object):
@@ -36,11 +36,11 @@ class Node(object):
 
         if self.config is not None:
             # Configuration is available in DB; use this
-            logger.info('Using stored configuration from database')
+            logger.info("Using stored configuration from database")
         else:
             # Check for a provisioning configuration
             try:
-                with open(os.path.join(os.getenv('SNAP', './'), 'provisioning', 'config.json'), 'r') as config_json:
+                with open(os.path.join(os.getenv("SNAP", "./"), "provisioning", "config.json"), "r") as config_json:
                     config = json.load(config_json)
                     logger.info("Using configuration from provisioning file")
                     self.config = config
@@ -75,16 +75,16 @@ class Node(object):
 
         drivers = {}
 
-        drvpath = os.path.join(os.getenv('SNAP', './'), 'drivers')
+        drvpath = os.path.join(os.getenv("SNAP", "./"), "drivers")
 
-        driver_files = [pos_json for pos_json in os.listdir(drvpath) if pos_json.endswith('.json')]
+        driver_files = [pos_json for pos_json in os.listdir(drvpath) if pos_json.endswith(".json")]
         for drv in driver_files:
             try:
                 with open(os.path.join(drvpath, drv)) as driver_file:
                     drivers[os.path.splitext(drv)[0]] = json.load(driver_file)
-                    logger.info('Loaded driver %s' % drv)
+                    logger.info("Loaded driver %s" % drv)
             except Exception:
-                logger.error('Could not load driver %s' % drv, exc_info=True)
+                logger.error("Could not load driver %s" % drv, exc_info=True)
 
         return drivers
 
@@ -93,8 +93,8 @@ class Node(object):
         Check whether there are custom drivers in the config definition, and if so add them to the driver definition.
         """
 
-        if self.config and 'drivers' in self.config:
+        if self.config and "drivers" in self.config:
             try:
-                self.drivers.update(self.config['drivers'])
+                self.drivers.update(self.config["drivers"])
             except AttributeError:
-                self.drivers = self.config['drivers']
+                self.drivers = self.config["drivers"]

@@ -39,7 +39,7 @@ def process_reading(val_b: bytes, **rdg):
         return None
 
     # Apply multiplier and offset, unless we're dealing with a string or boolean value
-    if rdg.get('typecast') not in ['str', 'bool']:
+    if rdg.get("typecast") not in ["str", "bool"]:
         value = apply_mult_offset(value, **rdg)
 
     value = typecast(value, **rdg)
@@ -49,17 +49,17 @@ def process_reading(val_b: bytes, **rdg):
 
 def parse_val_b(val_b: bytes, **rdg):
 
-    if rdg.get('parse_as') == 'str':
+    if rdg.get("parse_as") == "str":
         try:
-            val_s = val_b.decode('utf-8')
+            val_s = val_b.decode("utf-8")
         except UnicodeDecodeError:
             logger.error(f"Could not decode {repr(val_b)} into a string")
             return
         value = value_from_string(val_s, **rdg)
 
-    elif rdg.get('parse_as') == 'hex':
+    elif rdg.get("parse_as") == "hex":
         try:
-            val_h = val_b.decode('utf-8')
+            val_h = val_b.decode("utf-8")
             val_b = bytes.fromhex(val_h)
         except UnicodeDecodeError:
             logger.error(f"Could not decode {repr(val_b)} into a string")
@@ -79,38 +79,38 @@ def value_from_bytes(val_b: bytes, **rdg):
 
     # Format identifiers used to unpack the binary result into desired format based on datatype
     fmt = {
-        'int16':  'h',
-        'uint16': 'H',
-        'int32':  'i',
-        'uint32': 'I',
-        'int64':  'q',
-        'uint64': 'Q',
-        'float':  'f',
-        'single': 'f',
-        'double': 'd'
+        "int16": "h",
+        "uint16": "H",
+        "int32": "i",
+        "uint32": "I",
+        "int64": "q",
+        "uint64": "Q",
+        "float": "f",
+        "single": "f",
+        "double": "d",
     }
     # If datatype is not available, fall back on format characters based on data length (in bytes)
-    fmt_fallback = [None, 'B', 'H', None, 'I', None, None, None, 'd']
+    fmt_fallback = [None, "B", "H", None, "I", None, None, None, "d"]
 
     # Check for defined value mappings in the driver
     # NOTE: The keys for these mappings must be HEX strings
-    if 'valuemap' in rdg:
+    if "valuemap" in rdg:
         # NOTE: Currently only mapping against hex representations works
         # Get hex string representing byte reading
-        val_h = '0x' + val_b.hex()
+        val_h = "0x" + val_b.hex()
 
         # If the value exists in the map, return
-        if val_h in rdg['valuemap']:
-            return rdg['valuemap'][val_h]
+        if val_h in rdg["valuemap"]:
+            return rdg["valuemap"][val_h]
 
     # Get the right format character to convert from binary to the desired data type
-    if rdg.get('datatype') in fmt:
-        fmt_char = fmt[rdg['datatype']]
+    if rdg.get("datatype") in fmt:
+        fmt_char = fmt[rdg["datatype"]]
     else:
         fmt_char = fmt_fallback[len(val_b)]
 
     # Convert
-    value = struct.unpack('>%s' % fmt_char, val_b)[0]
+    value = struct.unpack(">%s" % fmt_char, val_b)[0]
 
     return value
 
@@ -118,10 +118,10 @@ def value_from_bytes(val_b: bytes, **rdg):
 def value_from_string(val_s: str, **rdg):
 
     # Check for defined value mappings in the driver
-    if 'valuemap' in rdg:
+    if "valuemap" in rdg:
         # If the string value exists as a key in the map, return
-        if val_s in rdg['valuemap']:
-            return rdg['valuemap'][val_s]
+        if val_s in rdg["valuemap"]:
+            return rdg["valuemap"][val_s]
 
     # Don't do further processing here. We rely on the typecast() function for this
     return val_s
@@ -136,18 +136,17 @@ def apply_mult_offset(value, **rdg):
 
     try:
         # Apply a float multiplier if set
-        if 'multiplier' in rdg:
-            value = value * rdg['multiplier']
+        if "multiplier" in rdg:
+            value = value * rdg["multiplier"]
 
         # Apply an offset if set
-        if 'offset' in rdg:
-            value = value + rdg['offset']
+        if "offset" in rdg:
+            value = value + rdg["offset"]
 
         return value
 
     except Exception:
-        logger.exception(
-            f"Exception while applying multiplier and offset to {value}. Parameters: {rdg}")
+        logger.exception(f"Exception while applying multiplier and offset to {value}. Parameters: {rdg}")
         return None
 
 
@@ -156,10 +155,9 @@ def typecast(value, **rdg):
     if value is None:
         return None
 
-    if 'typecast' in rdg:
-        if rdg['typecast'] in ['int', 'float', 'str', 'bool']:
-            typecast_fn = {'int': int, 'float': float,
-                           'str': str, 'bool': bool}[rdg['typecast']]
+    if "typecast" in rdg:
+        if rdg["typecast"] in ["int", "float", "str", "bool"]:
+            typecast_fn = {"int": int, "float": float, "str": str, "bool": bool}[rdg["typecast"]]
         else:
             logger.warn(
                 f"Not applying invalid typecast value {rdg['typecast']}. Must be one of 'int', 'float', 'str', 'bool'."
@@ -171,8 +169,7 @@ def typecast(value, **rdg):
     try:
         value = typecast_fn(value)
     except ValueError:
-        logger.error(
-            f"Could not parse {value} as value of type {rdg['typecast']}")
+        logger.error(f"Could not parse {value} as value of type {rdg['typecast']}")
         return
 
     return value

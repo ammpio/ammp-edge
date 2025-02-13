@@ -7,7 +7,7 @@ from .helpers.sma_speedwire_parser import parse_datagram
 logger = logging.getLogger(__name__)
 
 DEFAULT_RECV_BUFFER_SIZE = 10240
-MULTICAST_GROUP = '239.12.255.254'
+MULTICAST_GROUP = "239.12.255.254"
 MULTICAST_PORT = 9522
 MAX_RESPONSES = 5
 
@@ -21,7 +21,7 @@ class Reader(object):
         recv_buffer_size: int = DEFAULT_RECV_BUFFER_SIZE,
         max_responses: int = MAX_RESPONSES,
         timeout: int = 5,
-        **kwargs
+        **kwargs,
     ):
         self._group = group
         self._port = port
@@ -33,23 +33,18 @@ class Reader(object):
         self._stored_values = None
 
     def __enter__(self):
-        self._conn = socket.socket(
-            socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+        self._conn = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
         self._conn.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self._conn.settimeout(self._timeout)
-        self._conn.bind(('', self._port))
-        mreq = struct.pack('4sl',
-                           socket.inet_aton(self._group),
-                           socket.INADDR_ANY
-                           )
+        self._conn.bind(("", self._port))
+        mreq = struct.pack("4sl", socket.inet_aton(self._group), socket.INADDR_ANY)
         logger.debug(f"Joining multicast group {self._group}")
-        self._conn.setsockopt(
-            socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
+        self._conn.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
 
         return self
 
     def __exit__(self, type, value, traceback):
-        if not hasattr(self, '_conn'):
+        if not hasattr(self, "_conn"):
             return
 
         try:
@@ -65,7 +60,7 @@ class Reader(object):
             return None
 
         logger.debug(f"Received {repr(datagram)} from multicast")
-        if datagram == b'':
+        if datagram == b"":
             logger.warning("Empty datagram received from multicast")
             return None
         return datagram

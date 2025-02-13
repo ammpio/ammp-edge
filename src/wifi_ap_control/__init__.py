@@ -1,17 +1,20 @@
 import logging
-from kvstore import KVStore
-from .wifi_ap_snap_ctl import WifiAPSnapCtl
-from time import sleep
-import sys
 import os
+import sys
+from time import sleep
+
 from dotenv import load_dotenv
 
+from kvstore import KVStore
+
+from .wifi_ap_snap_ctl import WifiAPSnapCtl
+
 # Set up logging
-logging.basicConfig(format='%(name)s [%(levelname)s] %(message)s', level='INFO')
+logging.basicConfig(format="%(name)s [%(levelname)s] %(message)s", level="INFO")
 logger = logging.getLogger(__name__)
 
 # Load additional environment variables from env file (set by snap configuration)
-dotenv_path = os.path.join(os.environ.get('SNAP_COMMON', '.'), '.env')
+dotenv_path = os.path.join(os.environ.get("SNAP_COMMON", "."), ".env")
 load_dotenv(dotenv_path)
 
 if os.environ.get("LOG_LEVEL"):
@@ -21,8 +24,8 @@ if os.environ.get("LOG_LEVEL"):
         logger.warn(f"Failed to set log level to {os.environ['LOG_LEVEL']}", exc_info=True)
 
 
-KVS_CONFIG_KEY = 'wifi_ap_config'
-KVS_AVAILABLE_KEY = 'wifi_ap_available'
+KVS_CONFIG_KEY = "wifi_ap_config"
+KVS_AVAILABLE_KEY = "wifi_ap_available"
 
 
 def initialize(wifi_ap: WifiAPSnapCtl, kvs: KVStore) -> bool:
@@ -58,5 +61,5 @@ def main() -> None:
     monitor_and_update(wifi_ap, kvs)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -13,7 +13,7 @@ CONFIG_REFRESH_DELAY = 3600
 
 
 def get_digest(obj: dict, length: int = 7) -> str:
-    s = json.dumps(obj, sort_keys=True).encode('utf-8')
+    s = json.dumps(obj, sort_keys=True).encode("utf-8")
     h = hashlib.sha1(s).hexdigest()
     return h[:length]
 
@@ -23,7 +23,7 @@ class ConfigWatch(Thread):
 
     def __init__(self, node):
         Thread.__init__(self)
-        self.name = 'config_watch'
+        self.name = "config_watch"
         # Make sure this thread exits directly when the program exits; no clean-up should be required
         self.daemon = True
 
@@ -32,11 +32,11 @@ class ConfigWatch(Thread):
     def run(self):
 
         while True:
-            logger.debug('Awaiting request for configuration check')
+            logger.debug("Awaiting request for configuration check")
 
             self._node.events.check_new_config.wait(timeout=CONFIG_REFRESH_DELAY)
 
-            logger.info('Proceeding with check for new configuration')
+            logger.info("Proceeding with check for new configuration")
 
             try:
 
@@ -54,7 +54,7 @@ class ConfigWatch(Thread):
                                 time.sleep(API_RETRY_DELAY)
 
                         # We don't want the 'config_id' key to be present, as it messes with the digest matching
-                        config.pop('config_id', None)
+                        config.pop("config_id", None)
                         # Update config definition, and save it to DB
                         self._node.config = config
 
@@ -74,18 +74,18 @@ class ConfigWatch(Thread):
         try:
             node_meta = self._node.api.get_node()
             if node_meta:
-                if 'message' in node_meta:
+                if "message" in node_meta:
                     logger.info(f"API message: {node_meta['message']}")
 
-                if 'config_id' in node_meta:
+                if "config_id" in node_meta:
                     available_config = self._node.config
                     logger.debug(f"Current available local config: {available_config}")
                     if not available_config:
                         logger.debug("Local configuration is not available, but remote config is.")
                         return True
 
-                    if get_digest(available_config) == node_meta['config_id']:
-                        logger.info('Latest remote configuration is in use locally')
+                    if get_digest(available_config) == node_meta["config_id"]:
+                        logger.info("Latest remote configuration is in use locally")
                         return False
                     else:
                         logger.info(f"New configuration with ID {node_meta['config_id']} is available from API")
@@ -97,5 +97,5 @@ class ConfigWatch(Thread):
                 return None
 
         except Exception:
-            logger.exception('Exception raised while requesting node info from API')
+            logger.exception("Exception raised while requesting node info from API")
             return None

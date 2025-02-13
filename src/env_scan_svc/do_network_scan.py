@@ -12,7 +12,7 @@ INIT_RETRY_HOLDOFF = 5
 def initialize_network(retries_left: int = INIT_MAX_RETRIES) -> NetworkEnv:
     net_env = NetworkEnv()
 
-    if net_env and not net_env.default_ip.startswith('169.254'):
+    if net_env and not net_env.default_ip.startswith("169.254"):
         return net_env
     else:
         logger.warn(f"Default interface {net_env.default_ifname} has automatic private IP {net_env.default_ip}")
@@ -32,9 +32,9 @@ def main() -> None:
         return
 
     # TODO: Scan all interfaces (within reason). The below will only scan the default interface.
-    res = net_env.network_scan(nmap_scan_opts=['-sn', '-n', '--disable-arp-ping'])
+    res = net_env.network_scan(nmap_scan_opts=["-sn", "-n", "--disable-arp-ping"])
     logger.info(f"Scan result: {res}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

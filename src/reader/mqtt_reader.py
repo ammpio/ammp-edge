@@ -1,10 +1,11 @@
 import logging
-import paho.mqtt.client as mqtt
 from time import sleep
+
+import paho.mqtt.client as mqtt
 
 logger = logging.getLogger(__name__)
 
-CLIENT_ID = 'ammp-edge'
+CLIENT_ID = "ammp-edge"
 DEFAULT_QOS = 1
 
 # A note on the reading logic; the approach implemented here does the following:
@@ -20,7 +21,7 @@ DEFAULT_QOS = 1
 
 
 class Reader(object):
-    def __init__(self, host: str = 'localhost', port: int = 1883, timeout: int = 3, **kwargs):
+    def __init__(self, host: str = "localhost", port: int = 1883, timeout: int = 3, **kwargs):
 
         self._host = host
         self._port = port
@@ -28,7 +29,9 @@ class Reader(object):
         # A timeout for connection is not supported by the Paho MQTT library
         self._timeout = timeout
 
-        self._client = mqtt.Client(callback_api_version=mqtt.CallbackAPIVersion.VERSION1, client_id=CLIENT_ID, clean_session=False, **kwargs)
+        self._client = mqtt.Client(
+            callback_api_version=mqtt.CallbackAPIVersion.VERSION1, client_id=CLIENT_ID, clean_session=False, **kwargs
+        )
 
         self._client.enable_logger(logger=logger)
 
@@ -41,7 +44,7 @@ class Reader(object):
         try:
             self._client.connect(self._host, port=self._port)
         except Exception:
-            logger.error('Exception while attempting to connect to MQTT broker:')
+            logger.error("Exception while attempting to connect to MQTT broker:")
             raise
 
         self._client.on_message = self.__on_message

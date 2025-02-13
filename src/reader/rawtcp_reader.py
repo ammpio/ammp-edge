@@ -10,19 +10,19 @@ DEFAULT_RECV_BUFFER_SIZE = 1024
 
 class Reader(object):
     def __init__(
-                self,
-                host: str = None,
-                port: int = 502,
-                recv_buffer_size: int = DEFAULT_RECV_BUFFER_SIZE,
-                timeout: int = 5,
-                **kwargs
-                ):
+        self,
+        host: str = None,
+        port: int = 502,
+        recv_buffer_size: int = DEFAULT_RECV_BUFFER_SIZE,
+        timeout: int = 5,
+        **kwargs,
+    ):
 
         self._host = host
         self._port = port
         self._recv_buffer_size = recv_buffer_size
         self._timeout = timeout
-        self._device_args = {'host': host, 'port': port, **kwargs}
+        self._device_args = {"host": host, "port": port, **kwargs}
 
         self._stored_responses = {}
 
@@ -33,13 +33,13 @@ class Reader(object):
         try:
             self._conn.connect((self._host, self._port))
         except Exception:
-            logger.error('Exception while attempting to create TCP connection:')
+            logger.error("Exception while attempting to create TCP connection:")
             raise
 
         return self
 
     def __exit__(self, type, value, traceback):
-        if not hasattr(self, '_conn'):
+        if not hasattr(self, "_conn"):
             return
 
         try:
@@ -49,7 +49,7 @@ class Reader(object):
 
     def read(self, schema, **rdg):
 
-        request = generate_request(schema['request'], self._device_args, **rdg)
+        request = generate_request(schema["request"], self._device_args, **rdg)
 
         if request in self._stored_responses:
             response = self._stored_responses[request]
@@ -62,7 +62,7 @@ class Reader(object):
                 response = self._conn.recv(self._recv_buffer_size)
                 logger.debug(f"Received {repr(response)} from serial port")
 
-                if response == b'':
+                if response == b"":
                     logger.warn("No response received from device")
                     return
 
@@ -75,11 +75,9 @@ class Reader(object):
 
         try:
             # Parse the response to obtain the actual value
-            val_b = parse_response(response, schema['response'], self._device_args, **rdg)
+            val_b = parse_response(response, schema["response"], self._device_args, **rdg)
         except Exception:
-            logger.error(
-                f"Exception while processing value from response {repr(response)}"
-                )
+            logger.error(f"Exception while processing value from response {repr(response)}")
             raise
 
         return val_b

@@ -1,11 +1,14 @@
 import logging
+
 logger = logging.getLogger(__name__)
 
-from easysnmp import Session
 import builtins
 
+from easysnmp import Session
+
+
 class Reader(object):
-    def __init__(self, host, port=161, community='public', version=2, timeout=60, **kwargs):
+    def __init__(self, host, port=161, community="public", version=2, timeout=60, **kwargs):
 
         self._host = host
         self._port = port
@@ -15,8 +18,13 @@ class Reader(object):
 
     def __enter__(self):
         # Create an SNMP session to be used for all our requests
-        self._session = Session(hostname=self._host, remote_port=self._port, timeout=self._timeout,
-            community=self._community, version=self._version)
+        self._session = Session(
+            hostname=self._host,
+            remote_port=self._port,
+            timeout=self._timeout,
+            community=self._community,
+            version=self._version,
+        )
 
         return self
 

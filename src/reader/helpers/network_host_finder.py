@@ -1,7 +1,8 @@
 import logging
-from threading import Thread, Lock
+from threading import Lock, Thread
 from time import sleep
-from kvstore import keys, KVCache
+
+from kvstore import KVCache, keys
 
 logger = logging.getLogger(__name__)
 
@@ -10,8 +11,8 @@ kvc = KVCache()
 scan_in_progress = Lock()
 # Time to pause after a scan, before the next scan can be triggered
 WAIT_AFTER_SCAN = 900
-ARP_TABLE_FILE = '/proc/net/arp'
-INVALID_MAC = '00:00:00:00:00:00'
+ARP_TABLE_FILE = "/proc/net/arp"
+INVALID_MAC = "00:00:00:00:00:00"
 
 # Note that we expect /proc/net/arp to look like this. 6 columns, with IP and MAC in 1st and 4th col:
 # IP address       HW type     Flags       HW address            Mask     Device
@@ -21,7 +22,7 @@ INVALID_MAC = '00:00:00:00:00:00'
 
 def arp_get_mac_from_ip(ip: str) -> str:
     try:
-        with open(ARP_TABLE_FILE, 'r') as arp_table:
+        with open(ARP_TABLE_FILE, "r") as arp_table:
             # Skip header row
             next(arp_table)
             for l in arp_table:
@@ -51,7 +52,7 @@ def arp_get_ip_from_mac(mac: str) -> str:
         return None
 
     try:
-        with open(ARP_TABLE_FILE, 'r') as arp_table:
+        with open(ARP_TABLE_FILE, "r") as arp_table:
             # Skip header row
             next(arp_table)
             for arp_line in arp_table:
@@ -90,11 +91,7 @@ def trigger_network_scan() -> None:
         logger.info(f"Scan is in progress or completed within last {WAIT_AFTER_SCAN} seconds. Not scanning again.")
         return
 
-    scan_thread = Thread(
-            target=network_scan_thread,
-            name='network_scan',
-            daemon=True
-            )
+    scan_thread = Thread(target=network_scan_thread, name="network_scan", daemon=True)
     scan_thread.start()
 
 
@@ -112,9 +109,9 @@ def set_host_from_mac(address: dict) -> None:
     here "in place". I.e. no value is returned to the caller.
     """
 
-    if address.get('mac'):
+    if address.get("mac"):
 
-        mac = address['mac'].lower()
+        mac = address["mac"].lower()
 
         # First try ARP cache:
         ip = arp_get_ip_from_mac(mac)
@@ -122,7 +119,7 @@ def set_host_from_mac(address: dict) -> None:
         # If not available in ARP cache, look in key-value store
         if not ip:
             logger.info(f"MAC {mac} not found in ARP cache; looking in k-v store")
-            ip = kvc.get(f"{keys.ENV_NET_MAC_PFX}/{mac}", {}).get('ipv4')
+            ip = kvc.get(f"{keys.ENV_NET_MAC_PFX}/{mac}", {}).get("ipv4")
             logger.debug(f"KVS cache: Obtained IP {ip} from MAC {mac}")
 
             if not ip:
@@ -132,7 +129,7 @@ def set_host_from_mac(address: dict) -> None:
 
         # Set the host IP
         logger.info(f"Setting host IP of MAC {mac} to {ip}")
-        address['host'] = ip
+        address["host"] = ip
 
 
 def check_host_vs_mac(address: dict) -> bool:
@@ -141,10 +138,10 @@ def check_host_vs_mac(address: dict) -> bool:
     Idea is to carry out this check following a readout, which would have triggered an ARP update.
     """
 
-    if address.get('mac') and address.get('host'):
+    if address.get("mac") and address.get("host"):
         # Only carry out check if both MAC and IP are set
-        set_mac = address['mac'].lower()
-        set_ip = address['host']
+        set_mac = address["mac"].lower()
+        set_ip = address["host"]
 
         logger.debug(f"Checking {set_mac} vs {set_ip}")
 
