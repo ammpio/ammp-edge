@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 # coding=utf-8
 
-from setuptools import setup, find_packages
+import sys
 
+from setuptools import find_packages, setup
 
 package_name = 'ammp_edge'
 filename = package_name + '.py'
@@ -25,6 +26,26 @@ def get_long_description():
         return ''
 
 
+# Base requirements
+install_requires = [
+    'python-dotenv',
+    'pyModbusTCP',
+    'minimalmodbus',
+    'pyserial',
+    'arrow',
+    'psutil',
+    'requests',
+    'xmltodict',
+    'requests-unixsocket2',
+    'flask',
+    'paho-mqtt',
+    'jsonata-python',
+]
+
+# Add easysnmp only on Linux
+if sys.platform.startswith('linux'):
+    install_requires.append('easysnmp')
+
 setup(
     name=package_name,
     version=get_version(),
@@ -44,23 +65,9 @@ setup(
         'console_scripts': [
             'ammp_edge = ammp_edge:main',
             'wifi_ap_control = wifi_ap_control:main',
-            'env_scan_svc = env_scan_svc:main'
+            'env_scan_svc = env_scan_svc:main',
         ]
     },
     python_requires='~=3.10',
-    install_requires=[
-        'python-dotenv',
-        'pyModbusTCP',
-        'minimalmodbus',
-        'pyserial',
-        'easysnmp',
-        'arrow',
-        'psutil',
-        'requests',
-        'xmltodict',
-        'requests-unixsocket2',
-        'flask',
-        'paho-mqtt',
-        'pyjsonata>=0.0.1a9',
-    ],
+    install_requires=install_requires,
 )

@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 
 class Reader(object):
-    def __init__(self, host, port=502, unit_id=1, register_offset=0, timeout=10, conn_check=False, conn_retry=10, debug=False, **kwargs):
+    def __init__(self, host, port=502, unit_id=1, register_offset=0, timeout=10, conn_check=False, conn_retry=10, **kwargs):
 
         self._host = host
         self._port = port
@@ -18,7 +18,6 @@ class Reader(object):
         self._timeout = timeout
         self._conn_check = conn_check
         self._conn_retry = conn_retry
-        self._debug = debug
 
     def __enter__(self):
         # Create a ModbusTCP connection to be used for all our requests
@@ -28,7 +27,6 @@ class Reader(object):
                 port=self._port,
                 unit_id=self._unit_id,
                 timeout=self._timeout,
-                debug=self._debug,
                 auto_open=False,
                 auto_close=False
             )

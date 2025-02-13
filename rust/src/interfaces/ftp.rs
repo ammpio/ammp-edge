@@ -108,11 +108,11 @@ impl FtpConnection {
 mod test {
     use super::*;
 
-    const BASE_URL: &str = "ftp://testuser:testpwd@localhost:21/fsc/log/DataFast";
+    const BASE_URL: &str = "ftp://testuser:TestPWD123!@localhost:21/fsc/log/DataFast";
     const HOST: &str = "localhost";
     const PORT: u16 = 21;
     const USER: &str = "testuser";
-    const PASSWORD: &str = "testpwd";
+    const PASSWORD: &str = "TestPWD123!";
     const CSV_DIR: &str = "fsc/log/DataFast";
     const CSV_FILENAME: &str = "LogDataFast_2023-03-10.csv";
     const SECURE: bool = false;

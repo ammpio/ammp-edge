@@ -85,20 +85,28 @@ The MQTT bridge is used for the majority of interfacing with the cloud, such as:
 
 The following approaches can be used for convenience during development. Note that you some [environment variables](#environment-variables) may need to be set in order to ensure proper operation.
 
-### Running Python code
+### Python Development Environment
 
 If you would prefer to run the Python portion of the code directly, rather than building and running it in Docker, you can set up the environment as follows:
+
+```bash
+make python-dev-setup
 ```
-python -m venv venv
-. venv/bin/activate
-cd src
-pip install -U . --extra-index-url https://ammplipy.ammp.io/
-```
-The extra index is currently needed to obtain builds of [pyjsonata](https://pypi.org/project/pyjsonata/) for relevant architectures/Python versions.
+
+### Running Python code
 
 See the `setup.py` file for the available entrypoints.
 
 The code has been most extensively tested on Python 3.10, but should run on most recent versions.
+
+### Code Quality Tools
+
+The following tools are configured for code quality:
+
+**Black** and **isort** for code formatting:
+```bash
+make python-format
+```
 
 ### Running Rust code
 
