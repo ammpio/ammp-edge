@@ -92,10 +92,8 @@ If you would prefer to run the Python portion of the code directly, rather than 
 python -m venv venv
 . venv/bin/activate
 cd src
-pip install -U . --extra-index-url https://ammplipy.ammp.io/
+pip install -U .
 ```
-The extra index is currently needed to obtain builds of [pyjsonata](https://pypi.org/project/pyjsonata/) for relevant architectures/Python versions.
-
 See the `setup.py` file for the available entrypoints.
 
 The code has been most extensively tested on Python 3.10, but should run on most recent versions.
