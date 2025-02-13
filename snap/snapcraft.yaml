@@ -179,7 +179,7 @@ parts:
       - gcc
       - g++
     stage-packages:
-      - libssl3:$CRAFT_ARCH_TRIPLET_BUILD_FOR
+      - libssl3:$CRAFT_ARCH_BUILD_ON
     prime:
       - usr/sbin/mosquitto
       - usr/lib/libmosquitto.so*
