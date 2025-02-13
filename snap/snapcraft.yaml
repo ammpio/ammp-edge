@@ -11,7 +11,7 @@ confinement: strict
 
 base: core24
 
-platform:
+platforms:
   armhf:
   arm64:
 
