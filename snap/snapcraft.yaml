@@ -11,9 +11,9 @@ confinement: strict
 
 base: core24
 
-architectures:
-  - build-on: armhf
-  - build-on: arm64
+platform:
+  armhf:
+  arm64:
 
 compression: lzo
 
