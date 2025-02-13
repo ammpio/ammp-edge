@@ -11,9 +11,9 @@ confinement: strict
 
 base: core24
 
-architectures:
-  - build-on: armhf
-  - build-on: arm64
+platform:
+  armhf:
+  arm64:
 
 compression: lzo
 
@@ -172,7 +172,7 @@ parts:
      - "CFLAGS='-Wall -ggdb -O2 -I$CRAFT_STAGE/include -D_GNU_SOURCE'"
     source: https://github.com/eclipse/mosquitto
     source-type: git
-    source-tag: v2.0.14
+    source-tag: v2.0.20
     source-depth: 1
     build-packages:
       - libssl-dev
