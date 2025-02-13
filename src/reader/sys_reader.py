@@ -1,7 +1,9 @@
 import logging
+
 logger = logging.getLogger(__name__)
 
 from importlib import import_module
+
 
 class Reader(object):
     def __init__(self):

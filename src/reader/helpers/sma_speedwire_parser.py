@@ -4,7 +4,7 @@ from typing import Tuple
 
 logger = logging.getLogger(__name__)
 
-BYTEORDER_BIG = 'big'
+BYTEORDER_BIG = "big"
 
 OBIS_TYPE_ACTUAL = 4
 OBIS_TYPE_COUNTER = 8
@@ -28,23 +28,21 @@ def parse_datagram(response: bytes) -> Tuple[int, dict]:
     # initial position for relevant data in datagram
     position = 28
     while position < data_length:
-        (obis_channel, obis_type) = decode_obis(
-            response[position:position + 4])
+        (obis_channel, obis_type) = decode_obis(response[position : position + 4])
         # spot values
         if obis_type == OBIS_TYPE_ACTUAL:
-            value = response[position + 4:position + 8]
+            value = response[position + 4 : position + 8]
             position += 8
         # counter values
         elif obis_type == OBIS_TYPE_COUNTER:
-            value = response[position + 4:position + 12]
+            value = response[position + 4 : position + 12]
             position += 12
         # version value
         elif obis_type == OBIS_TYPE_VERSION and obis_channel == OBIS_CHANNEL_VERSION:
             position += 8
-            value = response[position + 4:position + 8]
+            value = response[position + 4 : position + 8]
         else:
-            logger.error(
-                f"Cannot parse OBIS channel and type {obis_channel}.{obis_type}; stopping parse")
+            logger.error(f"Cannot parse OBIS channel and type {obis_channel}.{obis_type}; stopping parse")
             value = None
             break
 

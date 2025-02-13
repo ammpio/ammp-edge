@@ -1,6 +1,13 @@
 {
   "config_id": "a0",
   "name": "Basic config",
+  "output": [
+    {
+      "field": "P_double",
+      "source": "sma_stp_1[var = \"P_total\"].value *2",
+      "typecast": "float"
+    }
+  ],
   "devices": {
     "logger": {
       "name": "Logger",
@@ -43,5 +50,6 @@
   },
   "timestamp": "2022-08-15T13:03:17Z",
   "read_interval": 15,
-  "read_roundtime": true
+  "read_roundtime": true,
+  "calc_vendor_id": "calc-1"
 }

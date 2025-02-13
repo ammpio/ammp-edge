@@ -1,34 +1,21 @@
 import logging
-import json
-from json import JSONDecodeError
-from pyjsonata import jsonata, PyjsonataError
+
+from jsonata import JException, Jsonata
 
 logger = logging.getLogger(__name__)
 
-JSON_UNDEFINED = 'undefined'
+JSON_UNDEFINED = "undefined"
 
 
-def evaluate_jsonata(data_dict, expr):
-
-    inp = json.dumps(data_dict)
+def evaluate_jsonata(data, expr):
 
     try:
-        res_str = jsonata(expr, inp)
-    except PyjsonataError as e:
-        logger.error(f"Error while processing JSONata: {e}\n"
-            f"Input dictionary: {data_dict}\n"
-            f"Expression: {expr}"
-        )
+        expr = Jsonata(expr)
+        res = expr.evaluate(data)
+    except JException as e:
+        logger.error(f"Error while processing JSONata: {e}\n" f"Input data: {data}\n" f"Expression: {expr}")
         return None
 
-    logger.debug(f"JSONata output string: {res_str}")
-    if not res_str or res_str == JSON_UNDEFINED:
-        return None
-
-    try:
-        res = json.loads(res_str)
-    except JSONDecodeError:
-        logger.error(f"Cannot decode response as JSON: {res_str}")
-        return None
+    logger.debug(f"JSONata output: {res}")
 
     return res

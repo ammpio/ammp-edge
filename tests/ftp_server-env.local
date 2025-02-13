@@ -1,2 +1,2 @@
-USERS=testuser|testpwd|/ftp/data
+USERS=testuser|TestPWD123!|/ftp/data
 ADDRESS=mock-sma-hycon

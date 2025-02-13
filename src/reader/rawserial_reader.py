@@ -1,13 +1,14 @@
 import logging
-import serial
-import time
 import re
+import time
+
+import serial
 
 logger = logging.getLogger(__name__)
 
 
 class Reader(object):
-    def __init__(self, device, baudrate=9600, bytesize=8, parity='none', stopbits=1, timeout=5, **kwargs):
+    def __init__(self, device, baudrate=9600, bytesize=8, parity="none", stopbits=1, timeout=5, **kwargs):
 
         self._device = device
         self._baudrate = baudrate
@@ -15,7 +16,7 @@ class Reader(object):
         self._stopbits = stopbits
         self._timeout = timeout
 
-        paritysel = {'none': serial.PARITY_NONE, 'odd': serial.PARITY_ODD, 'even': serial.PARITY_EVEN}
+        paritysel = {"none": serial.PARITY_NONE, "odd": serial.PARITY_ODD, "even": serial.PARITY_EVEN}
         self._parity = paritysel[parity]
 
         self._stored_responses = {}
@@ -24,14 +25,15 @@ class Reader(object):
         # Create a Serial connection to be used for all our requests
         try:
             self._conn = serial.Serial(
-                                    port=self._device,
-                                    baudrate=self._baudrate,
-                                    bytesize=self._bytesize,
-                                    parity=self._parity,
-                                    stopbits=self._stopbits,
-                                    timeout=self._timeout)
+                port=self._device,
+                baudrate=self._baudrate,
+                bytesize=self._bytesize,
+                parity=self._parity,
+                stopbits=self._stopbits,
+                timeout=self._timeout,
+            )
         except Exception:
-            logger.error('Exception while attempting to create serial connection:')
+            logger.error("Exception while attempting to create serial connection:")
             raise
 
         try:
@@ -50,7 +52,7 @@ class Reader(object):
         return self
 
     def __exit__(self, type, value, traceback):
-        if not hasattr(self, '_conn'):
+        if not hasattr(self, "_conn"):
             return
 
         try:
@@ -76,14 +78,14 @@ class Reader(object):
                     resp = self._conn.read_all()
                     logger.debug(f"Received {repr(resp)} from serial port")
 
-                if resp == b'':
+                if resp == b"":
                     logger.warn("No response received from device")
                     return
 
                 # If a template is defined, check whether the response matches it.
                 if resp_template:
                     # Since resp is binary, the template needs to be also
-                    template_b = resp_template.encode('utf-8')
+                    template_b = resp_template.encode("utf-8")
                     if not re.match(template_b, resp):
                         logger.warn(f"Response {repr(resp)} does not match template {resp_template}. Discarding")
                         return
@@ -97,21 +99,21 @@ class Reader(object):
 
         try:
             # Extract the actual values requested
-            val_b = resp[pos:pos+length]
+            val_b = resp[pos : pos + length]
         except Exception:
             logger.error(
                 f"Exception while processing value from response {repr(resp)}, position {pos}, length {length}"
-                )
+            )
             raise
 
         return val_b
 
     @staticmethod
     def get_bytes(string):
-        if string.startswith('0x'):
+        if string.startswith("0x"):
             try:
                 return bytes.fromhex(string[2:])
             except ValueError:
                 logger.warn(f"String {string} starts with 0x but is not hexadecimal. Interpreting literally")
 
-        return string.encode('utf-8')
+        return string.encode("utf-8")

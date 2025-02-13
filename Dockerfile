@@ -1,11 +1,11 @@
-FROM rust:bullseye as rust-builder
+FROM rust:bullseye AS rust-builder
 
 WORKDIR /code
 COPY rust .
 
 RUN cargo build --release
 
-FROM python:3.10-bullseye
+FROM python:3.12-bullseye
 
 COPY --from=rust-builder /code/target/release/ae /usr/local/bin/
 
@@ -24,6 +24,6 @@ COPY tests/bin/run-process.sh /usr/local/bin/
 
 WORKDIR src
 
-RUN pip install . --extra-index-url https://ammplipy.ammp.io/
+RUN pip install .
 
 ENTRYPOINT [ "run-process.sh" ]

@@ -1,9 +1,10 @@
 import logging
+
 from data_mgmt.helpers.mqtt_pub import MQTTPublisher
 
 logger = logging.getLogger(__name__)
 
-MQTT_CLIENT_ID_SUFFIX = 'data'
+MQTT_CLIENT_ID_SUFFIX = "data"
 
 
 class DataPusher:
