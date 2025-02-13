@@ -1,7 +1,7 @@
 #!/bin/sh -e
 
 if [ "$(snapctl get logging.level)" ]; then
-  echo "LOGGING_LEVEL=$(snapctl get logging.level)" > $SNAP_COMMON/.env
+  echo "LOG_LEVEL=$(snapctl get logging.level)" > $SNAP_COMMON/.env
 else
   rm -f $SNAP_COMMON/.env
 fi

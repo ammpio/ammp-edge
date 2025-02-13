@@ -14,21 +14,18 @@ from node_mgmt.config_watch import ConfigWatch
 from reader import get_readout
 
 # Set up logging
-logging.basicConfig(
-    format='%(threadName)s:%(name)s:%(lineno)d [%(levelname)s] %(message)s',
-    level=os.getenv('LOG_LEVEL', 'INFO')
-)
+logging.basicConfig(format="%(threadName)s:%(name)s:%(lineno)d [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
 
 # Load additional environment variables from env file (set by snap configuration)
 dotenv_path = os.path.join(os.environ.get('SNAP_COMMON', '.'), '.env')
 load_dotenv(dotenv_path)
 
-if os.environ.get('LOGGING_LEVEL'):
+if os.environ.get("LOG_LEVEL"):
     try:
-        logging.getLogger().setLevel(os.environ['LOGGING_LEVEL'])
+        logging.getLogger().setLevel(os.environ["LOG_LEVEL"])
     except Exception:
-        logger.warn(f"Failed to set log level to {os.environ['LOGGING_LEVEL']}", exc_info=True)
+        logger.warn(f"Failed to set log level to {os.environ['LOG_LEVEL']}", exc_info=True)
 
 __version__ = '1.0'
 

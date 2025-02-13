@@ -46,7 +46,7 @@ The application was originally written in Python, with various components being 
 ### Environment variables
 
 The following variables are used to define operation:
-- `LOGGING_LEVEL`: set to e.g. `debug` or `info` (the default)
+- `LOG_LEVEL`: set to e.g. `debug` or `info` (the default)
 - `AE_ROOT_DIR`: the root of the application; by default mapped to `$SNAP` in production, or `.` otherwise (assumed read-only)
 - `AE_DATA_DIR`: the data storage directory; by default mapped to `$SNAP_COMMON` in production, or `$AE_ROOT_DIR/data` (assumed read-write, non-volatile)
 - `AE_TEMP_DIR`: a temporary directory; by default mapped to `/tmp` (assumed read-write, volatile)
