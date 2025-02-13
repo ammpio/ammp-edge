@@ -11,7 +11,7 @@ confinement: strict
 
 base: core24
 
-platform:
+platforms:
   armhf:
   arm64:
 
@@ -115,7 +115,7 @@ parts:
     build-environment:
       - PIP_EXTRA_INDEX_URL: https://ammplipy.ammp.io/
     stage-packages:
-      - libsnmp40
+      - libsnmp40t64
       - nmap
     override-prime: |
       craftctl default
@@ -179,7 +179,7 @@ parts:
       - gcc
       - g++
     stage-packages:
-      - libssl3
+      - libssl3:$CRAFT_ARCH_BUILD_ON
     prime:
       - usr/sbin/mosquitto
       - usr/lib/libmosquitto.so*
