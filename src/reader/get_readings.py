@@ -4,9 +4,8 @@ import queue
 import threading
 import time
 from copy import deepcopy
+from datetime import datetime
 from time import sleep
-
-import arrow
 
 from constants import CONFIG_CALC_VENDOR_ID, DEVICE_ID_KEY, OUTPUT_READINGS_DEV_ID, VENDOR_ID_KEY
 from kvstore import KVCache, keys
@@ -89,7 +88,7 @@ def get_readout(config: dict, drivers: dict):
         snap_rev = os.getenv("SNAP_REVISION")
 
     readout = {
-        "t": arrow.utcnow().int_timestamp,
+        "t": int(datetime.now(datetime.UTC).timestamp()),
         "r": [],
         "m": {
             "snap_rev": snap_rev,
@@ -162,7 +161,7 @@ def get_readout(config: dict, drivers: dict):
         kvc.set(keys.LAST_READINGS_TS, readout["t"])
 
     # time that took to read all devices.
-    readout["m"]["reading_duration"] = arrow.utcnow().float_timestamp - readout["t"]
+    readout["m"]["reading_duration"] = datetime.now(datetime.UTC).timestamp() - readout["t"]
 
     if "output" in config:
         # Get additional processed values

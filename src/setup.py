@@ -32,7 +32,6 @@ install_requires = [
     "pyModbusTCP",
     "minimalmodbus",
     "pyserial",
-    "arrow",
     "psutil",
     "requests",
     "xmltodict",

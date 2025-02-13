@@ -3,8 +3,8 @@ import os
 import socket
 import subprocess
 from collections import defaultdict
+from datetime import datetime
 
-import arrow
 import serial.tools.list_ports
 import xmltodict
 from psutil import net_if_addrs
@@ -347,7 +347,7 @@ class EnvScanner(object):
             speedwire_serials = self.speedwire_env.scan_serials()
 
         scan_result = {
-            "time": arrow.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "time": datetime.now(datetime.UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "network_scan": [
                 {
                     "ifname": self.net_env.default_ifname,
