@@ -68,6 +68,6 @@ setup(
             "env_scan_svc = env_scan_svc:main",
         ]
     },
-    python_requires="~=3.10",
+    python_requires="~=3.12",
     install_requires=install_requires,
 )
