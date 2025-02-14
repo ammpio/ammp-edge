@@ -361,7 +361,7 @@ class EnvScanner(object):
         }
         with KVCache() as kvc:
             kvc.set(keys.LAST_ENV_SCAN, scan_result)
-            logger.info(f"ENV_SCAN [cache]: Successfully saved")
+            logger.info("ENV_SCAN [cache]: Successfully saved")
         return scan_result
 
 

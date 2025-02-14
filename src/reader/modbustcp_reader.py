@@ -56,7 +56,7 @@ class Reader(object):
         try:
             self._conn.close()
         except Exception:
-            logger.warning(f"Exception while trying to close ModbusTCP connection", exc_info=True)
+            logger.warning("Exception while trying to close ModbusTCP connection", exc_info=True)
 
     def __open_connection(self, retries_left=0):
         # Make sure we have an open connection to server

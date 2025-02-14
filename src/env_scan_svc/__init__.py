@@ -1,9 +1,8 @@
 import logging
 import os
 
+from do_network_scan import main
 from dotenv import load_dotenv
-
-from .do_network_scan import main
 
 # Set up logging
 logging.basicConfig(format="%(name)s [%(levelname)s] %(message)s", level="INFO")
@@ -18,3 +17,5 @@ if os.environ.get("LOG_LEVEL"):
         logging.getLogger().setLevel(os.environ["LOG_LEVEL"])
     except Exception:
         logger.warn(f"Failed to set log level to {os.environ['LOG_LEVEL']}", exc_info=True)
+
+__all__ = ["main"]
