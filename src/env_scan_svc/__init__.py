@@ -1,8 +1,9 @@
 import logging
 import os
 
-from do_network_scan import main
 from dotenv import load_dotenv
+
+from .do_network_scan import main
 
 # Set up logging
 logging.basicConfig(format="%(name)s [%(levelname)s] %(message)s", level="INFO")
