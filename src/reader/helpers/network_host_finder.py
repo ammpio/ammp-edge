@@ -25,11 +25,11 @@ def arp_get_mac_from_ip(ip: str) -> str:
         with open(ARP_TABLE_FILE, "r") as arp_table:
             # Skip header row
             next(arp_table)
-            for l in arp_table:
+            for arp_line in arp_table:
                 try:
-                    this_ip, _, _, this_mac, _, _ = l.split()
+                    this_ip, _, _, this_mac, _, _ = arp_line.split()
                 except ValueError:
-                    logger.warning(f"Malformed ARP table entry: {l}. Skipping")
+                    logger.warning(f"Malformed ARP table entry: {arp_line}. Skipping")
                     continue
                 if this_mac == INVALID_MAC:
                     logger.debug(f"Ignoring MAC address with only zeros for IP: {this_ip}, consider flushing ARP cache")

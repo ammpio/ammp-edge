@@ -68,10 +68,10 @@ def env_scan(node):
     logger.info("Completed environment scan. Submitting results to API and MQTT")
     node.api.post_env_scan(scan_result)
     if node.mqtt_client.publish(scan_result, topic=MQTT_STATE_TOPIC):
-        logger.info(f"ENV_SCAN [mqtt]: Successfully pushed")
+        logger.info("ENV_SCAN [mqtt]: Successfully pushed")
     else:
         # For some reason the env_state wasn't pushed successfully
-        logger.warning(f"ENV_SCAN [mqtt]: Push failed")
+        logger.warning("ENV_SCAN [mqtt]: Push failed")
 
 
 def trigger_config_generation(node, tank_dimensions=None):
@@ -90,10 +90,10 @@ def trigger_config_generation(node, tank_dimensions=None):
 
     logger.info("Submitting results to MQTT Broker.")
     if node.mqtt_client.publish(last_env_scan, topic=MQTT_STATE_TOPIC):
-        logger.info(f"ENV_SCAN [mqtt]: Successfully pushed")
+        logger.info("ENV_SCAN [mqtt]: Successfully pushed")
     else:
         # For some reason the env_state wasn't pushed successfully
-        logger.warning(f"ENV_SCAN [mqtt]: Push failed")
+        logger.warning("ENV_SCAN [mqtt]: Push failed")
 
 
 def imt_sensor_address():

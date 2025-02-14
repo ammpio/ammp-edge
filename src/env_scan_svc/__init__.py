@@ -18,3 +18,5 @@ if os.environ.get("LOG_LEVEL"):
         logging.getLogger().setLevel(os.environ["LOG_LEVEL"])
     except Exception:
         logger.warn(f"Failed to set log level to {os.environ['LOG_LEVEL']}", exc_info=True)
+
+__all__ = ["main"]

@@ -4,8 +4,6 @@ from typing import Optional, Tuple
 
 import requests
 
-from kvstore import KVStore, keys
-
 logger = logging.getLogger(__name__)
 
 DEFAULT_REQUEST_TIMEOUT = 60
