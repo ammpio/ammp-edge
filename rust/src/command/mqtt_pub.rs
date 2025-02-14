@@ -21,7 +21,10 @@ fn construct_meta_msg() -> Vec<MqttMessage> {
     ];
 
     if let Ok(snap_revision) = env::var(envvars::SNAP_REVISION) {
-        msgs.push(MqttMessage::new(topics::META_SNAP_REV, snap_revision));
+        msgs.push(MqttMessage::new(
+            topics::META_SNAP_REV,
+            snap_revision.parse::<i16>().unwrap_or(0).to_string(),
+        ));
     }
     if let Ok(arch) = helpers::get_node_arch() {
         msgs.push(MqttMessage::new(topics::META_ARCH, arch));
