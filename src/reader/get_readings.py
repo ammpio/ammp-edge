@@ -102,6 +102,20 @@ def get_readout(config: dict, drivers: dict):
     readout_q = queue.Queue()
     jobs = []
 
+    # Skip any devices for which min_read_interval has not yet elapsed
+    with KVCache() as kvc:
+        devices_to_skip = [
+            dev_id
+            for dev_id in dev_rdg.keys()
+            if (min_read_interval := config["devices"][dev_id].get("min_read_interval"))
+            and reading_timestamp - kvc.get(f"{keys.LAST_READING_TS_FOR_DEV_PFX}/{dev_id}", 0) < min_read_interval
+        ]
+
+    if devices_to_skip:
+        logger.info(f"Skipping devices due to min_read_interval: {devices_to_skip}")
+        for dev_id in devices_to_skip:
+            del dev_rdg[dev_id]
+
     # Sometimes multiple "devices" will actually share the same serial port, or host IP.
     # It is best to make sure that multiple threads do not try to open concurrent
     # connections to a single port or host; in the case of a serial port at least, this
@@ -124,6 +138,7 @@ def get_readout(config: dict, drivers: dict):
 
             # Set host IP based on MAC, if MAC is available
             set_host_from_mac(dev["address"])
+
     # Set up threads for reading each of the devices
     for dev_id in dev_rdg:
         dev = config["devices"][dev_id]
