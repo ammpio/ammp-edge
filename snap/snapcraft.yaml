@@ -178,13 +178,8 @@ parts:
       - libssl-dev
       - gcc
       - g++
-    stage-packages:
-      - libssl3
     prime:
       - usr/sbin/mosquitto
-      - usr/lib/libmosquitto.so*
-      - lib/*-linux-gnu/libcrypto.so*
-      - lib/*-linux-gnu/libssl.so*
       - usr/include/mosquitto.h
       - usr/include/mosquitto_broker.h
       - usr/include/mosquitto_plugin.h
