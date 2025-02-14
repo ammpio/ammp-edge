@@ -49,7 +49,7 @@ class MQTTPublisher:
             logger.exception("Publish unsuccessful; attempting to reconnect")
             self._client.reconnect()
             return False
-        logger.debug(f"MQTT message published successfully")
+        logger.debug("MQTT message published successfully")
         return True
 
     def publish_data(self, payload: Dict) -> bool:
@@ -70,7 +70,7 @@ class MQTTPublisher:
 
     def __on_disconnect(self, client: mqtt.Client, userdata, rc: List) -> None:
         if rc == MQTT_CONN_SUCCESS:
-            logger.info(f"Successfully disconnected to MQTT broker")
+            logger.info("Successfully disconnected to MQTT broker")
         else:
             logger.error(f"Disconnection from broker with result code {rc}")
         self._connected = False

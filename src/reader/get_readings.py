@@ -4,9 +4,8 @@ import queue
 import threading
 import time
 from copy import deepcopy
+from datetime import UTC, datetime
 from time import sleep
-
-import arrow
 
 from constants import CONFIG_CALC_VENDOR_ID, DEVICE_ID_KEY, OUTPUT_READINGS_DEV_ID, VENDOR_ID_KEY
 from kvstore import KVCache, keys
@@ -86,10 +85,12 @@ def get_readout(config: dict, drivers: dict):
     try:
         snap_rev = int(os.getenv("SNAP_REVISION", 0))
     except ValueError:  # Occurs if it's a devel snap with revision prefixed in 'x'
-        snap_rev = os.getenv("SNAP_REVISION")
+        snap_rev = 0
+
+    reading_timestamp = int(datetime.now(UTC).timestamp())
 
     readout = {
-        "t": arrow.utcnow().int_timestamp,
+        "t": reading_timestamp,
         "r": [],
         "m": {
             "snap_rev": snap_rev,
@@ -100,6 +101,20 @@ def get_readout(config: dict, drivers: dict):
     # Set up queue in which to save readouts from the multiple threads that are reading each device
     readout_q = queue.Queue()
     jobs = []
+
+    # Skip any devices for which min_read_interval has not yet elapsed
+    with KVCache() as kvc:
+        devices_to_skip = [
+            dev_id
+            for dev_id in dev_rdg.keys()
+            if (min_read_interval := config["devices"][dev_id].get("min_read_interval"))
+            and reading_timestamp - kvc.get(f"{keys.LAST_READING_TS_FOR_DEV_PFX}/{dev_id}", 0) < min_read_interval
+        ]
+
+    if devices_to_skip:
+        logger.info(f"Skipping devices due to min_read_interval: {devices_to_skip}")
+        for dev_id in devices_to_skip:
+            del dev_rdg[dev_id]
 
     # Sometimes multiple "devices" will actually share the same serial port, or host IP.
     # It is best to make sure that multiple threads do not try to open concurrent
@@ -123,6 +138,7 @@ def get_readout(config: dict, drivers: dict):
 
             # Set host IP based on MAC, if MAC is available
             set_host_from_mac(dev["address"])
+
     # Set up threads for reading each of the devices
     for dev_id in dev_rdg:
         dev = config["devices"][dev_id]
@@ -160,9 +176,11 @@ def get_readout(config: dict, drivers: dict):
     with KVCache() as kvc:
         kvc.set(keys.LAST_READINGS, dev_rdg)
         kvc.set(keys.LAST_READINGS_TS, readout["t"])
+        for dev_id in dev_rdg.keys():
+            kvc.set(f"{keys.LAST_READING_TS_FOR_DEV_PFX}/{dev_id}", reading_timestamp)
 
     # time that took to read all devices.
-    readout["m"]["reading_duration"] = arrow.utcnow().float_timestamp - readout["t"]
+    readout["m"]["reading_duration"] = datetime.now(UTC).timestamp() - reading_timestamp
 
     if "output" in config:
         # Get additional processed values
@@ -196,7 +214,7 @@ def read_device(dev, readings, readout_q, dev_lock=None):
     if dev_lock:
         dev_lock.acquire()
         # If we've just finished reading another device on this port, let it breathe
-        time.sleep(5)
+        time.sleep(0.5)
 
     fields = {
         DEVICE_ID_KEY: dev["id"],

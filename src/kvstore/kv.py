@@ -5,7 +5,9 @@ import threading
 from os import getenv, path
 
 from kvstore.constants import SQLITE_CACHE_ABS_PATH, SQLITE_STORE_REL_PATH
+from utils.logging import add_logging_level
 
+add_logging_level("TRACE", logging.DEBUG - 5)
 logger = logging.getLogger(__name__)
 
 
@@ -22,7 +24,7 @@ KVC_lock = threading.Lock()
 class KV:
     def __init__(self, sqlite_db_path: str, lock: threading.Lock) -> None:
         self._conn = sqlite3.connect(sqlite_db_path, check_same_thread=False)
-        self._conn.set_trace_callback(logger.debug)
+        self._conn.set_trace_callback(logger.trace)
         self._cur = self._conn.cursor()
         self._lock = lock
         with self._lock:

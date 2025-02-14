@@ -36,7 +36,8 @@
       "address": {
         "host": "mock-sma-stp",
         "unit_id": 100
-      }
+      },
+      "min_read_interval": 30
     }
   },
   "readings": {
@@ -49,7 +50,7 @@
     "pv_P_2": {"device": "sma_stp_2", "var": "P_total"}
   },
   "timestamp": "2022-08-15T13:03:17Z",
-  "read_interval": 15,
+  "read_interval": 10,
   "read_roundtime": true,
   "calc_vendor_id": "calc-1"
 }
