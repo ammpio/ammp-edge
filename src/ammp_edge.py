@@ -14,7 +14,7 @@ from node_mgmt.node import Node
 from reader import get_readout
 
 # Set up logging
-logging.basicConfig(format="%(threadName)s:%(name)s:%(lineno)d [%(levelname)s] %(message)s")
+logging.basicConfig(format="%(threadName)s:%(name)s:%(lineno)d [%(levelname)s] %(message)s", level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Load additional environment variables from env file (set by snap configuration)
