@@ -85,7 +85,7 @@ def get_readout(config: dict, drivers: dict):
     try:
         snap_rev = int(os.getenv("SNAP_REVISION", 0))
     except ValueError:  # Occurs if it's a devel snap with revision prefixed in 'x'
-        snap_rev = os.getenv("SNAP_REVISION")
+        snap_rev = 0
 
     reading_timestamp = int(datetime.now(UTC).timestamp())
 
