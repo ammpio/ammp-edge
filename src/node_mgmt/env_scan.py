@@ -3,8 +3,8 @@ import os
 import socket
 import subprocess
 from collections import defaultdict
+from datetime import UTC, datetime
 
-import arrow
 import serial.tools.list_ports
 import xmltodict
 from psutil import net_if_addrs
@@ -347,7 +347,7 @@ class EnvScanner(object):
             speedwire_serials = self.speedwire_env.scan_serials()
 
         scan_result = {
-            "time": arrow.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "time": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "network_scan": [
                 {
                     "ifname": self.net_env.default_ifname,
@@ -361,7 +361,7 @@ class EnvScanner(object):
         }
         with KVCache() as kvc:
             kvc.set(keys.LAST_ENV_SCAN, scan_result)
-            logger.info(f"ENV_SCAN [cache]: Successfully saved")
+            logger.info("ENV_SCAN [cache]: Successfully saved")
         return scan_result
 
 

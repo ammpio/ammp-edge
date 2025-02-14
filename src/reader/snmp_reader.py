@@ -1,10 +1,8 @@
 import logging
 
-logger = logging.getLogger(__name__)
-
-import builtins
-
 from easysnmp import Session
+
+logger = logging.getLogger(__name__)
 
 
 class Reader(object):
