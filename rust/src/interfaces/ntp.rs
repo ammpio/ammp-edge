@@ -70,7 +70,7 @@ fn run_ntp_query(hostname: &str, port: Option<u16>) -> Result<NtpResult, NtpErro
 
     sntpc::get_time(
         format!("{}:{}", hostname, port.unwrap_or(DEFAULT_NTP_PORT)).as_str(),
-        sock_wrapper,
+        &sock_wrapper,
         ntp_context,
     )
     .map_err(map_sntpc_error)

@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::io::{BufRead, BufReader, Cursor};
 
-use chrono::{DateTime, Duration, TimeZone, Utc};
+use chrono::{DateTime, Duration, NaiveDateTime, Utc};
 use chrono_tz::Tz;
 use thiserror::Error;
 
@@ -107,8 +107,10 @@ fn parse_timestamp(
     timezone: Tz,
     clock_offset: Duration,
 ) -> Result<DateTime<Utc>, ParseError> {
-    Ok(timezone
-        .datetime_from_str(timestamp, TIMESTAMP_FORMAT)?
+    Ok(NaiveDateTime::parse_from_str(timestamp, TIMESTAMP_FORMAT)?
+        .and_local_timezone(timezone)
+        .single()
+        .ok_or(ParseError::FileFormat("ambiguous timestamp".into()))?
         .with_timezone(&Utc)
         - clock_offset)
 }

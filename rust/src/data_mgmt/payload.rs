@@ -1,5 +1,4 @@
 use itertools::Itertools;
-use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use typify::import_types;
 
