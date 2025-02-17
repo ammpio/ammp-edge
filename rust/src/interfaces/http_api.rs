@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use anyhow::Result;
 use kvstore::KVDb;
 use serde::{Deserialize, Serialize};
@@ -29,10 +27,15 @@ pub fn get_api_base_url(kvs: &KVDb) -> String {
 }
 
 fn get_ureq_agent() -> Result<ureq::Agent> {
-    Ok(ureq::AgentBuilder::new()
-        .tls_connector(Arc::new(native_tls::TlsConnector::new()?))
-        .timeout(defaults::API_REQUEST_TIMEOUT)
-        .build())
+    let config = ureq::config::Config::builder()
+        .tls_config(
+            ureq::tls::TlsConfig::builder()
+                .provider(ureq::tls::TlsProvider::NativeTls)
+                .build(),
+        )
+        .timeout_global(Some(defaults::API_REQUEST_TIMEOUT))
+        .build();
+    Ok(ureq::Agent::new_with_config(config))
 }
 
 fn activation_step_1(agent: &ureq::Agent, api_root: &str, node_id: &str) -> Result<String> {
@@ -44,7 +47,9 @@ fn activation_step_1(agent: &ureq::Agent, api_root: &str, node_id: &str) -> Resu
             .map_err(backoff::Error::transient)
     };
 
-    let resp1: R1 = helpers::backoff_retry(request_step1, None)?.into_json()?;
+    let resp1: R1 = helpers::backoff_retry(request_step1, None)?
+        .body_mut()
+        .read_json()?;
     let access_key = resp1.access_key;
 
     log::debug!(
@@ -66,12 +71,14 @@ fn activation_step_2(
         log::debug!("Doing activation step 2");
         agent
             .post(&format!("{api_root}/nodes/{node_id}/activate"))
-            .set("Authorization", access_key)
-            .call()
+            .header("Authorization", access_key)
+            .send_empty()
             .map_err(backoff::Error::transient)
     };
 
-    let resp2: R2 = helpers::backoff_retry(request_step2, None)?.into_json()?;
+    let resp2: R2 = helpers::backoff_retry(request_step2, None)?
+        .body_mut()
+        .read_json()?;
     log::debug!(
         "Carried out second step of activation. Message: {}",
         resp2.message

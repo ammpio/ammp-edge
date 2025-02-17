@@ -12,10 +12,8 @@ pub use time::{now_epoch, now_iso};
 
 pub mod base_path;
 
-use getrandom::getrandom;
+use rand::random;
 
 pub fn rand_hex(bytes: usize) -> String {
-    let mut rand = vec![0u8; bytes];
-    getrandom(&mut rand).unwrap();
-    hex::encode(rand)
+    hex::encode((0..bytes).map(|_| random::<u8>()).collect::<Vec<u8>>())
 }
