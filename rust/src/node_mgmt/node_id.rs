@@ -25,18 +25,24 @@ fn get_primary_mac() -> Option<[u8; 6]> {
     if let Ok(ifiter) = ifaddrs::getifaddrs() {
         for interface in ifiter {
             if let Some(link) = interface.address
-            && let Some(link_addr) = link.as_link_addr()
-            && let Some(mac) = link_addr.addr()
-            && mac_is_non_zero(&mac) {
+                && let Some(link_addr) = link.as_link_addr()
+                && let Some(mac) = link_addr.addr()
+                && mac_is_non_zero(&mac)
+            {
                 if best_mac.is_none() {
                     best_mac = Some(mac);
                     log::debug!("Fallback MAC: {:?}", hex::encode(best_mac.unwrap()));
                 }
                 if let Some(prio) = get_interface_priority(&interface.interface_name)
-                && prio < best_prio {
+                    && prio < best_prio
+                {
                     best_mac = Some(mac);
                     best_prio = prio;
-                    log::debug!("Found MAC {:?} with priority {:?}", hex::encode(best_mac.unwrap()), best_prio);
+                    log::debug!(
+                        "Found MAC {:?} with priority {:?}",
+                        hex::encode(best_mac.unwrap()),
+                        best_prio
+                    );
                 }
             }
         }

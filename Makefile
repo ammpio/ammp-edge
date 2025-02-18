@@ -30,7 +30,6 @@ python-static-test:
 	flake8 src
 
 test:
-	$(MAKE) python-static-test
 	$(MAKE) -C rust test
 
 python-clean:

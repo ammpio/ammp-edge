@@ -22,8 +22,9 @@ static MQTT_BRIDGE_HOST: Lazy<String> = Lazy::new(|| {
 });
 
 static MQTT_BRIDGE_PORT: Lazy<u16> = Lazy::new(|| {
-    if let Ok(port_str) = env::var(envvars::MQTT_BRIDGE_PORT) &&
-    let Ok(port) = port_str.parse::<u16>() {
+    if let Ok(port_str) = env::var(envvars::MQTT_BRIDGE_PORT)
+        && let Ok(port) = port_str.parse::<u16>()
+    {
         return port;
     }
     defaults::MQTT_BRIDGE_PORT
@@ -81,7 +82,7 @@ pub fn publish_msgs(
     client_prefix: Option<&str>,
     retain: bool,
 ) -> Result<(), MqttError> {
-    let (mut client, mut connection) = client_conn(&rand_client_id(client_prefix), true);
+    let (client, mut connection) = client_conn(&rand_client_id(client_prefix), true);
 
     for msg_batch in messages.chunks(MQTT_QUEUE_CAPACITY) {
         let mut expected_msg_acks = msg_batch.len();
@@ -131,7 +132,7 @@ pub fn sub_topics(
     tx: Sender<MqttMessage>,
     max_messages: Option<usize>,
 ) -> Result<(), MqttError> {
-    let (mut client, mut connection) = client_conn(&rand_client_id(client_prefix), true);
+    let (client, mut connection) = client_conn(&rand_client_id(client_prefix), true);
 
     for topic in topics.iter() {
         log::info!("Subscribing to {}", topic);
@@ -150,7 +151,9 @@ pub fn sub_topics(
                 }
 
                 num_messages += 1;
-                if let Some(mm) = max_messages && num_messages == mm {
+                if let Some(mm) = max_messages
+                    && num_messages == mm
+                {
                     break;
                 }
             }
