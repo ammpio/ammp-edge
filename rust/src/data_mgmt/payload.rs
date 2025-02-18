@@ -1,5 +1,4 @@
 use itertools::Itertools;
-use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use typify::import_types;
 
@@ -31,7 +30,7 @@ pub fn payloads_from_device_readings(
     let mut payloads = Vec::new();
     for (timestamp, dev_rdgs) in &device_readings
         .into_iter()
-        .group_by(|r| r.record.get_timestamp())
+        .chunk_by(|r| r.record.get_timestamp())
     {
         // Any records that are not explicitly timestamped will be ignored
         if let Some(ts) = timestamp {

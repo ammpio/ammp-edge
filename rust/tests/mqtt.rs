@@ -33,7 +33,7 @@ fn mqtt_publish_meta() {
     let mut mqttoptions = MqttOptions::new("mqtt-pub-e2e-test-subscriber", "localhost", 1883);
     mqttoptions.set_clean_session(true);
 
-    let (mut client, mut connection) = Client::new(mqttoptions, 10);
+    let (client, mut connection) = Client::new(mqttoptions, 10);
 
     client.subscribe("u/meta/#", QoS::ExactlyOnce).unwrap();
 
@@ -90,7 +90,7 @@ fn mqtt_receive_config() {
         let mut mqttoptions = MqttOptions::new("mqtt-sub-e2e-test-publisher", "localhost", 1883);
         mqttoptions.set_clean_session(true);
 
-        let (mut client, mut connection) = Client::new(mqttoptions, 10);
+        let (client, mut connection) = Client::new(mqttoptions, 10);
 
         client
             .publish(
@@ -134,7 +134,7 @@ fn mqtt_receive_bad_config() {
         let mut mqttoptions = MqttOptions::new("mqtt-sub-e2e-test-publisher", "localhost", 1883);
         mqttoptions.set_clean_session(true);
 
-        let (mut client, mut connection) = Client::new(mqttoptions, 10);
+        let (client, mut connection) = Client::new(mqttoptions, 10);
 
         client
             .publish(

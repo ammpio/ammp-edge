@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::node_mgmt::config::Device;
 
-use super::payload::DeviceDataExtraExtra;
+use super::payload::DeviceDataExtraValue;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 
@@ -53,15 +53,15 @@ impl Record {
         &self.fields
     }
 
-    pub fn all_fields_as_device_data_extra(&self) -> HashMap<String, DeviceDataExtraExtra> {
+    pub fn all_fields_as_device_data_extra(&self) -> HashMap<String, DeviceDataExtraValue> {
         self.fields
             .iter()
             .map(|(k, v)| {
                 let value = match v {
-                    RtValue::Bool(b) => DeviceDataExtraExtra::Boolean(*b),
-                    RtValue::Float(f) => DeviceDataExtraExtra::Number(*f),
-                    RtValue::Int(i) => DeviceDataExtraExtra::Integer(*i),
-                    RtValue::String(s) => DeviceDataExtraExtra::String(s.to_string()),
+                    RtValue::Bool(b) => DeviceDataExtraValue::Boolean(*b),
+                    RtValue::Float(f) => DeviceDataExtraValue::Number(*f),
+                    RtValue::Int(i) => DeviceDataExtraValue::Integer(*i),
+                    RtValue::String(s) => DeviceDataExtraValue::String(s.to_string()),
                 };
                 (k.clone(), value)
             })

@@ -2,7 +2,7 @@ use std::env;
 use std::time::Duration;
 
 use anyhow::Result;
-use sysinfo::{System, SystemExt};
+use sysinfo::System;
 
 use crate::constants::{envvars, topics};
 use crate::helpers;
@@ -13,15 +13,15 @@ const PUBLISH_TIMEOUT: Duration = Duration::from_secs(30);
 
 fn construct_meta_msg() -> Vec<MqttMessage> {
     let mut msgs = vec![
-        MqttMessage::new(
-            topics::META_BOOT_TIME,
-            System::new().boot_time().to_string(),
-        ),
+        MqttMessage::new(topics::META_BOOT_TIME, System::boot_time().to_string()),
         MqttMessage::new(topics::META_START_TIME, helpers::now_epoch().to_string()),
     ];
 
     if let Ok(snap_revision) = env::var(envvars::SNAP_REVISION) {
-        msgs.push(MqttMessage::new(topics::META_SNAP_REV, snap_revision));
+        msgs.push(MqttMessage::new(
+            topics::META_SNAP_REV,
+            snap_revision.parse::<i16>().unwrap_or(0).to_string(),
+        ));
     }
     if let Ok(arch) = helpers::get_node_arch() {
         msgs.push(MqttMessage::new(topics::META_ARCH, arch));

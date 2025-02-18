@@ -1,7 +1,6 @@
 use std::str::FromStr;
 
 use kvstore::{KVDb, KVStoreError};
-use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use typify::import_types;
 

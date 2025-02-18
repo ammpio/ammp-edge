@@ -14,7 +14,12 @@ where
     let fn_name = std::any::type_name::<F>();
 
     let notify = |err, dur: Duration| {
-        log::error!("when running '{}' temporary error after {:.1}s: {}", fn_name, dur.as_secs_f32(), err);
+        log::error!(
+            "when running '{}' temporary error after {:.1}s: {}",
+            fn_name,
+            dur.as_secs_f32(),
+            err
+        );
     };
 
     // Set to retry forever, rather than give up after 15 minutes.
