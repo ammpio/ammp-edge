@@ -55,14 +55,22 @@ fn run_timedatectl_show() -> Result<String, io::Error> {
         .arg(TIMEDATECTL_SUBCMD)
         .output()?;
 
+    let stdout = String::from_utf8_lossy(&output.stdout);
+
     if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
         return Err(io::Error::new(
             io::ErrorKind::Other,
-            format!("timedatectl returned exit code {:?}", output.status.code()),
+            format!(
+                "timedatectl returned exit code {:?}, stdout: {}, stderr: {}",
+                output.status.code(),
+                stdout,
+                stderr,
+            ),
         ));
     }
 
-    Ok(String::from_utf8_lossy(&output.stdout).to_string())
+    Ok(stdout.to_string())
 }
 
 fn rtc_time_and_ntp_status(timedatectl_output: &str) -> (Option<String>, bool) {
