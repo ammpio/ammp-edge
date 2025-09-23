@@ -1,18 +1,69 @@
-[tool.black]
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ammp-edge"
+version = "1.0"
+description = "Edge application for AMMP"
+authors = [
+    {name = "AMMP Technologies", email = "contact@ammp.io"},
+]
+readme = "README.md"
+license = {file = "LICENSE"}
+requires-python = ">=3.12"
+keywords = ["ammp", "edge", "monitoring", "iot"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+]
+
+dependencies = [
+    "python-dotenv",
+    "pyModbusTCP",
+    "minimalmodbus",
+    "pyserial",
+    "psutil",
+    "requests",
+    "xmltodict",
+    "requests-unixsocket2",
+    "flask",
+    "paho-mqtt",
+    "jsonata-python",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.12.12",
+    "ty>=0.0.1a21",
+]
+
+[project.urls]
+Homepage = "https://www.ammp.io/"
+Repository = "https://github.com/ammpio/ammp-edge"
+Documentation = "https://ammpio.atlassian.net/wiki/spaces/APD"
+
+[project.scripts]
+ammp_edge = "ammp_edge:main"
+wifi_ap_control = "wifi_ap_control:main"
+env_scan_svc = "env_scan_svc:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[tool.hatch.build.targets.wheel.sources]
+"src" = ""
+
+[tool.ruff]
 line-length = 120
-target-version = ['py312']
-include = 'src/.*\.pyi?$'
+target-version = "py312"
+src = ["src"]
 
-[tool.flake8]
-max-line-length = 120
-extend-ignore = "E203"
-include = 'src/.*\.pyi?$'
+[tool.ruff.lint.isort]
+known-first-party = ["ammp_edge"]
 
-[tool.isort]
-honor_noqa = true
-include_trailing_comma = true
-line_length = 120
-multi_line_output = 3
-skip_gitignore = true
-star_first = true
-src_paths = ["src"] 
+[tool.ty]
+python-version = "3.12"
+src = ["src"]

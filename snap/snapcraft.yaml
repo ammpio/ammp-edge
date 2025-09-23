@@ -109,11 +109,9 @@ apps:
 parts:
   ammp-edge:
     plugin: python
-    source: src
+    source: .
     build-packages:
       - libsnmp-dev
-    build-environment:
-      - PIP_EXTRA_INDEX_URL: https://ammplipy.ammp.io/
     stage-packages:
       - libsnmp40t64
       - nmap

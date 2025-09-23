@@ -2,7 +2,7 @@ PROJECT_NAME=ammp-edge
 COMPOSE_FILE=tests/docker-compose.yml
 IMAGE_NAME=ammp-edge_image
 
-.PHONY: docker-build docker-run docker-clean python-clean python-dev-setup python-format python-lint test
+.PHONY: docker-build docker-run docker-clean python-clean python-dev-setup python-format python-lint python-build test
 
 docker-build:
 	docker-compose -f ${COMPOSE_FILE} build  # --progress=plain
@@ -15,25 +15,34 @@ docker-clean:
 	docker rmi -f ${IMAGE_NAME}
 
 python-dev-setup:
-	python -m venv venv
-	. venv/bin/activate && pip install -r requirements-dev.txt
-	cd src && . ../venv/bin/activate && pip install -e .
-	@echo "Please run '. venv/bin/activate' to enter the virtual environment"
+	uv sync --dev
+	@echo "Development environment set up. Use 'uv run' to execute commands."
 
 python-format:
-	isort src
-	black src
+	uv run ruff format src
+
+python-lint:
+	uv run ruff check src
+
+python-lint-fix:
+	uv run ruff check --fix src
+
+python-typecheck:
+	uv run ty src
 
 python-static-test:
-	isort --check src
-	black --check src
-	flake8 src
+	uv run ruff check src
+	uv run ruff format --check src
+	uv run ty src
+
+python-build:
+	uv build
 
 test:
 	$(MAKE) -C rust test
 
 python-clean:
-	rm -rf venv/
+	uv cache clean
 	find . -name '*.pyc' -delete
 	find . -name '__pycache__' -type d | xargs rm -fr
 	find . -type d -name "*.egg-info" -exec rm -rf {} +
