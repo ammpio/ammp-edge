@@ -109,21 +109,9 @@ apps:
 parts:
   ammp-edge:
     plugin: python
-    source: src
-    build-packages:
-      - libsnmp-dev
-    build-environment:
-      - PIP_EXTRA_INDEX_URL: https://ammplipy.ammp.io/
+    source: .
     stage-packages:
-      - libsnmp40t64
       - nmap
-    override-prime: |
-      craftctl default
-      "${CRAFT_PRIME}"/bin/python3 \
-        -m compileall \
-        -q \
-        --workers 0 \
-        "${CRAFT_PRIME}"
   configs:
     plugin: dump
     source: config

@@ -1,0 +1,91 @@
+{
+  "common": {
+    "words": 1,
+    "fncode": 3,
+    "typecast": "float"
+  },
+  "fields": {
+    "batt_I": {
+      "unit": "A",
+      "datatype": "int16",
+      "register": 45057,
+      "multiplier": 0.1,
+      "description": "Battery current"
+    },
+    "batt_V": {
+      "unit": "V",
+      "datatype": "uint16",
+      "register": 45056,
+      "multiplier": 0.1,
+      "description": "Battery voltage"
+    },
+    "batt_soc": {
+      "unit": "%",
+      "datatype": "uint16",
+      "register": 45059,
+      "multiplier": 0.01,
+      "description": "State of charge"
+    },
+    "bms_state": {
+      "datatype": "uint16",
+      "register": 45061,
+      "description": "BMS state"
+    },
+    "max_cell_V": {
+      "unit": "V",
+      "datatype": "uint16",
+      "register": 45062,
+      "multiplier": 0.001,
+      "description": "Maximum cell voltage"
+    },
+    "min_cell_V": {
+      "unit": "V",
+      "datatype": "uint16",
+      "register": 45065,
+      "multiplier": 0.001,
+      "description": "Minimum cell voltage"
+    },
+    "batt_P_total": {
+      "datatype": "int16",
+      "register": 45058,
+      "multiplier": 100,
+      "description": "System power charging(-)/discharging(+)"
+    },
+    "max_cell_temp": {
+      "unit": "°C",
+      "datatype": "int16",
+      "register": 45068,
+      "multiplier": 0.01,
+      "description": "Maximum cell temperature"
+    },
+    "min_cell_temp": {
+      "unit": "°C",
+      "datatype": "int16",
+      "register": 45071,
+      "multiplier": 0.01,
+      "description": "Minimum cell temperature"
+    },
+    "batt_E_charged": {
+      "unit": "Wh",
+      "words": 2,
+      "datatype": "uint32",
+      "register": 45082,
+      "multiplier": 10,
+      "description": "Total energy charged"
+    },
+    "batt_alarm_state": {
+      "words": 2,
+      "datatype": "uint32",
+      "register": 45074,
+      "description": "Battery alarm state"
+    },
+    "batt_E_discharged": {
+      "unit": "Wh",
+      "words": 2,
+      "datatype": "uint32",
+      "register": 45084,
+      "multiplier": 10,
+      "description": "Total energy discharged"
+    }
+  }
+}

@@ -93,19 +93,39 @@ If you would prefer to run the Python portion of the code directly, rather than 
 make python-dev-setup
 ```
 
+This will use `uv` to set up the development environment with all dependencies.
+
 ### Running Python code
 
-See the `setup.py` file for the available entrypoints.
+See the `pyproject.toml` file for the available entry points. You can run commands directly with:
 
-The code has been most extensively tested on Python 3.10, but should run on most recent versions.
+```bash
+uv run ammp_edge          # Run main edge application
+uv run wifi_ap_control    # Run WiFi access point control
+uv run env_scan_svc       # Run environment scanning service
+```
+
+The code has been most extensively tested on Python 3.12, but should run on most recent versions.
 
 ### Code Quality Tools
 
 The following tools are configured for code quality:
 
-**Black** and **isort** for code formatting:
+**Ruff** for code formatting and linting:
 ```bash
-make python-format
+make python-format        # Format code
+make python-lint          # Run linting
+make python-lint-fix      # Auto-fix linting issues
+```
+
+**Ty** for type checking:
+```bash
+make python-typecheck     # Run type checking
+```
+
+**Combined static analysis**:
+```bash
+make python-static-test   # Run all static analysis (ruff + ty)
 ```
 
 ### Running Rust code
@@ -120,7 +140,7 @@ This will output the available subcommands (which can be viewed as entry points)
 
 The Web UI service provides an interface to setup the dataloggers.
 
-This service is a `Flask` application that uses Jinja2 as template engine and Python 3.10.
+This service is a `Flask` application that uses Jinja2 as template engine and Python 3.12.
 
 *Create a new page within `web-ui` service*
 

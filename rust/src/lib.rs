@@ -1,5 +1,3 @@
-#![feature(let_chains)]
-
 pub mod argsets;
 pub mod command;
 pub mod constants;

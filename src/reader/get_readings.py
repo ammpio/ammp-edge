@@ -230,7 +230,6 @@ def read_device(dev, readings, readout_q, dev_lock=None):
     # modbustcp - ModbusTCP
     # modbusrtu or serial - RS-485 / ModbusRTU
     # rawserial - Raw serial request
-    # snmp - SNMP
 
     if dev["reading_type"] == "modbustcp":
         reader_config = deepcopy(dev["address"])
@@ -251,11 +250,6 @@ def read_device(dev, readings, readout_q, dev_lock=None):
         reader_config = deepcopy(dev["address"])
         reader_config["timeout"] = dev.get("timeout", DEVICE_DEFAULT_TIMEOUT)
         from reader.rawtcp_reader import Reader
-
-    elif dev["reading_type"] == "snmp":
-        reader_config = deepcopy(dev["address"])
-        reader_config["timeout"] = dev.get("timeout", DEVICE_DEFAULT_TIMEOUT)
-        from reader.snmp_reader import Reader
 
     elif dev["reading_type"] == "mqtt":
         reader_config = deepcopy(dev["address"])
