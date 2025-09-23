@@ -94,6 +94,6 @@ Available via `pyproject.toml`:
 - **Local Web UI**: Accessible on port 8000 when running
 - **Mock services**: `mock-sma-stp` container provides ModbusTCP testing interface
 - **Driver development**: Test drivers as add-ons before incorporating into repository
-- **Python version**: Targets Python 3.12 with Linux-specific dependencies (easysnmp)
+- **Python version**: Targets Python 3.12
 - **Package management**: Uses uv for fast dependency resolution and virtual environment management
 - **Code quality**: Uses ruff for formatting/linting and ty for type checking

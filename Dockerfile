@@ -12,7 +12,7 @@ COPY --from=rust-builder /code/target/release/ae /usr/local/bin/
 WORKDIR /srv/ammp-edge
 
 RUN apt update && \
-    apt install -y libsnmp-dev nmap && \
+    apt install -y nmap && \
     rm -rf /var/lib/apt/lists/*
 
 COPY drivers drivers

@@ -110,10 +110,7 @@ parts:
   ammp-edge:
     plugin: python
     source: .
-    build-packages:
-      - libsnmp-dev
     stage-packages:
-      - libsnmp40t64
       - nmap
     override-prime: |
       craftctl default
