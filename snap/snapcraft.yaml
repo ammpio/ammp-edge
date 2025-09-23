@@ -112,13 +112,6 @@ parts:
     source: .
     stage-packages:
       - nmap
-    override-prime: |
-      craftctl default
-      "${CRAFT_PRIME}"/bin/python3 \
-        -m compileall \
-        -q \
-        --workers 0 \
-        "${CRAFT_PRIME}"
   configs:
     plugin: dump
     source: config
