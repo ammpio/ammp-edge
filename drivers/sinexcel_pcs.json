@@ -1,0 +1,179 @@
+{
+  "common": {
+    "words": 1,
+    "fncode": 3,
+    "datatype": "uint16",
+    "typecast": "float"
+  },
+  "fields": {
+    "pf": {
+      "offset": -1,
+      "register": 53238,
+      "multiplier": 0.01,
+      "description": "Power factor"
+    },
+    "I_L1": {
+      "unit": "A",
+      "offset": -1500,
+      "register": 53203,
+      "multiplier": 0.1,
+      "description": "Phase 1 current"
+    },
+    "I_L2": {
+      "unit": "A",
+      "offset": -1500,
+      "register": 53204,
+      "multiplier": 0.1,
+      "description": "Phase 2 current"
+    },
+    "I_L3": {
+      "unit": "A",
+      "offset": -1500,
+      "register": 53205,
+      "multiplier": 0.1,
+      "description": "Phase 3 current"
+    },
+    "P_L1": {
+      "unit": "W",
+      "offset": -400,
+      "register": 53209,
+      "multiplier": 10,
+      "description": "Phase 1 current"
+    },
+    "P_L2": {
+      "unit": "W",
+      "offset": -400,
+      "register": 53210,
+      "multiplier": 10,
+      "description": "Phase 2 current"
+    },
+    "P_L3": {
+      "unit": "W",
+      "offset": -400,
+      "register": 53211,
+      "multiplier": 10,
+      "description": "Phase 3 current"
+    },
+    "Q_L1": {
+      "unit": "VAr",
+      "offset": -400,
+      "register": 53212,
+      "multiplier": 10,
+      "description": "Phase 1 current"
+    },
+    "Q_L2": {
+      "unit": "VAr",
+      "offset": -400,
+      "register": 53213,
+      "multiplier": 10,
+      "description": "Phase 2 current"
+    },
+    "Q_L3": {
+      "unit": "VAr",
+      "offset": -400,
+      "register": 53214,
+      "multiplier": 10,
+      "description": "Phase 3 current"
+    },
+    "S_L1": {
+      "unit": "VA",
+      "offset": -400,
+      "register": 53215,
+      "multiplier": 10,
+      "description": "Phase 1 current"
+    },
+    "S_L2": {
+      "unit": "VA",
+      "offset": -400,
+      "register": 53216,
+      "multiplier": 10,
+      "description": "Phase 2 current"
+    },
+    "S_L3": {
+      "unit": "VA",
+      "offset": -400,
+      "register": 53217,
+      "multiplier": 10,
+      "description": "Phase 3 current"
+    },
+    "dc_I": {
+      "unit": "A",
+      "offset": -2000,
+      "register": 53252,
+      "multiplier": 0.1,
+      "description": "DC current"
+    },
+    "dc_P": {
+      "unit": "W",
+      "offset": -1500,
+      "register": 53250,
+      "multiplier": 10,
+      "description": "DC Power"
+    },
+    "dc_V": {
+      "unit": "V",
+      "register": 53251,
+      "multiplier": 0.1,
+      "description": "DC Voltage"
+    },
+    "freq": {
+      "unit": "Hz",
+      "register": 53206,
+      "multiplier": 0.01,
+      "description": "Frequency"
+    },
+    "pf_L1": {
+      "offset": -1,
+      "register": 53218,
+      "multiplier": 0.01,
+      "description": "Power factor L1"
+    },
+    "pf_L2": {
+      "offset": -1,
+      "register": 53219,
+      "multiplier": 0.01,
+      "description": "Power factor L2"
+    },
+    "pf_L3": {
+      "offset": -1,
+      "register": 53220,
+      "multiplier": 0.01,
+      "description": "Power factor L3"
+    },
+    "P_total": {
+      "unit": "W",
+      "offset": -1200,
+      "register": 53235,
+      "multiplier": 10,
+      "description": "Total active power"
+    },
+    "Q_total": {
+      "unit": "VAr",
+      "offset": -1200,
+      "register": 53236,
+      "multiplier": 10,
+      "description": "Total reactive power"
+    },
+    "S_total": {
+      "unit": "VA",
+      "offset": -1200,
+      "register": 53237,
+      "multiplier": 10,
+      "description": "Total apparent power"
+    },
+    "temp_module": {
+      "unit": "°C",
+      "offset": -20,
+      "register": 53221,
+      "multiplier": 0.1,
+      "description": "Inverter module temperature"
+    },
+    "temp_ambient": {
+      "unit": "°C",
+      "offset": -20,
+      "register": 53223,
+      "multiplier": 0.1,
+      "description": "Ambient temperature"
+    }
+  }
+}
