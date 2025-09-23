@@ -2,7 +2,7 @@
 name = "ae"
 version = "0.2.3"
 authors = ["AMMP Technologies B.V. <dev@ammp.io>"]
-edition = "2021"
+edition = "2024"
 description = "Edge application for AMMP"
 repository = "https://github.com/ammpio/ammp-edge"
 
