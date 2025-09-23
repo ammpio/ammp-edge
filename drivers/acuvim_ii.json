@@ -1,0 +1,35 @@
+{
+    "common": {
+        "fncode": 3,
+        "words": 2,
+        "typecast": "float"
+    },
+    "fields": {
+        "E_imported": {"datatype": "int32", "description": "Total imported energy", "multiplier": 0.1, "register": 16456, "unit": "kWh"},
+        "E_exported": {"datatype": "int32", "description": "Total exported energy", "multiplier": 0.1, "register": 16458, "unit": "kWh"},
+        "freq": {"datatype": "float", "description": "Frequency", "register": 16384, "unit": "Hz"},
+        "I_L1": {"datatype": "float", "description": "Phase 1 current", "register": 16402, "unit": "A"},
+        "I_L2": {"datatype": "float", "description": "Phase 2 current", "register": 16404, "unit": "A"},
+        "I_L3": {"datatype": "float", "description": "Phase 3 current", "register": 16406, "unit": "A"},
+        "I_average": {"datatype": "float", "description": "Average current", "register": 16408, "unit": "A"},
+        "P_L1": {"datatype": "float", "description": "Phase 1 active power", "register": 16412, "unit": "W"},
+        "P_L2": {"datatype": "float", "description": "Phase 2 active power", "register": 16414, "unit": "W"},
+        "P_L3": {"datatype": "float", "description": "Phase 3 active power", "register": 16416, "unit": "W"},
+        "P_total": {"datatype": "float", "description": "Total active power", "register": 16418, "unit": "W"},
+        "pf_L1": {"datatype": "float", "description": "Phase 1 power factor", "register": 16436},
+        "pf_L2": {"datatype": "float", "description": "Phase 2 power factor", "register": 16438},
+        "pf_L3": {"datatype": "float", "description": "Phase 3 power factor", "register": 16440},
+        "Q_L1": {"datatype": "float", "description": "Phase 1 reactive power", "register": 16420, "unit": "VAr"},
+        "Q_L2": {"datatype": "float", "description": "Phase 2 reactive power", "register": 16422, "unit": "VAr"},
+        "Q_L3": {"datatype": "float", "description": "Phase 3 reactive power", "register": 16424, "unit": "VAr"},
+        "Q_total": {"datatype": "float", "description": "Total reactive power", "register": 16426, "unit": "VAr"},
+        "S_L1": {"datatype": "float", "description": "Phase 1 apparent power", "register": 16428, "unit": "VA"},
+        "S_L2": {"datatype": "float", "description": "Phase 2 apparent power", "register": 16430, "unit": "VA"},
+        "S_L3": {"datatype": "float", "description": "Phase 3 apparent power", "register": 16432, "unit": "VA"},
+        "S_total": {"datatype": "float", "description": "Total apparent power", "register": 16434, "unit": "VA"},
+        "V_L1": {"datatype": "float", "description": "Phase 1 line to neutral volts", "register": 16386, "unit": "V"},
+        "V_L2": {"datatype": "float", "description": "Phase 2 line to neutral volts", "register": 16388, "unit": "V"},
+        "V_L3": {"datatype": "float", "description": "Phase 3 line to neutral volts", "register": 16390, "unit": "V"},
+        "V_average": {"datatype": "float", "description": "Average line to neutral volts", "register": 16392, "unit": "V"}
+    }
+}
