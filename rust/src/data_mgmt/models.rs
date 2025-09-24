@@ -81,6 +81,13 @@ pub struct DeviceReading {
     pub record: Record,
 }
 
+#[derive(Clone, Debug)]
+pub struct Reading {
+    pub field: String,
+    pub value: RtValue,
+    pub unit: Option<String>,
+}
+
 // #[derive(Debug)]
 // pub struct DeviceReadings {
 //     pub device: Device,
