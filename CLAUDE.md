@@ -97,3 +97,10 @@ Available via `pyproject.toml`:
 - **Python version**: Targets Python 3.12
 - **Package management**: Uses uv for fast dependency resolution and virtual environment management
 - **Code quality**: Uses ruff for formatting/linting and ty for type checking
+
+## Rust Import Policy
+- **Derived models**: Do not import types directly from the `derived_models` crate. Use domain-specific re-exports:
+  - `node_mgmt::config` for config types (Device, ReadingType, etc.)
+  - `node_mgmt::drivers` for driver schema types
+  - `data_mgmt::payload` for data payload types (Metadata, DeviceData, etc.)
+- This maintains proper domain boundaries and makes refactoring easier

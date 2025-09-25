@@ -3,7 +3,12 @@ use thiserror::Error;
 
 use crate::constants::keys;
 
-pub use derived_models::config::{AmmpEdgeConfiguration as Config, Device, ReadingType};
+pub use derived_models::config::{
+    AmmpEdgeConfiguration as Config,
+    Device,
+    DeviceAddress,
+    ReadingType
+};
 
 #[derive(Error, Debug)]
 pub enum ConfigError {

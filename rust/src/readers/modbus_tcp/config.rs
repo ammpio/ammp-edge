@@ -6,9 +6,9 @@
 use anyhow::{Result, anyhow};
 use std::time::Duration;
 
-// Import the generated types
-use derived_models::config::{AmmpEdgeConfiguration as Config, Device, ReadingType};
-use derived_models::driver::{DriverSchema, DriverSchemaFieldsValue};
+// Import the generated types through domain module re-exports
+use crate::node_mgmt::config::{Config, Device, ReadingType};
+use crate::node_mgmt::drivers::{DriverSchema, DriverSchemaFieldsValue};
 
 /// Configuration for a ModbusTCP device connection
 #[derive(Clone, Debug)]
