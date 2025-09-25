@@ -1,4 +1,3 @@
-use std::str::FromStr;
 use std::thread;
 use std::time::Duration;
 
@@ -9,11 +8,11 @@ use crate::constants::defaults::DB_WRITE_TIMEOUT;
 use crate::constants::topics;
 use crate::helpers;
 use crate::interfaces::{kvpath, mqtt, mqtt::MqttMessage};
-use crate::node_mgmt::config::ConfigError;
-use crate::node_mgmt::{self, Config};
+use crate::node_mgmt::config::{ConfigError, config_from_str};
+use crate::node_mgmt::{self};
 
 fn try_set_config(config_payload: &str) {
-    match Config::from_str(config_payload) {
+    match config_from_str(config_payload) {
         Ok(config) => {
             // A databse connection or write error is transient and would lead to a retry
             let set_config = || {
