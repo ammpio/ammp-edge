@@ -28,6 +28,7 @@ dependencies = [
  "byteorder",
  "chrono",
  "chrono-tz",
+ "derived_models",
  "dotenv",
  "env_logger",
  "flume",
@@ -271,7 +272,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "145052bdd345b87320e369255277e3fb5152762ad123a901ef5c262dd38fe8d2"
 dependencies = [
  "iana-time-zone",
+ "js-sys",
  "num-traits",
+ "serde",
+ "wasm-bindgen",
  "windows-link",
 ]
 
@@ -367,6 +371,19 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "derived_models"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "prettyplease",
+ "schemars",
+ "serde",
+ "serde_json",
+ "syn",
+ "typify",
 ]
 
 [[package]]
@@ -1448,6 +1465,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "prettyplease"
+version = "0.2.37"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "479ca8adacdd7ce8f1fb39ce9ecccbfe93a3f1344b3d0d97f20bc0196208f62b"
+dependencies = [
+ "proc-macro2",
+ "syn",
+]
+
+[[package]]
 name = "proc-macro2"
 version = "1.0.101"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1674,6 +1701,7 @@ version = "0.8.22"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3fbf2ae1b8bc8e02df939598064d22402220cd5bbcca1c76f7d6a310974d5615"
 dependencies = [
+ "chrono",
  "dyn-clone",
  "schemars_derive",
  "serde",
@@ -2110,9 +2138,9 @@ dependencies = [
 
 [[package]]
 name = "typify"
-version = "0.3.0"
+version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e03ba3643450cfd95a1aca2e1938fef63c1c1994489337998aff4ad771f21ef8"
+checksum = "7144144e97e987c94758a3017c920a027feac0799df325d6df4fc8f08d02068e"
 dependencies = [
  "typify-impl",
  "typify-macro",
@@ -2120,9 +2148,9 @@ dependencies = [
 
 [[package]]
 name = "typify-impl"
-version = "0.3.0"
+version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bce48219a2f3154aaa2c56cbf027728b24a3c8fe0a47ed6399781de2b3f3eeaf"
+checksum = "062879d46aa4c9dfe0d33b035bbaf512da192131645d05deacb7033ec8581a09"
 dependencies = [
  "heck",
  "log",
@@ -2140,9 +2168,9 @@ dependencies = [
 
 [[package]]
 name = "typify-macro"
-version = "0.3.0"
+version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "68b5780d745920ed73c5b7447496a9b5c42ed2681a9b70859377aec423ecf02b"
+checksum = "9708a3ceb6660ba3f8d2b8f0567e7d4b8b198e2b94d093b8a6077a751425de9e"
 dependencies = [
  "proc-macro2",
  "quote",
