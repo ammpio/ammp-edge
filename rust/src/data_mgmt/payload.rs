@@ -1,20 +1,13 @@
 use itertools::Itertools;
 use thiserror::Error;
-use typify::import_types;
 
 use super::models::DeviceReading;
 
-import_types!(
-    schema = "json-schema/data.schema.json",
-    derives = [PartialEq]
-);
+pub use derived_models::data::{DataPayload, DeviceData, DeviceDataExtraValue, Metadata};
 
-pub const BLANK_METADATA: Metadata = Metadata {
-    config_id: None,
-    reading_duration: None,
-    snap_rev: None,
-    data_provider: None,
-};
+pub fn blank_metadata() -> Metadata {
+    Metadata::default()
+}
 
 #[derive(Error, Debug)]
 pub enum DataPayloadError {
