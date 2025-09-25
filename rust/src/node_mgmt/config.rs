@@ -4,10 +4,7 @@ use thiserror::Error;
 use crate::constants::keys;
 
 pub use derived_models::config::{
-    AmmpEdgeConfiguration as Config,
-    Device,
-    DeviceAddress,
-    ReadingType
+    AmmpEdgeConfiguration as Config, Device, DeviceAddress, ReadingSchema, ReadingType,
 };
 
 #[derive(Error, Debug)]

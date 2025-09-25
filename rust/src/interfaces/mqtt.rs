@@ -115,6 +115,52 @@ pub fn publish_msgs(
     Ok(())
 }
 
+pub async fn publish_msgs_async(
+    messages: &[MqttMessage],
+    client_prefix: Option<&str>,
+    retain: bool,
+) -> Result<(), MqttError> {
+    let (client, mut connection) = client_conn(&rand_client_id(client_prefix), true);
+
+    for msg_batch in messages.chunks(MQTT_QUEUE_CAPACITY) {
+        let mut expected_msg_acks = msg_batch.len();
+        log::debug!("Publishing batch of {} messages", msg_batch.len());
+
+        for msg in msg_batch.iter() {
+            log::debug!("Publishing to {}: {}", msg.topic, msg.payload);
+
+            client.publish(
+                msg.topic.clone(),
+                QoS::AtLeastOnce,
+                retain,
+                msg.payload.as_bytes(),
+            )?;
+        }
+
+        while expected_msg_acks > 0 {
+            let notification = connection.eventloop.poll().await;
+            log::debug!("Notification = {:?}", notification);
+            match notification {
+                Ok(Event::Incoming(Packet::PubAck(_))) => expected_msg_acks -= 1,
+                Err(e) => return Err(e.into()),
+                _ => (),
+            }
+        }
+    }
+    client.disconnect()?;
+
+    // Drop the connection in a spawn_blocking to avoid runtime-in-runtime issues
+    tokio::task::spawn_blocking(move || {
+        drop(connection);
+    })
+    .await
+    .map_err(|e| {
+        MqttError::MqttConnection(rumqttc::ConnectionError::Io(std::io::Error::other(e)))
+    })?;
+
+    Ok(())
+}
+
 pub fn publish_log_msg(log_msg: &str) -> Result<(), MqttError> {
     publish_msgs(
         &[MqttMessage {

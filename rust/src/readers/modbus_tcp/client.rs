@@ -1,5 +1,5 @@
 use anyhow::{Result, anyhow};
-use std::net::SocketAddr;
+use std::net::ToSocketAddrs;
 use tokio::time::Duration;
 use tokio_modbus::prelude::*;
 
@@ -22,7 +22,10 @@ impl ModbusTcpReader {
         unit_id: u8,
         _timeout: Option<Duration>,
     ) -> Result<Self> {
-        let socket_addr: SocketAddr = format!("{}:{}", host, port).parse()?;
+        let socket_addr = (host, port)
+            .to_socket_addrs()?
+            .next()
+            .ok_or_else(|| anyhow!("Failed to resolve hostname: {}", host))?;
 
         log::debug!(
             "Connecting to ModbusTCP device at {}/{}",

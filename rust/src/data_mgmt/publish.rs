@@ -28,6 +28,20 @@ pub fn publish_readings(
     Ok(())
 }
 
+pub async fn publish_readings_async(
+    readings: Vec<DeviceReading>,
+    metadata: Option<Metadata>,
+) -> anyhow::Result<(), PublishError> {
+    let messages = construct_payloads(readings, metadata);
+    log::trace!("Publishing messages: {:?}", &messages);
+
+    mqtt::publish_msgs_async(&messages, Some("local-pub-data"), false)
+        .await
+        .map_err(Box::new)?;
+
+    Ok(())
+}
+
 fn construct_payloads(
     readings: Vec<DeviceReading>,
     metadata: Option<Metadata>,

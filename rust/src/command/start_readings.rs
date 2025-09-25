@@ -2,9 +2,15 @@ use anyhow::Result;
 use kvstore::KVDb;
 use tokio::time::{Duration, interval};
 
-use crate::{interfaces::kvpath, node_mgmt};
+use crate::{
+    data_mgmt::{payload::Metadata, publish::publish_readings_async, readings::get_readings},
+    interfaces::kvpath,
+    node_mgmt,
+};
 
 /// Start the continuous reading cycle for ModbusTCP devices
+///
+/// Other device types like SMA HyCon CSV have their own dedicated commands.
 pub async fn start_readings() -> Result<()> {
     log::info!("Starting ModbusTCP reading cycle...");
 
@@ -48,30 +54,37 @@ pub async fn start_readings() -> Result<()> {
 }
 
 /// Execute one iteration of the reading cycle
-async fn execute_reading_cycle(_config: &node_mgmt::config::Config) -> Result<usize> {
-    // TODO: Phase 2 - Implement device filtering and reading
-    // TODO: Phase 3 - Implement ModbusTCP reading
-    // TODO: Phase 4 - Implement data processing
-    // TODO: Phase 5 - Implement MQTT publishing
+async fn execute_reading_cycle(config: &node_mgmt::config::Config) -> Result<usize> {
+    let start_time = tokio::time::Instant::now();
 
-    log::debug!("Reading cycle iteration (placeholder)");
+    // Delegate to the reading orchestrator
+    let all_readings = get_readings(config).await?;
+    let reading_count = all_readings.len();
 
-    // For now, just return 0 readings as a placeholder
-    Ok(0)
+    // Publish readings if we have any
+    if !all_readings.is_empty() {
+        let duration = start_time.elapsed();
+        let metadata = Metadata {
+            data_provider: Some("modbus-tcp-reader".into()),
+            reading_duration: Some(duration.as_secs_f64()),
+            ..Default::default()
+        };
+
+        publish_readings_async(all_readings, Some(metadata)).await?;
+        log::debug!("Published {} readings in {:?}", reading_count, duration);
+    }
+
+    Ok(reading_count)
 }
 
 /// Extract read_interval from config, with default fallback
-fn extract_read_interval(_config: &node_mgmt::config::Config) -> u32 {
-    // TODO: Phase 4 - Extract from config schema
-    // For now, use a sensible default
-    60 // Default: 60 seconds
+fn extract_read_interval(config: &node_mgmt::config::Config) -> u32 {
+    config.read_interval as u32
 }
 
 /// Extract read_roundtime from config, with default fallback
-fn extract_read_roundtime(_config: &node_mgmt::config::Config) -> bool {
-    // TODO: Phase 4 - Extract from config schema
-    // For now, use a sensible default
-    false // Default: no round time alignment
+fn extract_read_roundtime(config: &node_mgmt::config::Config) -> bool {
+    config.read_roundtime
 }
 
 /// Create an interval timer aligned to round timestamps
@@ -102,14 +115,31 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_extract_defaults() {
-        // Create a minimal config for testing using serde_json::Value
+    fn test_extract_config_values() {
+        // Create a test config with specific values
         let config_json = serde_json::json!({
             "devices": {},
-            "readings": {}
+            "readings": {},
+            "read_interval": 120,
+            "read_roundtime": true
         });
 
-        // Parse it into a Config - this will be updated when we have proper schema
+        let config: node_mgmt::config::Config = serde_json::from_value(config_json).unwrap();
+
+        assert_eq!(extract_read_interval(&config), 120);
+        assert_eq!(extract_read_roundtime(&config), true);
+    }
+
+    #[test]
+    fn test_extract_config_defaults() {
+        // Create a minimal config for testing defaults
+        let config_json = serde_json::json!({
+            "devices": {},
+            "readings": {},
+            "read_interval": 60,
+            "read_roundtime": false
+        });
+
         let config: node_mgmt::config::Config = serde_json::from_value(config_json).unwrap();
 
         assert_eq!(extract_read_interval(&config), 60);

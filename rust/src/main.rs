@@ -41,7 +41,7 @@ fn main() -> Result<()> {
         Some(CMD_START_READINGS) => {
             let rt = tokio::runtime::Runtime::new()?;
             rt.block_on(command::start_readings())
-        },
+        }
         Some(CMD_WAIT_FOR_TIME_SOURCE) => command::wait_for_time_source(),
         _ => Err(anyhow!(
             r#"
