@@ -1,10 +1,10 @@
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use std::net::SocketAddr;
 use tokio::time::Duration;
 use tokio_modbus::prelude::*;
 
-use crate::data_mgmt::models::{Reading, RtValue};
 use super::config::ReadingConfig;
+use crate::data_mgmt::models::{Reading, RtValue};
 
 /// ModbusTCP client for reading device registers
 pub struct ModbusTcpReader {
@@ -24,10 +24,22 @@ impl ModbusTcpReader {
     ) -> Result<Self> {
         let socket_addr: SocketAddr = format!("{}:{}", host, port).parse()?;
 
-        log::debug!("Connecting to ModbusTCP device at {}/{}", socket_addr, unit_id);
+        log::debug!(
+            "Connecting to ModbusTCP device at {}/{}",
+            socket_addr,
+            unit_id
+        );
 
-        let ctx = tcp::connect_slave(socket_addr, Slave(unit_id)).await
-            .map_err(|e| anyhow::anyhow!("Failed to connect to ModbusTCP device {}/{}: {}", socket_addr, unit_id, e))?;
+        let ctx = tcp::connect_slave(socket_addr, Slave(unit_id))
+            .await
+            .map_err(|e| {
+                anyhow::anyhow!(
+                    "Failed to connect to ModbusTCP device {}/{}: {}",
+                    socket_addr,
+                    unit_id,
+                    e
+                )
+            })?;
 
         log::info!("Connected to ModbusTCP device {}/{}", socket_addr, unit_id);
 
@@ -45,19 +57,39 @@ impl ModbusTcpReader {
         count: u16,
         function_code: u8,
     ) -> Result<Vec<u16>> {
-        log::debug!("Reading {} registers from address {} with function code {}", count, register, function_code);
+        log::debug!(
+            "Reading {} registers from address {} with function code {}",
+            count,
+            register,
+            function_code
+        );
 
         let result = match function_code {
             3 => self.context.read_holding_registers(register, count).await,
             4 => self.context.read_input_registers(register, count).await,
-            _ => return Err(anyhow!("Unsupported ModbusTCP function code: {}", function_code)),
+            _ => {
+                return Err(anyhow!(
+                    "Unsupported ModbusTCP function code: {}",
+                    function_code
+                ));
+            }
         };
 
         let registers = result
-            .map_err(|e| anyhow!("ModbusTCP connection error for register {}: {}", register, e))?
+            .map_err(|e| {
+                anyhow!(
+                    "ModbusTCP connection error for register {}: {}",
+                    register,
+                    e
+                )
+            })?
             .map_err(|e| anyhow!("ModbusTCP protocol error for register {}: {}", register, e))?;
 
-        log::debug!("Successfully read {} registers: {:?}", registers.len(), registers);
+        log::debug!(
+            "Successfully read {} registers: {:?}",
+            registers.len(),
+            registers
+        );
         Ok(registers)
     }
 
@@ -84,10 +116,8 @@ impl ModbusTcpReader {
                 }
             }
 
-            // Optional: Add delay between readings if specified
-            if let Some(delay_ms) = config.read_delay_ms {
-                tokio::time::sleep(Duration::from_millis(delay_ms as u64)).await;
-            }
+            // Note: read_delay_ms was removed from the new ReadingConfig
+            // If needed, this can be added back as a global or device-level setting
         }
 
         Ok(readings)
@@ -96,21 +126,13 @@ impl ModbusTcpReader {
     /// Read and process a single value according to its configuration
     async fn read_single_value(&mut self, config: &ReadingConfig) -> Result<f64> {
         // Read raw register values
-        let raw_registers = self.read_registers(
-            config.register,
-            config.word_count,
-            config.function_code.unwrap_or(3),
-        ).await?;
+        let raw_registers = self
+            .read_registers(config.register, config.word_count, config.function_code)
+            .await?;
 
-        // Convert registers to bytes for processing
-        let bytes = registers_to_bytes(&raw_registers, config.byte_order.as_deref())?;
-
-        // Parse according to data type
-        let raw_value = parse_register_value(&bytes, &config.datatype)?;
-
-        // Apply scaling: output = multiplier * input + offset
-        let scaled_value = raw_value * config.multiplier.unwrap_or(1.0)
-                         + config.offset.unwrap_or(0.0);
+        // Use the new parsing method from ReadingConfig
+        let bytes = registers_to_bytes(&raw_registers, None)?; // byte_order removed for now
+        let scaled_value = config.parse_raw_bytes(&bytes)?;
 
         Ok(scaled_value)
     }
@@ -151,6 +173,8 @@ fn registers_to_bytes(registers: &[u16], byte_order: Option<&str>) -> Result<Vec
 }
 
 /// Parse register bytes according to data type specification
+/// NOTE: This function is now replaced by ReadingConfig::parse_raw_bytes()
+#[allow(dead_code)]
 fn parse_register_value(bytes: &[u8], datatype: &str) -> Result<f64> {
     use byteorder::{BigEndian, ReadBytesExt};
     use std::io::Cursor;

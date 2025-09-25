@@ -1,11 +1,8 @@
 use anyhow::Result;
 use kvstore::KVDb;
-use tokio::time::{interval, Duration};
+use tokio::time::{Duration, interval};
 
-use crate::{
-    interfaces::kvpath,
-    node_mgmt,
-};
+use crate::{interfaces::kvpath, node_mgmt};
 
 /// Start the continuous reading cycle for ModbusTCP devices
 pub async fn start_readings() -> Result<()> {
@@ -22,7 +19,8 @@ pub async fn start_readings() -> Result<()> {
 
     log::info!(
         "Reading cycle configured - interval: {}s, roundtime: {}",
-        read_interval, read_roundtime
+        read_interval,
+        read_roundtime
     );
 
     // Create interval timer
@@ -50,7 +48,7 @@ pub async fn start_readings() -> Result<()> {
 }
 
 /// Execute one iteration of the reading cycle
-async fn execute_reading_cycle(_config: &node_mgmt::Config) -> Result<usize> {
+async fn execute_reading_cycle(_config: &node_mgmt::config::Config) -> Result<usize> {
     // TODO: Phase 2 - Implement device filtering and reading
     // TODO: Phase 3 - Implement ModbusTCP reading
     // TODO: Phase 4 - Implement data processing
@@ -63,14 +61,14 @@ async fn execute_reading_cycle(_config: &node_mgmt::Config) -> Result<usize> {
 }
 
 /// Extract read_interval from config, with default fallback
-fn extract_read_interval(_config: &node_mgmt::Config) -> u32 {
+fn extract_read_interval(_config: &node_mgmt::config::Config) -> u32 {
     // TODO: Phase 4 - Extract from config schema
     // For now, use a sensible default
     60 // Default: 60 seconds
 }
 
 /// Extract read_roundtime from config, with default fallback
-fn extract_read_roundtime(_config: &node_mgmt::Config) -> bool {
+fn extract_read_roundtime(_config: &node_mgmt::config::Config) -> bool {
     // TODO: Phase 4 - Extract from config schema
     // For now, use a sensible default
     false // Default: no round time alignment
@@ -89,7 +87,10 @@ async fn create_aligned_interval(interval_secs: u32) -> tokio::time::Interval {
     let next_aligned = now + (interval_secs as u64) - (now % (interval_secs as u64));
     let delay_until_aligned = Duration::from_secs(next_aligned - now);
 
-    log::debug!("Aligning reading cycle to round timestamps, delay: {:?}", delay_until_aligned);
+    log::debug!(
+        "Aligning reading cycle to round timestamps, delay: {:?}",
+        delay_until_aligned
+    );
 
     // Sleep until aligned time, then create regular interval
     tokio::time::sleep(delay_until_aligned).await;
@@ -109,7 +110,7 @@ mod tests {
         });
 
         // Parse it into a Config - this will be updated when we have proper schema
-        let config: node_mgmt::Config = serde_json::from_value(config_json).unwrap();
+        let config: node_mgmt::config::Config = serde_json::from_value(config_json).unwrap();
 
         assert_eq!(extract_read_interval(&config), 60);
         assert_eq!(extract_read_roundtime(&config), false);
