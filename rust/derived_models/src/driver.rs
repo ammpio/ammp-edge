@@ -8,18 +8,12 @@ pub mod error {
     pub struct ConversionError(::std::borrow::Cow<'static, str>);
     impl ::std::error::Error for ConversionError {}
     impl ::std::fmt::Display for ConversionError {
-        fn fmt(
-            &self,
-            f: &mut ::std::fmt::Formatter<'_>,
-        ) -> Result<(), ::std::fmt::Error> {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> Result<(), ::std::fmt::Error> {
             ::std::fmt::Display::fmt(&self.0, f)
         }
     }
     impl ::std::fmt::Debug for ConversionError {
-        fn fmt(
-            &self,
-            f: &mut ::std::fmt::Formatter<'_>,
-        ) -> Result<(), ::std::fmt::Error> {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> Result<(), ::std::fmt::Error> {
             ::std::fmt::Debug::fmt(&self.0, f)
         }
     }
@@ -112,8 +106,7 @@ pub struct CommonParametersForEachField {
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub words: ::std::option::Option<i64>,
 }
-impl ::std::convert::From<&CommonParametersForEachField>
-for CommonParametersForEachField {
+impl ::std::convert::From<&CommonParametersForEachField> for CommonParametersForEachField {
     fn from(value: &CommonParametersForEachField) -> Self {
         value.clone()
     }
@@ -288,10 +281,7 @@ impl ::std::default::Default for CommonParametersForEachField {
 pub struct DriverSchema {
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub common: ::std::option::Option<CommonParametersForEachField>,
-    pub fields: ::std::collections::HashMap<
-        ::std::string::String,
-        DriverSchemaFieldsValue,
-    >,
+    pub fields: ::std::collections::HashMap<::std::string::String, DriverSchemaFieldsValue>,
 }
 impl ::std::convert::From<&DriverSchema> for DriverSchema {
     fn from(value: &DriverSchema) -> Self {
@@ -458,7 +448,7 @@ impl ::std::default::Default for DriverSchemaFieldsValue {
     Hash,
     Ord,
     PartialEq,
-    PartialOrd
+    PartialOrd,
 )]
 pub enum SourceTypeOfDataBeingRead {
     #[serde(rename = "int16")]
@@ -499,9 +489,7 @@ impl ::std::fmt::Display for SourceTypeOfDataBeingRead {
 }
 impl ::std::str::FromStr for SourceTypeOfDataBeingRead {
     type Err = self::error::ConversionError;
-    fn from_str(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+    fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
         match value {
             "int16" => Ok(Self::Int16),
             "uint16" => Ok(Self::Uint16),
@@ -517,9 +505,7 @@ impl ::std::str::FromStr for SourceTypeOfDataBeingRead {
 }
 impl ::std::convert::TryFrom<&str> for SourceTypeOfDataBeingRead {
     type Error = self::error::ConversionError;
-    fn try_from(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+    fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
         value.parse()
     }
 }
@@ -569,7 +555,7 @@ impl ::std::convert::TryFrom<::std::string::String> for SourceTypeOfDataBeingRea
     Hash,
     Ord,
     PartialEq,
-    PartialOrd
+    PartialOrd,
 )]
 pub enum TypecastForFinalProcessedReading {
     #[serde(rename = "int")]
@@ -598,9 +584,7 @@ impl ::std::fmt::Display for TypecastForFinalProcessedReading {
 }
 impl ::std::str::FromStr for TypecastForFinalProcessedReading {
     type Err = self::error::ConversionError;
-    fn from_str(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+    fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
         match value {
             "int" => Ok(Self::Int),
             "float" => Ok(Self::Float),
@@ -612,14 +596,11 @@ impl ::std::str::FromStr for TypecastForFinalProcessedReading {
 }
 impl ::std::convert::TryFrom<&str> for TypecastForFinalProcessedReading {
     type Error = self::error::ConversionError;
-    fn try_from(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+    fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
         value.parse()
     }
 }
-impl ::std::convert::TryFrom<&::std::string::String>
-for TypecastForFinalProcessedReading {
+impl ::std::convert::TryFrom<&::std::string::String> for TypecastForFinalProcessedReading {
     type Error = self::error::ConversionError;
     fn try_from(
         value: &::std::string::String,
@@ -627,8 +608,7 @@ for TypecastForFinalProcessedReading {
         value.parse()
     }
 }
-impl ::std::convert::TryFrom<::std::string::String>
-for TypecastForFinalProcessedReading {
+impl ::std::convert::TryFrom<::std::string::String> for TypecastForFinalProcessedReading {
     type Error = self::error::ConversionError;
     fn try_from(
         value: ::std::string::String,
@@ -646,4 +626,3 @@ pub mod defaults {
         T::try_from(V).unwrap()
     }
 }
-

@@ -8,9 +8,5 @@
 //! These types are generated at build time and should not be edited manually.
 
 pub mod config;
-pub mod driver;
 pub mod data;
-
-// Re-export commonly used types for convenience
-pub use config::AmmpEdgeConfiguration as Config;
-pub use data::{DataPayload, DeviceData, Metadata};
+pub mod driver;

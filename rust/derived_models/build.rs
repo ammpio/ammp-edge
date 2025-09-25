@@ -41,7 +41,8 @@ fn generate_types_from_schema(schema_path: &str, output_path: &str, description:
     settings.with_derive("Clone".to_string());
     settings.with_derive("PartialEq".to_string());
     let mut type_space = TypeSpace::new(&settings);
-    type_space.add_root_schema(schema)
+    type_space
+        .add_root_schema(schema)
         .unwrap_or_else(|e| panic!("Failed to process schema {}: {}", schema_path, e));
 
     // Write generated code
