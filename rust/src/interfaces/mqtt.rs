@@ -4,7 +4,8 @@ use std::str::Utf8Error;
 
 use flume::Sender;
 use once_cell::sync::Lazy;
-use rumqttc::{Client, Connection, Event, MqttOptions, Packet, QoS};
+use rumqttc::{AsyncClient, Client, Connection, Event, EventLoop, MqttOptions, Packet, QoS};
+use std::time::Duration;
 use thiserror::Error;
 
 use crate::constants::topics;
@@ -13,6 +14,7 @@ use crate::helpers;
 
 const MAX_PACKET_SIZE: usize = 16777216; // 16 MB
 const MQTT_QUEUE_CAPACITY: usize = 10;
+const MQTT_KEEP_ALIVE: Duration = Duration::from_secs(60);
 
 static MQTT_BRIDGE_HOST: Lazy<String> = Lazy::new(|| {
     if let Ok(host) = env::var(envvars::MQTT_BRIDGE_HOST) {
@@ -115,50 +117,75 @@ pub fn publish_msgs(
     Ok(())
 }
 
-pub async fn publish_msgs_async(
-    messages: &[MqttMessage],
-    client_prefix: Option<&str>,
-    retain: bool,
-) -> Result<(), MqttError> {
-    let (client, mut connection) = client_conn(&rand_client_id(client_prefix), true);
+/// Persistent MQTT publisher that maintains a connection across multiple publish operations
+pub struct MqttPublisher {
+    client: AsyncClient,
+    eventloop: EventLoop,
+}
 
-    for msg_batch in messages.chunks(MQTT_QUEUE_CAPACITY) {
-        let mut expected_msg_acks = msg_batch.len();
-        log::debug!("Publishing batch of {} messages", msg_batch.len());
+impl MqttPublisher {
+    pub async fn new(client_prefix: Option<&str>) -> Self {
+        let host = MQTT_BRIDGE_HOST.clone();
+        let port = *MQTT_BRIDGE_PORT;
+        let client_id = rand_client_id(client_prefix);
 
-        for msg in msg_batch.iter() {
-            log::debug!("Publishing to {}: {}", msg.topic, msg.payload);
+        log::info!("Establishing async MQTT connection to {host}:{port} as {client_id}");
 
-            client.publish(
-                msg.topic.clone(),
-                QoS::AtLeastOnce,
-                retain,
-                msg.payload.as_bytes(),
-            )?;
-        }
+        let mut mqttoptions = MqttOptions::new(client_id, host, port);
+        mqttoptions.set_clean_session(true);
+        mqttoptions.set_max_packet_size(MAX_PACKET_SIZE, MAX_PACKET_SIZE);
+        mqttoptions.set_keep_alive(MQTT_KEEP_ALIVE);
 
-        while expected_msg_acks > 0 {
-            let notification = connection.eventloop.poll().await;
-            log::debug!("Notification = {:?}", notification);
-            match notification {
-                Ok(Event::Incoming(Packet::PubAck(_))) => expected_msg_acks -= 1,
-                Err(e) => return Err(e.into()),
-                _ => (),
+        let (client, eventloop) = AsyncClient::new(mqttoptions, MQTT_QUEUE_CAPACITY);
+
+        Self { client, eventloop }
+    }
+
+    pub async fn publish_msgs(
+        &mut self,
+        messages: &[MqttMessage],
+        retain: bool,
+    ) -> Result<(), MqttError> {
+        for msg_batch in messages.chunks(MQTT_QUEUE_CAPACITY) {
+            let mut expected_msg_acks = msg_batch.len();
+            log::debug!("Publishing batch of {} messages", msg_batch.len());
+
+            for msg in msg_batch.iter() {
+                log::debug!("Publishing to {}: {}", msg.topic, msg.payload);
+
+                self.client
+                    .publish(
+                        msg.topic.clone(),
+                        QoS::AtLeastOnce,
+                        retain,
+                        msg.payload.as_bytes(),
+                    )
+                    .await?;
+            }
+
+            while expected_msg_acks > 0 {
+                let notification = self.eventloop.poll().await;
+                log::debug!("Notification = {:?}", notification);
+                match notification {
+                    Ok(Event::Incoming(Packet::PubAck(_))) => expected_msg_acks -= 1,
+                    Err(e) => return Err(e.into()),
+                    _ => (),
+                }
             }
         }
+        Ok(())
     }
-    client.disconnect()?;
 
-    // Drop the connection in a spawn_blocking to avoid runtime-in-runtime issues
-    tokio::task::spawn_blocking(move || {
-        drop(connection);
-    })
-    .await
-    .map_err(|e| {
-        MqttError::MqttConnection(rumqttc::ConnectionError::Io(std::io::Error::other(e)))
-    })?;
+    pub async fn disconnect(&self) -> Result<(), MqttError> {
+        self.client.disconnect().await.map_err(Into::into)
+    }
+}
 
-    Ok(())
+impl Drop for MqttPublisher {
+    fn drop(&mut self) {
+        // Best effort disconnect - ignore errors during drop
+        let _ = self.client.try_disconnect();
+    }
 }
 
 pub fn publish_log_msg(log_msg: &str) -> Result<(), MqttError> {

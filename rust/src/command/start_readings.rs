@@ -3,8 +3,11 @@ use kvstore::KVDb;
 use tokio::time::{Duration, interval};
 
 use crate::{
-    data_mgmt::{payload::Metadata, publish::publish_readings_async, readings::get_readings},
+    data_mgmt::{
+        payload::Metadata, publish::publish_readings_with_publisher, readings::get_readings,
+    },
     interfaces::kvpath,
+    interfaces::mqtt::MqttPublisher,
     node_mgmt,
 };
 
@@ -29,6 +32,9 @@ pub async fn start_readings() -> Result<()> {
         read_roundtime
     );
 
+    // Create persistent MQTT publisher
+    let mut mqtt_publisher = MqttPublisher::new(Some("data")).await;
+
     // Create interval timer
     let mut interval_timer = if read_roundtime {
         create_aligned_interval(read_interval).await
@@ -42,7 +48,7 @@ pub async fn start_readings() -> Result<()> {
 
         log::debug!("Starting reading cycle iteration");
 
-        match execute_reading_cycle(&config).await {
+        match execute_reading_cycle(&config, &mut mqtt_publisher).await {
             Ok(reading_count) => {
                 log::info!("Completed reading cycle: {} readings", reading_count);
             }
@@ -54,13 +60,26 @@ pub async fn start_readings() -> Result<()> {
 }
 
 /// Execute one iteration of the reading cycle
-async fn execute_reading_cycle(config: &node_mgmt::config::Config) -> Result<usize> {
-    let start_time = tokio::time::Instant::now();
+async fn execute_reading_cycle(
+    config: &node_mgmt::config::Config,
+    mqtt_publisher: &mut MqttPublisher,
+) -> Result<usize> {
+    // One of these is for a monotonic timer, the other is for a wall clock timestamp
+    let start_time = std::time::Instant::now();
+    let start_timestamp = chrono::Utc::now();
 
     // Delegate to the reading orchestrator
-    let all_readings = get_readings(config).await?;
+    let mut all_readings = get_readings(config).await?;
     let reading_count = all_readings.len();
 
+    // Ensure all readings have timestamps
+    for reading in &mut all_readings {
+        if reading.record.get_timestamp().is_none() {
+            reading.record.set_timestamp(start_timestamp);
+        }
+    }
+
+    log::info!("Publishing {} readings", reading_count);
     // Publish readings if we have any
     if !all_readings.is_empty() {
         let duration = start_time.elapsed();
@@ -70,7 +89,7 @@ async fn execute_reading_cycle(config: &node_mgmt::config::Config) -> Result<usi
             ..Default::default()
         };
 
-        publish_readings_async(all_readings, Some(metadata)).await?;
+        publish_readings_with_publisher(mqtt_publisher, all_readings, Some(metadata)).await?;
         log::debug!("Published {} readings in {:?}", reading_count, duration);
     }
 

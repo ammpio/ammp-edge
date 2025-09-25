@@ -2,7 +2,7 @@ use thiserror::Error;
 
 use crate::{
     constants::topics,
-    interfaces::mqtt::{self, MqttMessage},
+    interfaces::mqtt::{self, MqttMessage, MqttPublisher},
 };
 
 use super::{
@@ -28,14 +28,17 @@ pub fn publish_readings(
     Ok(())
 }
 
-pub async fn publish_readings_async(
+pub async fn publish_readings_with_publisher(
+    publisher: &mut MqttPublisher,
     readings: Vec<DeviceReading>,
     metadata: Option<Metadata>,
 ) -> anyhow::Result<(), PublishError> {
     let messages = construct_payloads(readings, metadata);
-    log::trace!("Publishing messages: {:?}", &messages);
 
-    mqtt::publish_msgs_async(&messages, Some("local-pub-data"), false)
+    log::info!("Publishing {} payloads to MQTT", messages.len());
+
+    publisher
+        .publish_msgs(&messages, false)
         .await
         .map_err(Box::new)?;
 
