@@ -1,7 +1,7 @@
 use std::io::{Cursor, Read};
 
-use zip::result::{ZipError, ZipResult};
 use zip::ZipArchive;
+use zip::result::{ZipError, ZipResult};
 
 use crate::interfaces::ftp;
 use crate::node_mgmt::config::Device;

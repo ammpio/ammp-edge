@@ -7,7 +7,7 @@ use crate::{
 
 use super::{
     models::DeviceReading,
-    payload::{payloads_from_device_readings, Metadata},
+    payload::{Metadata, payloads_from_device_readings},
 };
 
 #[derive(Error, Debug)]

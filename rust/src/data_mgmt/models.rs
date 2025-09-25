@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use chrono::{offset::Utc, DateTime};
+use chrono::{DateTime, offset::Utc};
 use serde::{Deserialize, Serialize};
 
 use crate::node_mgmt::config::Device;

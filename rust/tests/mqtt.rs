@@ -4,7 +4,7 @@ use std::str;
 use std::thread;
 use std::time::Duration;
 
-use assert_cmd::{assert::Assert, Command};
+use assert_cmd::{Command, assert::Assert};
 use kvstore::KVDb;
 use rumqttc::{Client, Event, MqttOptions, Packet, QoS};
 use serde_json::Value;

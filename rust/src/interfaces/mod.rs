@@ -5,4 +5,4 @@ mod legacy_configdb;
 pub mod mqtt;
 pub mod ntp;
 
-pub use legacy_configdb::{legacy_config, LegacyConfig};
+pub use legacy_configdb::{LegacyConfig, legacy_config};

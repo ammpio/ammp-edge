@@ -3,7 +3,7 @@ use ae::command;
 use ae::constants;
 use ae::helpers;
 
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use env_logger::Env;
 
 use constants::{defaults, envvars};

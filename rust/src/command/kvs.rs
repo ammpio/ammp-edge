@@ -1,7 +1,7 @@
 use crate::argsets::{KvsGetArgs, KvsSetArgs};
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use kvstore::KVDb;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 use crate::interfaces::kvpath;
 
