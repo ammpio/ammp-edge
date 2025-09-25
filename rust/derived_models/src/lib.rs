@@ -7,6 +7,8 @@
 //!
 //! These types are generated at build time and should not be edited manually.
 
+#![allow(clippy::derivable_impls, clippy::clone_on_copy)]
+
 pub mod config;
 pub mod data;
 pub mod driver;

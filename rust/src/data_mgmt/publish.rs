@@ -13,7 +13,7 @@ use super::{
 #[derive(Error, Debug)]
 pub enum PublishError {
     #[error("MQTT error: {0}")]
-    MqttError(#[from] mqtt::MqttError),
+    MqttError(#[from] Box<mqtt::MqttError>),
 }
 
 pub fn publish_readings(
@@ -23,7 +23,7 @@ pub fn publish_readings(
     let messages = construct_payloads(readings, metadata);
     log::trace!("Publishing messages: {:?}", &messages);
 
-    mqtt::publish_msgs(&messages, Some("local-pub-data"), false)?;
+    mqtt::publish_msgs(&messages, Some("local-pub-data"), false).map_err(Box::new)?;
 
     Ok(())
 }

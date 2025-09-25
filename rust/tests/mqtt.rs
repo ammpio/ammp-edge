@@ -47,7 +47,7 @@ fn mqtt_publish_meta() {
     let mut msg_count: u8 = 0;
 
     // Start with blank messages on each topic, used to reset previously retained messages
-    for (_, notification) in connection.iter().enumerate() {
+    for notification in connection.iter() {
         println!("Notification = {:?}", notification);
         let event = notification.unwrap();
         if let Event::Incoming(Packet::Publish(msg)) = event {
@@ -61,7 +61,7 @@ fn mqtt_publish_meta() {
 
     msg_count = 0;
     // Then we get the acutal payloads
-    for (_, notification) in connection.iter().enumerate() {
+    for notification in connection.iter() {
         println!("Notification = {:?}", notification);
         let event = notification.unwrap();
         if let Event::Incoming(Packet::Publish(msg)) = event {
@@ -101,7 +101,7 @@ fn mqtt_receive_config() {
             )
             .unwrap();
 
-        for (_, notification) in connection.iter().enumerate() {
+        for notification in connection.iter() {
             println!("Notification = {:?}", notification);
             let event = notification.unwrap();
             if let Event::Incoming(Packet::PubAck(_)) = event {
@@ -145,7 +145,7 @@ fn mqtt_receive_bad_config() {
             )
             .unwrap();
 
-        for (_, notification) in connection.iter().enumerate() {
+        for notification in connection.iter() {
             println!("Notification = {:?}", notification);
             let event = notification.unwrap();
             if let Event::Incoming(Packet::PubAck(_)) = event {

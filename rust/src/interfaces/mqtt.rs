@@ -99,7 +99,7 @@ pub fn publish_msgs(
             )?;
         }
 
-        for (_, notification) in connection.iter().enumerate() {
+        for notification in connection.iter() {
             log::debug!("Notification = {:?}", notification);
             match notification {
                 Ok(Event::Incoming(Packet::PubAck(_))) => expected_msg_acks -= 1,
@@ -141,7 +141,7 @@ pub fn sub_topics(
 
     let mut num_messages: usize = 0;
 
-    for (_, notification) in connection.iter().enumerate() {
+    for notification in connection.iter() {
         log::trace!("Notification = {:?}", notification);
         match notification {
             Ok(Event::Incoming(Packet::Publish(r))) => {
@@ -194,7 +194,7 @@ mod test {
 
     #[test]
     fn test_publist_and_receive_msgs() {
-        assert!(SAMPLE_MQTT_MESSAGES.len() > 0);
+        assert!(!SAMPLE_MQTT_MESSAGES.is_empty());
 
         let (tx, rx) = unbounded();
 
