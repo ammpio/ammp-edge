@@ -1,7 +1,7 @@
 pub mod client;
 pub mod config;
 
-use anyhow::Result;
+use anyhow::{Result, anyhow};
 
 use crate::{
     data_mgmt::models::{DeviceReading, Record},
@@ -18,6 +18,7 @@ pub use config::{ModbusDeviceConfig, ReadingConfig};
 /// This function follows the pattern established by the SMA reader, taking a device
 /// and reading requests, then returning DeviceReading results.
 pub async fn read_device(
+    config: &crate::node_mgmt::config::Config,
     device_id: &str,
     device: &Device,
     reading_requests: &[ReadingRequest],
@@ -31,7 +32,7 @@ pub async fn read_device(
     let device_config = ModbusDeviceConfig::from_config(device_id, device)?;
 
     // Convert reading requests to ReadingConfig format
-    let reading_configs = convert_reading_requests_to_configs(reading_requests, device)?;
+    let reading_configs = convert_reading_requests_to_configs(config, reading_requests, device)?;
 
     log::debug!(
         "Reading {} variables from ModbusTCP device '{}' at {}:{}",
@@ -84,25 +85,33 @@ pub async fn read_device(
 
 /// Convert ReadingRequest objects to ReadingConfig objects using driver information
 fn convert_reading_requests_to_configs(
+    config: &crate::node_mgmt::config::Config,
     reading_requests: &[ReadingRequest],
     device: &Device,
 ) -> Result<Vec<ReadingConfig>> {
+    use crate::data_mgmt::drivers::{load_driver, resolve_field_definition};
+
     let mut reading_configs = Vec::new();
 
-    // For now, we'll create basic ReadingConfig objects
-    // In the future, this should look up driver information to get register details
+    // Load driver definition for this device
+    let driver = load_driver(config, &device.driver)
+        .map_err(|e| anyhow!("Failed to load driver '{}': {}", device.driver, e))?;
+
     for request in reading_requests {
-        // This is a simplified implementation - in reality we need to look up
-        // the driver information to get register addresses, data types, etc.
+        // Resolve field definition from driver
+        let field_def = resolve_field_definition(&driver, &request.variable_name)
+            .map_err(|e| anyhow!("Failed to resolve field '{}': {}", request.variable_name, e))?;
+
         let reading_config = ReadingConfig {
             variable_name: request.variable_name.clone(),
-            register: 0,                    // TODO: Look up from driver
-            word_count: 1,                  // TODO: Look up from driver
-            datatype: "uint16".to_string(), // TODO: Look up from driver
-            function_code: 3,               // Default to holding registers
-            multiplier: 1.0,
-            offset: 0.0,
-            unit: None,
+            register: field_def.register.unwrap(), // Already validated in resolve_field_definition
+            word_count: field_def.words,
+            datatype: field_def.datatype,
+            function_code: field_def.fncode,
+            multiplier: field_def.multiplier.unwrap_or(1.0),
+            offset: field_def.offset.unwrap_or(0.0),
+            unit: field_def.unit,
+            valuemap: field_def.valuemap,
         };
 
         reading_configs.push(reading_config);
@@ -117,3 +126,4 @@ fn convert_reading_requests_to_configs(
 
     Ok(reading_configs)
 }
+

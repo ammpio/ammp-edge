@@ -37,7 +37,7 @@ pub async fn get_readings(config: &Config) -> Result<Vec<DeviceReading>> {
 
     // Execute readings for ModbusTCP devices only
     // Other device types (like SMA HyCon CSV) have their own dedicated commands
-    let all_readings = read_modbus_devices(&device_readings_map).await?;
+    let all_readings = read_modbus_devices(config, &device_readings_map).await?;
 
     let duration = start_time.elapsed();
     log::info!(
@@ -101,6 +101,7 @@ fn organize_readings_by_device(
 
 /// Process all ModbusTCP devices
 async fn read_modbus_devices(
+    config: &Config,
     device_readings_map: &HashMap<String, (Device, Vec<ReadingRequest>)>,
 ) -> Result<Vec<DeviceReading>> {
     // Filter ModbusTCP devices
@@ -123,14 +124,15 @@ async fn read_modbus_devices(
                 let device_id = device_id.clone();
                 let device = device.clone();
                 let reading_requests = reading_requests.clone();
+                let config = config.clone();
 
                 tokio::spawn(async move {
-                    modbus_tcp::read_device(&device_id, &device, &reading_requests).await
+                    modbus_tcp::read_device(&config, &device_id, &device, &reading_requests).await
                 })
             });
 
     // Execute all tasks concurrently with timeout
-    let timeout_duration = Duration::from_secs(600); // 10 minutes max
+    let timeout_duration = Duration::from_secs(60); // 1 minute max for all devices
     let results =
         tokio::time::timeout(timeout_duration, futures::future::join_all(reading_tasks)).await?;
 

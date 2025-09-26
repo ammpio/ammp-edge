@@ -1,1 +1,1 @@
-pub use derived_models::driver::{DriverSchema, DriverSchemaFieldsValue};
+pub use derived_models::driver::{DriverSchema, FieldOpts};

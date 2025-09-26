@@ -8,7 +8,7 @@ use std::time::Duration;
 
 // Import the generated types through domain module re-exports
 use crate::node_mgmt::config::{Config, Device, ReadingType};
-use crate::node_mgmt::drivers::{DriverSchema, DriverSchemaFieldsValue};
+use crate::node_mgmt::drivers::FieldOpts;
 
 /// Configuration for a ModbusTCP device connection
 #[derive(Clone, Debug)]
@@ -94,14 +94,43 @@ pub struct ReadingConfig {
     pub multiplier: f64,
     pub offset: f64,
     pub unit: Option<String>,
+    pub valuemap: Option<std::collections::HashMap<String, f64>>,
 }
 
 impl ReadingConfig {
+    /// Parse raw bytes using the configured data processing parameters
+    pub fn parse_raw_bytes(&self, bytes: &[u8]) -> Result<f64> {
+        use crate::data_mgmt::process::{process_reading, ProcessingParams, DataType, TypeCast, ParseAs};
+
+        // Convert datatype string to enum
+        let datatype = self.datatype.parse::<DataType>()?;
+
+        // Create processing parameters
+        let params = ProcessingParams {
+            parse_as: ParseAs::Bytes,
+            datatype: Some(datatype),
+            typecast: Some(TypeCast::Float), // ModbusTCP readings are typically numeric
+            valuemap: self.valuemap.clone(),
+            multiplier: Some(self.multiplier),
+            offset: Some(self.offset),
+        };
+
+        // Process the reading
+        let processed = process_reading(bytes, &params)?;
+
+        // Extract numeric value
+        match processed {
+            crate::data_mgmt::process::ProcessedValue::Float(f) => Ok(f),
+            crate::data_mgmt::process::ProcessedValue::Int(i) => Ok(i as f64),
+            _ => Err(anyhow!("Expected numeric value from ModbusTCP reading")),
+        }
+    }
+
     /// Create reading config from configuration data
     pub fn from_driver_field(
         variable_name: &str,
-        field_config: &DriverSchemaFieldsValue,
-        common_config: Option<&derived_models::driver::CommonParametersForEachField>,
+        field_config: &FieldOpts,
+        common_config: Option<&FieldOpts>,
     ) -> Result<Self> {
         // Get register address
         let register = field_config
@@ -133,6 +162,20 @@ impl ReadingConfig {
         let multiplier = field_config.multiplier.unwrap_or(1.0);
         let offset = field_config.offset.unwrap_or(0.0);
 
+        // Extract valuemap from datamap field
+        let valuemap = if !field_config.datamap.is_empty() {
+            let mut vm = std::collections::HashMap::new();
+            for (key, value) in &field_config.datamap {
+                if let Some(num_val) = value.as_f64() {
+                    vm.insert(key.clone(), num_val);
+                }
+                // Note: null values in datamap are ignored as they typically represent invalid readings
+            }
+            if !vm.is_empty() { Some(vm) } else { None }
+        } else {
+            None
+        };
+
         Ok(ReadingConfig {
             variable_name: variable_name.to_string(),
             register,
@@ -142,6 +185,7 @@ impl ReadingConfig {
             multiplier,
             offset,
             unit: field_config.unit.clone(),
+            valuemap,
         })
     }
 
@@ -163,6 +207,7 @@ impl ReadingConfig {
             multiplier: multiplier.unwrap_or(1.0),
             offset: 0.0,
             unit: None,
+            valuemap: None,
         })
     }
 
@@ -181,38 +226,6 @@ impl ReadingConfig {
         }
     }
 
-    /// Parse raw bytes according to datatype
-    pub fn parse_raw_bytes(&self, bytes: &[u8]) -> Result<f64> {
-        use byteorder::{BigEndian, ReadBytesExt};
-        use std::io::Cursor;
-
-        if bytes.len() < (self.word_count as usize * 2) {
-            return Err(anyhow!(
-                "Insufficient bytes for datatype {}: got {}, need {}",
-                self.datatype,
-                bytes.len(),
-                self.word_count * 2
-            ));
-        }
-
-        let mut cursor = Cursor::new(bytes);
-
-        let raw_value = match self.datatype.to_lowercase().as_str() {
-            "uint16" => cursor.read_u16::<BigEndian>()? as f64,
-            "int16" => cursor.read_i16::<BigEndian>()? as f64,
-            "uint32" => cursor.read_u32::<BigEndian>()? as f64,
-            "int32" => cursor.read_i32::<BigEndian>()? as f64,
-            "uint64" => cursor.read_u64::<BigEndian>()? as f64,
-            "int64" => cursor.read_i64::<BigEndian>()? as f64,
-            "float" | "single" => cursor.read_f32::<BigEndian>()? as f64,
-            "double" => cursor.read_f64::<BigEndian>()?,
-            _ => return Err(anyhow!("Unsupported datatype: {}", self.datatype)),
-        };
-
-        // Apply scaling
-        let scaled_value = raw_value * self.multiplier + self.offset;
-        Ok(scaled_value)
-    }
 }
 
 /// Extract ModbusTCP devices from the main configuration
@@ -246,17 +259,11 @@ pub fn extract_device_readings(config: &Config, device_id: &str) -> Result<Vec<R
     // Get driver configuration
     let driver_config = config.drivers.get(&device.driver);
 
-    // Convert to DriverSchema if available
-    let driver_schema = if let Some(driver_json) = driver_config {
-        Some(serde_json::from_value::<DriverSchema>(
-            serde_json::Value::Object(driver_json.clone()),
-        )?)
-    } else {
-        None
-    };
+    // Convert to DriverSchema if available (it's already a DriverSchema now)
+    let driver_schema = driver_config;
 
     // Filter readings that belong to this device
-    for (_reading_name, reading_schema) in &config.readings {
+    for reading_schema in config.readings.values() {
         if reading_schema.device == device_id {
             // Try to get field configuration from driver
             if let Some(driver) = &driver_schema {
@@ -264,7 +271,7 @@ pub fn extract_device_readings(config: &Config, device_id: &str) -> Result<Vec<R
                     let reading_config = ReadingConfig::from_driver_field(
                         &reading_schema.var,
                         field_config,
-                        driver.common.as_ref(),
+                        Some(&driver.common),
                     )?;
                     reading_configs.push(reading_config);
                 } else {

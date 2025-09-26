@@ -161,7 +161,6 @@ mod tests {
     #[test]
     fn fresh_initialization() -> Result<()> {
         let blank_kvs = KVDb::new(IN_MEMORY)?;
-        // TODO
         blank_kvs.set(keys::NODE_ID, SAMPLE_NODE_ID)?;
         assert_eq!(
             blank_kvs.get::<String>(keys::NODE_ID)?.unwrap(),
