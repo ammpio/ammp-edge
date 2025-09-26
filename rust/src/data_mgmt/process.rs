@@ -52,9 +52,7 @@ fn parse_value_bytes(val_bytes: &[u8], params: &ProcessingParams) -> Result<Opti
                 .map_err(|_| anyhow!("Could not parse {} as hex value", val_hex_str))?;
             value_from_bytes(&hex_bytes, params)
         }
-        ParseAs::Bytes => {
-            value_from_bytes(val_bytes, params)
-        }
+        ParseAs::Bytes => value_from_bytes(val_bytes, params),
     }
 }
 
@@ -62,7 +60,8 @@ fn parse_value_bytes(val_bytes: &[u8], params: &ProcessingParams) -> Result<Opti
 fn value_from_string(val_str: &str, params: &ProcessingParams) -> Result<Option<f64>> {
     // Check value mapping first
     if let Some(ref valuemap) = params.valuemap
-        && let Some(mapped_value) = valuemap.get(val_str) {
+        && let Some(mapped_value) = valuemap.get(val_str)
+    {
         return Ok(Some(*mapped_value));
     }
 
@@ -94,7 +93,9 @@ fn value_from_bytes(val_bytes: &[u8], params: &ProcessingParams) -> Result<Optio
         }
     }
 
-    let datatype = params.datatype.as_ref()
+    let datatype = params
+        .datatype
+        .as_ref()
         .ok_or_else(|| anyhow!("datatype parameter required for bytes parsing"))?;
 
     let value = match datatype {
@@ -152,7 +153,11 @@ fn value_from_bytes(val_bytes: &[u8], params: &ProcessingParams) -> Result<Optio
 }
 
 /// Apply multiplier and offset: output = multiplier * reading + offset
-fn apply_multiplier_offset(value: f64, multiplier: Option<f64>, offset: Option<f64>) -> Result<f64> {
+fn apply_multiplier_offset(
+    value: f64,
+    multiplier: Option<f64>,
+    offset: Option<f64>,
+) -> Result<f64> {
     let multiplied = value * multiplier.unwrap_or(1.0);
     let result = multiplied + offset.unwrap_or(0.0);
     Ok(result)

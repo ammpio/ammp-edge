@@ -35,14 +35,31 @@ pub fn load_driver(config: &Config, driver_name: &str) -> Result<DriverDefinitio
     }
 
     // Fall back to filesystem and cache the result
-    let driver_path = crate::helpers::base_path::ROOT_DIR.join("drivers").join(format!("{}.json", driver_name));
+    let driver_path = crate::helpers::base_path::ROOT_DIR
+        .join("drivers")
+        .join(format!("{}.json", driver_name));
     if driver_path.exists() {
-        log::debug!("Loading driver '{}' from filesystem: {}", driver_name, driver_path.display());
-        let driver_content = fs::read_to_string(&driver_path)
-            .map_err(|e| anyhow!("Failed to read driver file {}: {}", driver_path.display(), e))?;
+        log::debug!(
+            "Loading driver '{}' from filesystem: {}",
+            driver_name,
+            driver_path.display()
+        );
+        let driver_content = fs::read_to_string(&driver_path).map_err(|e| {
+            anyhow!(
+                "Failed to read driver file {}: {}",
+                driver_path.display(),
+                e
+            )
+        })?;
 
-        let driver_json: serde_json::Value = serde_json::from_str(&driver_content)
-            .map_err(|e| anyhow!("Failed to parse driver JSON {}: {}", driver_path.display(), e))?;
+        let driver_json: serde_json::Value =
+            serde_json::from_str(&driver_content).map_err(|e| {
+                anyhow!(
+                    "Failed to parse driver JSON {}: {}",
+                    driver_path.display(),
+                    e
+                )
+            })?;
 
         let driver_definition = parse_driver_from_json_value(&driver_json)?;
 
@@ -56,7 +73,10 @@ pub fn load_driver(config: &Config, driver_name: &str) -> Result<DriverDefinitio
         return Ok(driver_definition);
     }
 
-    Err(anyhow!("Driver '{}' not found in config or filesystem", driver_name))
+    Err(anyhow!(
+        "Driver '{}' not found in config or filesystem",
+        driver_name
+    ))
 }
 
 /// Clear the driver cache (useful for testing or if drivers are updated)
@@ -69,7 +89,8 @@ pub fn clear_driver_cache() {
 
 /// Parse driver definition from JSON value (either from config or file)
 fn parse_driver_from_json_value(json: &serde_json::Value) -> Result<DriverDefinition> {
-    let obj = json.as_object()
+    let obj = json
+        .as_object()
         .ok_or_else(|| anyhow!("Driver definition must be a JSON object"))?;
 
     // Parse common section (if present)
@@ -80,7 +101,8 @@ fn parse_driver_from_json_value(json: &serde_json::Value) -> Result<DriverDefini
     };
 
     // Parse fields section
-    let fields_obj = obj.get("fields")
+    let fields_obj = obj
+        .get("fields")
         .and_then(|v| v.as_object())
         .ok_or_else(|| anyhow!("Driver definition must have 'fields' object"))?;
 
@@ -90,27 +112,40 @@ fn parse_driver_from_json_value(json: &serde_json::Value) -> Result<DriverDefini
         fields.insert(field_name.clone(), parsed_field);
     }
 
-    Ok(DriverDefinition {
-        common,
-        fields,
-    })
+    Ok(DriverDefinition { common, fields })
 }
 
 /// Parse a field definition (either common or specific field)
 fn parse_field_definition(json: &serde_json::Value) -> Result<FieldDefinition> {
-    let obj = json.as_object()
+    let obj = json
+        .as_object()
         .ok_or_else(|| anyhow!("Field definition must be a JSON object"))?;
 
     Ok(FieldDefinition {
-        register: obj.get("register").and_then(|v| v.as_u64()).map(|v| v as u16),
+        register: obj
+            .get("register")
+            .and_then(|v| v.as_u64())
+            .map(|v| v as u16),
         words: obj.get("words").and_then(|v| v.as_u64()).map(|v| v as u16),
-        datatype: obj.get("datatype").and_then(|v| v.as_str()).map(|s| s.to_string()),
+        datatype: obj
+            .get("datatype")
+            .and_then(|v| v.as_str())
+            .map(|s| s.to_string()),
         fncode: obj.get("fncode").and_then(|v| v.as_u64()).map(|v| v as u8),
-        typecast: obj.get("typecast").and_then(|v| v.as_str()).map(|s| s.to_string()),
+        typecast: obj
+            .get("typecast")
+            .and_then(|v| v.as_str())
+            .map(|s| s.to_string()),
         multiplier: obj.get("multiplier").and_then(|v| v.as_f64()),
         offset: obj.get("offset").and_then(|v| v.as_f64()),
-        unit: obj.get("unit").and_then(|v| v.as_str()).map(|s| s.to_string()),
-        description: obj.get("description").and_then(|v| v.as_str()).map(|s| s.to_string()),
+        unit: obj
+            .get("unit")
+            .and_then(|v| v.as_str())
+            .map(|s| s.to_string()),
+        description: obj
+            .get("description")
+            .and_then(|v| v.as_str())
+            .map(|s| s.to_string()),
         valuemap: parse_valuemap(obj.get("valuemap")),
     })
 }
@@ -140,15 +175,17 @@ pub fn resolve_field_definition(
     driver: &DriverDefinition,
     field_name: &str,
 ) -> Result<ResolvedFieldDefinition> {
-    let field_def = driver.fields.get(field_name)
+    let field_def = driver
+        .fields
+        .get(field_name)
         .ok_or_else(|| anyhow!("Field '{}' not found in driver", field_name))?;
 
     // Start with common settings as base
     let mut resolved = ResolvedFieldDefinition {
         register: None,
-        words: 1, // Default to 1 word
+        words: 1,                       // Default to 1 word
         datatype: "uint16".to_string(), // Default datatype
-        fncode: 3, // Default to holding registers
+        fncode: 3,                      // Default to holding registers
         typecast: None,
         multiplier: None,
         offset: None,
@@ -222,7 +259,10 @@ pub fn resolve_field_definition(
 
     // Ensure we have a register address
     if resolved.register.is_none() {
-        return Err(anyhow!("Field '{}' missing required 'register' property", field_name));
+        return Err(anyhow!(
+            "Field '{}' missing required 'register' property",
+            field_name
+        ));
     }
 
     Ok(resolved)
@@ -349,6 +389,11 @@ mod tests {
         let result = resolve_field_definition(&driver, "invalid_field");
 
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("missing required 'register'"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("missing required 'register'")
+        );
     }
 }

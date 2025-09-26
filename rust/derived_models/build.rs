@@ -31,7 +31,6 @@ fn main() {
     post_process_config_rs();
 }
 
-
 fn generate_types_from_schema(schema_path: &str, output_path: &str, description: &str) {
     let schema_file = Path::new(schema_path);
     let output_file = Path::new(output_path);
@@ -80,8 +79,10 @@ fn post_process_config_rs() {
 
     // Find and replace the drivers field type
     // Replace the specific pattern we found: pub drivers: ::serde_json::Map<::std::string::String, ::serde_json::Value>
-    let old_drivers_type = "pub drivers: ::serde_json::Map<::std::string::String, ::serde_json::Value>";
-    let new_drivers_type = "pub drivers: ::std::collections::HashMap<::std::string::String, DriverSchema>";
+    let old_drivers_type =
+        "pub drivers: ::serde_json::Map<::std::string::String, ::serde_json::Value>";
+    let new_drivers_type =
+        "pub drivers: ::std::collections::HashMap<::std::string::String, DriverSchema>";
 
     if modified_content.contains(old_drivers_type) {
         modified_content = modified_content.replace(old_drivers_type, new_drivers_type);
@@ -89,7 +90,8 @@ fn post_process_config_rs() {
 
     // Also fix the serde annotation for the drivers field
     let old_serde_attr = "#[serde(default, skip_serializing_if = \"::serde_json::Map::is_empty\")]";
-    let new_serde_attr = "#[serde(default, skip_serializing_if = \"::std::collections::HashMap::is_empty\")]";
+    let new_serde_attr =
+        "#[serde(default, skip_serializing_if = \"::std::collections::HashMap::is_empty\")]";
 
     if modified_content.contains(old_serde_attr) {
         modified_content = modified_content.replace(old_serde_attr, new_serde_attr);

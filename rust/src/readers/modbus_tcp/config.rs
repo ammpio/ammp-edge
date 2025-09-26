@@ -100,7 +100,9 @@ pub struct ReadingConfig {
 impl ReadingConfig {
     /// Parse raw bytes using the configured data processing parameters
     pub fn parse_raw_bytes(&self, bytes: &[u8]) -> Result<f64> {
-        use crate::data_mgmt::process::{process_reading, ProcessingParams, DataType, TypeCast, ParseAs};
+        use crate::data_mgmt::process::{
+            DataType, ParseAs, ProcessingParams, TypeCast, process_reading,
+        };
 
         // Convert datatype string to enum
         let datatype = self.datatype.parse::<DataType>()?;
@@ -225,7 +227,6 @@ impl ReadingConfig {
             _ => Err(anyhow!("Unsupported datatype: {}", datatype)),
         }
     }
-
 }
 
 /// Extract ModbusTCP devices from the main configuration

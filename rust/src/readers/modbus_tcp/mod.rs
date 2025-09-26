@@ -126,4 +126,3 @@ fn convert_reading_requests_to_configs(
 
     Ok(reading_configs)
 }
-
