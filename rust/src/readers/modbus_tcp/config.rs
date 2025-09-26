@@ -88,58 +88,27 @@ impl ModbusDeviceConfig {
 pub struct ReadingConfig {
     pub variable_name: String,
     pub field_config: FieldOpts,
+    pub fncode: u8,
     pub register: u16,
     pub words: u16,
-    pub fncode: u8,
 }
 
 impl ReadingConfig {
     /// Parse raw bytes using the configured data processing parameters
     pub fn parse_raw_bytes(&self, bytes: &[u8]) -> Result<f64> {
-        use crate::data_mgmt::process::{
-            DataType, ParseAs, ProcessingParams, TypeCast, process_reading,
-        };
+        use crate::data_mgmt::process::{ProcessedValue, process_field_reading};
 
-        // Get datatype from field config
-        let datatype = self
-            .field_config
-            .datatype
-            .ok_or_else(|| anyhow!("Missing datatype for field {}", self.variable_name))?;
+        // Use the centralized processing system
+        let processed = process_field_reading(bytes, &self.field_config)?;
 
-        // Convert to processing enum
-        let datatype_enum = datatype.to_string().parse::<DataType>()?;
-
-        // Extract valuemap from datamap field
-        let valuemap = if !self.field_config.datamap.is_empty() {
-            let mut vm = std::collections::HashMap::new();
-            for (key, value) in &self.field_config.datamap {
-                if let Some(num_val) = value.as_f64() {
-                    vm.insert(key.clone(), num_val);
-                }
-            }
-            if !vm.is_empty() { Some(vm) } else { None }
-        } else {
-            None
-        };
-
-        // Create processing parameters
-        let params = ProcessingParams {
-            parse_as: ParseAs::Bytes,
-            datatype: Some(datatype_enum),
-            typecast: Some(TypeCast::Float), // ModbusTCP readings are typically numeric
-            valuemap,
-            multiplier: self.field_config.multiplier,
-            offset: self.field_config.offset,
-        };
-
-        // Process the reading
-        let processed = process_reading(bytes, &params)?;
-
-        // Extract numeric value
+        // Extract numeric value for ModbusTCP (which should always be numeric)
         match processed {
-            crate::data_mgmt::process::ProcessedValue::Float(f) => Ok(f),
-            crate::data_mgmt::process::ProcessedValue::Int(i) => Ok(i as f64),
-            _ => Err(anyhow!("Expected numeric value from ModbusTCP reading")),
+            ProcessedValue::Float(f) => Ok(f),
+            ProcessedValue::Int(i) => Ok(i as f64),
+            _ => Err(anyhow!(
+                "Expected numeric value from ModbusTCP reading, got: {:?}",
+                processed
+            )),
         }
     }
 

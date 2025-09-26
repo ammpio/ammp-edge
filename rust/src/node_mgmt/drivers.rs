@@ -119,7 +119,9 @@ fn merge_field_opts(target: &mut FieldOpts, source: &FieldOpts) {
     if let Some(datatype) = source.datatype {
         target.datatype = Some(datatype);
     }
-    if target.fncode != source.fncode {
+    // Only override fncode if source has a non-default value
+    // The default value for fncode is 3, so we only copy if source != 3
+    if source.fncode != 3 {
         target.fncode = source.fncode;
     }
     if let Some(typecast) = source.typecast {

@@ -4,8 +4,19 @@
 //! processor/process_reading.py module. It handles data type conversion, scaling,
 //! offset application, and type casting for readings from various device types.
 
+use crate::node_mgmt::drivers::FieldOpts;
 use anyhow::{Result, anyhow};
 use std::collections::HashMap;
+
+/// Process raw bytes using field configuration from driver system
+///
+/// This is a convenience function that converts FieldOpts to ProcessingParams
+/// and processes the raw bytes. This provides the clean separation between
+/// reading (getting raw bytes) and processing (converting to final values).
+pub fn process_field_reading(val_bytes: &[u8], field_config: &FieldOpts) -> Result<ProcessedValue> {
+    let params = ProcessingParams::from_field_opts(field_config)?;
+    process_reading(val_bytes, &params)
+}
 
 /// Process a raw reading value according to the provided parameters
 ///
@@ -201,6 +212,57 @@ impl Default for ProcessingParams {
             multiplier: None,
             offset: None,
         }
+    }
+}
+
+impl ProcessingParams {
+    /// Create ProcessingParams from FieldOpts (driver field configuration)
+    ///
+    /// This provides the bridge between the driver configuration system
+    /// and the data processing system.
+    pub fn from_field_opts(field_config: &FieldOpts) -> Result<Self> {
+        // Convert datatype from driver schema to processing enum
+        let datatype = if let Some(dt) = &field_config.datatype {
+            Some(dt.to_string().parse::<DataType>()?)
+        } else {
+            None
+        };
+
+        // Convert typecast from driver schema to processing enum
+        let typecast = if let Some(tc) = &field_config.typecast {
+            Some(match tc.to_string().as_str() {
+                "int" => TypeCast::Int,
+                "float" => TypeCast::Float,
+                "str" => TypeCast::Str,
+                "bool" => TypeCast::Bool,
+                other => return Err(anyhow!("Unsupported typecast: {}", other)),
+            })
+        } else {
+            None
+        };
+
+        // Convert datamap to valuemap
+        let valuemap = if !field_config.datamap.is_empty() {
+            let mut vm = HashMap::new();
+            for (key, value) in &field_config.datamap {
+                if let Some(num_val) = value.as_f64() {
+                    vm.insert(key.clone(), num_val);
+                }
+                // Note: null values in datamap are ignored as they typically represent invalid readings
+            }
+            if !vm.is_empty() { Some(vm) } else { None }
+        } else {
+            None
+        };
+
+        Ok(ProcessingParams {
+            parse_as: ParseAs::Bytes, // Default for Modbus and most binary protocols
+            datatype,
+            typecast,
+            valuemap,
+            multiplier: field_config.multiplier,
+            offset: field_config.offset,
+        })
     }
 }
 
