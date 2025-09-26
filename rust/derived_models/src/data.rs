@@ -110,6 +110,17 @@ pub mod error {
 ///            "genset_fuel_level_percent": 100.0,
 ///            "genset_fuel_volume": 3048.625,
 ///            "level": 0.0
+///          },
+///          {
+///            "_d": "diesel_sensor",
+///            "_s": [
+///              {
+///                "c": "High Temperature",
+///                "l": 3
+///              }
+///            ],
+///            "_vid": "gamicos-1",
+///            "cpu_temp": 98.7
 ///          }
 ///        ],
 ///        "type": "object",
@@ -126,6 +137,35 @@ pub mod error {
 ///              "dse855"
 ///            ],
 ///            "type": "string"
+///          },
+///          "_s": {
+///            "title": "Status readings",
+///            "type": "array",
+///            "items": {
+///              "title": "Status reading",
+///              "type": "object",
+///              "properties": {
+///                "c": {
+///                  "title": "Content for the status info",
+///                  "examples": [
+///                    "Low Oil Pressure",
+///                    "High Temperature"
+///                  ],
+///                  "type": "string"
+///                },
+///                "l": {
+///                  "title": "Status level of the status info, 0=OK, 4=Critical",
+///                  "examples": [
+///                    0,
+///                    1,
+///                    2,
+///                    3,
+///                    4
+///                  ],
+///                  "type": "integer"
+///                }
+///              }
+///            }
 ///          },
 ///          "_vid": {
 ///            "title": "Device vendor ID",
@@ -195,6 +235,17 @@ impl ::std::convert::From<&DataPayload> for DataPayload {
 ///      "genset_fuel_level_percent": 100.0,
 ///      "genset_fuel_volume": 3048.625,
 ///      "level": 0.0
+///    },
+///    {
+///      "_d": "diesel_sensor",
+///      "_s": [
+///        {
+///          "c": "High Temperature",
+///          "l": 3
+///        }
+///      ],
+///      "_vid": "gamicos-1",
+///      "cpu_temp": 98.7
 ///    }
 ///  ],
 ///  "type": "object",
@@ -211,6 +262,35 @@ impl ::std::convert::From<&DataPayload> for DataPayload {
 ///        "dse855"
 ///      ],
 ///      "type": "string"
+///    },
+///    "_s": {
+///      "title": "Status readings",
+///      "type": "array",
+///      "items": {
+///        "title": "Status reading",
+///        "type": "object",
+///        "properties": {
+///          "c": {
+///            "title": "Content for the status info",
+///            "examples": [
+///              "Low Oil Pressure",
+///              "High Temperature"
+///            ],
+///            "type": "string"
+///          },
+///          "l": {
+///            "title": "Status level of the status info, 0=OK, 4=Critical",
+///            "examples": [
+///              0,
+///              1,
+///              2,
+///              3,
+///              4
+///            ],
+///            "type": "integer"
+///          }
+///        }
+///      }
 ///    },
 ///    "_vid": {
 ///      "title": "Device vendor ID",
@@ -244,6 +324,8 @@ pub struct DeviceData {
         skip_serializing_if = "::std::option::Option::is_none"
     )]
     pub d: ::std::option::Option<::std::string::String>,
+    #[serde(rename = "_s", default, skip_serializing_if = "::std::vec::Vec::is_empty")]
+    pub s: ::std::vec::Vec<StatusReading>,
     ///Vendor ID of device (must match vendor_id in device table
     #[serde(rename = "_vid")]
     pub vid: ::std::string::String,
@@ -371,6 +453,58 @@ impl ::std::default::Default for Metadata {
             data_provider: Default::default(),
             reading_duration: Default::default(),
             snap_rev: Default::default(),
+        }
+    }
+}
+///`StatusReading`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "title": "Status reading",
+///  "type": "object",
+///  "properties": {
+///    "c": {
+///      "title": "Content for the status info",
+///      "examples": [
+///        "Low Oil Pressure",
+///        "High Temperature"
+///      ],
+///      "type": "string"
+///    },
+///    "l": {
+///      "title": "Status level of the status info, 0=OK, 4=Critical",
+///      "examples": [
+///        0,
+///        1,
+///        2,
+///        3,
+///        4
+///      ],
+///      "type": "integer"
+///    }
+///  }
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug, PartialEq)]
+pub struct StatusReading {
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub c: ::std::option::Option<::std::string::String>,
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub l: ::std::option::Option<i64>,
+}
+impl ::std::convert::From<&StatusReading> for StatusReading {
+    fn from(value: &StatusReading) -> Self {
+        value.clone()
+    }
+}
+impl ::std::default::Default for StatusReading {
+    fn default() -> Self {
+        Self {
+            c: Default::default(),
+            l: Default::default(),
         }
     }
 }

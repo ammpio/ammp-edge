@@ -34,98 +34,92 @@ pub mod error {
         }
     }
 }
-///`CommonParametersForEachField`
+///`BitOrder`
 ///
 /// <details><summary>JSON schema</summary>
 ///
 /// ```json
 ///{
-///  "title": "Common parameters for each field",
-///  "default": {},
-///  "examples": [
-///    {
-///      "datatype": "float",
-///      "fncode": 4,
-///      "words": 2
-///    }
-///  ],
-///  "type": "object",
-///  "properties": {
-///    "datatype": {
-///      "title": "Source type of data being read",
-///      "examples": [
-///        "int16"
-///      ],
-///      "type": "string",
-///      "enum": [
-///        "int16",
-///        "uint16",
-///        "int32",
-///        "uint32",
-///        "int64",
-///        "uint64",
-///        "float",
-///        "double"
-///      ]
-///    },
-///    "fncode": {
-///      "title": "Modbus function code",
-///      "default": 3,
-///      "examples": [
-///        3,
-///        4
-///      ],
-///      "type": "integer"
-///    },
-///    "typecast": {
-///      "title": "Typecast for final processed reading",
-///      "examples": [
-///        "int"
-///      ],
-///      "type": "string",
-///      "enum": [
-///        "int",
-///        "float",
-///        "str",
-///        "bool"
-///      ]
-///    },
-///    "words": {
-///      "title": "Number of 2-byte words for Modbus",
-///      "examples": [
-///        2
-///      ],
-///      "type": "integer"
-///    }
-///  }
+///  "title": "Bit order",
+///  "default": "lsb",
+///  "type": "string",
+///  "enum": [
+///    "lsb",
+///    "msb"
+///  ]
 ///}
 /// ```
 /// </details>
-#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug, PartialEq)]
-pub struct CommonParametersForEachField {
-    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub datatype: ::std::option::Option<SourceTypeOfDataBeingRead>,
-    #[serde(default = "defaults::default_u64::<i64, 3>")]
-    pub fncode: i64,
-    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub typecast: ::std::option::Option<TypecastForFinalProcessedReading>,
-    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub words: ::std::option::Option<i64>,
+#[derive(
+    ::serde::Deserialize,
+    ::serde::Serialize,
+    Clone,
+    Copy,
+    Debug,
+    Eq,
+    Hash,
+    Ord,
+    PartialEq,
+    PartialOrd
+)]
+pub enum BitOrder {
+    #[serde(rename = "lsb")]
+    Lsb,
+    #[serde(rename = "msb")]
+    Msb,
 }
-impl ::std::convert::From<&CommonParametersForEachField>
-for CommonParametersForEachField {
-    fn from(value: &CommonParametersForEachField) -> Self {
+impl ::std::convert::From<&Self> for BitOrder {
+    fn from(value: &BitOrder) -> Self {
         value.clone()
     }
 }
-impl ::std::default::Default for CommonParametersForEachField {
-    fn default() -> Self {
-        CommonParametersForEachField {
-            datatype: Default::default(),
-            fncode: Default::default(),
-            typecast: Default::default(),
-            words: Default::default(),
+impl ::std::fmt::Display for BitOrder {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        match *self {
+            Self::Lsb => f.write_str("lsb"),
+            Self::Msb => f.write_str("msb"),
         }
+    }
+}
+impl ::std::str::FromStr for BitOrder {
+    type Err = self::error::ConversionError;
+    fn from_str(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        match value {
+            "lsb" => Ok(Self::Lsb),
+            "msb" => Ok(Self::Msb),
+            _ => Err("invalid value".into()),
+        }
+    }
+}
+impl ::std::convert::TryFrom<&str> for BitOrder {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<&::std::string::String> for BitOrder {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<::std::string::String> for BitOrder {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: ::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::default::Default for BitOrder {
+    fn default() -> Self {
+        BitOrder::Lsb
     }
 }
 ///`DriverSchema`
@@ -151,134 +145,25 @@ impl ::std::default::Default for CommonParametersForEachField {
 ///          "words": 2
 ///        }
 ///      ],
-///      "type": "object",
-///      "properties": {
-///        "datatype": {
-///          "title": "Source type of data being read",
-///          "examples": [
-///            "int16"
-///          ],
-///          "type": "string",
-///          "enum": [
-///            "int16",
-///            "uint16",
-///            "int32",
-///            "uint32",
-///            "int64",
-///            "uint64",
-///            "float",
-///            "double"
-///          ]
-///        },
-///        "fncode": {
-///          "title": "Modbus function code",
-///          "default": 3,
-///          "examples": [
-///            3,
-///            4
-///          ],
-///          "type": "integer"
-///        },
-///        "typecast": {
-///          "title": "Typecast for final processed reading",
-///          "examples": [
-///            "int"
-///          ],
-///          "type": "string",
-///          "enum": [
-///            "int",
-///            "float",
-///            "str",
-///            "bool"
-///          ]
-///        },
-///        "words": {
-///          "title": "Number of 2-byte words for Modbus",
-///          "examples": [
-///            2
-///          ],
-///          "type": "integer"
-///        }
-///      }
+///      "$ref": "#/definitions/field_opts"
 ///    },
 ///    "fields": {
 ///      "title": "Fields to be read",
 ///      "type": "object",
 ///      "additionalProperties": {
-///        "type": "object",
-///        "properties": {
-///          "datamap": {
-///            "title": "Mapping between source and final value",
-///            "type": "object"
-///          },
-///          "datatype": {
-///            "title": "Source type of data being read",
-///            "examples": [
-///              "int16"
-///            ],
-///            "type": "string",
-///            "enum": [
-///              "int16",
-///              "uint16",
-///              "int32",
-///              "uint32",
-///              "int64",
-///              "uint64",
-///              "float",
-///              "double"
-///            ]
-///          },
-///          "description": {
-///            "title": "Description of reading (not used for data processing)",
-///            "type": "string"
-///          },
-///          "fncode": {
-///            "title": "Modbus function code",
-///            "default": 3,
-///            "examples": [
-///              3,
-///              4
-///            ],
-///            "type": "integer"
-///          },
-///          "multiplier": {
-///            "title": "Reading multiplier (applied before offset)",
-///            "type": "number"
-///          },
-///          "offset": {
-///            "title": "Reading offset (applied after multiplier)",
-///            "type": "number"
-///          },
-///          "register": {
-///            "title": "Modbus start register",
-///            "type": "integer"
-///          },
-///          "typecast": {
-///            "title": "Typecast for final processed reading",
-///            "examples": [
-///              "int"
-///            ],
-///            "type": "string",
-///            "enum": [
-///              "int",
-///              "float",
-///              "str",
-///              "bool"
-///            ]
-///          },
-///          "unit": {
-///            "title": "Unit of reading (not used for data processing)",
-///            "type": "string"
-///          },
-///          "words": {
-///            "title": "Number of 2-byte words for Modbus",
-///            "examples": [
-///              2
-///            ],
-///            "type": "integer"
-///          }
-///        }
+///        "$ref": "#/definitions/field_opts"
 ///      }
+///    },
+///    "status_info": {
+///      "title": "Configs per status info key",
+///      "type": "object",
+///      "additionalProperties": {
+///        "$ref": "#/definitions/status_info_opts"
+///      }
+///    },
+///    "status_info_common": {
+///      "title": "Fallback if no specific config per status info key is defined",
+///      "$ref": "#/definitions/status_info_opts"
 ///    }
 ///  }
 ///}
@@ -286,24 +171,26 @@ impl ::std::default::Default for CommonParametersForEachField {
 /// </details>
 #[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug, PartialEq)]
 pub struct DriverSchema {
+    #[serde(default = "defaults::driver_schema_common")]
+    pub common: FieldOpts,
+    pub fields: ::std::collections::HashMap<::std::string::String, FieldOpts>,
+    #[serde(default, skip_serializing_if = ":: std :: collections :: HashMap::is_empty")]
+    pub status_info: ::std::collections::HashMap<::std::string::String, StatusInfoOpts>,
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub common: ::std::option::Option<CommonParametersForEachField>,
-    pub fields: ::std::collections::HashMap<
-        ::std::string::String,
-        DriverSchemaFieldsValue,
-    >,
+    pub status_info_common: ::std::option::Option<StatusInfoOpts>,
 }
 impl ::std::convert::From<&DriverSchema> for DriverSchema {
     fn from(value: &DriverSchema) -> Self {
         value.clone()
     }
 }
-///`DriverSchemaFieldsValue`
+///`FieldOpts`
 ///
 /// <details><summary>JSON schema</summary>
 ///
 /// ```json
 ///{
+///  "title": "Field options",
 ///  "type": "object",
 ///  "properties": {
 ///    "datamap": {
@@ -381,7 +268,7 @@ impl ::std::convert::From<&DriverSchema> for DriverSchema {
 /// ```
 /// </details>
 #[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug, PartialEq)]
-pub struct DriverSchemaFieldsValue {
+pub struct FieldOpts {
     #[serde(default, skip_serializing_if = "::serde_json::Map::is_empty")]
     pub datamap: ::serde_json::Map<::std::string::String, ::serde_json::Value>,
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
@@ -403,12 +290,12 @@ pub struct DriverSchemaFieldsValue {
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub words: ::std::option::Option<i64>,
 }
-impl ::std::convert::From<&DriverSchemaFieldsValue> for DriverSchemaFieldsValue {
-    fn from(value: &DriverSchemaFieldsValue) -> Self {
+impl ::std::convert::From<&FieldOpts> for FieldOpts {
+    fn from(value: &FieldOpts) -> Self {
         value.clone()
     }
 }
-impl ::std::default::Default for DriverSchemaFieldsValue {
+impl ::std::default::Default for FieldOpts {
     fn default() -> Self {
         Self {
             datamap: Default::default(),
@@ -422,6 +309,64 @@ impl ::std::default::Default for DriverSchemaFieldsValue {
             unit: Default::default(),
             words: Default::default(),
         }
+    }
+}
+///`NumericStatusLevel`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "title": "Numeric Status Level",
+///  "type": "integer",
+///  "enum": [
+///    0,
+///    1,
+///    2,
+///    3,
+///    4
+///  ]
+///}
+/// ```
+/// </details>
+#[derive(::serde::Serialize, Clone, Debug, PartialEq)]
+#[serde(transparent)]
+pub struct NumericStatusLevel(i64);
+impl ::std::ops::Deref for NumericStatusLevel {
+    type Target = i64;
+    fn deref(&self) -> &i64 {
+        &self.0
+    }
+}
+impl ::std::convert::From<NumericStatusLevel> for i64 {
+    fn from(value: NumericStatusLevel) -> Self {
+        value.0
+    }
+}
+impl ::std::convert::From<&NumericStatusLevel> for NumericStatusLevel {
+    fn from(value: &NumericStatusLevel) -> Self {
+        value.clone()
+    }
+}
+impl ::std::convert::TryFrom<i64> for NumericStatusLevel {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: i64,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        if ![0_i64, 1_i64, 2_i64, 3_i64, 4_i64].contains(&value) {
+            Err("invalid value".into())
+        } else {
+            Ok(Self(value))
+        }
+    }
+}
+impl<'de> ::serde::Deserialize<'de> for NumericStatusLevel {
+    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
+    where
+        D: ::serde::Deserializer<'de>,
+    {
+        Self::try_from(<i64>::deserialize(deserializer)?)
+            .map_err(|e| { <D::Error as ::serde::de::Error>::custom(e.to_string()) })
     }
 }
 ///`SourceTypeOfDataBeingRead`
@@ -539,6 +484,263 @@ impl ::std::convert::TryFrom<::std::string::String> for SourceTypeOfDataBeingRea
         value.parse()
     }
 }
+///`StatusInfoOpts`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "title": "Status info field map",
+///  "examples": [
+///    {
+///      "oil_pressure": {
+///        "content": "Low Oil Pressure",
+///        "register": 100,
+///        "start_bit": 0
+///      }
+///    }
+///  ],
+///  "type": "object",
+///  "additionalProperties": {
+///    "type": "object",
+///    "properties": {
+///      "bit_order": {
+///        "title": "Bit order",
+///        "default": "lsb",
+///        "type": "string",
+///        "enum": [
+///          "lsb",
+///          "msb"
+///        ]
+///      },
+///      "content": {
+///        "title": "Content for the status info",
+///        "examples": [
+///          "Low Oil Pressure",
+///          "High Temperature"
+///        ],
+///        "type": "string"
+///      },
+///      "fncode": {
+///        "title": "Modbus function code",
+///        "type": "integer"
+///      },
+///      "length_bits": {
+///        "title": "Length in bits for the status info",
+///        "type": "integer"
+///      },
+///      "register": {
+///        "title": "Modbus register for the status info",
+///        "type": "integer"
+///      },
+///      "start_bit": {
+///        "title": "Start bit (within the register) for the status info, first=0",
+///        "type": "integer",
+///        "maximum": 15.0,
+///        "minimum": 0.0
+///      },
+///      "status_level_value_map": {
+///        "title": "Mapping between value and status level",
+///        "description": "List of pairs that defines how to map a value to a status level (0=OK, 4=Critical)",
+///        "examples": [
+///          [
+///            [
+///              0,
+///              0
+///            ],
+///            [
+///              1,
+///              3
+///            ]
+///          ]
+///        ],
+///        "type": "array",
+///        "items": {
+///          "type": "array",
+///          "items": [
+///            {
+///              "title": "Value",
+///              "type": "integer"
+///            },
+///            {
+///              "title": "Numeric Status Level",
+///              "type": "integer",
+///              "enum": [
+///                0,
+///                1,
+///                2,
+///                3,
+///                4
+///              ]
+///            }
+///          ],
+///          "maxItems": 2,
+///          "minItems": 2
+///        }
+///      }
+///    }
+///  }
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug, PartialEq)]
+#[serde(transparent)]
+pub struct StatusInfoOpts(
+    pub ::std::collections::HashMap<::std::string::String, StatusInfoOptsValue>,
+);
+impl ::std::ops::Deref for StatusInfoOpts {
+    type Target = ::std::collections::HashMap<
+        ::std::string::String,
+        StatusInfoOptsValue,
+    >;
+    fn deref(
+        &self,
+    ) -> &::std::collections::HashMap<::std::string::String, StatusInfoOptsValue> {
+        &self.0
+    }
+}
+impl ::std::convert::From<StatusInfoOpts>
+for ::std::collections::HashMap<::std::string::String, StatusInfoOptsValue> {
+    fn from(value: StatusInfoOpts) -> Self {
+        value.0
+    }
+}
+impl ::std::convert::From<&StatusInfoOpts> for StatusInfoOpts {
+    fn from(value: &StatusInfoOpts) -> Self {
+        value.clone()
+    }
+}
+impl ::std::convert::From<
+    ::std::collections::HashMap<::std::string::String, StatusInfoOptsValue>,
+> for StatusInfoOpts {
+    fn from(
+        value: ::std::collections::HashMap<::std::string::String, StatusInfoOptsValue>,
+    ) -> Self {
+        Self(value)
+    }
+}
+///`StatusInfoOptsValue`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "properties": {
+///    "bit_order": {
+///      "title": "Bit order",
+///      "default": "lsb",
+///      "type": "string",
+///      "enum": [
+///        "lsb",
+///        "msb"
+///      ]
+///    },
+///    "content": {
+///      "title": "Content for the status info",
+///      "examples": [
+///        "Low Oil Pressure",
+///        "High Temperature"
+///      ],
+///      "type": "string"
+///    },
+///    "fncode": {
+///      "title": "Modbus function code",
+///      "type": "integer"
+///    },
+///    "length_bits": {
+///      "title": "Length in bits for the status info",
+///      "type": "integer"
+///    },
+///    "register": {
+///      "title": "Modbus register for the status info",
+///      "type": "integer"
+///    },
+///    "start_bit": {
+///      "title": "Start bit (within the register) for the status info, first=0",
+///      "type": "integer",
+///      "maximum": 15.0,
+///      "minimum": 0.0
+///    },
+///    "status_level_value_map": {
+///      "title": "Mapping between value and status level",
+///      "description": "List of pairs that defines how to map a value to a status level (0=OK, 4=Critical)",
+///      "examples": [
+///        [
+///          [
+///            0,
+///            0
+///          ],
+///          [
+///            1,
+///            3
+///          ]
+///        ]
+///      ],
+///      "type": "array",
+///      "items": {
+///        "type": "array",
+///        "items": [
+///          {
+///            "title": "Value",
+///            "type": "integer"
+///          },
+///          {
+///            "title": "Numeric Status Level",
+///            "type": "integer",
+///            "enum": [
+///              0,
+///              1,
+///              2,
+///              3,
+///              4
+///            ]
+///          }
+///        ],
+///        "maxItems": 2,
+///        "minItems": 2
+///      }
+///    }
+///  }
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug, PartialEq)]
+pub struct StatusInfoOptsValue {
+    #[serde(default = "defaults::status_info_opts_value_bit_order")]
+    pub bit_order: BitOrder,
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub content: ::std::option::Option<::std::string::String>,
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub fncode: ::std::option::Option<i64>,
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub length_bits: ::std::option::Option<i64>,
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub register: ::std::option::Option<i64>,
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub start_bit: ::std::option::Option<i64>,
+    ///List of pairs that defines how to map a value to a status level (0=OK, 4=Critical)
+    #[serde(default, skip_serializing_if = "::std::vec::Vec::is_empty")]
+    pub status_level_value_map: ::std::vec::Vec<(i64, NumericStatusLevel)>,
+}
+impl ::std::convert::From<&StatusInfoOptsValue> for StatusInfoOptsValue {
+    fn from(value: &StatusInfoOptsValue) -> Self {
+        value.clone()
+    }
+}
+impl ::std::default::Default for StatusInfoOptsValue {
+    fn default() -> Self {
+        Self {
+            bit_order: defaults::status_info_opts_value_bit_order(),
+            content: Default::default(),
+            fncode: Default::default(),
+            length_bits: Default::default(),
+            register: Default::default(),
+            start_bit: Default::default(),
+            status_level_value_map: Default::default(),
+        }
+    }
+}
 ///`TypecastForFinalProcessedReading`
 ///
 /// <details><summary>JSON schema</summary>
@@ -644,6 +846,23 @@ pub mod defaults {
         <T as ::std::convert::TryFrom<u64>>::Error: ::std::fmt::Debug,
     {
         T::try_from(V).unwrap()
+    }
+    pub(super) fn driver_schema_common() -> super::FieldOpts {
+        super::FieldOpts {
+            datamap: Default::default(),
+            datatype: Default::default(),
+            description: Default::default(),
+            fncode: Default::default(),
+            multiplier: Default::default(),
+            offset: Default::default(),
+            register: Default::default(),
+            typecast: Default::default(),
+            unit: Default::default(),
+            words: Default::default(),
+        }
+    }
+    pub(super) fn status_info_opts_value_bit_order() -> super::BitOrder {
+        super::BitOrder::Lsb
     }
 }
 

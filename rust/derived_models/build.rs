@@ -6,24 +6,31 @@ fn main() {
     println!("cargo:rerun-if-changed=../json-schema/driver.schema.json");
     println!("cargo:rerun-if-changed=../json-schema/data.schema.json");
 
+    // Generate config types
     generate_types_from_schema(
         "../json-schema/config.schema.json",
         "src/config.rs",
         "Config types from config.schema.json",
     );
 
+    // Generate standalone driver types
     generate_types_from_schema(
         "../json-schema/driver.schema.json",
         "src/driver.rs",
         "Driver types from driver.schema.json",
     );
 
+    // Generate standalone data schema
     generate_types_from_schema(
         "../json-schema/data.schema.json",
         "src/data.rs",
         "Data types from data.schema.json",
     );
+
+    // Post-process config.rs to fix the drivers field type
+    post_process_config_rs();
 }
+
 
 fn generate_types_from_schema(schema_path: &str, output_path: &str, description: &str) {
     let schema_file = Path::new(schema_path);
@@ -54,4 +61,41 @@ fn generate_types_from_schema(schema_path: &str, output_path: &str, description:
 
     std::fs::write(output_file, contents)
         .unwrap_or_else(|e| panic!("Failed to write output file {}: {}", output_path, e));
+}
+
+fn post_process_config_rs() {
+    let config_file_path = "src/config.rs";
+
+    // Read the generated config.rs file
+    let content = std::fs::read_to_string(config_file_path)
+        .unwrap_or_else(|e| panic!("Failed to read generated config.rs: {}", e));
+
+    let mut modified_content = content;
+
+    // Add import for DriverSchema at the file level (after the header comments)
+    if let Some(pos) = modified_content.find("/// Error types.") {
+        let import_line = "use crate::driver::DriverSchema;\n\n";
+        modified_content.insert_str(pos, import_line);
+    }
+
+    // Find and replace the drivers field type
+    // Replace the specific pattern we found: pub drivers: ::serde_json::Map<::std::string::String, ::serde_json::Value>
+    let old_drivers_type = "pub drivers: ::serde_json::Map<::std::string::String, ::serde_json::Value>";
+    let new_drivers_type = "pub drivers: ::std::collections::HashMap<::std::string::String, DriverSchema>";
+
+    if modified_content.contains(old_drivers_type) {
+        modified_content = modified_content.replace(old_drivers_type, new_drivers_type);
+    }
+
+    // Also fix the serde annotation for the drivers field
+    let old_serde_attr = "#[serde(default, skip_serializing_if = \"::serde_json::Map::is_empty\")]";
+    let new_serde_attr = "#[serde(default, skip_serializing_if = \"::std::collections::HashMap::is_empty\")]";
+
+    if modified_content.contains(old_serde_attr) {
+        modified_content = modified_content.replace(old_serde_attr, new_serde_attr);
+    }
+
+    // Write the modified content back
+    std::fs::write(config_file_path, modified_content)
+        .unwrap_or_else(|e| panic!("Failed to write modified config.rs: {}", e));
 }
