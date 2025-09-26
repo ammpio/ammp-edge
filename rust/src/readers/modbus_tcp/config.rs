@@ -8,7 +8,7 @@ use std::time::Duration;
 
 // Import the generated types through domain module re-exports
 use crate::node_mgmt::config::{Config, Device, ReadingType};
-use crate::node_mgmt::drivers::{FieldOpts, DriverSchema, resolve_field_definition};
+use crate::node_mgmt::drivers::{DriverSchema, FieldOpts, resolve_field_definition};
 
 /// Configuration for a ModbusTCP device connection
 #[derive(Clone, Debug)]
@@ -83,12 +83,14 @@ impl ModbusDeviceConfig {
     }
 }
 
-/// Configuration for reading a specific register/variable
+/// Configuration for reading a specific field
 #[derive(Clone, Debug)]
 pub struct ReadingConfig {
     pub variable_name: String,
-    /// The resolved field configuration from the driver
     pub field_config: FieldOpts,
+    pub register: u16,
+    pub words: u16,
+    pub fncode: u8,
 }
 
 impl ReadingConfig {
@@ -99,7 +101,9 @@ impl ReadingConfig {
         };
 
         // Get datatype from field config
-        let datatype = self.field_config.datatype
+        let datatype = self
+            .field_config
+            .datatype
             .ok_or_else(|| anyhow!("Missing datatype for field {}", self.variable_name))?;
 
         // Convert to processing enum
@@ -140,61 +144,22 @@ impl ReadingConfig {
     }
 
     /// Create reading config from driver and field name
-    pub fn from_driver_field(
-        variable_name: &str,
-        driver: &DriverSchema,
-    ) -> Result<Self> {
+    pub fn from_driver_field(variable_name: &str, driver: &DriverSchema) -> Result<Self> {
         // Use the driver system to resolve field configuration
         let field_config = resolve_field_definition(driver, variable_name)?;
 
         // Validate required fields for ModbusTCP
-        field_config.register
+        let register = field_config
+            .register
             .ok_or_else(|| anyhow!("Field {} missing register address", variable_name))?;
-
-        field_config.datatype
-            .ok_or_else(|| anyhow!("Field {} missing datatype", variable_name))?;
 
         Ok(ReadingConfig {
             variable_name: variable_name.to_string(),
+            register: register as u16,
+            words: field_config.words.unwrap_or(1) as u16,
+            fncode: field_config.fncode as u8,
             field_config,
         })
-    }
-
-    /// Get the register address for this reading
-    pub fn register(&self) -> u16 {
-        self.field_config.register.unwrap_or(0) as u16
-    }
-
-    /// Get the number of words to read
-    pub fn word_count(&self) -> u16 {
-        self.field_config.words.unwrap_or_else(|| {
-            // Calculate default word count based on datatype if not specified
-            if let Some(datatype) = &self.field_config.datatype {
-                match datatype.to_string().to_lowercase().as_str() {
-                    "uint16" | "int16" => 1,
-                    "uint32" | "int32" | "float" | "single" => 2,
-                    "uint64" | "int64" | "double" => 4,
-                    _ => 1, // Default fallback
-                }
-            } else {
-                1 // Default fallback
-            }
-        }) as u16
-    }
-
-    /// Get the Modbus function code
-    pub fn function_code(&self) -> u8 {
-        self.field_config.fncode as u8
-    }
-
-    /// Get the unit string if available
-    pub fn unit(&self) -> Option<&String> {
-        self.field_config.unit.as_ref()
-    }
-
-    /// Calculate register range (start, count)
-    pub fn register_range(&self) -> (u16, u16) {
-        (self.register(), self.word_count())
     }
 }
 
@@ -308,18 +273,18 @@ mod tests {
         // Test voltage field (inherits from common)
         let voltage_config = ReadingConfig::from_driver_field("voltage", &driver).unwrap();
         assert_eq!(voltage_config.variable_name, "voltage");
-        assert_eq!(voltage_config.register(), 1000);
-        assert_eq!(voltage_config.word_count(), 1); // From common
-        assert_eq!(voltage_config.function_code(), 4); // From common
-        assert_eq!(voltage_config.unit(), Some(&"V".to_string()));
+        assert_eq!(voltage_config.register, 1000);
+        assert_eq!(voltage_config.words, 1); // From common
+        assert_eq!(voltage_config.fncode, 4); // From common
+        assert_eq!(voltage_config.field_config.unit, Some("V".to_string()));
 
         // Test power field (overrides common)
         let power_config = ReadingConfig::from_driver_field("power", &driver).unwrap();
         assert_eq!(power_config.variable_name, "power");
-        assert_eq!(power_config.register(), 2000);
-        assert_eq!(power_config.word_count(), 2); // Overridden
-        assert_eq!(power_config.function_code(), 4); // From common
-        assert_eq!(power_config.unit(), Some(&"W".to_string()));
+        assert_eq!(power_config.register, 2000);
+        assert_eq!(power_config.words, 2); // Overridden
+        assert_eq!(power_config.fncode, 4); // From common
+        assert_eq!(power_config.field_config.unit, Some("W".to_string()));
     }
 
     #[test]

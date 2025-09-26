@@ -85,7 +85,6 @@ pub struct DeviceReading {
 pub struct Reading {
     pub field: String,
     pub value: RtValue,
-    pub unit: Option<String>,
 }
 
 // #[derive(Debug)]
