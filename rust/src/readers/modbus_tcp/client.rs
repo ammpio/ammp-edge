@@ -109,7 +109,7 @@ impl ModbusTcpReader {
                     readings.push(Reading {
                         field: config.variable_name.clone(),
                         value: RtValue::Float(value),
-                        unit: config.unit.clone(),
+                        unit: config.unit().cloned(),
                     });
                     log::debug!("Successfully read {}: {}", config.variable_name, value);
                 }
@@ -130,7 +130,7 @@ impl ModbusTcpReader {
     async fn read_single_value(&mut self, config: &ReadingConfig) -> Result<f64> {
         // Read raw register values
         let raw_registers = self
-            .read_registers(config.register, config.word_count, config.function_code)
+            .read_registers(config.register(), config.word_count(), config.function_code())
             .await?;
 
         // Use the new parsing method from ReadingConfig

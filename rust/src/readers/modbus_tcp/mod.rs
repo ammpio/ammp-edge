@@ -7,6 +7,7 @@ use crate::{
     data_mgmt::models::{DeviceReading, Record},
     data_mgmt::readings::ReadingRequest,
     node_mgmt::config::Device,
+    node_mgmt::drivers::load_driver,
 };
 
 // Re-export main types for easier access
@@ -89,8 +90,6 @@ fn convert_reading_requests_to_configs(
     reading_requests: &[ReadingRequest],
     device: &Device,
 ) -> Result<Vec<ReadingConfig>> {
-    use crate::data_mgmt::drivers::{load_driver, resolve_field_definition};
-
     let mut reading_configs = Vec::new();
 
     // Load driver definition for this device
@@ -98,21 +97,9 @@ fn convert_reading_requests_to_configs(
         .map_err(|e| anyhow!("Failed to load driver '{}': {}", device.driver, e))?;
 
     for request in reading_requests {
-        // Resolve field definition from driver
-        let field_def = resolve_field_definition(&driver, &request.variable_name)
-            .map_err(|e| anyhow!("Failed to resolve field '{}': {}", request.variable_name, e))?;
-
-        let reading_config = ReadingConfig {
-            variable_name: request.variable_name.clone(),
-            register: field_def.register.unwrap(), // Already validated in resolve_field_definition
-            word_count: field_def.words,
-            datatype: field_def.datatype,
-            function_code: field_def.fncode,
-            multiplier: field_def.multiplier.unwrap_or(1.0),
-            offset: field_def.offset.unwrap_or(0.0),
-            unit: field_def.unit,
-            valuemap: field_def.valuemap,
-        };
+        // Use the simplified ReadingConfig creation
+        let reading_config = ReadingConfig::from_driver_field(&request.variable_name, &driver)
+            .map_err(|e| anyhow!("Failed to create reading config for '{}': {}", request.variable_name, e))?;
 
         reading_configs.push(reading_config);
     }

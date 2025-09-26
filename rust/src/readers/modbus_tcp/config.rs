@@ -8,7 +8,7 @@ use std::time::Duration;
 
 // Import the generated types through domain module re-exports
 use crate::node_mgmt::config::{Config, Device, ReadingType};
-use crate::node_mgmt::drivers::FieldOpts;
+use crate::node_mgmt::drivers::{FieldOpts, DriverSchema, resolve_field_definition};
 
 /// Configuration for a ModbusTCP device connection
 #[derive(Clone, Debug)]
@@ -87,14 +87,8 @@ impl ModbusDeviceConfig {
 #[derive(Clone, Debug)]
 pub struct ReadingConfig {
     pub variable_name: String,
-    pub register: u16,
-    pub word_count: u16,
-    pub datatype: String,
-    pub function_code: u8,
-    pub multiplier: f64,
-    pub offset: f64,
-    pub unit: Option<String>,
-    pub valuemap: Option<std::collections::HashMap<String, f64>>,
+    /// The resolved field configuration from the driver
+    pub field_config: FieldOpts,
 }
 
 impl ReadingConfig {
@@ -104,17 +98,34 @@ impl ReadingConfig {
             DataType, ParseAs, ProcessingParams, TypeCast, process_reading,
         };
 
-        // Convert datatype string to enum
-        let datatype = self.datatype.parse::<DataType>()?;
+        // Get datatype from field config
+        let datatype = self.field_config.datatype
+            .ok_or_else(|| anyhow!("Missing datatype for field {}", self.variable_name))?;
+
+        // Convert to processing enum
+        let datatype_enum = datatype.to_string().parse::<DataType>()?;
+
+        // Extract valuemap from datamap field
+        let valuemap = if !self.field_config.datamap.is_empty() {
+            let mut vm = std::collections::HashMap::new();
+            for (key, value) in &self.field_config.datamap {
+                if let Some(num_val) = value.as_f64() {
+                    vm.insert(key.clone(), num_val);
+                }
+            }
+            if !vm.is_empty() { Some(vm) } else { None }
+        } else {
+            None
+        };
 
         // Create processing parameters
         let params = ProcessingParams {
             parse_as: ParseAs::Bytes,
-            datatype: Some(datatype),
+            datatype: Some(datatype_enum),
             typecast: Some(TypeCast::Float), // ModbusTCP readings are typically numeric
-            valuemap: self.valuemap.clone(),
-            multiplier: Some(self.multiplier),
-            offset: Some(self.offset),
+            valuemap,
+            multiplier: self.field_config.multiplier,
+            offset: self.field_config.offset,
         };
 
         // Process the reading
@@ -128,104 +139,62 @@ impl ReadingConfig {
         }
     }
 
-    /// Create reading config from configuration data
+    /// Create reading config from driver and field name
     pub fn from_driver_field(
         variable_name: &str,
-        field_config: &FieldOpts,
-        common_config: Option<&FieldOpts>,
+        driver: &DriverSchema,
     ) -> Result<Self> {
-        // Get register address
-        let register = field_config
-            .register
-            .ok_or_else(|| anyhow!("Field {} missing register address", variable_name))?
-            as u16;
+        // Use the driver system to resolve field configuration
+        let field_config = resolve_field_definition(driver, variable_name)?;
 
-        // Determine datatype from field or common config
-        let datatype = field_config
-            .datatype
-            .or_else(|| common_config.and_then(|c| c.datatype))
+        // Validate required fields for ModbusTCP
+        field_config.register
+            .ok_or_else(|| anyhow!("Field {} missing register address", variable_name))?;
+
+        field_config.datatype
             .ok_or_else(|| anyhow!("Field {} missing datatype", variable_name))?;
-
-        let datatype_str = datatype.to_string();
-
-        // Calculate word count based on datatype
-        let word_count = Self::calculate_word_count(&datatype_str)?;
-
-        // Get function code
-        let function_code = if field_config.fncode != 0 {
-            field_config.fncode as u8
-        } else if let Some(common) = common_config {
-            common.fncode as u8
-        } else {
-            3 // Default to holding registers
-        };
-
-        // Get scaling parameters
-        let multiplier = field_config.multiplier.unwrap_or(1.0);
-        let offset = field_config.offset.unwrap_or(0.0);
-
-        // Extract valuemap from datamap field
-        let valuemap = if !field_config.datamap.is_empty() {
-            let mut vm = std::collections::HashMap::new();
-            for (key, value) in &field_config.datamap {
-                if let Some(num_val) = value.as_f64() {
-                    vm.insert(key.clone(), num_val);
-                }
-                // Note: null values in datamap are ignored as they typically represent invalid readings
-            }
-            if !vm.is_empty() { Some(vm) } else { None }
-        } else {
-            None
-        };
 
         Ok(ReadingConfig {
             variable_name: variable_name.to_string(),
-            register,
-            word_count,
-            datatype: datatype_str,
-            function_code,
-            multiplier,
-            offset,
-            unit: field_config.unit.clone(),
-            valuemap,
+            field_config,
         })
     }
 
-    /// Create a test reading configuration for development
-    pub fn test_config(
-        variable_name: &str,
-        register: u16,
-        datatype: &str,
-        multiplier: Option<f64>,
-    ) -> Result<Self> {
-        let word_count = Self::calculate_word_count(datatype)?;
+    /// Get the register address for this reading
+    pub fn register(&self) -> u16 {
+        self.field_config.register.unwrap_or(0) as u16
+    }
 
-        Ok(ReadingConfig {
-            variable_name: variable_name.to_string(),
-            register,
-            word_count,
-            datatype: datatype.to_string(),
-            function_code: 3, // Holding registers
-            multiplier: multiplier.unwrap_or(1.0),
-            offset: 0.0,
-            unit: None,
-            valuemap: None,
-        })
+    /// Get the number of words to read
+    pub fn word_count(&self) -> u16 {
+        self.field_config.words.unwrap_or_else(|| {
+            // Calculate default word count based on datatype if not specified
+            if let Some(datatype) = &self.field_config.datatype {
+                match datatype.to_string().to_lowercase().as_str() {
+                    "uint16" | "int16" => 1,
+                    "uint32" | "int32" | "float" | "single" => 2,
+                    "uint64" | "int64" | "double" => 4,
+                    _ => 1, // Default fallback
+                }
+            } else {
+                1 // Default fallback
+            }
+        }) as u16
+    }
+
+    /// Get the Modbus function code
+    pub fn function_code(&self) -> u8 {
+        self.field_config.fncode as u8
+    }
+
+    /// Get the unit string if available
+    pub fn unit(&self) -> Option<&String> {
+        self.field_config.unit.as_ref()
     }
 
     /// Calculate register range (start, count)
     pub fn register_range(&self) -> (u16, u16) {
-        (self.register, self.word_count)
-    }
-
-    /// Calculate word count based on datatype
-    fn calculate_word_count(datatype: &str) -> Result<u16> {
-        match datatype.to_lowercase().as_str() {
-            "uint16" | "int16" => Ok(1),
-            "uint32" | "int32" | "float" | "single" => Ok(2),
-            "uint64" | "int64" | "double" => Ok(4),
-            _ => Err(anyhow!("Unsupported datatype: {}", datatype)),
-        }
+        (self.register(), self.word_count())
     }
 }
 
@@ -268,20 +237,19 @@ pub fn extract_device_readings(config: &Config, device_id: &str) -> Result<Vec<R
         if reading_schema.device == device_id {
             // Try to get field configuration from driver
             if let Some(driver) = &driver_schema {
-                if let Some(field_config) = driver.fields.get(&reading_schema.var) {
-                    let reading_config = ReadingConfig::from_driver_field(
-                        &reading_schema.var,
-                        field_config,
-                        Some(&driver.common),
-                    )?;
-                    reading_configs.push(reading_config);
-                } else {
-                    log::warn!(
-                        "Field {} not found in driver {} for device {}",
-                        reading_schema.var,
-                        device.driver,
-                        device_id
-                    );
+                match ReadingConfig::from_driver_field(&reading_schema.var, driver) {
+                    Ok(reading_config) => {
+                        reading_configs.push(reading_config);
+                    }
+                    Err(e) => {
+                        log::warn!(
+                            "Failed to create reading config for field {} in driver {} for device {}: {}",
+                            reading_schema.var,
+                            device.driver,
+                            device_id,
+                            e
+                        );
+                    }
                 }
             } else {
                 log::warn!(
@@ -299,6 +267,7 @@ pub fn extract_device_readings(config: &Config, device_id: &str) -> Result<Vec<R
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serde_json::json;
 
     #[test]
     fn test_modbus_device_config_test_config() {
@@ -310,36 +279,47 @@ mod tests {
     }
 
     #[test]
-    fn test_reading_config_word_count_calculation() {
-        let config_u16 = ReadingConfig::test_config("test", 1000, "uint16", None).unwrap();
-        assert_eq!(config_u16.word_count, 1);
+    fn test_reading_config_from_driver() {
+        // Create a test driver schema
+        let driver_json = json!({
+            "common": {
+                "fncode": 4,
+                "words": 1,
+                "datatype": "uint16"
+            },
+            "fields": {
+                "voltage": {
+                    "register": 1000,
+                    "multiplier": 0.1,
+                    "unit": "V"
+                },
+                "power": {
+                    "register": 2000,
+                    "words": 2,
+                    "datatype": "uint32",
+                    "multiplier": 10.0,
+                    "unit": "W"
+                }
+            }
+        });
 
-        let config_u32 = ReadingConfig::test_config("test", 1000, "uint32", None).unwrap();
-        assert_eq!(config_u32.word_count, 2);
+        let driver: DriverSchema = serde_json::from_value(driver_json).unwrap();
 
-        let config_float = ReadingConfig::test_config("test", 1000, "float", None).unwrap();
-        assert_eq!(config_float.word_count, 2);
+        // Test voltage field (inherits from common)
+        let voltage_config = ReadingConfig::from_driver_field("voltage", &driver).unwrap();
+        assert_eq!(voltage_config.variable_name, "voltage");
+        assert_eq!(voltage_config.register(), 1000);
+        assert_eq!(voltage_config.word_count(), 1); // From common
+        assert_eq!(voltage_config.function_code(), 4); // From common
+        assert_eq!(voltage_config.unit(), Some(&"V".to_string()));
 
-        let config_double = ReadingConfig::test_config("test", 1000, "double", None).unwrap();
-        assert_eq!(config_double.word_count, 4);
-    }
-
-    #[test]
-    fn test_reading_config_with_multiplier() {
-        let config = ReadingConfig::test_config("voltage", 1000, "uint16", Some(0.1)).unwrap();
-        assert_eq!(config.variable_name, "voltage");
-        assert_eq!(config.register, 1000);
-        assert_eq!(config.multiplier, 0.1);
-    }
-
-    #[test]
-    fn test_reading_config_word_count_calculation_direct() {
-        assert_eq!(ReadingConfig::calculate_word_count("uint16").unwrap(), 1);
-        assert_eq!(ReadingConfig::calculate_word_count("int16").unwrap(), 1);
-        assert_eq!(ReadingConfig::calculate_word_count("uint32").unwrap(), 2);
-        assert_eq!(ReadingConfig::calculate_word_count("int32").unwrap(), 2);
-        assert_eq!(ReadingConfig::calculate_word_count("float").unwrap(), 2);
-        assert_eq!(ReadingConfig::calculate_word_count("double").unwrap(), 4);
+        // Test power field (overrides common)
+        let power_config = ReadingConfig::from_driver_field("power", &driver).unwrap();
+        assert_eq!(power_config.variable_name, "power");
+        assert_eq!(power_config.register(), 2000);
+        assert_eq!(power_config.word_count(), 2); // Overridden
+        assert_eq!(power_config.function_code(), 4); // From common
+        assert_eq!(power_config.unit(), Some(&"W".to_string()));
     }
 
     #[test]
