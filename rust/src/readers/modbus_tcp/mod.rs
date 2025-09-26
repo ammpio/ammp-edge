@@ -99,7 +99,13 @@ fn convert_reading_requests_to_configs(
     for request in reading_requests {
         // Use the simplified ReadingConfig creation
         let reading_config = ReadingConfig::from_driver_field(&request.variable_name, &driver)
-            .map_err(|e| anyhow!("Failed to create reading config for '{}': {}", request.variable_name, e))?;
+            .map_err(|e| {
+                anyhow!(
+                    "Failed to create reading config for '{}': {}",
+                    request.variable_name,
+                    e
+                )
+            })?;
 
         reading_configs.push(reading_config);
     }

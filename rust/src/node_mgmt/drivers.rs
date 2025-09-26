@@ -55,14 +55,13 @@ pub fn load_driver(config: &Config, driver_name: &str) -> Result<DriverSchema> {
             )
         })?;
 
-        let driver_schema: DriverSchema =
-            serde_json::from_str(&driver_content).map_err(|e| {
-                anyhow!(
-                    "Failed to parse driver JSON {}: {}",
-                    driver_path.display(),
-                    e
-                )
-            })?;
+        let driver_schema: DriverSchema = serde_json::from_str(&driver_content).map_err(|e| {
+            anyhow!(
+                "Failed to parse driver JSON {}: {}",
+                driver_path.display(),
+                e
+            )
+        })?;
 
         // Cache the loaded driver
         {
@@ -88,14 +87,10 @@ pub fn clear_driver_cache() {
     log::debug!("Driver cache cleared");
 }
 
-
 /// Resolve field definition by merging common and field-specific settings
 ///
 /// Field-specific settings override common settings
-pub fn resolve_field_definition(
-    driver: &DriverSchema,
-    field_name: &str,
-) -> Result<FieldOpts> {
+pub fn resolve_field_definition(driver: &DriverSchema, field_name: &str) -> Result<FieldOpts> {
     let field_def = driver
         .fields
         .get(field_name)
@@ -115,8 +110,6 @@ pub fn resolve_field_definition(
 
 /// Merge source FieldOpts into target, with source taking precedence
 fn merge_field_opts(target: &mut FieldOpts, source: &FieldOpts) {
-    let defaults = FieldOpts::default();
-    
     if let Some(register) = source.register {
         target.register = Some(register);
     }
@@ -126,7 +119,7 @@ fn merge_field_opts(target: &mut FieldOpts, source: &FieldOpts) {
     if let Some(datatype) = source.datatype {
         target.datatype = Some(datatype);
     }
-    if source.fncode != defaults.fncode {
+    if target.fncode != source.fncode {
         target.fncode = source.fncode;
     }
     if let Some(typecast) = source.typecast {
@@ -148,8 +141,6 @@ fn merge_field_opts(target: &mut FieldOpts, source: &FieldOpts) {
         target.datamap = source.datamap.clone();
     }
 }
-
-
 
 #[cfg(test)]
 mod tests {
@@ -195,7 +186,10 @@ mod tests {
         let power_field = resolve_field_definition(&driver, "power").unwrap();
         assert_eq!(power_field.register, Some(20));
         assert_eq!(power_field.words, Some(2)); // Overrides common
-        assert_eq!(power_field.datatype.as_ref().map(|d| d.to_string()), Some("uint32".to_string())); // Overrides common
+        assert_eq!(
+            power_field.datatype.as_ref().map(|d| d.to_string()),
+            Some("uint32".to_string())
+        ); // Overrides common
     }
 
     #[test]
