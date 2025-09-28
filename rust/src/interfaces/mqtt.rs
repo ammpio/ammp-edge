@@ -54,7 +54,13 @@ pub enum MqttError {
     #[error(transparent)]
     MqttClient(#[from] rumqttc::ClientError),
     #[error(transparent)]
-    MqttConnection(#[from] rumqttc::ConnectionError),
+    MqttConnection(Box<rumqttc::ConnectionError>),
+}
+
+impl From<rumqttc::ConnectionError> for MqttError {
+    fn from(err: rumqttc::ConnectionError) -> Self {
+        Self::MqttConnection(Box::new(err))
+    }
 }
 
 pub fn rand_client_id(prefix: Option<&str>) -> String {
