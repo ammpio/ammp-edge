@@ -71,7 +71,7 @@ fn generate_types_from_schema(schema_path: &str, output_path: &str, description:
 fn post_process_driver_rs(content: String) -> String {
     // Convert all i64 types to u8 types
     // This handles the case where JSON schema has "type": "integer", "format": "u8"
-    
+
     content
         .replace("i64", "u8")
         .replace("::std::num::NonZeroU64", "::std::num::NonZeroU16")

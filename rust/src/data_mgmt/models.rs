@@ -7,8 +7,7 @@ use crate::node_mgmt::config::Device;
 
 use super::payload::DeviceDataExtraValue;
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
-
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 pub enum RtValue {
     Bool(bool),
     Float(f64),

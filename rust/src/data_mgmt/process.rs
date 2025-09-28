@@ -175,7 +175,7 @@ fn apply_multiplier_offset(
 }
 
 /// Apply final type casting to get the desired output type
-fn apply_typecast(value: f64, typecast: Option<TypeCast>) -> Result<ProcessedValue> {
+pub fn apply_typecast(value: f64, typecast: Option<TypeCast>) -> Result<ProcessedValue> {
     match typecast {
         Some(TypeCast::Int) => Ok(ProcessedValue::Int(value as i64)),
         Some(TypeCast::Float) => Ok(ProcessedValue::Float(value)),

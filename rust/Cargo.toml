@@ -10,6 +10,7 @@ repository = "https://github.com/ammpio/ammp-edge"
 anyhow = "1.0.95"
 ahash = "0.8.11"
 backoff = "0.4.0"
+bumpalo = "3.19.0"
 byteorder = "1.5"
 chrono = { version = "0.4.39", default-features = false, features = ["std", "clock"] }
 chrono-tz = "0.10.1"
@@ -19,6 +20,7 @@ flume = "0.11.1"
 futures = "0.3"
 hex = "0.4.3"
 itertools = "0.14.0"
+jsonata-rs = "0.3.4"
 kvstore = { path = "kvstore" }
 derived_models = { path = "derived_models" }
 log = "0.4.25"
