@@ -122,11 +122,15 @@ impl ReadingConfig {
             .register
             .ok_or_else(|| anyhow!("Field {} missing register address", variable_name))?;
 
+        let fncode = field_config
+            .fncode
+            .ok_or_else(|| anyhow!("Field {} missing fncode (function code)", variable_name))?;
+
         Ok(ReadingConfig {
             variable_name: variable_name.to_string(),
-            register: register as u16,
-            words: field_config.words.unwrap_or(1) as u16,
-            fncode: field_config.fncode as u8,
+            fncode,
+            register,
+            words: field_config.words.map(|w| w.get()).unwrap_or(1) as u16,
             field_config,
         })
     }

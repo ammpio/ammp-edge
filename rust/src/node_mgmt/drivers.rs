@@ -119,10 +119,8 @@ fn merge_field_opts(target: &mut FieldOpts, source: &FieldOpts) {
     if let Some(datatype) = source.datatype {
         target.datatype = Some(datatype);
     }
-    // Only override fncode if source has a non-default value
-    // The default value for fncode is 3, so we only copy if source != 3
-    if source.fncode != 3 {
-        target.fncode = source.fncode;
+    if let Some(fncode) = source.fncode {
+        target.fncode = Some(fncode);
     }
     if let Some(typecast) = source.typecast {
         target.typecast = Some(typecast);
@@ -176,18 +174,18 @@ mod tests {
 
         let driver: DriverSchema = serde_json::from_value(driver_json).unwrap();
 
-        assert_eq!(driver.common.fncode, 4);
+        assert_eq!(driver.common.fncode, Some(4));
         assert_eq!(driver.fields.len(), 2);
 
         let voltage_field = resolve_field_definition(&driver, "voltage").unwrap();
         assert_eq!(voltage_field.register, Some(10));
-        assert_eq!(voltage_field.fncode, 4); // From common
+        assert_eq!(voltage_field.fncode, Some(4)); // From common
         assert_eq!(voltage_field.multiplier, Some(0.1));
         assert_eq!(voltage_field.unit, Some("V".to_string()));
 
         let power_field = resolve_field_definition(&driver, "power").unwrap();
         assert_eq!(power_field.register, Some(20));
-        assert_eq!(power_field.words, Some(2)); // Overrides common
+        assert_eq!(power_field.words.map(|w| w.get()), Some(2)); // Overrides common
         assert_eq!(
             power_field.datatype.as_ref().map(|d| d.to_string()),
             Some("uint32".to_string())
