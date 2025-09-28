@@ -34,14 +34,14 @@ pub mod error {
         }
     }
 }
-///`BitOrder`
+///Bit order, if extracting part of register
 ///
 /// <details><summary>JSON schema</summary>
 ///
 /// ```json
 ///{
 ///  "title": "Bit order",
-///  "default": "lsb",
+///  "description": "Bit order, if extracting part of register",
 ///  "type": "string",
 ///  "enum": [
 ///    "lsb",
@@ -117,9 +117,291 @@ impl ::std::convert::TryFrom<::std::string::String> for BitOrder {
         value.parse()
     }
 }
-impl ::std::default::Default for BitOrder {
+///`CommonModbusReadingOpts`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "title": "Common Modbus reading opts",
+///  "type": "object",
+///  "properties": {
+///    "bit_order": {
+///      "title": "Bit order",
+///      "description": "Bit order, if extracting part of register",
+///      "type": "string",
+///      "enum": [
+///        "lsb",
+///        "msb"
+///      ]
+///    },
+///    "fncode": {
+///      "title": "Function code",
+///      "description": "Modbus function code",
+///      "examples": [
+///        3,
+///        4
+///      ],
+///      "type": "integer",
+///      "format": "u8"
+///    },
+///    "length_bits": {
+///      "title": "Length in bits",
+///      "description": "Length in bits, if extracting part of register",
+///      "type": "integer",
+///      "format": "u8",
+///      "maximum": 16.0,
+///      "minimum": 1.0
+///    },
+///    "order": {
+///      "title": "Register order",
+///      "description": "Register order when parsing multi-register readings",
+///      "type": "string",
+///      "enum": [
+///        "msr",
+///        "lsr"
+///      ]
+///    },
+///    "register": {
+///      "title": "Register",
+///      "description": "Modbus register",
+///      "type": "integer",
+///      "format": "u16",
+///      "maximum": 65535.0,
+///      "minimum": 0.0
+///    },
+///    "start_bit": {
+///      "title": "Start bit",
+///      "description": "Start bit, if extracting part of register",
+///      "type": "integer",
+///      "format": "u8",
+///      "maximum": 15.0,
+///      "minimum": 0.0
+///    },
+///    "words": {
+///      "title": "Words",
+///      "description": "Number of 2-byte words for Modbus",
+///      "examples": [
+///        2
+///      ],
+///      "type": "integer",
+///      "format": "u16",
+///      "maximum": 4.0,
+///      "minimum": 1.0
+///    }
+///  }
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug, PartialEq)]
+pub struct CommonModbusReadingOpts {
+    ///Bit order, if extracting part of register
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub bit_order: ::std::option::Option<BitOrder>,
+    ///Modbus function code
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub fncode: ::std::option::Option<u8>,
+    ///Length in bits, if extracting part of register
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub length_bits: ::std::option::Option<::std::num::NonZeroU16>,
+    ///Register order when parsing multi-register readings
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub order: ::std::option::Option<RegisterOrder>,
+    ///Modbus register
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub register: ::std::option::Option<u16>,
+    ///Start bit, if extracting part of register
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub start_bit: ::std::option::Option<u8>,
+    ///Number of 2-byte words for Modbus
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub words: ::std::option::Option<::std::num::NonZeroU16>,
+}
+impl ::std::convert::From<&CommonModbusReadingOpts> for CommonModbusReadingOpts {
+    fn from(value: &CommonModbusReadingOpts) -> Self {
+        value.clone()
+    }
+}
+impl ::std::default::Default for CommonModbusReadingOpts {
     fn default() -> Self {
-        BitOrder::Lsb
+        Self {
+            bit_order: Default::default(),
+            fncode: Default::default(),
+            length_bits: Default::default(),
+            order: Default::default(),
+            register: Default::default(),
+            start_bit: Default::default(),
+            words: Default::default(),
+        }
+    }
+}
+///`CommonMqttReadingOpts`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "title": "Common MQTT reading opts",
+///  "type": "object",
+///  "properties": {
+///    "parse_as": {
+///      "title": "Parse input as",
+///      "description": "Parse data based on serialization of readout",
+///      "type": "string",
+///      "enum": [
+///        "bytes",
+///        "str",
+///        "hex"
+///      ]
+///    },
+///    "topic": {
+///      "title": "Topic",
+///      "description": "MQTT topic to subscribe to",
+///      "examples": [
+///        "sensor/temperature"
+///      ],
+///      "type": "string"
+///    }
+///  }
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug, PartialEq)]
+pub struct CommonMqttReadingOpts {
+    ///Parse data based on serialization of readout
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub parse_as: ::std::option::Option<ParseInputAs>,
+    ///MQTT topic to subscribe to
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub topic: ::std::option::Option<::std::string::String>,
+}
+impl ::std::convert::From<&CommonMqttReadingOpts> for CommonMqttReadingOpts {
+    fn from(value: &CommonMqttReadingOpts) -> Self {
+        value.clone()
+    }
+}
+impl ::std::default::Default for CommonMqttReadingOpts {
+    fn default() -> Self {
+        Self {
+            parse_as: Default::default(),
+            topic: Default::default(),
+        }
+    }
+}
+///Source type of data being read
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "title": "Data type",
+///  "description": "Source type of data being read",
+///  "examples": [
+///    "int16"
+///  ],
+///  "type": "string",
+///  "enum": [
+///    "int16",
+///    "uint16",
+///    "int32",
+///    "uint32",
+///    "int64",
+///    "uint64",
+///    "float",
+///    "double"
+///  ]
+///}
+/// ```
+/// </details>
+#[derive(
+    ::serde::Deserialize,
+    ::serde::Serialize,
+    Clone,
+    Copy,
+    Debug,
+    Eq,
+    Hash,
+    Ord,
+    PartialEq,
+    PartialOrd
+)]
+pub enum DataType {
+    #[serde(rename = "int16")]
+    Int16,
+    #[serde(rename = "uint16")]
+    Uint16,
+    #[serde(rename = "int32")]
+    Int32,
+    #[serde(rename = "uint32")]
+    Uint32,
+    #[serde(rename = "int64")]
+    Int64,
+    #[serde(rename = "uint64")]
+    Uint64,
+    #[serde(rename = "float")]
+    Float,
+    #[serde(rename = "double")]
+    Double,
+}
+impl ::std::convert::From<&Self> for DataType {
+    fn from(value: &DataType) -> Self {
+        value.clone()
+    }
+}
+impl ::std::fmt::Display for DataType {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        match *self {
+            Self::Int16 => f.write_str("int16"),
+            Self::Uint16 => f.write_str("uint16"),
+            Self::Int32 => f.write_str("int32"),
+            Self::Uint32 => f.write_str("uint32"),
+            Self::Int64 => f.write_str("int64"),
+            Self::Uint64 => f.write_str("uint64"),
+            Self::Float => f.write_str("float"),
+            Self::Double => f.write_str("double"),
+        }
+    }
+}
+impl ::std::str::FromStr for DataType {
+    type Err = self::error::ConversionError;
+    fn from_str(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        match value {
+            "int16" => Ok(Self::Int16),
+            "uint16" => Ok(Self::Uint16),
+            "int32" => Ok(Self::Int32),
+            "uint32" => Ok(Self::Uint32),
+            "int64" => Ok(Self::Int64),
+            "uint64" => Ok(Self::Uint64),
+            "float" => Ok(Self::Float),
+            "double" => Ok(Self::Double),
+            _ => Err("invalid value".into()),
+        }
+    }
+}
+impl ::std::convert::TryFrom<&str> for DataType {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<&::std::string::String> for DataType {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<::std::string::String> for DataType {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: ::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
     }
 }
 ///`DriverSchema`
@@ -155,14 +437,15 @@ impl ::std::default::Default for BitOrder {
 ///      }
 ///    },
 ///    "status_info": {
-///      "title": "Configs per status info key",
+///      "title": "Status info items to be read",
 ///      "type": "object",
 ///      "additionalProperties": {
 ///        "$ref": "#/definitions/status_info_opts"
 ///      }
 ///    },
 ///    "status_info_common": {
-///      "title": "Fallback if no specific config per status info key is defined",
+///      "title": "Common status info parameters",
+///      "default": {},
 ///      "$ref": "#/definitions/status_info_opts"
 ///    }
 ///  }
@@ -176,8 +459,8 @@ pub struct DriverSchema {
     pub fields: ::std::collections::HashMap<::std::string::String, FieldOpts>,
     #[serde(default, skip_serializing_if = ":: std :: collections :: HashMap::is_empty")]
     pub status_info: ::std::collections::HashMap<::std::string::String, StatusInfoOpts>,
-    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub status_info_common: ::std::option::Option<StatusInfoOpts>,
+    #[serde(default = "defaults::driver_schema_status_info_common")]
+    pub status_info_common: StatusInfoOpts,
 }
 impl ::std::convert::From<&DriverSchema> for DriverSchema {
     fn from(value: &DriverSchema) -> Self {
@@ -190,105 +473,121 @@ impl ::std::convert::From<&DriverSchema> for DriverSchema {
 ///
 /// ```json
 ///{
-///  "title": "Field options",
-///  "type": "object",
-///  "properties": {
-///    "datamap": {
-///      "title": "Mapping between source and final value",
-///      "type": "object"
+///  "allOf": [
+///    {
+///      "$ref": "#/definitions/common_modbus_reading_opts"
 ///    },
-///    "datatype": {
-///      "title": "Source type of data being read",
-///      "examples": [
-///        "int16"
-///      ],
-///      "type": "string",
-///      "enum": [
-///        "int16",
-///        "uint16",
-///        "int32",
-///        "uint32",
-///        "int64",
-///        "uint64",
-///        "float",
-///        "double"
-///      ]
+///    {
+///      "$ref": "#/definitions/common_mqtt_reading_opts"
 ///    },
-///    "description": {
-///      "title": "Description of reading (not used for data processing)",
-///      "type": "string"
-///    },
-///    "fncode": {
-///      "title": "Modbus function code",
-///      "default": 3,
-///      "examples": [
-///        3,
-///        4
-///      ],
-///      "type": "integer"
-///    },
-///    "multiplier": {
-///      "title": "Reading multiplier (applied before offset)",
-///      "type": "number"
-///    },
-///    "offset": {
-///      "title": "Reading offset (applied after multiplier)",
-///      "type": "number"
-///    },
-///    "register": {
-///      "title": "Modbus start register",
-///      "type": "integer"
-///    },
-///    "typecast": {
-///      "title": "Typecast for final processed reading",
-///      "examples": [
-///        "int"
-///      ],
-///      "type": "string",
-///      "enum": [
-///        "int",
-///        "float",
-///        "str",
-///        "bool"
-///      ]
-///    },
-///    "unit": {
-///      "title": "Unit of reading (not used for data processing)",
-///      "type": "string"
-///    },
-///    "words": {
-///      "title": "Number of 2-byte words for Modbus",
-///      "examples": [
-///        2
-///      ],
-///      "type": "integer"
+///    {
+///      "title": "Field specific opts",
+///      "type": "object",
+///      "properties": {
+///        "datamap": {
+///          "title": "Data map",
+///          "description": "Mapping between source (hex) and final value",
+///          "type": "object"
+///        },
+///        "datatype": {
+///          "title": "Data type",
+///          "description": "Source type of data being read",
+///          "examples": [
+///            "int16"
+///          ],
+///          "type": "string",
+///          "enum": [
+///            "int16",
+///            "uint16",
+///            "int32",
+///            "uint32",
+///            "int64",
+///            "uint64",
+///            "float",
+///            "double"
+///          ]
+///        },
+///        "description": {
+///          "title": "Description of reading (not used for data processing)",
+///          "type": "string"
+///        },
+///        "multiplier": {
+///          "title": "Multiplier",
+///          "description": "Reading multiplier (applied before offset)",
+///          "type": "number"
+///        },
+///        "offset": {
+///          "title": "Reading offset (applied after multiplier)",
+///          "type": "number"
+///        },
+///        "typecast": {
+///          "title": "Typecast for final processed reading",
+///          "examples": [
+///            "int"
+///          ],
+///          "type": "string",
+///          "enum": [
+///            "int",
+///            "float",
+///            "str",
+///            "bool"
+///          ]
+///        },
+///        "unit": {
+///          "title": "Unit of reading (not used for data processing)",
+///          "type": "string"
+///        }
+///      }
 ///    }
-///  }
+///  ]
 ///}
 /// ```
 /// </details>
 #[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug, PartialEq)]
 pub struct FieldOpts {
+    ///Bit order, if extracting part of register
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub bit_order: ::std::option::Option<BitOrder>,
+    ///Mapping between source (hex) and final value
     #[serde(default, skip_serializing_if = "::serde_json::Map::is_empty")]
     pub datamap: ::serde_json::Map<::std::string::String, ::serde_json::Value>,
+    ///Source type of data being read
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub datatype: ::std::option::Option<SourceTypeOfDataBeingRead>,
+    pub datatype: ::std::option::Option<DataType>,
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub description: ::std::option::Option<::std::string::String>,
-    #[serde(default = "defaults::default_u64::<i64, 3>")]
-    pub fncode: i64,
+    ///Modbus function code
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub fncode: ::std::option::Option<u8>,
+    ///Length in bits, if extracting part of register
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub length_bits: ::std::option::Option<::std::num::NonZeroU16>,
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub multiplier: ::std::option::Option<f64>,
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub offset: ::std::option::Option<f64>,
+    ///Register order when parsing multi-register readings
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub register: ::std::option::Option<i64>,
+    pub order: ::std::option::Option<RegisterOrder>,
+    ///Parse data based on serialization of readout
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub parse_as: ::std::option::Option<ParseInputAs>,
+    ///Modbus register
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub register: ::std::option::Option<u16>,
+    ///Start bit, if extracting part of register
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub start_bit: ::std::option::Option<u8>,
+    ///MQTT topic to subscribe to
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub topic: ::std::option::Option<::std::string::String>,
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub typecast: ::std::option::Option<TypecastForFinalProcessedReading>,
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub unit: ::std::option::Option<::std::string::String>,
+    ///Number of 2-byte words for Modbus
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub words: ::std::option::Option<i64>,
+    pub words: ::std::option::Option<::std::num::NonZeroU16>,
 }
 impl ::std::convert::From<&FieldOpts> for FieldOpts {
     fn from(value: &FieldOpts) -> Self {
@@ -298,13 +597,19 @@ impl ::std::convert::From<&FieldOpts> for FieldOpts {
 impl ::std::default::Default for FieldOpts {
     fn default() -> Self {
         Self {
+            bit_order: Default::default(),
             datamap: Default::default(),
             datatype: Default::default(),
             description: Default::default(),
-            fncode: defaults::default_u64::<i64, 3>(),
+            fncode: Default::default(),
+            length_bits: Default::default(),
             multiplier: Default::default(),
             offset: Default::default(),
+            order: Default::default(),
+            parse_as: Default::default(),
             register: Default::default(),
+            start_bit: Default::default(),
+            topic: Default::default(),
             typecast: Default::default(),
             unit: Default::default(),
             words: Default::default(),
@@ -319,6 +624,7 @@ impl ::std::default::Default for FieldOpts {
 ///{
 ///  "title": "Numeric Status Level",
 ///  "type": "integer",
+///  "format": "u8",
 ///  "enum": [
 ///    0,
 ///    1,
@@ -331,14 +637,14 @@ impl ::std::default::Default for FieldOpts {
 /// </details>
 #[derive(::serde::Serialize, Clone, Debug, PartialEq)]
 #[serde(transparent)]
-pub struct NumericStatusLevel(i64);
+pub struct NumericStatusLevel(u8);
 impl ::std::ops::Deref for NumericStatusLevel {
-    type Target = i64;
-    fn deref(&self) -> &i64 {
+    type Target = u8;
+    fn deref(&self) -> &u8 {
         &self.0
     }
 }
-impl ::std::convert::From<NumericStatusLevel> for i64 {
+impl ::std::convert::From<NumericStatusLevel> for u8 {
     fn from(value: NumericStatusLevel) -> Self {
         value.0
     }
@@ -348,12 +654,12 @@ impl ::std::convert::From<&NumericStatusLevel> for NumericStatusLevel {
         value.clone()
     }
 }
-impl ::std::convert::TryFrom<i64> for NumericStatusLevel {
+impl ::std::convert::TryFrom<u8> for NumericStatusLevel {
     type Error = self::error::ConversionError;
     fn try_from(
-        value: i64,
+        value: u8,
     ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        if ![0_i64, 1_i64, 2_i64, 3_i64, 4_i64].contains(&value) {
+        if ![0_u8, 1_u8, 2_u8, 3_u8, 4_u8].contains(&value) {
             Err("invalid value".into())
         } else {
             Ok(Self(value))
@@ -365,30 +671,23 @@ impl<'de> ::serde::Deserialize<'de> for NumericStatusLevel {
     where
         D: ::serde::Deserializer<'de>,
     {
-        Self::try_from(<i64>::deserialize(deserializer)?)
+        Self::try_from(<u8>::deserialize(deserializer)?)
             .map_err(|e| { <D::Error as ::serde::de::Error>::custom(e.to_string()) })
     }
 }
-///`SourceTypeOfDataBeingRead`
+///Parse data based on serialization of readout
 ///
 /// <details><summary>JSON schema</summary>
 ///
 /// ```json
 ///{
-///  "title": "Source type of data being read",
-///  "examples": [
-///    "int16"
-///  ],
+///  "title": "Parse input as",
+///  "description": "Parse data based on serialization of readout",
 ///  "type": "string",
 ///  "enum": [
-///    "int16",
-///    "uint16",
-///    "int32",
-///    "uint32",
-///    "int64",
-///    "uint64",
-///    "float",
-///    "double"
+///    "bytes",
+///    "str",
+///    "hex"
 ///  ]
 ///}
 /// ```
@@ -405,62 +704,42 @@ impl<'de> ::serde::Deserialize<'de> for NumericStatusLevel {
     PartialEq,
     PartialOrd
 )]
-pub enum SourceTypeOfDataBeingRead {
-    #[serde(rename = "int16")]
-    Int16,
-    #[serde(rename = "uint16")]
-    Uint16,
-    #[serde(rename = "int32")]
-    Int32,
-    #[serde(rename = "uint32")]
-    Uint32,
-    #[serde(rename = "int64")]
-    Int64,
-    #[serde(rename = "uint64")]
-    Uint64,
-    #[serde(rename = "float")]
-    Float,
-    #[serde(rename = "double")]
-    Double,
+pub enum ParseInputAs {
+    #[serde(rename = "bytes")]
+    Bytes,
+    #[serde(rename = "str")]
+    Str,
+    #[serde(rename = "hex")]
+    Hex,
 }
-impl ::std::convert::From<&Self> for SourceTypeOfDataBeingRead {
-    fn from(value: &SourceTypeOfDataBeingRead) -> Self {
+impl ::std::convert::From<&Self> for ParseInputAs {
+    fn from(value: &ParseInputAs) -> Self {
         value.clone()
     }
 }
-impl ::std::fmt::Display for SourceTypeOfDataBeingRead {
+impl ::std::fmt::Display for ParseInputAs {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         match *self {
-            Self::Int16 => f.write_str("int16"),
-            Self::Uint16 => f.write_str("uint16"),
-            Self::Int32 => f.write_str("int32"),
-            Self::Uint32 => f.write_str("uint32"),
-            Self::Int64 => f.write_str("int64"),
-            Self::Uint64 => f.write_str("uint64"),
-            Self::Float => f.write_str("float"),
-            Self::Double => f.write_str("double"),
+            Self::Bytes => f.write_str("bytes"),
+            Self::Str => f.write_str("str"),
+            Self::Hex => f.write_str("hex"),
         }
     }
 }
-impl ::std::str::FromStr for SourceTypeOfDataBeingRead {
+impl ::std::str::FromStr for ParseInputAs {
     type Err = self::error::ConversionError;
     fn from_str(
         value: &str,
     ) -> ::std::result::Result<Self, self::error::ConversionError> {
         match value {
-            "int16" => Ok(Self::Int16),
-            "uint16" => Ok(Self::Uint16),
-            "int32" => Ok(Self::Int32),
-            "uint32" => Ok(Self::Uint32),
-            "int64" => Ok(Self::Int64),
-            "uint64" => Ok(Self::Uint64),
-            "float" => Ok(Self::Float),
-            "double" => Ok(Self::Double),
+            "bytes" => Ok(Self::Bytes),
+            "str" => Ok(Self::Str),
+            "hex" => Ok(Self::Hex),
             _ => Err("invalid value".into()),
         }
     }
 }
-impl ::std::convert::TryFrom<&str> for SourceTypeOfDataBeingRead {
+impl ::std::convert::TryFrom<&str> for ParseInputAs {
     type Error = self::error::ConversionError;
     fn try_from(
         value: &str,
@@ -468,7 +747,7 @@ impl ::std::convert::TryFrom<&str> for SourceTypeOfDataBeingRead {
         value.parse()
     }
 }
-impl ::std::convert::TryFrom<&::std::string::String> for SourceTypeOfDataBeingRead {
+impl ::std::convert::TryFrom<&::std::string::String> for ParseInputAs {
     type Error = self::error::ConversionError;
     fn try_from(
         value: &::std::string::String,
@@ -476,7 +755,90 @@ impl ::std::convert::TryFrom<&::std::string::String> for SourceTypeOfDataBeingRe
         value.parse()
     }
 }
-impl ::std::convert::TryFrom<::std::string::String> for SourceTypeOfDataBeingRead {
+impl ::std::convert::TryFrom<::std::string::String> for ParseInputAs {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: ::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+///Register order when parsing multi-register readings
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "title": "Register order",
+///  "description": "Register order when parsing multi-register readings",
+///  "type": "string",
+///  "enum": [
+///    "msr",
+///    "lsr"
+///  ]
+///}
+/// ```
+/// </details>
+#[derive(
+    ::serde::Deserialize,
+    ::serde::Serialize,
+    Clone,
+    Copy,
+    Debug,
+    Eq,
+    Hash,
+    Ord,
+    PartialEq,
+    PartialOrd
+)]
+pub enum RegisterOrder {
+    #[serde(rename = "msr")]
+    Msr,
+    #[serde(rename = "lsr")]
+    Lsr,
+}
+impl ::std::convert::From<&Self> for RegisterOrder {
+    fn from(value: &RegisterOrder) -> Self {
+        value.clone()
+    }
+}
+impl ::std::fmt::Display for RegisterOrder {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        match *self {
+            Self::Msr => f.write_str("msr"),
+            Self::Lsr => f.write_str("lsr"),
+        }
+    }
+}
+impl ::std::str::FromStr for RegisterOrder {
+    type Err = self::error::ConversionError;
+    fn from_str(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        match value {
+            "msr" => Ok(Self::Msr),
+            "lsr" => Ok(Self::Lsr),
+            _ => Err("invalid value".into()),
+        }
+    }
+}
+impl ::std::convert::TryFrom<&str> for RegisterOrder {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<&::std::string::String> for RegisterOrder {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<::std::string::String> for RegisterOrder {
     type Error = self::error::ConversionError;
     fn try_from(
         value: ::std::string::String,
@@ -490,95 +852,80 @@ impl ::std::convert::TryFrom<::std::string::String> for SourceTypeOfDataBeingRea
 ///
 /// ```json
 ///{
-///  "title": "Status info field map",
+///  "title": "Status info opts",
 ///  "examples": [
 ///    {
 ///      "oil_pressure": {
 ///        "content": "Low Oil Pressure",
-///        "register": 100,
+///        "length_bits": 4,
+///        "register": 2049,
 ///        "start_bit": 0
 ///      }
 ///    }
 ///  ],
 ///  "type": "object",
 ///  "additionalProperties": {
-///    "type": "object",
-///    "properties": {
-///      "bit_order": {
-///        "title": "Bit order",
-///        "default": "lsb",
-///        "type": "string",
-///        "enum": [
-///          "lsb",
-///          "msb"
-///        ]
+///    "allOf": [
+///      {
+///        "$ref": "#/definitions/common_modbus_reading_opts"
 ///      },
-///      "content": {
-///        "title": "Content for the status info",
-///        "examples": [
-///          "Low Oil Pressure",
-///          "High Temperature"
-///        ],
-///        "type": "string"
-///      },
-///      "fncode": {
-///        "title": "Modbus function code",
-///        "type": "integer"
-///      },
-///      "length_bits": {
-///        "title": "Length in bits for the status info",
-///        "type": "integer"
-///      },
-///      "register": {
-///        "title": "Modbus register for the status info",
-///        "type": "integer"
-///      },
-///      "start_bit": {
-///        "title": "Start bit (within the register) for the status info, first=0",
-///        "type": "integer",
-///        "maximum": 15.0,
-///        "minimum": 0.0
-///      },
-///      "status_level_value_map": {
-///        "title": "Mapping between value and status level",
-///        "description": "List of pairs that defines how to map a value to a status level (0=OK, 4=Critical)",
-///        "examples": [
-///          [
-///            [
-///              0,
-///              0
+///      {
+///        "title": "Status info specific opts",
+///        "type": "object",
+///        "properties": {
+///          "content": {
+///            "title": "Content",
+///            "description": "Content for the status info",
+///            "examples": [
+///              "Low Oil Pressure",
+///              "High Temperature"
 ///            ],
-///            [
-///              1,
-///              3
-///            ]
-///          ]
-///        ],
-///        "type": "array",
-///        "items": {
-///          "type": "array",
-///          "items": [
-///            {
-///              "title": "Value",
-///              "type": "integer"
-///            },
-///            {
-///              "title": "Numeric Status Level",
-///              "type": "integer",
-///              "enum": [
-///                0,
-///                1,
-///                2,
-///                3,
-///                4
+///            "type": "string"
+///          },
+///          "status_level_value_map": {
+///            "title": "Status level value map",
+///            "description": "List of pairs that defines how to map a value to a status level (0=OK, 4=Critical)",
+///            "examples": [
+///              [
+///                [
+///                  0,
+///                  0
+///                ],
+///                [
+///                  1,
+///                  3
+///                ]
 ///              ]
+///            ],
+///            "type": "array",
+///            "items": {
+///              "type": "array",
+///              "items": [
+///                {
+///                  "title": "Value",
+///                  "type": "integer",
+///                  "format": "u8"
+///                },
+///                {
+///                  "title": "Numeric Status Level",
+///                  "type": "integer",
+///                  "format": "u8",
+///                  "enum": [
+///                    0,
+///                    1,
+///                    2,
+///                    3,
+///                    4
+///                  ]
+///                }
+///              ],
+///              "maxItems": 2,
+///              "minItems": 2
 ///            }
-///          ],
-///          "maxItems": 2,
-///          "minItems": 2
+///          }
 ///        }
 ///      }
-///    }
+///    ]
 ///  }
 ///}
 /// ```
@@ -625,103 +972,99 @@ impl ::std::convert::From<
 ///
 /// ```json
 ///{
-///  "type": "object",
-///  "properties": {
-///    "bit_order": {
-///      "title": "Bit order",
-///      "default": "lsb",
-///      "type": "string",
-///      "enum": [
-///        "lsb",
-///        "msb"
-///      ]
+///  "allOf": [
+///    {
+///      "$ref": "#/definitions/common_modbus_reading_opts"
 ///    },
-///    "content": {
-///      "title": "Content for the status info",
-///      "examples": [
-///        "Low Oil Pressure",
-///        "High Temperature"
-///      ],
-///      "type": "string"
-///    },
-///    "fncode": {
-///      "title": "Modbus function code",
-///      "type": "integer"
-///    },
-///    "length_bits": {
-///      "title": "Length in bits for the status info",
-///      "type": "integer"
-///    },
-///    "register": {
-///      "title": "Modbus register for the status info",
-///      "type": "integer"
-///    },
-///    "start_bit": {
-///      "title": "Start bit (within the register) for the status info, first=0",
-///      "type": "integer",
-///      "maximum": 15.0,
-///      "minimum": 0.0
-///    },
-///    "status_level_value_map": {
-///      "title": "Mapping between value and status level",
-///      "description": "List of pairs that defines how to map a value to a status level (0=OK, 4=Critical)",
-///      "examples": [
-///        [
-///          [
-///            0,
-///            0
+///    {
+///      "title": "Status info specific opts",
+///      "type": "object",
+///      "properties": {
+///        "content": {
+///          "title": "Content",
+///          "description": "Content for the status info",
+///          "examples": [
+///            "Low Oil Pressure",
+///            "High Temperature"
 ///          ],
-///          [
-///            1,
-///            3
-///          ]
-///        ]
-///      ],
-///      "type": "array",
-///      "items": {
-///        "type": "array",
-///        "items": [
-///          {
-///            "title": "Value",
-///            "type": "integer"
-///          },
-///          {
-///            "title": "Numeric Status Level",
-///            "type": "integer",
-///            "enum": [
-///              0,
-///              1,
-///              2,
-///              3,
-///              4
+///          "type": "string"
+///        },
+///        "status_level_value_map": {
+///          "title": "Status level value map",
+///          "description": "List of pairs that defines how to map a value to a status level (0=OK, 4=Critical)",
+///          "examples": [
+///            [
+///              [
+///                0,
+///                0
+///              ],
+///              [
+///                1,
+///                3
+///              ]
 ///            ]
+///          ],
+///          "type": "array",
+///          "items": {
+///            "type": "array",
+///            "items": [
+///              {
+///                "title": "Value",
+///                "type": "integer",
+///                "format": "u8"
+///              },
+///              {
+///                "title": "Numeric Status Level",
+///                "type": "integer",
+///                "format": "u8",
+///                "enum": [
+///                  0,
+///                  1,
+///                  2,
+///                  3,
+///                  4
+///                ]
+///              }
+///            ],
+///            "maxItems": 2,
+///            "minItems": 2
 ///          }
-///        ],
-///        "maxItems": 2,
-///        "minItems": 2
+///        }
 ///      }
 ///    }
-///  }
+///  ]
 ///}
 /// ```
 /// </details>
 #[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug, PartialEq)]
 pub struct StatusInfoOptsValue {
-    #[serde(default = "defaults::status_info_opts_value_bit_order")]
-    pub bit_order: BitOrder,
+    ///Bit order, if extracting part of register
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub bit_order: ::std::option::Option<BitOrder>,
+    ///Content for the status info
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub content: ::std::option::Option<::std::string::String>,
+    ///Modbus function code
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub fncode: ::std::option::Option<i64>,
+    pub fncode: ::std::option::Option<u8>,
+    ///Length in bits, if extracting part of register
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub length_bits: ::std::option::Option<i64>,
+    pub length_bits: ::std::option::Option<::std::num::NonZeroU16>,
+    ///Register order when parsing multi-register readings
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub register: ::std::option::Option<i64>,
+    pub order: ::std::option::Option<RegisterOrder>,
+    ///Modbus register
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub start_bit: ::std::option::Option<i64>,
+    pub register: ::std::option::Option<u16>,
+    ///Start bit, if extracting part of register
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub start_bit: ::std::option::Option<u8>,
     ///List of pairs that defines how to map a value to a status level (0=OK, 4=Critical)
     #[serde(default, skip_serializing_if = "::std::vec::Vec::is_empty")]
-    pub status_level_value_map: ::std::vec::Vec<(i64, NumericStatusLevel)>,
+    pub status_level_value_map: ::std::vec::Vec<(u8, NumericStatusLevel)>,
+    ///Number of 2-byte words for Modbus
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub words: ::std::option::Option<::std::num::NonZeroU16>,
 }
 impl ::std::convert::From<&StatusInfoOptsValue> for StatusInfoOptsValue {
     fn from(value: &StatusInfoOptsValue) -> Self {
@@ -731,13 +1074,15 @@ impl ::std::convert::From<&StatusInfoOptsValue> for StatusInfoOptsValue {
 impl ::std::default::Default for StatusInfoOptsValue {
     fn default() -> Self {
         Self {
-            bit_order: defaults::status_info_opts_value_bit_order(),
+            bit_order: Default::default(),
             content: Default::default(),
             fncode: Default::default(),
             length_bits: Default::default(),
+            order: Default::default(),
             register: Default::default(),
             start_bit: Default::default(),
             status_level_value_map: Default::default(),
+            words: Default::default(),
         }
     }
 }
@@ -840,29 +1185,28 @@ for TypecastForFinalProcessedReading {
 }
 /// Generation of default values for serde.
 pub mod defaults {
-    pub(super) fn default_u64<T, const V: u64>() -> T
-    where
-        T: ::std::convert::TryFrom<u64>,
-        <T as ::std::convert::TryFrom<u64>>::Error: ::std::fmt::Debug,
-    {
-        T::try_from(V).unwrap()
-    }
     pub(super) fn driver_schema_common() -> super::FieldOpts {
         super::FieldOpts {
+            bit_order: Default::default(),
             datamap: Default::default(),
             datatype: Default::default(),
             description: Default::default(),
             fncode: Default::default(),
+            length_bits: Default::default(),
             multiplier: Default::default(),
             offset: Default::default(),
+            order: Default::default(),
+            parse_as: Default::default(),
             register: Default::default(),
+            start_bit: Default::default(),
+            topic: Default::default(),
             typecast: Default::default(),
             unit: Default::default(),
             words: Default::default(),
         }
     }
-    pub(super) fn status_info_opts_value_bit_order() -> super::BitOrder {
-        super::BitOrder::Lsb
+    pub(super) fn driver_schema_status_info_common() -> super::StatusInfoOpts {
+        super::StatusInfoOpts([].into_iter().collect())
     }
 }
 
