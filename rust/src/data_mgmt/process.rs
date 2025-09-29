@@ -5,6 +5,7 @@
 //! offset application, and type casting for readings from various device types.
 
 use crate::node_mgmt::drivers::FieldOpts;
+use crate::data_mgmt::models::RtValue;
 use anyhow::{Result, anyhow};
 use std::collections::HashMap;
 
@@ -13,7 +14,7 @@ use std::collections::HashMap;
 /// This is a convenience function that converts FieldOpts to ProcessingParams
 /// and processes the raw bytes. This provides the clean separation between
 /// reading (getting raw bytes) and processing (converting to final values).
-pub fn process_field_reading(val_bytes: &[u8], field_config: &FieldOpts) -> Result<ProcessedValue> {
+pub fn process_field_reading(val_bytes: &[u8], field_config: &FieldOpts) -> Result<RtValue> {
     let params = ProcessingParams::from_field_opts(field_config)?;
     process_reading(val_bytes, &params)
 }
@@ -22,17 +23,17 @@ pub fn process_field_reading(val_bytes: &[u8], field_config: &FieldOpts) -> Resu
 ///
 /// This function replicates the Python `process_reading()` functionality,
 /// supporting the same parameter set and processing pipeline.
-pub fn process_reading(val_bytes: &[u8], params: &ProcessingParams) -> Result<ProcessedValue> {
+pub fn process_reading(val_bytes: &[u8], params: &ProcessingParams) -> Result<RtValue> {
     // Parse the raw bytes according to parse_as parameter
     let value = if val_bytes.is_empty() {
-        return Ok(ProcessedValue::None);
+        return Ok(RtValue::None);
     } else {
         parse_value_bytes(val_bytes, params)?
     };
 
     let value = match value {
         Some(v) => v,
-        None => return Ok(ProcessedValue::None),
+        None => return Ok(RtValue::None),
     };
 
     // Apply multiplier and offset (unless dealing with string/boolean)
@@ -183,13 +184,13 @@ fn apply_multiplier_offset(
 }
 
 /// Apply final type casting to get the desired output type
-pub fn apply_typecast(value: f64, typecast: Option<TypeCast>) -> Result<ProcessedValue> {
+pub fn apply_typecast(value: f64, typecast: Option<TypeCast>) -> Result<RtValue> {
     match typecast {
-        Some(TypeCast::Int) => Ok(ProcessedValue::Int(value as i64)),
-        Some(TypeCast::Float) => Ok(ProcessedValue::Float(value)),
-        Some(TypeCast::Bool) => Ok(ProcessedValue::Bool(value != 0.0)),
-        Some(TypeCast::Str) => Ok(ProcessedValue::String(value.to_string())),
-        None => Ok(ProcessedValue::Float(value)), // Default to float
+        Some(TypeCast::Int) => Ok(RtValue::Int(value as i64)),
+        Some(TypeCast::Float) => Ok(RtValue::Float(value)),
+        Some(TypeCast::Bool) => Ok(RtValue::Bool(value != 0.0)),
+        Some(TypeCast::Str) => Ok(RtValue::String(value.to_string())),
+        None => Ok(RtValue::Float(value)), // Default to float
     }
 }
 
@@ -341,30 +342,6 @@ impl std::str::FromStr for TypeCast {
     }
 }
 
-/// Processed value output
-#[derive(Debug, Clone, PartialEq)]
-pub enum ProcessedValue {
-    None,
-    Int(i64),
-    Float(f64),
-    String(String),
-    Bool(bool),
-}
-
-impl ProcessedValue {
-    /// Convert to RtValue for use in the data model
-    pub fn to_rt_value(self) -> Option<crate::data_mgmt::models::RtValue> {
-        use crate::data_mgmt::models::RtValue;
-
-        match self {
-            ProcessedValue::None => None,
-            ProcessedValue::Int(i) => Some(RtValue::Int(i)),
-            ProcessedValue::Float(f) => Some(RtValue::Float(f)),
-            ProcessedValue::String(s) => Some(RtValue::String(s)),
-            ProcessedValue::Bool(b) => Some(RtValue::Bool(b)),
-        }
-    }
-}
 
 #[cfg(test)]
 mod tests {
@@ -379,7 +356,7 @@ mod tests {
         };
 
         let result = process_reading(&bytes, &params).unwrap();
-        assert_eq!(result, ProcessedValue::Float(4660.0));
+        assert_eq!(result, RtValue::Float(4660.0));
     }
 
     #[test]
@@ -394,7 +371,7 @@ mod tests {
         };
 
         let result = process_reading(&bytes, &params).unwrap();
-        assert_eq!(result, ProcessedValue::Float(15.0)); // 100 * 0.1 + 5.0 = 15.0
+        assert_eq!(result, RtValue::Float(15.0)); // 100 * 0.1 + 5.0 = 15.0
     }
 
     #[test]
@@ -407,7 +384,7 @@ mod tests {
         };
 
         let result = process_reading(bytes, &params).unwrap();
-        assert_eq!(result, ProcessedValue::Float(123.45));
+        assert_eq!(result, RtValue::Float(123.45));
     }
 
     #[test]
@@ -423,7 +400,7 @@ mod tests {
         };
 
         let result = process_reading(&bytes, &params).unwrap();
-        assert_eq!(result, ProcessedValue::Float(999.0));
+        assert_eq!(result, RtValue::Float(999.0));
     }
 
     #[test]
@@ -436,6 +413,6 @@ mod tests {
         };
 
         let result = process_reading(&bytes, &params).unwrap();
-        assert_eq!(result, ProcessedValue::Int(100));
+        assert_eq!(result, RtValue::Int(100));
     }
 }

@@ -105,16 +105,29 @@ impl ModbusTcpReader {
         let mut readings = Vec::new();
 
         for config in reading_configs {
-            match self.read_single_value(&config).await {
-                Ok(value) => {
-                    readings.push(Reading {
-                        field: config.variable_name.clone(),
-                        value: RtValue::Float(value),
-                    });
-                    log::debug!("Successfully read {}: {}", config.variable_name, value);
+            match self.read_raw_registers(&config).await {
+                Ok(raw_bytes) => {
+                    // Process the raw bytes using the data processing pipeline
+                    match crate::data_mgmt::process::process_field_reading(&raw_bytes, &config.field_config) {
+                        Ok(RtValue::None) => {
+                            log::debug!("Reading '{}' returned no value", config.variable_name);
+                            // Skip None values
+                        }
+                        Ok(value) => {
+                            log::debug!("Successfully read {}: {:?}", config.variable_name, value);
+                            readings.push(Reading {
+                                field: config.variable_name.clone(),
+                                value,
+                            });
+                        }
+                        Err(e) => {
+                            log::warn!("Failed to process reading '{}': {}", config.variable_name, e);
+                            // Continue with other readings even if one fails
+                        }
+                    }
                 }
                 Err(e) => {
-                    log::warn!("Failed to read variable '{}': {}", config.variable_name, e);
+                    log::warn!("Failed to read raw data for '{}': {}", config.variable_name, e);
                     // Continue with other readings even if one fails
                 }
             }
@@ -126,37 +139,17 @@ impl ModbusTcpReader {
         Ok(readings)
     }
 
-    /// Read and process a single value according to its configuration
-    async fn read_single_value(&mut self, config: &ReadingConfig) -> Result<f64> {
+    /// Read raw register values and convert them to bytes according to configuration
+    async fn read_raw_registers(&mut self, config: &ReadingConfig) -> Result<Vec<u8>> {
         // Read raw register values
         let raw_registers = self
             .read_registers(config.register, config.words, config.fncode)
             .await?;
 
-        // Convert registers to bytes with proper order
+        // Convert registers to bytes with proper order (step 1 from the flow)
         let bytes = registers_to_bytes(&raw_registers, config.field_config.order.as_ref())?;
 
-        // Use the centralized processing system for the complete flow:
-        // 1. Register order (already applied above)
-        // 2. Valuemap checking
-        // 3. Datatype parsing
-        // 4. Multiplier/offset application
-        // 5. Typecast application
-        use crate::data_mgmt::process::{ProcessedValue, process_field_reading};
-
-        let processed = process_field_reading(&bytes, &config.field_config)?;
-
-        // Extract numeric value for ModbusTCP (which should always be numeric)
-        let scaled_value = match processed {
-            ProcessedValue::Float(f) => f,
-            ProcessedValue::Int(i) => i as f64,
-            _ => return Err(anyhow!(
-                "Expected numeric value from ModbusTCP reading, got: {:?}",
-                processed
-            )),
-        };
-
-        Ok(scaled_value)
+        Ok(bytes)
     }
 
     /// Get device ID for this reader

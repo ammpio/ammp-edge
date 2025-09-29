@@ -149,10 +149,8 @@ fn apply_typecast(value: Value, typecast: Typecast) -> Result<RtValue> {
     let processed =
         crate::data_mgmt::process::apply_typecast(numeric_value, Some(process_typecast))?;
 
-    // Convert ProcessedValue to RtValue
-    processed
-        .to_rt_value()
-        .ok_or_else(|| anyhow!("Failed to convert processed value to RtValue"))
+    // The process module now returns RtValue directly
+    Ok(processed)
 }
 
 /// Convert device readings to JSON format expected by JSONata expressions
@@ -188,6 +186,7 @@ fn convert_device_readings_to_json(device_readings: &[DeviceReading]) -> Value {
 /// Convert RtValue to JSON Value
 fn rt_value_to_json(rt_value: &RtValue) -> Value {
     match rt_value {
+        RtValue::None => json!(null),
         RtValue::Bool(b) => json!(b),
         RtValue::Float(f) => json!(f),
         RtValue::Int(i) => json!(i),
