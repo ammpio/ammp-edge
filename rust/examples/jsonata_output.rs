@@ -107,12 +107,9 @@ fn create_sample_config() -> AmmpEdgeConfiguration {
         calc_vendor_id: Some("calculated".to_string()),
         drivers: HashMap::new(),
         name: Some("JSONata Output Example".to_string()),
-        push_throttle_delay: None,
-        push_timeout: None,
         read_interval: 60,
         read_roundtime: false,
         status_readings: vec![],
         timestamp: None,
-        volatile_q_size: None,
     }
 }
