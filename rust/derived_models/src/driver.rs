@@ -245,7 +245,7 @@ impl ::std::default::Default for CommonModbusReadingOpts {
 ///  "type": "object",
 ///  "properties": {
 ///    "parse_as": {
-///      "title": "Parse input as",
+///      "title": "Parse as",
 ///      "description": "Parse data based on serialization of readout",
 ///      "type": "string",
 ///      "enum": [
@@ -270,7 +270,7 @@ impl ::std::default::Default for CommonModbusReadingOpts {
 pub struct CommonMqttReadingOpts {
     ///Parse data based on serialization of readout
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub parse_as: ::std::option::Option<ParseInputAs>,
+    pub parse_as: ::std::option::Option<ParseAs>,
     ///MQTT topic to subscribe to
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub topic: ::std::option::Option<::std::string::String>,
@@ -484,11 +484,6 @@ impl ::std::convert::From<&DriverSchema> for DriverSchema {
 ///      "title": "Field specific opts",
 ///      "type": "object",
 ///      "properties": {
-///        "datamap": {
-///          "title": "Data map",
-///          "description": "Mapping between source (hex) and final value",
-///          "type": "object"
-///        },
 ///        "datatype": {
 ///          "title": "Data type",
 ///          "description": "Source type of data being read",
@@ -537,6 +532,21 @@ impl ::std::convert::From<&DriverSchema> for DriverSchema {
 ///        "unit": {
 ///          "title": "Unit of reading (not used for data processing)",
 ///          "type": "string"
+///        },
+///        "valuemap": {
+///          "title": "Value map",
+///          "description": "Mapping between source (hex) and final value",
+///          "type": "object",
+///          "additionalProperties": {
+///            "oneOf": [
+///              {
+///                "type": "number"
+///              },
+///              {
+///                "type": "null"
+///              }
+///            ]
+///          }
 ///        }
 ///      }
 ///    }
@@ -549,9 +559,6 @@ pub struct FieldOpts {
     ///Bit order, if extracting part of register
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub bit_order: ::std::option::Option<BitOrder>,
-    ///Mapping between source (hex) and final value
-    #[serde(default, skip_serializing_if = "::serde_json::Map::is_empty")]
-    pub datamap: ::serde_json::Map<::std::string::String, ::serde_json::Value>,
     ///Source type of data being read
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub datatype: ::std::option::Option<DataType>,
@@ -572,7 +579,7 @@ pub struct FieldOpts {
     pub order: ::std::option::Option<RegisterOrder>,
     ///Parse data based on serialization of readout
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub parse_as: ::std::option::Option<ParseInputAs>,
+    pub parse_as: ::std::option::Option<ParseAs>,
     ///Modbus register
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub register: ::std::option::Option<u16>,
@@ -587,6 +594,12 @@ pub struct FieldOpts {
     pub typecast: ::std::option::Option<Typecast>,
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub unit: ::std::option::Option<::std::string::String>,
+    ///Mapping between source (hex) and final value
+    #[serde(default, skip_serializing_if = ":: std :: collections :: HashMap::is_empty")]
+    pub valuemap: ::std::collections::HashMap<
+        ::std::string::String,
+        ::std::option::Option<f64>,
+    >,
     ///Number of 2-byte words for Modbus
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub words: ::std::option::Option<::std::num::NonZeroU16>,
@@ -600,7 +613,6 @@ impl ::std::default::Default for FieldOpts {
     fn default() -> Self {
         Self {
             bit_order: Default::default(),
-            datamap: Default::default(),
             datatype: Default::default(),
             description: Default::default(),
             fncode: Default::default(),
@@ -614,6 +626,7 @@ impl ::std::default::Default for FieldOpts {
             topic: Default::default(),
             typecast: Default::default(),
             unit: Default::default(),
+            valuemap: Default::default(),
             words: Default::default(),
         }
     }
@@ -683,7 +696,7 @@ impl<'de> ::serde::Deserialize<'de> for NumericStatusLevel {
 ///
 /// ```json
 ///{
-///  "title": "Parse input as",
+///  "title": "Parse as",
 ///  "description": "Parse data based on serialization of readout",
 ///  "type": "string",
 ///  "enum": [
@@ -706,7 +719,7 @@ impl<'de> ::serde::Deserialize<'de> for NumericStatusLevel {
     PartialEq,
     PartialOrd
 )]
-pub enum ParseInputAs {
+pub enum ParseAs {
     #[serde(rename = "bytes")]
     Bytes,
     #[serde(rename = "str")]
@@ -714,12 +727,12 @@ pub enum ParseInputAs {
     #[serde(rename = "hex")]
     Hex,
 }
-impl ::std::convert::From<&Self> for ParseInputAs {
-    fn from(value: &ParseInputAs) -> Self {
+impl ::std::convert::From<&Self> for ParseAs {
+    fn from(value: &ParseAs) -> Self {
         value.clone()
     }
 }
-impl ::std::fmt::Display for ParseInputAs {
+impl ::std::fmt::Display for ParseAs {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         match *self {
             Self::Bytes => f.write_str("bytes"),
@@ -728,7 +741,7 @@ impl ::std::fmt::Display for ParseInputAs {
         }
     }
 }
-impl ::std::str::FromStr for ParseInputAs {
+impl ::std::str::FromStr for ParseAs {
     type Err = self::error::ConversionError;
     fn from_str(
         value: &str,
@@ -741,7 +754,7 @@ impl ::std::str::FromStr for ParseInputAs {
         }
     }
 }
-impl ::std::convert::TryFrom<&str> for ParseInputAs {
+impl ::std::convert::TryFrom<&str> for ParseAs {
     type Error = self::error::ConversionError;
     fn try_from(
         value: &str,
@@ -749,7 +762,7 @@ impl ::std::convert::TryFrom<&str> for ParseInputAs {
         value.parse()
     }
 }
-impl ::std::convert::TryFrom<&::std::string::String> for ParseInputAs {
+impl ::std::convert::TryFrom<&::std::string::String> for ParseAs {
     type Error = self::error::ConversionError;
     fn try_from(
         value: &::std::string::String,
@@ -757,7 +770,7 @@ impl ::std::convert::TryFrom<&::std::string::String> for ParseInputAs {
         value.parse()
     }
 }
-impl ::std::convert::TryFrom<::std::string::String> for ParseInputAs {
+impl ::std::convert::TryFrom<::std::string::String> for ParseAs {
     type Error = self::error::ConversionError;
     fn try_from(
         value: ::std::string::String,
@@ -1189,7 +1202,6 @@ pub mod defaults {
     pub(super) fn driver_schema_common() -> super::FieldOpts {
         super::FieldOpts {
             bit_order: Default::default(),
-            datamap: Default::default(),
             datatype: Default::default(),
             description: Default::default(),
             fncode: Default::default(),
@@ -1203,6 +1215,7 @@ pub mod defaults {
             topic: Default::default(),
             typecast: Default::default(),
             unit: Default::default(),
+            valuemap: Default::default(),
             words: Default::default(),
         }
     }
