@@ -86,9 +86,9 @@ fn post_process_config_rs() {
 
     let mut modified_content = content;
 
-    // Add import for DriverSchema at the file level (after the header comments)
+    // Add import for DriverSchema and Typecast at the file level (after the header comments)
     if let Some(pos) = modified_content.find("/// Error types.") {
-        let import_line = "use crate::driver::DriverSchema;\n\n";
+        let import_line = "use crate::driver::{DriverSchema, Typecast};\n\n";
         modified_content.insert_str(pos, import_line);
     }
 
@@ -112,7 +112,45 @@ fn post_process_config_rs() {
         modified_content = modified_content.replace(old_serde_attr, new_serde_attr);
     }
 
+    // Remove the duplicate Typecast enum from config.rs
+    modified_content = remove_typecast_enum_simple(modified_content);
+
     // Write the modified content back
     std::fs::write(config_file_path, modified_content)
         .unwrap_or_else(|e| panic!("Failed to write modified config.rs: {}", e));
 }
+
+fn remove_typecast_enum_simple(content: String) -> String {
+    let lines: Vec<&str> = content.lines().collect();
+    
+    let mut start_line_to_remove = None;
+    let mut end_line_to_remove = None;
+    
+    // Find the line where the FULL content is "///Typecast of output" (not indented)
+    for (i, line) in lines.iter().enumerate() {
+        if *line == "///Typecast of output" {
+            start_line_to_remove = Some(i);
+            break;
+        }
+    }
+    
+    // Find the line that states "/// Generation of default values for serde."
+    if start_line_to_remove.is_some() {
+        for (i, line) in lines.iter().enumerate().skip(start_line_to_remove.unwrap()) {
+            if *line == "/// Generation of default values for serde." {
+                end_line_to_remove = Some(i);
+                break;
+            }
+        }
+    }
+    
+    if let (Some(start_line), Some(end_line)) = (start_line_to_remove, end_line_to_remove) {
+        // Remove from start_line to just before end_line (preserve the defaults module)
+        let mut result_lines = Vec::new();
+        result_lines.extend_from_slice(&lines[..start_line]);
+        result_lines.extend_from_slice(&lines[end_line..]);
+    }
+    
+    content
+}
+
