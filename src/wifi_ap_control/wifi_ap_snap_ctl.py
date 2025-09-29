@@ -34,9 +34,7 @@ DEFAULT_CONFIG = {
 
 
 class WifiAPSnapCtl(object):
-
     def __init__(self, socket_path: str = DEFAULT_SOCKET_PATH) -> None:
-
         self.socket_path = socket_path
         # Make sure we are able to read status from the wifi-ap API
         logger.info(f"Testing socket connection to {self.socket_path}")
@@ -46,7 +44,6 @@ class WifiAPSnapCtl(object):
         logger.info(f"Response from wifi-ap snap API: Status {res.status_code} / {res.text}")
 
     def configure(self, config: dict) -> bool:
-
         # For any parameters that are not explicitly defined in the submitted config, use defaults
         conf_payload = DEFAULT_CONFIG.copy()
         if isinstance(config, dict):

@@ -17,7 +17,6 @@ class Reader(object):
         timeout: int = 5,
         **kwargs,
     ):
-
         self._host = host
         self._port = port
         self._recv_buffer_size = recv_buffer_size
@@ -27,7 +26,6 @@ class Reader(object):
         self._stored_responses = {}
 
     def __enter__(self):
-
         self._conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._conn.settimeout(self._timeout)
         try:
@@ -48,7 +46,6 @@ class Reader(object):
             logger.warning("Could not close TCP connection", exc_info=True)
 
     def read(self, schema, **rdg):
-
         request = generate_request(schema["request"], self._device_args, **rdg)
 
         if request in self._stored_responses:

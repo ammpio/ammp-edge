@@ -36,7 +36,6 @@ if not node_id:
 
 @app.route("/")
 def index():
-
     device_online = test_online()
     snap_revision = os.getenv("SNAP_REVISION", "N/A")
 

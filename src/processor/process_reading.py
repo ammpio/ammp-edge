@@ -48,7 +48,6 @@ def process_reading(val_b: bytes, **rdg):
 
 
 def parse_val_b(val_b: bytes, **rdg):
-
     if rdg.get("parse_as") == "str":
         try:
             val_s = val_b.decode("utf-8")
@@ -76,7 +75,6 @@ def parse_val_b(val_b: bytes, **rdg):
 
 
 def value_from_bytes(val_b: bytes, **rdg):
-
     # Format identifiers used to unpack the binary result into desired format based on datatype
     fmt = {
         "int16": "h",
@@ -116,7 +114,6 @@ def value_from_bytes(val_b: bytes, **rdg):
 
 
 def value_from_string(val_s: str, **rdg):
-
     # Check for defined value mappings in the driver
     if "valuemap" in rdg:
         # If the string value exists as a key in the map, return
@@ -128,7 +125,6 @@ def value_from_string(val_s: str, **rdg):
 
 
 def apply_mult_offset(value, **rdg):
-
     # If the raw value is a string or bool, we need to apply a typecast before any
     # of the below (and this typecast does need to be explicitly defined in the driver)
     if isinstance(value, (str, bool)):
@@ -151,7 +147,6 @@ def apply_mult_offset(value, **rdg):
 
 
 def typecast(value, **rdg):
-
     if value is None:
         return None
 

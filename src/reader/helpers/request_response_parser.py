@@ -22,7 +22,6 @@ def generate_request(request_schema: dict, device_args: dict, **rdg: dict) -> by
     request = b""
 
     for c in request_schema["sequence"]:
-
         component = b""
 
         if c["type"] == "input" or c["type"] == "device_arg":

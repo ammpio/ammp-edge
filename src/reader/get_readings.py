@@ -20,7 +20,6 @@ DEVICE_READ_MAXTIMEOUT = 600
 
 
 def get_readings(config: dict, drivers: dict):
-
     # Work out all the readings that need to be taken, refactored by device
     dev_rdg = {}
 
@@ -209,7 +208,6 @@ def get_readout(config: dict, drivers: dict):
 
 
 def read_device(dev, readings, readout_q, dev_lock=None):
-
     # If the device has a concurrency lock associated with it, make sure it's available
     if dev_lock:
         dev_lock.acquire()

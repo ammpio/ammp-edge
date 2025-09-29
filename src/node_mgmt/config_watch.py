@@ -30,7 +30,6 @@ class ConfigWatch(Thread):
         self._node = node
 
     def run(self):
-
         while True:
             logger.debug("Awaiting request for configuration check")
 
@@ -39,9 +38,7 @@ class ConfigWatch(Thread):
             logger.info("Proceeding with check for new configuration")
 
             try:
-
                 if self.__new_config_available():
-
                     with self._node.events.getting_config:
                         config = None
 

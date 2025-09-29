@@ -12,7 +12,6 @@ class Reader(object):
     def __init__(
         self, host, port=502, unit_id=1, register_offset=0, timeout=10, conn_check=False, conn_retry=10, **kwargs
     ):
-
         self._host = host
         self._port = port
         self._unit_id = unit_id
@@ -90,7 +89,6 @@ class Reader(object):
             return False
 
     def read(self, register, words, fncode=3, **kwargs):
-
         # Make sure connection is open
         if not self.__open_connection():
             logger.warning(f"Cannot open ModbusTCP connection to {self._host}:{self._port}/{self._unit_id}")

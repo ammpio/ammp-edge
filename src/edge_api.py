@@ -14,7 +14,6 @@ REMOTE_API_ROOT = "https://edge.ammp.io/api/v0/"
 
 class EdgeAPI(object):
     def __init__(self, node_id: str, access_key: str, root: str = REMOTE_API_ROOT) -> None:
-
         self.remote_api_root = root
         self.node_id = node_id
         self.access_key = access_key
@@ -93,7 +92,6 @@ class EdgeAPI(object):
         params: Optional[dict] = None,
         retry_count: int = 0,
     ) -> Optional[requests.Response]:
-
         try:
             if method.upper() == "GET":
                 return self._session.get(url, params=params, timeout=self.__request_timeout)

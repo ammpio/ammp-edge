@@ -51,7 +51,6 @@ logger = logging.getLogger(__name__)
 
 class NetworkEnv:
     def __init__(self, default_ifname=None, default_ip=None, default_netmask_bits=None):
-
         # Define the socket address families that may contain MAC addresses
         self.__mac_socket_family = []
         if hasattr(socket, "AF_PACKET"):
@@ -82,7 +81,6 @@ class NetworkEnv:
         )
 
     def get_interfaces(self):
-
         all_interfaces = net_if_addrs()
         interfaces = defaultdict(dict)
         for if_name, if_addrs in all_interfaces.items():
@@ -331,7 +329,6 @@ class SerialEnv:
 
 class EnvScanner(object):
     def __init__(self, ifname=None, serial_dev=None):
-
         self.net_env = NetworkEnv(default_ifname=ifname)
         self.serial_env = SerialEnv(default_serial_dev=serial_dev)
         self.speedwire_env = SpeedWireReader()
