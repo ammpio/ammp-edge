@@ -38,11 +38,18 @@ python-static-test:
 python-build:
 	uv build
 
-test:
-	$(MAKE) -C rust test
-
 python-clean:
 	uv cache clean
 	find . -name '*.pyc' -delete
 	find . -name '__pycache__' -type d | xargs rm -fr
 	find . -type d -name "*.egg-info" -exec rm -rf {} +
+
+rust-format:
+	$(MAKE) -C rust format
+
+format:
+	$(MAKE) -C rust format
+	$(MAKE) python-format
+
+test:
+	$(MAKE) -C rust test
