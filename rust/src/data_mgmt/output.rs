@@ -8,9 +8,9 @@ use serde_json::{Value, json};
 use std::collections::HashMap;
 
 use crate::data_mgmt::models::{DeviceReading, Reading, RtValue};
-use crate::data_mgmt::process::TypeCast;
 use crate::node_mgmt::config::Config;
-use derived_models::config::{Output, Typecast};
+use crate::node_mgmt::drivers::Typecast;
+use derived_models::config::Output;
 
 /// Process output fields from device readings using JSONata expressions
 ///
@@ -123,14 +123,6 @@ fn apply_typecast(value: Value, typecast: Typecast) -> Result<RtValue> {
         return Ok(RtValue::String(string_value));
     }
 
-    // Convert schema Typecast to process TypeCast
-    let process_typecast = match typecast {
-        Typecast::Int => TypeCast::Int,
-        Typecast::Float => TypeCast::Float,
-        Typecast::Bool => TypeCast::Bool,
-        Typecast::Str => unreachable!(), // Already handled above
-    };
-
     // Convert JSON value to numeric for process module (it expects f64)
     let numeric_value = match value {
         Value::Number(n) => n.as_f64().unwrap_or(0.0),
@@ -146,8 +138,7 @@ fn apply_typecast(value: Value, typecast: Typecast) -> Result<RtValue> {
     };
 
     // Use existing typecast functionality from process module
-    let processed =
-        crate::data_mgmt::process::apply_typecast(numeric_value, Some(process_typecast))?;
+    let processed = crate::data_mgmt::process::apply_typecast(numeric_value, Some(typecast))?;
 
     // The process module now returns RtValue directly
     Ok(processed)

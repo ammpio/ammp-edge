@@ -8,7 +8,8 @@ use ae::data_mgmt::{
     output::process_outputs,
 };
 use ae::node_mgmt::config::Device;
-use derived_models::config::{AmmpEdgeConfiguration, Output, ReadingType, Typecast};
+use derived_models::config::{AmmpEdgeConfiguration, Output, ReadingType};
+use derived_models::driver::Typecast;
 use std::collections::HashMap;
 
 fn main() -> anyhow::Result<()> {

@@ -5,7 +5,7 @@
 //! offset application, and type casting for readings from various device types.
 
 use crate::data_mgmt::models::RtValue;
-use crate::node_mgmt::drivers::FieldOpts;
+use crate::node_mgmt::drivers::{DataType, FieldOpts, Typecast};
 use anyhow::{Result, anyhow};
 use std::collections::HashMap;
 
@@ -37,7 +37,7 @@ pub fn process_reading(val_bytes: &[u8], params: &ProcessingParams) -> Result<Rt
     };
 
     // Apply multiplier and offset (unless dealing with string/boolean)
-    let scaled_value = if matches!(params.typecast, Some(TypeCast::Str) | Some(TypeCast::Bool)) {
+    let scaled_value = if matches!(params.typecast, Some(Typecast::Str) | Some(Typecast::Bool)) {
         value
     } else {
         apply_multiplier_offset(value, params.multiplier, params.offset)?
@@ -79,13 +79,13 @@ fn value_from_string(val_str: &str, params: &ProcessingParams) -> Result<Option<
 
     // Parse as number based on typecast
     let value = match params.typecast {
-        Some(TypeCast::Int) => val_str.parse::<i64>()? as f64,
-        Some(TypeCast::Float) => val_str.parse::<f64>()?,
-        Some(TypeCast::Bool) => {
+        Some(Typecast::Int) => val_str.parse::<i64>()? as f64,
+        Some(Typecast::Float) => val_str.parse::<f64>()?,
+        Some(Typecast::Bool) => {
             let bool_val = val_str.parse::<bool>()?;
             if bool_val { 1.0 } else { 0.0 }
         }
-        Some(TypeCast::Str) => {
+        Some(Typecast::Str) => {
             // For strings, we don't convert to f64, handle separately
             return Ok(Some(0.0)); // Placeholder, will be handled in typecast
         }
@@ -117,7 +117,7 @@ fn value_from_bytes(val_bytes: &[u8], params: &ProcessingParams) -> Result<Optio
             }
             i16::from_be_bytes([val_bytes[0], val_bytes[1]]) as f64
         }
-        DataType::UInt16 => {
+        DataType::Uint16 => {
             if val_bytes.len() < 2 {
                 return Err(anyhow!("Insufficient bytes for uint16"));
             }
@@ -129,7 +129,7 @@ fn value_from_bytes(val_bytes: &[u8], params: &ProcessingParams) -> Result<Optio
             }
             i32::from_be_bytes([val_bytes[0], val_bytes[1], val_bytes[2], val_bytes[3]]) as f64
         }
-        DataType::UInt32 => {
+        DataType::Uint32 => {
             if val_bytes.len() < 4 {
                 return Err(anyhow!("Insufficient bytes for uint32"));
             }
@@ -143,7 +143,7 @@ fn value_from_bytes(val_bytes: &[u8], params: &ProcessingParams) -> Result<Optio
             bytes.copy_from_slice(&val_bytes[0..8]);
             i64::from_be_bytes(bytes) as f64
         }
-        DataType::UInt64 => {
+        DataType::Uint64 => {
             if val_bytes.len() < 8 {
                 return Err(anyhow!("Insufficient bytes for uint64"));
             }
@@ -151,7 +151,7 @@ fn value_from_bytes(val_bytes: &[u8], params: &ProcessingParams) -> Result<Optio
             bytes.copy_from_slice(&val_bytes[0..8]);
             u64::from_be_bytes(bytes) as f64
         }
-        DataType::Float | DataType::Single => {
+        DataType::Float => {
             if val_bytes.len() < 4 {
                 return Err(anyhow!("Insufficient bytes for float"));
             }
@@ -184,12 +184,12 @@ fn apply_multiplier_offset(
 }
 
 /// Apply final type casting to get the desired output type
-pub fn apply_typecast(value: f64, typecast: Option<TypeCast>) -> Result<RtValue> {
+pub fn apply_typecast(value: f64, typecast: Option<Typecast>) -> Result<RtValue> {
     match typecast {
-        Some(TypeCast::Int) => Ok(RtValue::Int(value as i64)),
-        Some(TypeCast::Float) => Ok(RtValue::Float(value)),
-        Some(TypeCast::Bool) => Ok(RtValue::Bool(value != 0.0)),
-        Some(TypeCast::Str) => Ok(RtValue::String(value.to_string())),
+        Some(Typecast::Int) => Ok(RtValue::Int(value as i64)),
+        Some(Typecast::Float) => Ok(RtValue::Float(value)),
+        Some(Typecast::Bool) => Ok(RtValue::Bool(value != 0.0)),
+        Some(Typecast::Str) => Ok(RtValue::String(value.to_string())),
         None => Ok(RtValue::Float(value)), // Default to float
     }
 }
@@ -202,7 +202,7 @@ pub struct ProcessingParams {
     /// Data type for bytes/hex parsing
     pub datatype: Option<DataType>,
     /// Type casting for final output
-    pub typecast: Option<TypeCast>,
+    pub typecast: Option<Typecast>,
     /// Value mapping (hex keys for bytes, string keys for strings)
     pub valuemap: Option<HashMap<String, f64>>,
     /// Multiplier to apply
@@ -230,25 +230,11 @@ impl ProcessingParams {
     /// This provides the bridge between the driver configuration system
     /// and the data processing system.
     pub fn from_field_opts(field_config: &FieldOpts) -> Result<Self> {
-        // Convert datatype from driver schema to processing enum
-        let datatype = if let Some(dt) = &field_config.datatype {
-            Some(dt.to_string().parse::<DataType>()?)
-        } else {
-            None
-        };
+        // Use datatype directly from driver schema
+        let datatype = field_config.datatype;
 
-        // Convert typecast from driver schema to processing enum
-        let typecast = if let Some(tc) = &field_config.typecast {
-            Some(match tc.to_string().as_str() {
-                "int" => TypeCast::Int,
-                "float" => TypeCast::Float,
-                "str" => TypeCast::Str,
-                "bool" => TypeCast::Bool,
-                other => return Err(anyhow!("Unsupported typecast: {}", other)),
-            })
-        } else {
-            None
-        };
+        // Use typecast directly from driver schema
+        let typecast = field_config.typecast;
 
         // Convert datamap to valuemap
         let valuemap = if !field_config.datamap.is_empty() {
@@ -286,62 +272,6 @@ pub enum ParseAs {
     Hex,
 }
 
-/// Data types supported for bytes parsing
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum DataType {
-    Int16,
-    UInt16,
-    Int32,
-    UInt32,
-    Int64,
-    UInt64,
-    Float,
-    Single, // Alias for Float
-    Double,
-}
-
-impl std::str::FromStr for DataType {
-    type Err = anyhow::Error;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "int16" => Ok(DataType::Int16),
-            "uint16" => Ok(DataType::UInt16),
-            "int32" => Ok(DataType::Int32),
-            "uint32" => Ok(DataType::UInt32),
-            "int64" => Ok(DataType::Int64),
-            "uint64" => Ok(DataType::UInt64),
-            "float" => Ok(DataType::Float),
-            "single" => Ok(DataType::Single),
-            "double" => Ok(DataType::Double),
-            _ => Err(anyhow!("Unsupported datatype: {}", s)),
-        }
-    }
-}
-
-/// Type casting options for final output
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum TypeCast {
-    Int,
-    Float,
-    Str,
-    Bool,
-}
-
-impl std::str::FromStr for TypeCast {
-    type Err = anyhow::Error;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "int" => Ok(TypeCast::Int),
-            "float" => Ok(TypeCast::Float),
-            "str" => Ok(TypeCast::Str),
-            "bool" => Ok(TypeCast::Bool),
-            _ => Err(anyhow!("Unsupported typecast: {}", s)),
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -350,7 +280,7 @@ mod tests {
     fn test_process_uint16() {
         let bytes = [0x12, 0x34]; // 0x1234 = 4660
         let params = ProcessingParams {
-            datatype: Some(DataType::UInt16),
+            datatype: Some(DataType::Uint16),
             ..Default::default()
         };
 
@@ -362,10 +292,10 @@ mod tests {
     fn test_process_with_multiplier_offset() {
         let bytes = [0x00, 0x64]; // 100
         let params = ProcessingParams {
-            datatype: Some(DataType::UInt16),
+            datatype: Some(DataType::Uint16),
             multiplier: Some(0.1),
             offset: Some(5.0),
-            typecast: Some(TypeCast::Float),
+            typecast: Some(Typecast::Float),
             ..Default::default()
         };
 
@@ -378,7 +308,7 @@ mod tests {
         let bytes = b"123.45";
         let params = ProcessingParams {
             parse_as: ParseAs::Str,
-            typecast: Some(TypeCast::Float),
+            typecast: Some(Typecast::Float),
             ..Default::default()
         };
 
@@ -393,7 +323,7 @@ mod tests {
         valuemap.insert("0x1234".to_string(), 999.0);
 
         let params = ProcessingParams {
-            datatype: Some(DataType::UInt16),
+            datatype: Some(DataType::Uint16),
             valuemap: Some(valuemap),
             ..Default::default()
         };
@@ -406,8 +336,8 @@ mod tests {
     fn test_typecast_to_int() {
         let bytes = [0x00, 0x64]; // 100
         let params = ProcessingParams {
-            datatype: Some(DataType::UInt16),
-            typecast: Some(TypeCast::Int),
+            datatype: Some(DataType::Uint16),
+            typecast: Some(Typecast::Int),
             ..Default::default()
         };
 

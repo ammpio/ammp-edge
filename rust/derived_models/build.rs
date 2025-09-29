@@ -122,10 +122,10 @@ fn post_process_config_rs() {
 
 fn remove_typecast_enum(content: String) -> String {
     let lines: Vec<&str> = content.lines().collect();
-    
+
     let mut start_line_to_remove = None;
     let mut end_line_to_remove = None;
-    
+
     // Find the line where the FULL content is "///Typecast of output" (not indented)
     for (i, line) in lines.iter().enumerate() {
         if *line == "///Typecast of output" {
@@ -133,7 +133,7 @@ fn remove_typecast_enum(content: String) -> String {
             break;
         }
     }
-    
+
     // Find the line that states "/// Generation of default values for serde."
     if let Some(start_line) = start_line_to_remove {
         for (i, line) in lines.iter().enumerate().skip(start_line) {
@@ -143,13 +143,13 @@ fn remove_typecast_enum(content: String) -> String {
             }
         }
     }
-    
+
     if let (Some(start_line), Some(end_line)) = (start_line_to_remove, end_line_to_remove) {
         // Remove from start_line to just before end_line (preserve the defaults module)
         let mut result_lines = Vec::new();
         result_lines.extend_from_slice(&lines[..start_line]);
         result_lines.extend_from_slice(&lines[end_line..]);
-        
+
         // Add a final newline if the original content had one
         if content.ends_with('\n') {
             return result_lines.join("\n") + "\n";
@@ -157,7 +157,6 @@ fn remove_typecast_enum(content: String) -> String {
             return result_lines.join("\n");
         }
     }
-    
+
     content
 }
-
