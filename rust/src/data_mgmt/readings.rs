@@ -111,14 +111,14 @@ async fn read_modbus_devices(
     // Create reading tasks for each device
     let reading_tasks = modbus_devices
         .into_iter()
-        .map(|(device_id, (device, variable_names))| {
-            let device_id = device_id.clone();
+        .map(|(device_key, (device, variable_names))| {
+            let device_key = device_key.clone();
             let device = device.clone();
             let variable_names = variable_names.clone();
             let config = config.clone();
 
             tokio::spawn(async move {
-                modbus_tcp::read_device(&config, &device_id, &device, &variable_names).await
+                modbus_tcp::read_device(&config, &device_key, &device, &variable_names).await
             })
         });
 

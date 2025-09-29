@@ -13,7 +13,7 @@ use crate::node_mgmt::drivers::{DriverSchema, FieldOpts, resolve_field_definitio
 /// Configuration for a ModbusTCP device connection
 #[derive(Clone, Debug)]
 pub struct ModbusDeviceConfig {
-    pub device_id: String,
+    pub device_key: String,
     pub host: String,
     pub port: u16,
     pub unit_id: u8,
@@ -23,14 +23,14 @@ pub struct ModbusDeviceConfig {
 
 impl ModbusDeviceConfig {
     /// Create device config from the main configuration
-    pub fn from_config(device_id: &str, device: &Device) -> Result<Self> {
+    pub fn from_config(device_key: &str, device: &Device) -> Result<Self> {
         // Ensure this is a ModbusTCP device
         match device.reading_type {
             ReadingType::Modbustcp => {}
             other => {
                 return Err(anyhow!(
                     "Device {} has reading type {:?}, not modbustcp",
-                    device_id,
+                    device_key,
                     other
                 ));
             }
@@ -39,14 +39,14 @@ impl ModbusDeviceConfig {
         let address = device.address.as_ref().ok_or_else(|| {
             anyhow!(
                 "ModbusTCP device {} missing address configuration",
-                device_id
+                device_key
             )
         })?;
 
         let host = address
             .host
             .as_ref()
-            .ok_or_else(|| anyhow!("ModbusTCP device {} missing host address", device_id))?
+            .ok_or_else(|| anyhow!("ModbusTCP device {} missing host address", device_key))?
             .clone();
 
         let port = address.port.map(|p| p as u16).unwrap_or(502); // Default ModbusTCP port
@@ -56,7 +56,7 @@ impl ModbusDeviceConfig {
         let register_offset = address.register_offset.map(|o| o as u16).unwrap_or(0);
 
         Ok(ModbusDeviceConfig {
-            device_id: device_id.to_string(),
+            device_key: device_key.to_string(),
             host,
             port,
             unit_id,
@@ -66,9 +66,9 @@ impl ModbusDeviceConfig {
     }
 
     /// Create a test configuration for development
-    pub fn test_config(device_id: &str, host: &str, port: u16, unit_id: u8) -> Self {
+    pub fn test_config(device_key: &str, host: &str, port: u16, unit_id: u8) -> Self {
         ModbusDeviceConfig {
-            device_id: device_id.to_string(),
+            device_key: device_key.to_string(),
             host: host.to_string(),
             port,
             unit_id,
@@ -125,11 +125,11 @@ pub fn extract_modbus_devices(
     let mut modbus_devices = Vec::new();
 
     // Filter devices with reading_type = "modbustcp"
-    for (device_id, device) in &config.devices {
+    for (device_key, device) in &config.devices {
         if matches!(device.reading_type, ReadingType::Modbustcp) {
-            let device_config = ModbusDeviceConfig::from_config(device_id, device)?;
-            let reading_configs = extract_device_readings(config, device_id)?;
-            modbus_devices.push((device_id.to_string(), device_config, reading_configs));
+            let device_config = ModbusDeviceConfig::from_config(device_key, device)?;
+            let reading_configs = extract_device_readings(config, device_key)?;
+            modbus_devices.push((device_key.to_string(), device_config, reading_configs));
         }
     }
 
@@ -137,14 +137,14 @@ pub fn extract_modbus_devices(
 }
 
 /// Extract readings for a specific device from configuration
-pub fn extract_device_readings(config: &Config, device_id: &str) -> Result<Vec<ReadingConfig>> {
+pub fn extract_device_readings(config: &Config, device_key: &str) -> Result<Vec<ReadingConfig>> {
     let mut reading_configs = Vec::new();
 
     // Get the device to find its driver
     let device = config
         .devices
-        .get(device_id)
-        .ok_or_else(|| anyhow!("Device {} not found", device_id))?;
+        .get(device_key)
+        .ok_or_else(|| anyhow!("Device {} not found", device_key))?;
 
     // Get driver configuration
     let driver_config = config.drivers.get(&device.driver);
@@ -154,7 +154,7 @@ pub fn extract_device_readings(config: &Config, device_id: &str) -> Result<Vec<R
 
     // Filter readings that belong to this device
     for reading_schema in config.readings.values() {
-        if reading_schema.device == device_id {
+        if reading_schema.device == device_key {
             // Try to get field configuration from driver
             if let Some(driver) = &driver_schema {
                 match ReadingConfig::from_driver_field(&reading_schema.var, driver) {
@@ -166,7 +166,7 @@ pub fn extract_device_readings(config: &Config, device_id: &str) -> Result<Vec<R
                             "Failed to create reading config for field {} in driver {} for device {}: {}",
                             reading_schema.var,
                             device.driver,
-                            device_id,
+                            device_key,
                             e
                         );
                     }
@@ -175,7 +175,7 @@ pub fn extract_device_readings(config: &Config, device_id: &str) -> Result<Vec<R
                 log::warn!(
                     "Driver {} not found in configuration for device {}",
                     device.driver,
-                    device_id
+                    device_key
                 );
             }
         }

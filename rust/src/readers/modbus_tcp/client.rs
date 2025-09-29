@@ -10,14 +10,14 @@ use crate::node_mgmt::drivers::RegisterOrder;
 /// ModbusTCP client for reading device registers
 pub struct ModbusTcpReader {
     context: tokio_modbus::client::Context,
-    device_id: String,
+    device_key: String,
     unit_id: u8,
 }
 
 impl ModbusTcpReader {
     /// Connect to a ModbusTCP device
     pub async fn connect(
-        device_id: String,
+        device_key: String,
         host: &str,
         port: u16,
         unit_id: u8,
@@ -49,7 +49,7 @@ impl ModbusTcpReader {
 
         Ok(ModbusTcpReader {
             context: ctx,
-            device_id,
+            device_key,
             unit_id,
         })
     }
@@ -164,8 +164,8 @@ impl ModbusTcpReader {
     }
 
     /// Get device ID for this reader
-    pub fn device_id(&self) -> &str {
-        &self.device_id
+    pub fn device_key(&self) -> &str {
+        &self.device_key
     }
 
     /// Get unit ID for this reader
