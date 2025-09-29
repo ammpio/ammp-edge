@@ -521,7 +521,8 @@ impl ::std::convert::From<&DriverSchema> for DriverSchema {
 ///          "type": "number"
 ///        },
 ///        "typecast": {
-///          "title": "Typecast for final processed reading",
+///          "title": "Typecast",
+///          "description": "Typecast for final processed reading",
 ///          "examples": [
 ///            "int"
 ///          ],
@@ -581,8 +582,9 @@ pub struct FieldOpts {
     ///MQTT topic to subscribe to
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub topic: ::std::option::Option<::std::string::String>,
+    ///Typecast for final processed reading
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub typecast: ::std::option::Option<TypecastForFinalProcessedReading>,
+    pub typecast: ::std::option::Option<Typecast>,
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub unit: ::std::option::Option<::std::string::String>,
     ///Number of 2-byte words for Modbus
@@ -1086,13 +1088,14 @@ impl ::std::default::Default for StatusInfoOptsValue {
         }
     }
 }
-///`TypecastForFinalProcessedReading`
+///Typecast for final processed reading
 ///
 /// <details><summary>JSON schema</summary>
 ///
 /// ```json
 ///{
-///  "title": "Typecast for final processed reading",
+///  "title": "Typecast",
+///  "description": "Typecast for final processed reading",
 ///  "examples": [
 ///    "int"
 ///  ],
@@ -1118,7 +1121,7 @@ impl ::std::default::Default for StatusInfoOptsValue {
     PartialEq,
     PartialOrd
 )]
-pub enum TypecastForFinalProcessedReading {
+pub enum Typecast {
     #[serde(rename = "int")]
     Int,
     #[serde(rename = "float")]
@@ -1128,12 +1131,12 @@ pub enum TypecastForFinalProcessedReading {
     #[serde(rename = "bool")]
     Bool,
 }
-impl ::std::convert::From<&Self> for TypecastForFinalProcessedReading {
-    fn from(value: &TypecastForFinalProcessedReading) -> Self {
+impl ::std::convert::From<&Self> for Typecast {
+    fn from(value: &Typecast) -> Self {
         value.clone()
     }
 }
-impl ::std::fmt::Display for TypecastForFinalProcessedReading {
+impl ::std::fmt::Display for Typecast {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         match *self {
             Self::Int => f.write_str("int"),
@@ -1143,7 +1146,7 @@ impl ::std::fmt::Display for TypecastForFinalProcessedReading {
         }
     }
 }
-impl ::std::str::FromStr for TypecastForFinalProcessedReading {
+impl ::std::str::FromStr for Typecast {
     type Err = self::error::ConversionError;
     fn from_str(
         value: &str,
@@ -1157,7 +1160,7 @@ impl ::std::str::FromStr for TypecastForFinalProcessedReading {
         }
     }
 }
-impl ::std::convert::TryFrom<&str> for TypecastForFinalProcessedReading {
+impl ::std::convert::TryFrom<&str> for Typecast {
     type Error = self::error::ConversionError;
     fn try_from(
         value: &str,
@@ -1165,8 +1168,7 @@ impl ::std::convert::TryFrom<&str> for TypecastForFinalProcessedReading {
         value.parse()
     }
 }
-impl ::std::convert::TryFrom<&::std::string::String>
-for TypecastForFinalProcessedReading {
+impl ::std::convert::TryFrom<&::std::string::String> for Typecast {
     type Error = self::error::ConversionError;
     fn try_from(
         value: &::std::string::String,
@@ -1174,8 +1176,7 @@ for TypecastForFinalProcessedReading {
         value.parse()
     }
 }
-impl ::std::convert::TryFrom<::std::string::String>
-for TypecastForFinalProcessedReading {
+impl ::std::convert::TryFrom<::std::string::String> for Typecast {
     type Error = self::error::ConversionError;
     fn try_from(
         value: ::std::string::String,
