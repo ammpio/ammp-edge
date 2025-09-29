@@ -123,18 +123,33 @@ fn apply_typecast(value: Value, typecast: Typecast) -> Result<RtValue> {
         return Ok(RtValue::String(string_value));
     }
 
-    // Convert JSON value to numeric for process module (it expects f64)
+    // Convert JSON value to NumericValue for process module
     let numeric_value = match value {
-        Value::Number(n) => n.as_f64().unwrap_or(0.0),
-        Value::Bool(b) => {
-            if b {
-                1.0
+        Value::Number(n) => {
+            if let Some(i) = n.as_i64() {
+                crate::data_mgmt::process::NumericValue::Int(i)
+            } else if let Some(u) = n.as_u64() {
+                // Convert unsigned to signed, using saturation for large values
+                crate::data_mgmt::process::NumericValue::Int(if u <= i64::MAX as u64 {
+                    u as i64
+                } else {
+                    i64::MAX
+                })
             } else {
-                0.0
+                crate::data_mgmt::process::NumericValue::Float(n.as_f64().unwrap_or(0.0))
             }
         }
-        Value::String(s) => s.parse::<f64>().unwrap_or(0.0),
-        _ => 0.0,
+        Value::Bool(b) => crate::data_mgmt::process::NumericValue::Int(if b { 1 } else { 0 }),
+        Value::String(s) => {
+            if let Ok(i) = s.parse::<i64>() {
+                crate::data_mgmt::process::NumericValue::Int(i)
+            } else if let Ok(f) = s.parse::<f64>() {
+                crate::data_mgmt::process::NumericValue::Float(f)
+            } else {
+                crate::data_mgmt::process::NumericValue::Float(0.0)
+            }
+        }
+        _ => crate::data_mgmt::process::NumericValue::Float(0.0),
     };
 
     // Use existing typecast functionality from process module

@@ -109,7 +109,7 @@ impl ModbusTcpReader {
             match self.read_raw_registers(&config).await {
                 Ok(raw_bytes) => {
                     // Process the raw bytes using the data processing pipeline
-                    match crate::data_mgmt::process::process_field_reading(
+                    match crate::data_mgmt::process::process_reading(
                         &raw_bytes,
                         &config.field_config,
                     ) {
