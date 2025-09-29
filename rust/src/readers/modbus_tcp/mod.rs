@@ -5,7 +5,6 @@ use anyhow::{Result, anyhow};
 
 use crate::{
     data_mgmt::models::{DeviceReading, Record},
-    data_mgmt::readings::ReadingRequest,
     node_mgmt::config::Device,
     node_mgmt::drivers::load_driver,
 };
@@ -22,9 +21,9 @@ pub async fn read_device(
     config: &crate::node_mgmt::config::Config,
     device_id: &str,
     device: &Device,
-    reading_requests: &[ReadingRequest],
+    variable_names: &[String],
 ) -> Result<Vec<DeviceReading>> {
-    if reading_requests.is_empty() {
+    if variable_names.is_empty() {
         log::debug!("No readings requested for ModbusTCP device: {}", device_id);
         return Ok(Vec::new());
     }
@@ -32,8 +31,8 @@ pub async fn read_device(
     // Create device config from the device configuration
     let device_config = ModbusDeviceConfig::from_config(device_id, device)?;
 
-    // Convert reading requests to ReadingConfig format
-    let reading_configs = convert_reading_requests_to_configs(config, reading_requests, device)?;
+    // Convert variable names to ReadingConfig format
+    let reading_configs = convert_variable_names_to_configs(config, variable_names, device)?;
 
     log::debug!(
         "Reading {} variables from ModbusTCP device '{}' at {}:{}",
@@ -84,10 +83,10 @@ pub async fn read_device(
     Ok(vec![device_reading])
 }
 
-/// Convert ReadingRequest objects to ReadingConfig objects using driver information
-fn convert_reading_requests_to_configs(
+/// Convert variable names to ReadingConfig objects using driver information
+fn convert_variable_names_to_configs(
     config: &crate::node_mgmt::config::Config,
-    reading_requests: &[ReadingRequest],
+    variable_names: &[String],
     device: &Device,
 ) -> Result<Vec<ReadingConfig>> {
     let mut reading_configs = Vec::new();
@@ -96,13 +95,13 @@ fn convert_reading_requests_to_configs(
     let driver = load_driver(config, &device.driver)
         .map_err(|e| anyhow!("Failed to load driver '{}': {}", device.driver, e))?;
 
-    for request in reading_requests {
+    for variable_name in variable_names {
         // Use the simplified ReadingConfig creation
-        let reading_config = ReadingConfig::from_driver_field(&request.variable_name, &driver)
-            .map_err(|e| {
+        let reading_config =
+            ReadingConfig::from_driver_field(variable_name, &driver).map_err(|e| {
                 anyhow!(
                     "Failed to create reading config for '{}': {}",
-                    request.variable_name,
+                    variable_name,
                     e
                 )
             })?;

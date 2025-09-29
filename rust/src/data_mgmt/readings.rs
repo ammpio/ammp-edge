@@ -16,7 +16,7 @@ use crate::{
 ///
 /// Analyzes the configuration, determines what ModbusTCP readings need to be taken,
 /// organizes them by device, and delegates to the ModbusTCP reader.
-/// Other device types have their own dedicated commands.
+/// In the future this will be extended to support other device types.
 pub async fn get_readings(config: &Config) -> Result<Vec<DeviceReading>> {
     let start_time = Instant::now();
 
@@ -50,10 +50,8 @@ pub async fn get_readings(config: &Config) -> Result<Vec<DeviceReading>> {
 }
 
 /// Organize readings by device, filtering for enabled devices and readings
-fn organize_readings_by_device(
-    config: &Config,
-) -> Result<HashMap<String, (Device, Vec<ReadingRequest>)>> {
-    let mut device_readings_map: HashMap<String, (Device, Vec<ReadingRequest>)> = HashMap::new();
+fn organize_readings_by_device(config: &Config) -> Result<HashMap<String, (Device, Vec<String>)>> {
+    let mut device_readings_map: HashMap<String, (Device, Vec<String>)> = HashMap::new();
 
     // Iterate through all configured readings
     for (reading_name, reading_config) in &config.readings {
@@ -61,12 +59,12 @@ fn organize_readings_by_device(
         // If needed, enabled/disabled functionality can be added at the device level
 
         // Get the device this reading refers to
-        let device_id = &reading_config.device;
-        let Some(device) = config.devices.get(device_id) else {
+        let device_key = &reading_config.device;
+        let Some(device) = config.devices.get(device_key) else {
             log::error!(
                 "Reading '{}' references unknown device '{}'",
                 reading_name,
-                device_id
+                device_key
             );
             continue;
         };
@@ -78,22 +76,16 @@ fn organize_readings_by_device(
 
         // Create device with key populated
         let device_with_key = Device {
-            key: device_id.clone(),
+            key: device_key.clone(),
             ..device.clone()
         };
 
-        // Create reading request
-        let reading_request = ReadingRequest {
-            reading_name: reading_name.clone(),
-            variable_name: reading_config.var.clone(),
-        };
-
-        // Add to device map
+        // Add variable name to device map
         device_readings_map
-            .entry(device_id.clone())
+            .entry(device_key.clone())
             .or_insert_with(|| (device_with_key, Vec::new()))
             .1
-            .push(reading_request);
+            .push(reading_config.var.clone());
     }
 
     Ok(device_readings_map)
@@ -102,7 +94,7 @@ fn organize_readings_by_device(
 /// Process all ModbusTCP devices
 async fn read_modbus_devices(
     config: &Config,
-    device_readings_map: &HashMap<String, (Device, Vec<ReadingRequest>)>,
+    device_readings_map: &HashMap<String, (Device, Vec<String>)>,
 ) -> Result<Vec<DeviceReading>> {
     // Filter ModbusTCP devices
     let modbus_devices: Vec<_> = device_readings_map
@@ -117,19 +109,18 @@ async fn read_modbus_devices(
     log::info!("Processing {} ModbusTCP device(s)", modbus_devices.len());
 
     // Create reading tasks for each device
-    let reading_tasks =
-        modbus_devices
-            .into_iter()
-            .map(|(device_id, (device, reading_requests))| {
-                let device_id = device_id.clone();
-                let device = device.clone();
-                let reading_requests = reading_requests.clone();
-                let config = config.clone();
+    let reading_tasks = modbus_devices
+        .into_iter()
+        .map(|(device_id, (device, variable_names))| {
+            let device_id = device_id.clone();
+            let device = device.clone();
+            let variable_names = variable_names.clone();
+            let config = config.clone();
 
-                tokio::spawn(async move {
-                    modbus_tcp::read_device(&config, &device_id, &device, &reading_requests).await
-                })
-            });
+            tokio::spawn(async move {
+                modbus_tcp::read_device(&config, &device_id, &device, &variable_names).await
+            })
+        });
 
     // Execute all tasks concurrently with timeout
     let timeout_duration = Duration::from_secs(60); // 1 minute max for all devices
@@ -150,15 +141,6 @@ async fn read_modbus_devices(
     }
 
     Ok(readings)
-}
-
-/// Represents a reading request for a specific variable on a device
-#[derive(Clone, Debug)]
-pub struct ReadingRequest {
-    /// Name of the reading in the configuration
-    pub reading_name: String,
-    /// Variable name to read from the device
-    pub variable_name: String,
 }
 
 #[cfg(test)]
@@ -219,12 +201,11 @@ mod tests {
         assert_eq!(result.len(), 1);
         assert!(result.contains_key("test_device"));
 
-        let (device, readings) = &result["test_device"];
+        let (device, variable_names) = &result["test_device"];
         assert_eq!(device.key, "test_device");
-        assert_eq!(readings.len(), 2);
+        assert_eq!(variable_names.len(), 2);
 
-        let reading_names: Vec<_> = readings.iter().map(|r| &r.reading_name).collect();
-        assert!(reading_names.contains(&&"voltage".to_string()));
-        assert!(reading_names.contains(&&"power".to_string()));
+        assert!(variable_names.contains(&"voltage_L1".to_string()));
+        assert!(variable_names.contains(&"power_total".to_string()));
     }
 }
