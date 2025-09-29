@@ -22,9 +22,8 @@ pub async fn start_readings() -> Result<()> {
     let config = node_mgmt::config::get(kvs)?;
 
     // Extract timing parameters from config
-    // Note: These fields may not exist in current schema - will be added in Phase 4
-    let read_interval = extract_read_interval(&config);
-    let read_roundtime = extract_read_roundtime(&config);
+    let read_interval = config.read_interval as u32;
+    let read_roundtime = config.read_roundtime;
 
     log::info!(
         "Reading cycle configured - interval: {}s, roundtime: {}",
@@ -84,7 +83,7 @@ async fn execute_reading_cycle(
     if !all_readings.is_empty() {
         let duration = start_time.elapsed();
         let metadata = Metadata {
-            data_provider: Some("modbus-tcp-reader".into()),
+            data_provider: Some("test".into()),
             reading_duration: Some(duration.as_secs_f64()),
             ..Default::default()
         };
@@ -94,16 +93,6 @@ async fn execute_reading_cycle(
     }
 
     Ok(reading_count)
-}
-
-/// Extract read_interval from config, with default fallback
-fn extract_read_interval(config: &node_mgmt::config::Config) -> u32 {
-    config.read_interval as u32
-}
-
-/// Extract read_roundtime from config, with default fallback
-fn extract_read_roundtime(config: &node_mgmt::config::Config) -> bool {
-    config.read_roundtime
 }
 
 /// Create an interval timer aligned to round timestamps
@@ -127,41 +116,4 @@ async fn create_aligned_interval(interval_secs: u32) -> tokio::time::Interval {
     // Sleep until aligned time, then create regular interval
     tokio::time::sleep(delay_until_aligned).await;
     interval(Duration::from_secs(interval_secs as u64))
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_extract_config_values() {
-        // Create a test config with specific values
-        let config_json = serde_json::json!({
-            "devices": {},
-            "readings": {},
-            "read_interval": 120,
-            "read_roundtime": true
-        });
-
-        let config: node_mgmt::config::Config = serde_json::from_value(config_json).unwrap();
-
-        assert_eq!(extract_read_interval(&config), 120);
-        assert_eq!(extract_read_roundtime(&config), true);
-    }
-
-    #[test]
-    fn test_extract_config_defaults() {
-        // Create a minimal config for testing defaults
-        let config_json = serde_json::json!({
-            "devices": {},
-            "readings": {},
-            "read_interval": 60,
-            "read_roundtime": false
-        });
-
-        let config: node_mgmt::config::Config = serde_json::from_value(config_json).unwrap();
-
-        assert_eq!(extract_read_interval(&config), 60);
-        assert_eq!(extract_read_roundtime(&config), false);
-    }
 }
