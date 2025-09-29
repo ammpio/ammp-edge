@@ -1,4 +1,7 @@
 {
+  "common": {
+    "fncode": 3
+  },
   "fields": {
     "condition": {"register": 30201, "words": 2, "datatype": "uint32", "typecast": "int", "description": "Condition:; 35 = Fault; 303 = Off; 307 = Ok; 455 = Warning"},
     "total_yield": {"register": 30529, "words": 2, "datatype": "uint32", "typecast": "float", "multiplier": 1, "unit": "Wh", "description": "Total yield", "valuemap": {"0x80000000": null, "0xffffffff": null}},
