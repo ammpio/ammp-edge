@@ -11,7 +11,6 @@ class Reader(object):
     def __init__(
         self, device, slaveaddr, baudrate=9600, bytesize=8, parity="none", stopbits=1, timeout=5, debug=False, **kwargs
     ):
-
         self._device = device
         self._slaveaddr = slaveaddr
         self._baudrate = baudrate
@@ -69,7 +68,6 @@ class Reader(object):
             logger.warning("Could not close serial connection", exc_info=True)
 
     def read(self, register, words, fncode, **kwargs):
-
         try:
             val_i = self._conn.read_registers(register, words, fncode)
         except minimalmodbus.NoResponseError:

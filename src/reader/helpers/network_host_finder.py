@@ -110,7 +110,6 @@ def set_host_from_mac(address: dict) -> None:
     """
 
     if address.get("mac"):
-
         mac = address["mac"].lower()
 
         # First try ARP cache:

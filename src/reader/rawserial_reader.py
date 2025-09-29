@@ -9,7 +9,6 @@ logger = logging.getLogger(__name__)
 
 class Reader(object):
     def __init__(self, device, baudrate=9600, bytesize=8, parity="none", stopbits=1, timeout=5, **kwargs):
-
         self._device = device
         self._baudrate = baudrate
         self._bytesize = bytesize
@@ -61,7 +60,6 @@ class Reader(object):
             logger.warning("Could not close serial connection", exc_info=True)
 
     def read(self, query, pos, length, resp_template=None, resp_termination=None, **rdg):
-
         if query in self._stored_responses:
             resp = self._stored_responses[query]
         else:
