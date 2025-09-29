@@ -214,7 +214,7 @@ mod tests {
     fn create_test_device(key: &str) -> Device {
         Device {
             key: key.to_string(),
-            device_model: "test_model".to_string(),
+            device_model: Some("test_model".to_string()),
             driver: "test_driver".to_string(),
             reading_type: ReadingType::Modbustcp,
             vendor_id: "test_vendor".to_string(),
