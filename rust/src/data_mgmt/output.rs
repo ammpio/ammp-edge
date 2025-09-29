@@ -267,7 +267,7 @@ mod tests {
     fn test_rt_value_to_json() {
         assert_eq!(rt_value_to_json(&RtValue::None), json!(null));
         assert_eq!(rt_value_to_json(&RtValue::Int(42)), json!(42));
-        assert_eq!(rt_value_to_json(&RtValue::Float(3.14)), json!(3.14));
+        assert_eq!(rt_value_to_json(&RtValue::Float(3.23)), json!(3.23));
         assert_eq!(rt_value_to_json(&RtValue::Bool(true)), json!(true));
         assert_eq!(
             rt_value_to_json(&RtValue::String("test".to_string())),

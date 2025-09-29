@@ -94,7 +94,6 @@ pub struct ReadingConfig {
 }
 
 impl ReadingConfig {
-
     /// Create reading config from driver and field name
     pub fn from_driver_field(variable_name: &str, driver: &DriverSchema) -> Result<Self> {
         // Use the driver system to resolve field configuration

@@ -108,7 +108,10 @@ impl ModbusTcpReader {
             match self.read_raw_registers(&config).await {
                 Ok(raw_bytes) => {
                     // Process the raw bytes using the data processing pipeline
-                    match crate::data_mgmt::process::process_field_reading(&raw_bytes, &config.field_config) {
+                    match crate::data_mgmt::process::process_field_reading(
+                        &raw_bytes,
+                        &config.field_config,
+                    ) {
                         Ok(RtValue::None) => {
                             log::debug!("Reading '{}' returned no value", config.variable_name);
                             // Skip None values
@@ -121,13 +124,21 @@ impl ModbusTcpReader {
                             });
                         }
                         Err(e) => {
-                            log::warn!("Failed to process reading '{}': {}", config.variable_name, e);
+                            log::warn!(
+                                "Failed to process reading '{}': {}",
+                                config.variable_name,
+                                e
+                            );
                             // Continue with other readings even if one fails
                         }
                     }
                 }
                 Err(e) => {
-                    log::warn!("Failed to read raw data for '{}': {}", config.variable_name, e);
+                    log::warn!(
+                        "Failed to read raw data for '{}': {}",
+                        config.variable_name,
+                        e
+                    );
                     // Continue with other readings even if one fails
                 }
             }
@@ -187,7 +198,6 @@ fn registers_to_bytes(registers: &[u16], order: Option<&RegisterOrder>) -> Resul
     Ok(bytes)
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -212,5 +222,4 @@ mod tests {
         let bytes = registers_to_bytes(&registers, Some(&RegisterOrder::Msr)).unwrap();
         assert_eq!(bytes, vec![0x12, 0x34, 0x56, 0x78]);
     }
-
 }

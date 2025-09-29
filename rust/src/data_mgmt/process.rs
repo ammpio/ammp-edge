@@ -4,8 +4,8 @@
 //! processor/process_reading.py module. It handles data type conversion, scaling,
 //! offset application, and type casting for readings from various device types.
 
-use crate::node_mgmt::drivers::FieldOpts;
 use crate::data_mgmt::models::RtValue;
+use crate::node_mgmt::drivers::FieldOpts;
 use anyhow::{Result, anyhow};
 use std::collections::HashMap;
 
@@ -341,7 +341,6 @@ impl std::str::FromStr for TypeCast {
         }
     }
 }
-
 
 #[cfg(test)]
 mod tests {
