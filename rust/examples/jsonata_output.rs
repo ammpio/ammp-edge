@@ -40,7 +40,7 @@ fn create_sample_readings() -> Vec<DeviceReading> {
     let power_meter = DeviceReading {
         device: Device {
             key: "power_meter_1".to_string(),
-            device_model: "em210".to_string(),
+            device_model: Some("em210".to_string()),
             driver: "em210_driver".to_string(),
             reading_type: ReadingType::Modbustcp,
             vendor_id: "pm-001".to_string(),
@@ -60,7 +60,7 @@ fn create_sample_readings() -> Vec<DeviceReading> {
     let inverter = DeviceReading {
         device: Device {
             key: "inverter_1".to_string(),
-            device_model: "sma_stp".to_string(),
+            device_model: Some("sma_stp".to_string()),
             driver: "sma_stp_driver".to_string(),
             reading_type: ReadingType::Modbustcp,
             vendor_id: "inv-001".to_string(),
