@@ -7,6 +7,7 @@ use anyhow::{Result, anyhow};
 use std::time::Duration;
 
 // Import the generated types through domain module re-exports
+use crate::helpers::arp_get_ip_from_mac;
 use crate::node_mgmt::config::{Config, Device, ReadingType};
 use crate::node_mgmt::drivers::{DriverSchema, FieldOpts, resolve_field_definition};
 
@@ -43,11 +44,49 @@ impl ModbusDeviceConfig {
             )
         })?;
 
-        let host = address
-            .host
-            .as_ref()
-            .ok_or_else(|| anyhow!("ModbusTCP device {} missing host address", device_key))?
-            .clone();
+        // Determine host IP - either from configured host or resolve from MAC
+        let host = if let Some(host_ip) = &address.host {
+            // Host IP is already configured
+            host_ip.clone()
+        } else if let Some(mac_addr) = &address.mac {
+            // Try to resolve IP from MAC address using ARP table
+            log::info!(
+                "Resolving IP for MAC address {} on device {}",
+                mac_addr,
+                device_key
+            );
+            match arp_get_ip_from_mac(mac_addr) {
+                Ok(Some(ip)) => {
+                    log::info!(
+                        "Resolved MAC {} to IP {} for device {}",
+                        mac_addr,
+                        ip,
+                        device_key
+                    );
+                    ip
+                }
+                Ok(None) => {
+                    return Err(anyhow!(
+                        "ModbusTCP device {} with MAC {} not found in ARP table. Device may be offline or not on local network.",
+                        device_key,
+                        mac_addr
+                    ));
+                }
+                Err(e) => {
+                    return Err(anyhow!(
+                        "Failed to resolve MAC {} to IP for device {}: {}",
+                        mac_addr,
+                        device_key,
+                        e
+                    ));
+                }
+            }
+        } else {
+            return Err(anyhow!(
+                "ModbusTCP device {} missing both host IP and MAC address",
+                device_key
+            ));
+        };
 
         let port = address.port.map(|p| p as u16).unwrap_or(502); // Default ModbusTCP port
 
@@ -187,6 +226,7 @@ pub fn extract_device_readings(config: &Config, device_key: &str) -> Result<Vec<
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::node_mgmt::config::DeviceAddress;
     use serde_json::json;
 
     #[test]
@@ -249,5 +289,121 @@ mod tests {
         assert_eq!(host, "192.168.1.100");
         assert_eq!(port, 502);
         assert_eq!(unit_id, 1);
+    }
+
+    #[test]
+    fn test_modbus_device_config_with_host_ip() {
+        // Test device with configured host IP (should work without MAC resolution)
+        let device = Device {
+            key: "test_device".to_string(),
+            device_model: Some("test_model".to_string()),
+            driver: "test_driver".to_string(),
+            reading_type: ReadingType::Modbustcp,
+            vendor_id: "test_vendor".to_string(),
+            enabled: true,
+            address: Some(DeviceAddress {
+                host: Some("192.168.1.100".to_string()),
+                port: Some(502),
+                unit_id: Some(1),
+                ..Default::default()
+            }),
+            name: Some("Test Device".to_string()),
+            min_read_interval: None,
+        };
+
+        let config = ModbusDeviceConfig::from_config("test_device", &device).unwrap();
+        assert_eq!(config.host, "192.168.1.100");
+        assert_eq!(config.port, 502);
+        assert_eq!(config.unit_id, 1);
+    }
+
+    #[test]
+    fn test_modbus_device_config_with_mac_only() {
+        // Test device with only MAC address (will fail in test env but shouldn't panic)
+        let device = Device {
+            key: "test_device".to_string(),
+            device_model: Some("test_model".to_string()),
+            driver: "test_driver".to_string(),
+            reading_type: ReadingType::Modbustcp,
+            vendor_id: "test_vendor".to_string(),
+            enabled: true,
+            address: Some(DeviceAddress {
+                mac: Some("aa:bb:cc:dd:ee:ff".to_string()),
+                port: Some(502),
+                unit_id: Some(1),
+                ..Default::default()
+            }),
+            name: Some("Test Device".to_string()),
+            min_read_interval: None,
+        };
+
+        // This will likely fail since the MAC won't be in ARP table, but test error handling
+        let result = ModbusDeviceConfig::from_config("test_device", &device);
+
+        // Should get a meaningful error (either MAC not found or ARP table read failure)
+        if let Err(e) = result {
+            let error_msg = e.to_string();
+            assert!(
+                error_msg.contains("not found in ARP table")
+                    || error_msg.contains("Unable to load ARP table"),
+                "Unexpected error message: {}",
+                error_msg
+            );
+        }
+        // If it succeeds (unlikely), that's also fine - means MAC was actually found
+    }
+
+    #[test]
+    fn test_modbus_device_config_missing_address() {
+        // Test device with no address at all
+        let device = Device {
+            key: "test_device".to_string(),
+            device_model: Some("test_model".to_string()),
+            driver: "test_driver".to_string(),
+            reading_type: ReadingType::Modbustcp,
+            vendor_id: "test_vendor".to_string(),
+            enabled: true,
+            address: None,
+            name: Some("Test Device".to_string()),
+            min_read_interval: None,
+        };
+
+        let result = ModbusDeviceConfig::from_config("test_device", &device);
+        assert!(result.is_err());
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("missing address configuration")
+        );
+    }
+
+    #[test]
+    fn test_modbus_device_config_missing_host_and_mac() {
+        // Test device with address but no host or MAC
+        let device = Device {
+            key: "test_device".to_string(),
+            device_model: Some("test_model".to_string()),
+            driver: "test_driver".to_string(),
+            reading_type: ReadingType::Modbustcp,
+            vendor_id: "test_vendor".to_string(),
+            enabled: true,
+            address: Some(DeviceAddress {
+                port: Some(502),
+                unit_id: Some(1),
+                ..Default::default()
+            }),
+            name: Some("Test Device".to_string()),
+            min_read_interval: None,
+        };
+
+        let result = ModbusDeviceConfig::from_config("test_device", &device);
+        assert!(result.is_err());
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("missing both host IP and MAC address")
+        );
     }
 }
