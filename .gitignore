@@ -24,7 +24,10 @@ stage/
 rust/target/
 
 # Python virtual environment
-venv/
+.venv/
 
 # Local execution environment and cache
 tests/.cache
+
+# Ruff cache
+.ruff_cache/

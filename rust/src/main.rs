@@ -3,7 +3,7 @@ use ae::command;
 use ae::constants;
 use ae::helpers;
 
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use env_logger::Env;
 
 use constants::{defaults, envvars};
@@ -15,6 +15,7 @@ const CMD_KVS_SET: &str = "kvs-set";
 const CMD_MQTT_PUB_META: &str = "mqtt-pub-meta";
 const CMD_MQTT_SUB_CFG_CMD: &str = "mqtt-sub-cfg-cmd";
 const CMD_READ_SMA_HYCON_CSV: &str = "read-sma-hycon-csv";
+const CMD_START_READINGS: &str = "start-readings";
 const CMD_WAIT_FOR_TIME_SOURCE: &str = "wait-for-time-source";
 
 fn main() -> Result<()> {
@@ -37,11 +38,15 @@ fn main() -> Result<()> {
         Some(CMD_MQTT_PUB_META) => command::mqtt_pub_meta(),
         Some(CMD_MQTT_SUB_CFG_CMD) => command::mqtt_sub_cfg_cmd(),
         Some(CMD_READ_SMA_HYCON_CSV) => command::read_sma_hycon_csv(),
+        Some(CMD_START_READINGS) => {
+            let rt = tokio::runtime::Runtime::new()?;
+            rt.block_on(command::start_readings())
+        }
         Some(CMD_WAIT_FOR_TIME_SOURCE) => command::wait_for_time_source(),
         _ => Err(anyhow!(
             r#"
             Subcommand must be one of '{CMD_INIT}', '{CMD_KVS_GET}', '{CMD_KVS_SET}', '{CMD_MQTT_PUB_META}', '{CMD_MQTT_SUB_CFG_CMD}',
-            '{CMD_WAIT_FOR_TIME_SOURCE}', '{CMD_READ_SMA_HYCON_CSV}'
+            '{CMD_START_READINGS}', '{CMD_WAIT_FOR_TIME_SOURCE}', '{CMD_READ_SMA_HYCON_CSV}'
             "#
         )),
     }

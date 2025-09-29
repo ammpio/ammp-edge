@@ -2,7 +2,7 @@ use anyhow::Result;
 use kvstore::KVDb;
 use serde::{Deserialize, Serialize};
 
-use crate::constants::{defaults, keys, REMOTE_DEFAULTS};
+use crate::constants::{REMOTE_DEFAULTS, defaults, keys};
 use crate::helpers;
 
 #[derive(Debug, Deserialize, Serialize)]

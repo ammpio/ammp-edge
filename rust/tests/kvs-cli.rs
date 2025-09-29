@@ -1,9 +1,9 @@
 use std::ffi::OsStr;
 
-use assert_cmd::{assert::Assert, Command};
+use assert_cmd::{Command, assert::Assert};
 use once_cell::sync::Lazy;
 use predicates::prelude::*;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 const TEST_KEY: &str = "somekey";
 const TEST_VALUE_TEXT: &str = "somevalue";

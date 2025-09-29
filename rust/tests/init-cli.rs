@@ -1,6 +1,6 @@
 use std::ffi::OsStr;
 
-use assert_cmd::{assert::Assert, Command};
+use assert_cmd::{Command, assert::Assert};
 use mockito::Matcher;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
