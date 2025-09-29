@@ -2,7 +2,11 @@ PROJECT_NAME=ammp-edge
 COMPOSE_FILE=tests/docker-compose.yml
 IMAGE_NAME=ammp-edge_image
 
-.PHONY: docker-build docker-run docker-clean python-clean python-dev-setup python-format python-lint python-build test
+.PHONY: docker-build docker-run docker-clean python-clean python-dev-setup python-format python-lint python-lint-fix python-typecheck python-static-test python-build test setup-git-hooks
+
+setup-git-hooks:
+	@echo "Setting up git hooks..."
+	git config core.hooksPath .githooks
 
 docker-build:
 	docker-compose -f ${COMPOSE_FILE} build  # --progress=plain

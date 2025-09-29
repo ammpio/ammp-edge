@@ -1,0 +1,42 @@
+#!/bin/bash
+
+# Pre-commit hook that runs 'make format'
+# This will format all Python and Rust code.
+# In future, lint and type-checking can be added.
+
+set -e
+
+echo "Running pre-commit checks..."
+echo "Executing: make format"
+
+# Run make format from the project root
+cd "$(git rev-parse --show-toplevel)"
+
+# Get list of staged files before running checks
+staged_files=$(git diff --cached --name-only --diff-filter=ACM)
+
+# Run make format
+if make format; then
+    echo "✅ All pre-commit checks passed!"
+    
+    # Check if any tracked files were modified by the formatting
+    if [ -n "$(git diff --name-only)" ]; then
+        echo "📝 Code formatting made changes. Adding them to the commit..."
+        
+        # Only add files that were originally staged and got modified
+        for file in $staged_files; do
+            if [ -f "$file" ] && git diff --quiet HEAD -- "$file" 2>/dev/null || ! git diff --quiet -- "$file" 2>/dev/null; then
+                echo "  • Adding formatted file: $file"
+                git add "$file"
+            fi
+        done
+        
+        echo "✨ Formatted files have been added to the commit."
+    fi
+    
+    exit 0
+else
+    echo "❌ Pre-commit checks failed. Please fix the issues above before committing."
+    echo "You can run 'make format' manually to see the full output."
+    exit 1
+fi
