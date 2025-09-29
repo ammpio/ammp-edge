@@ -1,6 +1,6 @@
 use anyhow::Result;
 use kvstore::KVDb;
-use tokio::time::{Duration, interval};
+use tokio::time::{Duration, interval, sleep};
 
 use crate::{
     data_mgmt::{
@@ -67,6 +67,9 @@ async fn execute_reading_cycle(
     let start_time = std::time::Instant::now();
     let start_timestamp = chrono::Utc::now();
 
+    // Sleep for 10 seconds to avoid interference with other reader
+    sleep(Duration::from_secs(10)).await;
+
     // Delegate to the reading orchestrator
     let mut all_readings = get_readings(config).await?;
     let reading_count = all_readings.len();
@@ -114,6 +117,6 @@ async fn create_aligned_interval(interval_secs: u32) -> tokio::time::Interval {
     );
 
     // Sleep until aligned time, then create regular interval
-    tokio::time::sleep(delay_until_aligned).await;
+    sleep(delay_until_aligned).await;
     interval(Duration::from_secs(interval_secs as u64))
 }
