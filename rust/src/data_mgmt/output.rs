@@ -184,6 +184,10 @@ fn convert_device_readings_to_json(device_readings: &[DeviceReading]) -> Value {
 }
 
 /// Convert RtValue to JSON Value
+///
+/// This function extracts the inner value from RtValue for JSON compatibility.
+/// Note: We can't use RtValue's Serialize directly because it serializes as a tagged enum
+/// (e.g., {"Float": 100.0}) but we need the raw values (e.g., 100.0) for JSONata compatibility.
 fn rt_value_to_json(rt_value: &RtValue) -> Value {
     match rt_value {
         RtValue::None => json!(null),
@@ -261,6 +265,7 @@ mod tests {
 
     #[test]
     fn test_rt_value_to_json() {
+        assert_eq!(rt_value_to_json(&RtValue::None), json!(null));
         assert_eq!(rt_value_to_json(&RtValue::Int(42)), json!(42));
         assert_eq!(rt_value_to_json(&RtValue::Float(3.14)), json!(3.14));
         assert_eq!(rt_value_to_json(&RtValue::Bool(true)), json!(true));
