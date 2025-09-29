@@ -4,7 +4,8 @@ use std::str::Utf8Error;
 
 use flume::Sender;
 use once_cell::sync::Lazy;
-use rumqttc::{Client, Connection, Event, MqttOptions, Packet, QoS};
+use rumqttc::{AsyncClient, Client, Connection, Event, EventLoop, MqttOptions, Packet, QoS};
+use std::time::Duration;
 use thiserror::Error;
 
 use crate::constants::topics;
@@ -13,6 +14,7 @@ use crate::helpers;
 
 const MAX_PACKET_SIZE: usize = 16777216; // 16 MB
 const MQTT_QUEUE_CAPACITY: usize = 10;
+const MQTT_KEEP_ALIVE: Duration = Duration::from_secs(60);
 
 static MQTT_BRIDGE_HOST: Lazy<String> = Lazy::new(|| {
     if let Ok(host) = env::var(envvars::MQTT_BRIDGE_HOST) {
@@ -52,7 +54,13 @@ pub enum MqttError {
     #[error(transparent)]
     MqttClient(#[from] rumqttc::ClientError),
     #[error(transparent)]
-    MqttConnection(#[from] rumqttc::ConnectionError),
+    MqttConnection(Box<rumqttc::ConnectionError>),
+}
+
+impl From<rumqttc::ConnectionError> for MqttError {
+    fn from(err: rumqttc::ConnectionError) -> Self {
+        Self::MqttConnection(Box::new(err))
+    }
 }
 
 pub fn rand_client_id(prefix: Option<&str>) -> String {
@@ -99,7 +107,7 @@ pub fn publish_msgs(
             )?;
         }
 
-        for (_, notification) in connection.iter().enumerate() {
+        for notification in connection.iter() {
             log::debug!("Notification = {:?}", notification);
             match notification {
                 Ok(Event::Incoming(Packet::PubAck(_))) => expected_msg_acks -= 1,
@@ -113,6 +121,77 @@ pub fn publish_msgs(
     }
     client.disconnect()?;
     Ok(())
+}
+
+/// Persistent MQTT publisher that maintains a connection across multiple publish operations
+pub struct MqttPublisher {
+    client: AsyncClient,
+    eventloop: EventLoop,
+}
+
+impl MqttPublisher {
+    pub async fn new(client_prefix: Option<&str>) -> Self {
+        let host = MQTT_BRIDGE_HOST.clone();
+        let port = *MQTT_BRIDGE_PORT;
+        let client_id = rand_client_id(client_prefix);
+
+        log::info!("Establishing async MQTT connection to {host}:{port} as {client_id}");
+
+        let mut mqttoptions = MqttOptions::new(client_id, host, port);
+        mqttoptions.set_clean_session(true);
+        mqttoptions.set_max_packet_size(MAX_PACKET_SIZE, MAX_PACKET_SIZE);
+        mqttoptions.set_keep_alive(MQTT_KEEP_ALIVE);
+
+        let (client, eventloop) = AsyncClient::new(mqttoptions, MQTT_QUEUE_CAPACITY);
+
+        Self { client, eventloop }
+    }
+
+    pub async fn publish_msgs(
+        &mut self,
+        messages: &[MqttMessage],
+        retain: bool,
+    ) -> Result<(), MqttError> {
+        for msg_batch in messages.chunks(MQTT_QUEUE_CAPACITY) {
+            let mut expected_msg_acks = msg_batch.len();
+            log::debug!("Publishing batch of {} messages", msg_batch.len());
+
+            for msg in msg_batch.iter() {
+                log::debug!("Publishing to {}: {}", msg.topic, msg.payload);
+
+                self.client
+                    .publish(
+                        msg.topic.clone(),
+                        QoS::AtLeastOnce,
+                        retain,
+                        msg.payload.as_bytes(),
+                    )
+                    .await?;
+            }
+
+            while expected_msg_acks > 0 {
+                let notification = self.eventloop.poll().await;
+                log::debug!("Notification = {:?}", notification);
+                match notification {
+                    Ok(Event::Incoming(Packet::PubAck(_))) => expected_msg_acks -= 1,
+                    Err(e) => return Err(e.into()),
+                    _ => (),
+                }
+            }
+        }
+        Ok(())
+    }
+
+    pub async fn disconnect(&self) -> Result<(), MqttError> {
+        self.client.disconnect().await.map_err(Into::into)
+    }
+}
+
+impl Drop for MqttPublisher {
+    fn drop(&mut self) {
+        // Best effort disconnect - ignore errors during drop
+        let _ = self.client.try_disconnect();
+    }
 }
 
 pub fn publish_log_msg(log_msg: &str) -> Result<(), MqttError> {
@@ -141,7 +220,7 @@ pub fn sub_topics(
 
     let mut num_messages: usize = 0;
 
-    for (_, notification) in connection.iter().enumerate() {
+    for notification in connection.iter() {
         log::trace!("Notification = {:?}", notification);
         match notification {
             Ok(Event::Incoming(Packet::Publish(r))) => {
@@ -194,7 +273,7 @@ mod test {
 
     #[test]
     fn test_publist_and_receive_msgs() {
-        assert!(SAMPLE_MQTT_MESSAGES.len() > 0);
+        assert!(!SAMPLE_MQTT_MESSAGES.is_empty());
 
         let (tx, rx) = unbounded();
 

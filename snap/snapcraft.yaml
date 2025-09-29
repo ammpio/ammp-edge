@@ -68,6 +68,20 @@ apps:
       - log-observe
     environment:
       LD_LIBRARY_PATH: "$LD_LIBRARY_PATH:$SNAP/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/blas"
+  ae-start-readings:
+    command: bin/ae start-readings
+    daemon: simple
+    restart-condition: always
+    restart-delay: 2s
+    after: [ae-init, ae-wait-for-time-source, mosquitto]
+    plugs:
+      - network
+      - network-bind
+      - system-observe
+      - hardware-observe
+      - network-observe
+      - serial-port
+      - log-observe
   web-ui:
     command: bin/python3 -m flask run
     daemon: simple

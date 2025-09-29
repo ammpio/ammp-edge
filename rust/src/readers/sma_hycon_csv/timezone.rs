@@ -7,7 +7,7 @@ use crate::helpers::backoff_retry;
 use crate::interfaces::ntp;
 use crate::node_mgmt::config::Device;
 
-use super::{download::get_base_url, SmaHyconCsvError};
+use super::{SmaHyconCsvError, download::get_base_url};
 
 const NTP_RETRY_TIMEOUT: Option<StdDuration> = Some(StdDuration::from_secs(15));
 

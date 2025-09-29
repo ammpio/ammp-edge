@@ -7,7 +7,7 @@ use crate::data_mgmt::models::{DeviceReading, Record};
 use crate::helpers::backoff_retry;
 use crate::interfaces::ftp::FtpConnError;
 use crate::interfaces::ntp;
-use crate::node_mgmt::{config::Device, config::ReadingType, Config};
+use crate::node_mgmt::config::{Config, Device, ReadingType};
 
 mod download;
 mod driver;
@@ -102,12 +102,11 @@ mod tests {
     use super::*;
 
     use once_cell::sync::Lazy;
-    use std::str::FromStr;
 
-    use crate::node_mgmt::config::{Config, Device};
+    use crate::node_mgmt::config::{Config, Device, config_from_str};
 
     static SAMPLE_CONFIG_WITH_HYCON_CSV: Lazy<Config> = Lazy::new(|| {
-        Config::from_str(
+        config_from_str(
             r#"
         {
             "devices": {
@@ -132,7 +131,7 @@ mod tests {
     });
 
     static SAMPLE_CONFIG_NO_HYCON_CSV: Lazy<Config> = Lazy::new(|| {
-        Config::from_str(
+        config_from_str(
             r#"
         {
             "devices": {

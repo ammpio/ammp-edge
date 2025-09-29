@@ -1,17 +1,11 @@
-use std::str::FromStr;
-
 use kvstore::{KVDb, KVStoreError};
 use thiserror::Error;
-use typify::import_types;
 
 use crate::constants::keys;
 
-import_types!(
-    schema = "json-schema/config.schema.json",
-    derives = [Clone, Eq, PartialEq]
-);
-
-pub type Config = AmmpEdgeConfiguration;
+pub use derived_models::config::{
+    AmmpEdgeConfiguration as Config, Device, DeviceAddress, ReadingSchema, ReadingType,
+};
 
 #[derive(Error, Debug)]
 pub enum ConfigError {
@@ -23,11 +17,8 @@ pub enum ConfigError {
     NoConfigSet,
 }
 
-impl FromStr for Config {
-    type Err = ConfigError;
-    fn from_str(config_raw: &str) -> Result<Self, Self::Err> {
-        serde_json::from_str::<Config>(config_raw).map_err(Into::into)
-    }
+pub fn config_from_str(config_raw: &str) -> Result<Config, ConfigError> {
+    serde_json::from_str::<Config>(config_raw).map_err(Into::into)
 }
 
 pub fn get(kvs: KVDb) -> Result<Config, ConfigError> {

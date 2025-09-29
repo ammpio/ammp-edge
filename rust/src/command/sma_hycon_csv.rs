@@ -1,6 +1,6 @@
 use kvstore::KVDb;
 
-use crate::data_mgmt::payload::{Metadata, BLANK_METADATA};
+use crate::data_mgmt::payload::{Metadata, blank_metadata};
 use crate::interfaces::kvpath;
 use crate::{data_mgmt, node_mgmt, readers};
 
@@ -18,7 +18,7 @@ pub fn read_sma_hycon_csv() -> anyhow::Result<()> {
         log::info!("Publishing readings to MQTT");
         let metadata = Some(Metadata {
             data_provider: Some(DATA_PROVIDER.into()),
-            ..BLANK_METADATA
+            ..blank_metadata()
         });
         data_mgmt::publish::publish_readings(readings, metadata)?;
         log::info!("Finished publishing readings to MQTT");

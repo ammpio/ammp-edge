@@ -59,15 +59,12 @@ fn run_timedatectl_show() -> Result<String, io::Error> {
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
-        return Err(io::Error::new(
-            io::ErrorKind::Other,
-            format!(
-                "timedatectl returned exit code {:?}, stdout: {}, stderr: {}",
-                output.status.code(),
-                stdout,
-                stderr,
-            ),
-        ));
+        return Err(io::Error::other(format!(
+            "timedatectl returned exit code {:?}, stdout: {}, stderr: {}",
+            output.status.code(),
+            stdout,
+            stderr,
+        )));
     }
 
     Ok(stdout.to_string())

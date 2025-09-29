@@ -1,15 +1,15 @@
 use std::collections::HashMap;
 
-use chrono::{offset::Utc, DateTime};
+use chrono::{DateTime, offset::Utc};
 use serde::{Deserialize, Serialize};
 
 use crate::node_mgmt::config::Device;
 
 use super::payload::DeviceDataExtraValue;
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
-
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 pub enum RtValue {
+    None,
     Bool(bool),
     Float(f64),
     Int(i64),
@@ -56,12 +56,14 @@ impl Record {
     pub fn all_fields_as_device_data_extra(&self) -> HashMap<String, DeviceDataExtraValue> {
         self.fields
             .iter()
+            .filter(|(_, v)| !matches!(v, RtValue::None))
             .map(|(k, v)| {
                 let value = match v {
                     RtValue::Bool(b) => DeviceDataExtraValue::Boolean(*b),
                     RtValue::Float(f) => DeviceDataExtraValue::Number(*f),
                     RtValue::Int(i) => DeviceDataExtraValue::Integer(*i),
                     RtValue::String(s) => DeviceDataExtraValue::String(s.to_string()),
+                    RtValue::None => unreachable!(), // Already filtered out above
                 };
                 (k.clone(), value)
             })
@@ -79,6 +81,12 @@ impl Default for Record {
 pub struct DeviceReading {
     pub device: Device,
     pub record: Record,
+}
+
+#[derive(Clone, Debug)]
+pub struct Reading {
+    pub field: String,
+    pub value: RtValue,
 }
 
 // #[derive(Debug)]

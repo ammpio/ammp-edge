@@ -68,8 +68,8 @@ mod tests {
     use super::*;
     use once_cell::sync::Lazy;
 
-    use rusqlite::{params, Connection};
-    use serde_json::{json, Value};
+    use rusqlite::{Connection, params};
+    use serde_json::{Value, json};
 
     const IN_MEMORY: &str = ":memory:";
     const SAMPLE_NODE_ID: &str = "abcdef123456";
@@ -161,7 +161,6 @@ mod tests {
     #[test]
     fn fresh_initialization() -> Result<()> {
         let blank_kvs = KVDb::new(IN_MEMORY)?;
-        // TODO
         blank_kvs.set(keys::NODE_ID, SAMPLE_NODE_ID)?;
         assert_eq!(
             blank_kvs.get::<String>(keys::NODE_ID)?.unwrap(),
