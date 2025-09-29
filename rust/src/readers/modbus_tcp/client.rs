@@ -133,9 +133,28 @@ impl ModbusTcpReader {
             .read_registers(config.register, config.words, config.fncode)
             .await?;
 
-        // Use the new parsing method from ReadingConfig
+        // Convert registers to bytes with proper order
         let bytes = registers_to_bytes(&raw_registers, config.field_config.order.as_ref())?;
-        let scaled_value = config.parse_raw_bytes(&bytes)?;
+
+        // Use the centralized processing system for the complete flow:
+        // 1. Register order (already applied above)
+        // 2. Valuemap checking
+        // 3. Datatype parsing
+        // 4. Multiplier/offset application
+        // 5. Typecast application
+        use crate::data_mgmt::process::{ProcessedValue, process_field_reading};
+
+        let processed = process_field_reading(&bytes, &config.field_config)?;
+
+        // Extract numeric value for ModbusTCP (which should always be numeric)
+        let scaled_value = match processed {
+            ProcessedValue::Float(f) => f,
+            ProcessedValue::Int(i) => i as f64,
+            _ => return Err(anyhow!(
+                "Expected numeric value from ModbusTCP reading, got: {:?}",
+                processed
+            )),
+        };
 
         Ok(scaled_value)
     }
@@ -175,69 +194,6 @@ fn registers_to_bytes(registers: &[u16], order: Option<&RegisterOrder>) -> Resul
     Ok(bytes)
 }
 
-/// Parse register bytes according to data type specification
-/// NOTE: This function is now replaced by ReadingConfig::parse_raw_bytes()
-#[allow(dead_code)]
-fn parse_register_value(bytes: &[u8], datatype: &str) -> Result<f64> {
-    use byteorder::{BigEndian, ReadBytesExt};
-    use std::io::Cursor;
-
-    if bytes.is_empty() {
-        return Err(anyhow::anyhow!("No bytes to parse"));
-    }
-
-    let mut cursor = Cursor::new(bytes);
-
-    let value = match datatype {
-        "uint16" => {
-            if bytes.len() < 2 {
-                return Err(anyhow::anyhow!("Insufficient bytes for uint16"));
-            }
-            cursor.read_u16::<BigEndian>()? as f64
-        }
-        "int16" => {
-            if bytes.len() < 2 {
-                return Err(anyhow::anyhow!("Insufficient bytes for int16"));
-            }
-            cursor.read_i16::<BigEndian>()? as f64
-        }
-        "uint32" => {
-            if bytes.len() < 4 {
-                return Err(anyhow::anyhow!("Insufficient bytes for uint32"));
-            }
-            cursor.read_u32::<BigEndian>()? as f64
-        }
-        "int32" => {
-            if bytes.len() < 4 {
-                return Err(anyhow::anyhow!("Insufficient bytes for int32"));
-            }
-            cursor.read_i32::<BigEndian>()? as f64
-        }
-        "uint64" => {
-            if bytes.len() < 8 {
-                return Err(anyhow::anyhow!("Insufficient bytes for uint64"));
-            }
-            cursor.read_u64::<BigEndian>()? as f64
-        }
-        "float" | "single" => {
-            if bytes.len() < 4 {
-                return Err(anyhow::anyhow!("Insufficient bytes for float"));
-            }
-            cursor.read_f32::<BigEndian>()? as f64
-        }
-        "double" => {
-            if bytes.len() < 8 {
-                return Err(anyhow::anyhow!("Insufficient bytes for double"));
-            }
-            cursor.read_f64::<BigEndian>()?
-        }
-        _ => {
-            return Err(anyhow::anyhow!("Unsupported datatype: {}", datatype));
-        }
-    };
-
-    Ok(value)
-}
 
 #[cfg(test)]
 mod tests {
@@ -264,25 +220,4 @@ mod tests {
         assert_eq!(bytes, vec![0x12, 0x34, 0x56, 0x78]);
     }
 
-    #[test]
-    fn test_parse_register_value_uint16() {
-        let bytes = vec![0x12, 0x34];
-        let value = parse_register_value(&bytes, "uint16").unwrap();
-        assert_eq!(value, 0x1234 as f64);
-    }
-
-    #[test]
-    fn test_parse_register_value_int32() {
-        let bytes = vec![0xFF, 0xFF, 0xFF, 0xFF]; // -1 as int32
-        let value = parse_register_value(&bytes, "int32").unwrap();
-        assert_eq!(value, -1.0);
-    }
-
-    #[test]
-    fn test_parse_register_value_float() {
-        // IEEE 754 representation of 1.0
-        let bytes = vec![0x3F, 0x80, 0x00, 0x00];
-        let value = parse_register_value(&bytes, "float").unwrap();
-        assert!((value - 1.0).abs() < 0.001);
-    }
 }

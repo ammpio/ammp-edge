@@ -94,23 +94,6 @@ pub struct ReadingConfig {
 }
 
 impl ReadingConfig {
-    /// Parse raw bytes using the configured data processing parameters
-    pub fn parse_raw_bytes(&self, bytes: &[u8]) -> Result<f64> {
-        use crate::data_mgmt::process::{ProcessedValue, process_field_reading};
-
-        // Use the centralized processing system
-        let processed = process_field_reading(bytes, &self.field_config)?;
-
-        // Extract numeric value for ModbusTCP (which should always be numeric)
-        match processed {
-            ProcessedValue::Float(f) => Ok(f),
-            ProcessedValue::Int(i) => Ok(i as f64),
-            _ => Err(anyhow!(
-                "Expected numeric value from ModbusTCP reading, got: {:?}",
-                processed
-            )),
-        }
-    }
 
     /// Create reading config from driver and field name
     pub fn from_driver_field(variable_name: &str, driver: &DriverSchema) -> Result<Self> {

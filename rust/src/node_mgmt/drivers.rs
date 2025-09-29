@@ -11,7 +11,7 @@ use std::sync::Mutex;
 
 use crate::node_mgmt::config::Config;
 
-pub use derived_models::driver::{DriverSchema, FieldOpts, RegisterOrder};
+pub use derived_models::driver::{DataType, DriverSchema, FieldOpts, RegisterOrder};
 
 /// Cache for loaded driver definitions to avoid reloading on every reading cycle
 static DRIVER_CACHE: Lazy<Mutex<HashMap<String, DriverSchema>>> =

@@ -134,6 +134,14 @@ fn value_from_bytes(val_bytes: &[u8], params: &ProcessingParams) -> Result<Optio
             }
             u32::from_be_bytes([val_bytes[0], val_bytes[1], val_bytes[2], val_bytes[3]]) as f64
         }
+        DataType::Int64 => {
+            if val_bytes.len() < 8 {
+                return Err(anyhow!("Insufficient bytes for int64"));
+            }
+            let mut bytes = [0u8; 8];
+            bytes.copy_from_slice(&val_bytes[0..8]);
+            i64::from_be_bytes(bytes) as f64
+        }
         DataType::UInt64 => {
             if val_bytes.len() < 8 {
                 return Err(anyhow!("Insufficient bytes for uint64"));
@@ -284,6 +292,7 @@ pub enum DataType {
     UInt16,
     Int32,
     UInt32,
+    Int64,
     UInt64,
     Float,
     Single, // Alias for Float
@@ -299,6 +308,7 @@ impl std::str::FromStr for DataType {
             "uint16" => Ok(DataType::UInt16),
             "int32" => Ok(DataType::Int32),
             "uint32" => Ok(DataType::UInt32),
+            "int64" => Ok(DataType::Int64),
             "uint64" => Ok(DataType::UInt64),
             "float" => Ok(DataType::Float),
             "single" => Ok(DataType::Single),
