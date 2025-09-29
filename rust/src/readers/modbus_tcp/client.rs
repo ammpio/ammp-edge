@@ -5,6 +5,7 @@ use tokio_modbus::prelude::*;
 
 use super::config::ReadingConfig;
 use crate::data_mgmt::models::{Reading, RtValue};
+use crate::node_mgmt::drivers::RegisterOrder;
 
 /// ModbusTCP client for reading device registers
 pub struct ModbusTcpReader {
@@ -133,7 +134,7 @@ impl ModbusTcpReader {
             .await?;
 
         // Use the new parsing method from ReadingConfig
-        let bytes = registers_to_bytes(&raw_registers, None)?; // byte_order removed for now
+        let bytes = registers_to_bytes(&raw_registers, config.field_config.order.as_ref())?;
         let scaled_value = config.parse_raw_bytes(&bytes)?;
 
         Ok(scaled_value)
@@ -151,17 +152,17 @@ impl ModbusTcpReader {
 }
 
 /// Convert register values to bytes, handling byte order
-fn registers_to_bytes(registers: &[u16], byte_order: Option<&str>) -> Result<Vec<u8>> {
+fn registers_to_bytes(registers: &[u16], order: Option<&RegisterOrder>) -> Result<Vec<u8>> {
     let mut bytes = Vec::new();
 
-    // Handle register order (default is MSB first)
-    let ordered_registers: Vec<u16> = match byte_order {
-        Some("lsr") => {
+    // Handle register order
+    let ordered_registers: Vec<u16> = match order {
+        Some(RegisterOrder::Lsr) => {
             // Least Significant Register first - reverse register order
             registers.iter().rev().cloned().collect()
         }
-        _ => {
-            // Default: Most Significant Register first
+        Some(RegisterOrder::Msr) | None => {
+            // Most Significant Register first (default)
             registers.to_vec()
         }
     };
@@ -252,8 +253,15 @@ mod tests {
     #[test]
     fn test_registers_to_bytes_lsr_order() {
         let registers = vec![0x1234, 0x5678];
-        let bytes = registers_to_bytes(&registers, Some("lsr")).unwrap();
+        let bytes = registers_to_bytes(&registers, Some(&RegisterOrder::Lsr)).unwrap();
         assert_eq!(bytes, vec![0x56, 0x78, 0x12, 0x34]);
+    }
+
+    #[test]
+    fn test_registers_to_bytes_msr_order() {
+        let registers = vec![0x1234, 0x5678];
+        let bytes = registers_to_bytes(&registers, Some(&RegisterOrder::Msr)).unwrap();
+        assert_eq!(bytes, vec![0x12, 0x34, 0x56, 0x78]);
     }
 
     #[test]
