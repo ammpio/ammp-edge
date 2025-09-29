@@ -137,7 +137,6 @@ pub mod error {
 ///        "type": "object",
 ///        "minProperties": 1,
 ///        "required": [
-///          "device_model",
 ///          "driver",
 ///          "reading_type",
 ///          "vendor_id"
@@ -570,7 +569,6 @@ impl ::std::convert::From<&AmmpEdgeConfiguration> for AmmpEdgeConfiguration {
 ///  "type": "object",
 ///  "minProperties": 1,
 ///  "required": [
-///    "device_model",
 ///    "driver",
 ///    "reading_type",
 ///    "vendor_id"
@@ -754,7 +752,8 @@ pub struct Device {
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub address: ::std::option::Option<DeviceAddress>,
     ///Device model
-    pub device_model: ::std::string::String,
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub device_model: ::std::option::Option<::std::string::String>,
     pub driver: ::std::string::String,
     #[serde(default = "defaults::default_bool::<true>")]
     pub enabled: bool,
