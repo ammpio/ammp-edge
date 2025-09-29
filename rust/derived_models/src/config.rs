@@ -403,23 +403,6 @@ pub mod error {
 ///        }
 ///      }
 ///    },
-///    "push_throttle_delay": {
-///      "title": "Push throttle delay",
-///      "description": "Delay to throttle data push if unsuccessful [deprecated]",
-///      "deprecated": true,
-///      "examples": [
-///        15
-///      ],
-///      "type": "integer"
-///    },
-///    "push_timeout": {
-///      "title": "Timeout for data push (seconds) [deprecated]",
-///      "deprecated": true,
-///      "examples": [
-///        120
-///      ],
-///      "type": "integer"
-///    },
 ///    "read_interval": {
 ///      "title": "Interval between readings (seconds)",
 ///      "default": 60,
@@ -534,15 +517,6 @@ pub mod error {
 ///        "2022-07-30T06:07:48Z"
 ///      ],
 ///      "type": "string"
-///    },
-///    "volatile_q_size": {
-///      "title": "Volatile queue size",
-///      "description": "Size of volatile queue for data push [deprecated]",
-///      "deprecated": true,
-///      "examples": [
-///        5
-///      ],
-///      "type": "integer"
 ///    }
 ///  }
 ///}
@@ -559,11 +533,6 @@ pub struct AmmpEdgeConfiguration {
     pub name: ::std::option::Option<::std::string::String>,
     #[serde(default, skip_serializing_if = "::std::vec::Vec::is_empty")]
     pub output: ::std::vec::Vec<Output>,
-    ///Delay to throttle data push if unsuccessful [deprecated]
-    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub push_throttle_delay: ::std::option::Option<i64>,
-    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub push_timeout: ::std::option::Option<i64>,
     #[serde(default = "defaults::default_u64::<i64, 60>")]
     pub read_interval: i64,
     #[serde(default)]
@@ -575,9 +544,6 @@ pub struct AmmpEdgeConfiguration {
     ///Timestamp of config
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub timestamp: ::std::option::Option<::std::string::String>,
-    ///Size of volatile queue for data push [deprecated]
-    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub volatile_q_size: ::std::option::Option<i64>,
 }
 impl ::std::convert::From<&AmmpEdgeConfiguration> for AmmpEdgeConfiguration {
     fn from(value: &AmmpEdgeConfiguration) -> Self {
