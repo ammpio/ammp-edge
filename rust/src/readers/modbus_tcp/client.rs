@@ -10,8 +10,6 @@ use crate::node_mgmt::drivers::RegisterOrder;
 /// ModbusTCP client for reading device registers
 pub struct ModbusTcpReader {
     context: tokio_modbus::client::Context,
-    device_key: String,
-    unit_id: u8,
 }
 
 impl ModbusTcpReader {
@@ -29,7 +27,8 @@ impl ModbusTcpReader {
             .ok_or_else(|| anyhow!("Failed to resolve hostname: {}", host))?;
 
         log::debug!(
-            "Connecting to ModbusTCP device at {}/{}",
+            "[{}] Connecting to ModbusTCP device at {}/{}",
+            device_key,
             socket_addr,
             unit_id
         );
@@ -38,20 +37,22 @@ impl ModbusTcpReader {
             .await
             .map_err(|e| {
                 anyhow::anyhow!(
-                    "Failed to connect to ModbusTCP device {}/{}: {}",
+                    "[{}] Failed to connect to ModbusTCP device at {}/{}: {}",
+                    device_key,
                     socket_addr,
                     unit_id,
                     e
                 )
             })?;
 
-        log::info!("Connected to ModbusTCP device {}/{}", socket_addr, unit_id);
-
-        Ok(ModbusTcpReader {
-            context: ctx,
+        log::info!(
+            "[{}] Connected to ModbusTCP device at {}/{}",
             device_key,
-            unit_id,
-        })
+            socket_addr,
+            unit_id
+        );
+
+        Ok(ModbusTcpReader { context: ctx })
     }
 
     /// Read raw register values from the device
@@ -161,16 +162,6 @@ impl ModbusTcpReader {
         let bytes = registers_to_bytes(&raw_registers, config.field_config.order.as_ref())?;
 
         Ok(bytes)
-    }
-
-    /// Get device ID for this reader
-    pub fn device_key(&self) -> &str {
-        &self.device_key
-    }
-
-    /// Get unit ID for this reader
-    pub fn unit_id(&self) -> u8 {
-        self.unit_id
     }
 }
 

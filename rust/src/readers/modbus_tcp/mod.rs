@@ -19,17 +19,16 @@ pub use config::{ModbusDeviceConfig, ReadingConfig};
 /// and reading requests, then returning DeviceReading results.
 pub async fn read_device(
     config: &crate::node_mgmt::config::Config,
-    device_key: &str,
     device: &Device,
     variable_names: &[String],
 ) -> Result<Vec<DeviceReading>> {
     if variable_names.is_empty() {
-        log::debug!("No readings requested for ModbusTCP device: {}", device_key);
+        log::debug!("No readings requested for ModbusTCP device: {}", device.key);
         return Ok(Vec::new());
     }
 
-    // Create device config from the device configuration
-    let device_config = ModbusDeviceConfig::from_config(device_key, device)?;
+    // Create Modbus device config from the device configuration
+    let device_config = ModbusDeviceConfig::from_config(&device.key, device)?;
 
     // Convert variable names to ReadingConfig format
     let reading_configs = convert_variable_names_to_configs(config, variable_names, device)?;
@@ -37,14 +36,14 @@ pub async fn read_device(
     log::debug!(
         "Reading {} variables from ModbusTCP device '{}' at {}:{}",
         reading_configs.len(),
-        device_key,
+        device.key,
         device_config.host,
         device_config.port
     );
 
     // Connect to the device
     let mut client = ModbusTcpReader::connect(
-        device_key.to_string(),
+        device.key.clone(),
         &device_config.host,
         device_config.port,
         device_config.unit_id,
@@ -58,7 +57,7 @@ pub async fn read_device(
     if readings.is_empty() {
         log::warn!(
             "No successful readings from ModbusTCP device: {}",
-            device_key
+            device.key
         );
         return Ok(Vec::new());
     }
@@ -77,7 +76,7 @@ pub async fn read_device(
     log::info!(
         "Successfully read {} variables from ModbusTCP device \"{}\"",
         device_reading.record.all_fields().len(),
-        device_key
+        device.key
     );
 
     Ok(vec![device_reading])
