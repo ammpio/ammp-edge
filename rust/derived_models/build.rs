@@ -113,14 +113,14 @@ fn post_process_config_rs() {
     }
 
     // Remove the duplicate Typecast enum from config.rs
-    modified_content = remove_typecast_enum_simple(modified_content);
+    modified_content = remove_typecast_enum(modified_content);
 
     // Write the modified content back
     std::fs::write(config_file_path, modified_content)
         .unwrap_or_else(|e| panic!("Failed to write modified config.rs: {}", e));
 }
 
-fn remove_typecast_enum_simple(content: String) -> String {
+fn remove_typecast_enum(content: String) -> String {
     let lines: Vec<&str> = content.lines().collect();
     
     let mut start_line_to_remove = None;
@@ -135,8 +135,8 @@ fn remove_typecast_enum_simple(content: String) -> String {
     }
     
     // Find the line that states "/// Generation of default values for serde."
-    if start_line_to_remove.is_some() {
-        for (i, line) in lines.iter().enumerate().skip(start_line_to_remove.unwrap()) {
+    if let Some(start_line) = start_line_to_remove {
+        for (i, line) in lines.iter().enumerate().skip(start_line) {
             if *line == "/// Generation of default values for serde." {
                 end_line_to_remove = Some(i);
                 break;
@@ -149,6 +149,13 @@ fn remove_typecast_enum_simple(content: String) -> String {
         let mut result_lines = Vec::new();
         result_lines.extend_from_slice(&lines[..start_line]);
         result_lines.extend_from_slice(&lines[end_line..]);
+        
+        // Add a final newline if the original content had one
+        if content.ends_with('\n') {
+            return result_lines.join("\n") + "\n";
+        } else {
+            return result_lines.join("\n");
+        }
     }
     
     content
