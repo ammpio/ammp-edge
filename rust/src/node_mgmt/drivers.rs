@@ -11,7 +11,9 @@ use std::sync::Mutex;
 
 use crate::node_mgmt::config::Config;
 
-pub use derived_models::driver::{DataType, DriverSchema, FieldOpts, RegisterOrder, Typecast};
+pub use derived_models::driver::{
+    DataType, DriverSchema, FieldOpts, ParseAs, RegisterOrder, Typecast,
+};
 
 /// Cache for loaded driver definitions to avoid reloading on every reading cycle
 static DRIVER_CACHE: Lazy<Mutex<HashMap<String, DriverSchema>>> =
@@ -137,8 +139,8 @@ fn merge_field_opts(target: &mut FieldOpts, source: &FieldOpts) {
     if let Some(ref description) = source.description {
         target.description = Some(description.clone());
     }
-    if !source.datamap.is_empty() {
-        target.datamap = source.datamap.clone();
+    if !source.valuemap.is_empty() {
+        target.valuemap = source.valuemap.clone();
     }
 }
 
