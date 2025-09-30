@@ -9,8 +9,6 @@ use std::collections::HashMap;
 use std::fs;
 use std::sync::Mutex;
 
-use crate::node_mgmt::config::Config;
-
 pub use derived_models::driver::{
     DataType, DriverSchema, FieldOpts, ParseAs, RegisterOrder, Typecast,
 };
@@ -22,8 +20,11 @@ static DRIVER_CACHE: Lazy<Mutex<HashMap<String, DriverSchema>>> =
 /// Load driver definition for a specific driver name
 ///
 /// First checks the config.drivers object, then falls back to filesystem.
-pub fn load_driver(config: &Config, driver_name: &str) -> Result<DriverSchema> {
-    if let Some(inline_driver) = config.drivers.get(driver_name) {
+pub fn load_driver(
+    config_drivers: &HashMap<String, DriverSchema>,
+    driver_name: &str,
+) -> Result<DriverSchema> {
+    if let Some(inline_driver) = config_drivers.get(driver_name) {
         log::debug!("Loading driver '{}' from inline config", driver_name);
         let json_value = serde_json::to_value(inline_driver)?;
         let driver_schema: DriverSchema = serde_json::from_value(json_value)?;
