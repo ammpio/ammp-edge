@@ -2,13 +2,14 @@
 //!
 //! This module organizes readings by device and delegates to the appropriate reader modules.
 
-use anyhow::Result;
+use anyhow::{Result, anyhow};
 use std::collections::HashMap;
 use tokio::time::{Duration, Instant};
 
 use crate::{
     data_mgmt::models::DeviceReading,
     node_mgmt::config::{Config, Device, ReadingType},
+    node_mgmt::drivers::{DriverSchema, load_driver},
     readers::modbus_tcp,
 };
 
@@ -35,9 +36,11 @@ pub async fn get_readings(config: &Config) -> Result<Vec<DeviceReading>> {
         device_readings_map.len()
     );
 
+    let config_drivers = config.drivers.clone();
+
     // Execute readings for ModbusTCP devices only
     // Other device types (like SMA HyCon CSV) have their own dedicated commands
-    let all_readings = read_modbus_devices(config, &device_readings_map).await?;
+    let all_readings = read_modbus_devices(&config_drivers, &device_readings_map).await?;
 
     let duration = start_time.elapsed();
     log::info!(
@@ -93,7 +96,7 @@ fn organize_readings_by_device(config: &Config) -> Result<HashMap<String, (Devic
 
 /// Process all ModbusTCP devices
 async fn read_modbus_devices(
-    config: &Config,
+    config_drivers: &HashMap<String, DriverSchema>,
     device_readings_map: &HashMap<String, (Device, Vec<String>)>,
 ) -> Result<Vec<DeviceReading>> {
     // Filter ModbusTCP devices
@@ -106,20 +109,24 @@ async fn read_modbus_devices(
         return Ok(Vec::new());
     }
 
+    let config_drivers = config_drivers.clone();
+
     log::info!("Processing {} ModbusTCP device(s)", modbus_devices.len());
 
     // Create reading tasks for each device
-    let reading_tasks = modbus_devices
-        .into_iter()
-        .map(|(_, (device, variable_names))| {
-            let device = device.clone();
-            let variable_names = variable_names.clone();
-            let config = config.clone();
+    let mut reading_tasks = Vec::new();
+    for (_, (device, variable_names)) in modbus_devices {
+        let device = device.clone();
+        let variable_names = variable_names.clone();
 
-            tokio::spawn(
-                async move { modbus_tcp::read_device(&config, &device, &variable_names).await },
-            )
+        let driver = load_driver(&config_drivers, &device.driver)
+            .map_err(|e| anyhow!("Failed to load driver '{}': {}", device.driver, e))?;
+
+        let task = tokio::spawn(async move {
+            modbus_tcp::read_device(&device, &driver, &variable_names).await
         });
+        reading_tasks.push(task);
+    }
 
     // Execute all tasks concurrently with timeout
     let timeout_duration = Duration::from_secs(60); // 1 minute max for all devices

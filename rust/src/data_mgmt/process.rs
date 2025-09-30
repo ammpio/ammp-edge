@@ -471,6 +471,27 @@ mod tests {
     }
 
     #[test]
+    fn test_process_float() {
+        let bytes = [0x48, 0x9e, 0xcc, 0x5a]; // 0x489ecc5a as f32 = 325218.8125
+        let field_config = FieldOpts {
+            datatype: Some(DataType::Float),
+            ..Default::default()
+        };
+
+        let result = process_reading(&bytes, &field_config).unwrap();
+
+        if let RtValue::Float(f) = result {
+            // Check that it's approximately 325218.8125
+            assert!(
+                (f - 325218.8125).abs() < 0.001,
+                "Expected ~325218.8125, got {}",
+                f
+            );
+        } else {
+            panic!("Expected RtValue::Float, got {:?}", result);
+        }
+
+    #[test]
     fn test_bit_extraction_lsb_single_bit() {
         // 0x00AA = 0b00000000_10101010
         let bytes = [0x00, 0xAA];
@@ -479,10 +500,6 @@ mod tests {
             length_bits: Some(1.try_into().unwrap()),
             bit_order: Some(BitOrder::Lsb),
             datatype: Some(DataType::Uint16),
-            ..Default::default()
-        };
-
-        let result = process_reading(&bytes, &field_config).unwrap();
         assert_eq!(result, RtValue::Int(1)); // Bit 1 is set
     }
 

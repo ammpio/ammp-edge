@@ -43,7 +43,7 @@ fn parse_arp_table() -> Result<Vec<ArpEntry>> {
             match parse_arp_line(line) {
                 Ok(Some(entry)) => entries.push(entry),
                 Ok(None) => {
-                    log::debug!("Skipping invalid ARP entry: {}", line);
+                    log::trace!("Skipping invalid ARP entry: {}", line);
                 }
                 Err(e) => {
                     log::warn!("Malformed ARP table entry '{}': {}. Skipping", line, e);
