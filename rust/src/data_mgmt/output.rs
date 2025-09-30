@@ -15,8 +15,9 @@ use crate::data_mgmt::models::{DeviceReading, DeviceRef, Reading, Record, RtValu
 use crate::node_mgmt::config::Config;
 use crate::node_mgmt::drivers::Typecast;
 
-/// Calculate outputs and structure as DeviceReading that can be included in MQTT payload
-pub fn get_outputs_as_device_reading(
+/// Calculate outputs from device readings and structure as DeviceReading
+/// that can be included in MQTT payload
+pub fn get_outputs_from_device_readings(
     device_readings: &[DeviceReading],
     config: &Config,
 ) -> Option<DeviceReading> {

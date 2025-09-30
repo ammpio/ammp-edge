@@ -4,10 +4,10 @@ use tokio::time::{Duration, interval, sleep};
 
 use crate::{
     data_mgmt::{
-        payload::Metadata, publish::publish_readings_with_publisher, readings::get_readings,
+        output::get_outputs_from_device_readings, payload::Metadata,
+        publish::publish_readings_with_publisher, readings::get_readings,
     },
-    interfaces::kvpath,
-    interfaces::mqtt::MqttPublisher,
+    interfaces::{kvpath, mqtt::MqttPublisher},
     node_mgmt,
 };
 
@@ -45,7 +45,7 @@ pub async fn start_readings() -> Result<()> {
     loop {
         interval_timer.tick().await;
 
-        log::debug!("Starting reading cycle iteration");
+        log::debug!("Starting reading cycle");
 
         match execute_reading_cycle(&config, &mut mqtt_publisher).await {
             Ok(reading_count) => {
@@ -72,7 +72,6 @@ async fn execute_reading_cycle(
 
     // Delegate to the reading orchestrator
     let mut all_readings = get_readings(config).await?;
-    let reading_count = all_readings.len();
 
     // Ensure all readings have timestamps
     for reading in &mut all_readings {
@@ -81,7 +80,14 @@ async fn execute_reading_cycle(
         }
     }
 
+    // Calculate outputs and add to readings
+    if let Some(outputs) = get_outputs_from_device_readings(&all_readings, config) {
+        all_readings.push(outputs);
+    }
+
+    let reading_count = all_readings.len();
     log::info!("Publishing {} device readings", reading_count);
+
     // Publish readings if we have any
     if !all_readings.is_empty() {
         let duration = start_time.elapsed();
