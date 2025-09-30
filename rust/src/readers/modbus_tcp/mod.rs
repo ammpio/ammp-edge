@@ -1,5 +1,6 @@
 pub mod client;
 pub mod config;
+pub mod defaults;
 
 use anyhow::{Result, anyhow};
 
@@ -47,7 +48,8 @@ pub async fn read_device(
         &device_config.host,
         device_config.port,
         device_config.unit_id,
-        Some(device_config.timeout),
+        device_config.register_offset,
+        device_config.timeout,
     )
     .await?;
 

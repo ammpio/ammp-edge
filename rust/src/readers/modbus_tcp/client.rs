@@ -10,6 +10,8 @@ use crate::node_mgmt::drivers::RegisterOrder;
 /// ModbusTCP client for reading device registers
 pub struct ModbusTcpReader {
     context: tokio_modbus::client::Context,
+    register_offset: u16,
+    timeout: Duration,
 }
 
 impl ModbusTcpReader {
@@ -19,7 +21,8 @@ impl ModbusTcpReader {
         host: &str,
         port: u16,
         unit_id: u8,
-        _timeout: Option<Duration>,
+        register_offset: u16,
+        timeout: Duration,
     ) -> Result<Self> {
         let socket_addr = (host, port)
             .to_socket_addrs()?
@@ -33,8 +36,17 @@ impl ModbusTcpReader {
             unit_id
         );
 
-        let ctx = tcp::connect_slave(socket_addr, Slave(unit_id))
+        let ctx = tokio::time::timeout(timeout, tcp::connect_slave(socket_addr, Slave(unit_id)))
             .await
+            .map_err(|_| {
+                anyhow::anyhow!(
+                    "[{}] Connection timeout after {:?} to ModbusTCP device at {}/{}",
+                    device_key,
+                    timeout,
+                    socket_addr,
+                    unit_id
+                )
+            })?
             .map_err(|e| {
                 anyhow::anyhow!(
                     "[{}] Failed to connect to ModbusTCP device at {}/{}: {}",
@@ -52,7 +64,11 @@ impl ModbusTcpReader {
             unit_id
         );
 
-        Ok(ModbusTcpReader { context: ctx })
+        Ok(ModbusTcpReader {
+            context: ctx,
+            register_offset,
+            timeout,
+        })
     }
 
     /// Read raw register values from the device
@@ -69,9 +85,9 @@ impl ModbusTcpReader {
             function_code
         );
 
-        let result = match function_code {
-            3 => self.context.read_holding_registers(register, count).await,
-            4 => self.context.read_input_registers(register, count).await,
+        let read_future = match function_code {
+            3 => self.context.read_holding_registers(register, count),
+            4 => self.context.read_input_registers(register, count),
             _ => {
                 return Err(anyhow!(
                     "Unsupported ModbusTCP function code: {}",
@@ -79,6 +95,17 @@ impl ModbusTcpReader {
                 ));
             }
         };
+
+        let result = tokio::time::timeout(self.timeout, read_future)
+            .await
+            .map_err(|_| {
+                anyhow!(
+                    "Read timeout after {:?} for register {} with function code {}",
+                    self.timeout,
+                    register,
+                    function_code
+                )
+            })?;
 
         let registers = result
             .map_err(|e| {
@@ -154,8 +181,9 @@ impl ModbusTcpReader {
     /// Read raw register values and convert them to bytes according to configuration
     async fn read_raw_registers(&mut self, config: &ReadingConfig) -> Result<Vec<u8>> {
         // Read raw register values
+        let register_to_read = self.register_offset + config.register;
         let raw_registers = self
-            .read_registers(config.register, config.words, config.fncode)
+            .read_registers(register_to_read, config.words, config.fncode)
             .await?;
 
         // Convert registers to bytes with proper order (step 1 from the flow)

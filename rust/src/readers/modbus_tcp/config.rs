@@ -11,6 +11,8 @@ use crate::helpers::arp_get_ip_from_mac;
 use crate::node_mgmt::config::{Config, Device, DeviceAddress, ReadingType};
 use crate::node_mgmt::drivers::{DriverSchema, FieldOpts, resolve_field_definition};
 
+use super::defaults;
+
 /// Configuration for a ModbusTCP device connection
 #[derive(Clone, Debug)]
 pub struct ModbusDeviceConfig {
@@ -46,19 +48,30 @@ impl ModbusDeviceConfig {
 
         let host = Self::get_host(device_key, address)?;
 
-        let port = address.port.unwrap_or(502) as u16; // Default ModbusTCP port
+        let port = address.port.map(|p| p as u16).unwrap_or(defaults::PORT);
 
-        let unit_id = address.unit_id.unwrap_or(1) as u8; // Default unit ID
+        let unit_id = address
+            .unit_id
+            .map(|u| u as u8)
+            .unwrap_or(defaults::UNIT_ID);
 
-        let register_offset = address.register_offset.unwrap_or(0) as u16;
+        let register_offset = address
+            .register_offset
+            .map(|o| o as u16)
+            .unwrap_or(defaults::REGISTER_OFFSET);
+
+        let timeout = device
+            .timeout
+            .map(|t| Duration::from_secs(t as u64))
+            .unwrap_or(defaults::TIMEOUT);
 
         Ok(ModbusDeviceConfig {
             device_key: device_key.to_string(),
             host,
             port,
             unit_id,
-            timeout: Duration::from_secs(10), // Default timeout
             register_offset,
+            timeout,
         })
     }
 
@@ -310,6 +323,7 @@ mod tests {
                 ..Default::default()
             }),
             name: Some("Test Device".to_string()),
+            timeout: Some(10),
             min_read_interval: None,
         };
 
@@ -333,9 +347,11 @@ mod tests {
                 mac: Some("aa:bb:cc:dd:ee:ff".to_string()),
                 port: Some(502),
                 unit_id: Some(1),
+                register_offset: Some(0),
                 ..Default::default()
             }),
             name: Some("Test Device".to_string()),
+            timeout: Some(10),
             min_read_interval: None,
         };
 
@@ -367,6 +383,7 @@ mod tests {
             enabled: true,
             address: None,
             name: Some("Test Device".to_string()),
+            timeout: Some(10),
             min_read_interval: None,
         };
 
@@ -396,6 +413,7 @@ mod tests {
                 ..Default::default()
             }),
             name: Some("Test Device".to_string()),
+            timeout: Some(10),
             min_read_interval: None,
         };
 
@@ -405,7 +423,7 @@ mod tests {
             result
                 .unwrap_err()
                 .to_string()
-                .contains("missing both host IP and MAC address")
+                .contains("Missing both host IP and MAC address")
         );
     }
 }
