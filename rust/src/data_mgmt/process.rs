@@ -238,11 +238,6 @@ impl NumericValue {
         }
     }
 
-    /// Check if this value is an integer
-    pub fn is_integer(&self) -> bool {
-        matches!(self, NumericValue::Int(_))
-    }
-
     /// Apply multiplier and offset, converting to float when operations are applied
     pub fn apply_multiplier_offset(
         self,
