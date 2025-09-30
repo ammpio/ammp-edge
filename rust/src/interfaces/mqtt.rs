@@ -272,7 +272,7 @@ mod test {
     }
 
     #[test]
-    fn test_publist_and_receive_msgs() {
+    fn test_publish_and_receive_msgs() {
         assert!(!SAMPLE_MQTT_MESSAGES.is_empty());
 
         let (tx, rx) = unbounded();
