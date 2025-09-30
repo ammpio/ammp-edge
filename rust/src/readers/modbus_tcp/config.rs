@@ -8,7 +8,7 @@ use std::time::Duration;
 
 // Import the generated types through domain module re-exports
 use crate::helpers::arp_get_ip_from_mac;
-use crate::node_mgmt::config::{Config, Device, ReadingType};
+use crate::node_mgmt::config::{Config, Device, DeviceAddress, ReadingType};
 use crate::node_mgmt::drivers::{DriverSchema, FieldOpts, resolve_field_definition};
 
 /// Configuration for a ModbusTCP device connection
@@ -44,62 +44,20 @@ impl ModbusDeviceConfig {
             )
         })?;
 
-        // Determine host IP - either from configured host or resolve from MAC
-        let host = if let Some(host_ip) = &address.host {
-            // Host IP is already configured
-            host_ip.clone()
-        } else if let Some(mac_addr) = &address.mac {
-            // Try to resolve IP from MAC address using ARP table
-            log::info!(
-                "Resolving IP for MAC address {} on device {}",
-                mac_addr,
-                device_key
-            );
-            match arp_get_ip_from_mac(mac_addr) {
-                Ok(Some(ip)) => {
-                    log::info!(
-                        "Resolved MAC {} to IP {} for device {}",
-                        mac_addr,
-                        ip,
-                        device_key
-                    );
-                    ip
-                }
-                Ok(None) => {
-                    return Err(anyhow!(
-                        "ModbusTCP device {} with MAC {} not found in ARP table. Device may be offline or not on local network.",
-                        device_key,
-                        mac_addr
-                    ));
-                }
-                Err(e) => {
-                    return Err(anyhow!(
-                        "Failed to resolve MAC {} to IP for device {}: {}",
-                        mac_addr,
-                        device_key,
-                        e
-                    ));
-                }
-            }
-        } else {
-            return Err(anyhow!(
-                "ModbusTCP device {} missing both host IP and MAC address",
-                device_key
-            ));
-        };
+        let host = Self::get_host(device_key, address)?;
 
-        let port = address.port.map(|p| p as u16).unwrap_or(502); // Default ModbusTCP port
+        let port = address.port.unwrap_or(502) as u16; // Default ModbusTCP port
 
-        let unit_id = address.unit_id.map(|u| u as u8).unwrap_or(1); // Default unit ID
+        let unit_id = address.unit_id.unwrap_or(1) as u8; // Default unit ID
 
-        let register_offset = address.register_offset.map(|o| o as u16).unwrap_or(0);
+        let register_offset = address.register_offset.unwrap_or(0) as u16;
 
         Ok(ModbusDeviceConfig {
             device_key: device_key.to_string(),
             host,
             port,
             unit_id,
-            timeout: Duration::from_secs(5), // Default timeout
+            timeout: Duration::from_secs(10), // Default timeout
             register_offset,
         })
     }
@@ -119,6 +77,50 @@ impl ModbusDeviceConfig {
     /// Get connection parameters as a tuple
     pub fn connection_params(&self) -> (&str, u16, u8) {
         (&self.host, self.port, self.unit_id)
+    }
+
+    /// Determine host IP - either from configured host or resolve from MAC
+    fn get_host(device_key: &str, address: &DeviceAddress) -> Result<String> {
+        // Determine host IP - either from configured host or resolve from MAC
+        let host = if let Some(host_ip) = &address.host {
+            // Host IP is already configured
+            host_ip.clone()
+        } else if let Some(mac_addr) = &address.mac {
+            // Try to resolve IP from MAC address using ARP table
+            log::info!(
+                "Resolving IP for MAC address {} on device {}",
+                mac_addr,
+                device_key
+            );
+            match arp_get_ip_from_mac(mac_addr) {
+                Ok(Some(ip)) => {
+                    log::info!("[{}] Resolved MAC {} to IP {}", device_key, mac_addr, ip,);
+                    ip
+                }
+                Ok(None) => {
+                    return Err(anyhow!(
+                        "[{}] MAC {} not found in ARP table. Device may be offline or not on local network.",
+                        device_key,
+                        mac_addr
+                    ));
+                }
+                Err(e) => {
+                    return Err(anyhow!(
+                        "[{}] Failed to resolve MAC {} to IP: {}",
+                        device_key,
+                        mac_addr,
+                        e
+                    ));
+                }
+            }
+        } else {
+            return Err(anyhow!(
+                "[{}] Missing both host IP and MAC address",
+                device_key,
+            ));
+        };
+
+        Ok(host)
     }
 }
 
@@ -202,19 +204,19 @@ pub fn extract_device_readings(config: &Config, device_key: &str) -> Result<Vec<
                     }
                     Err(e) => {
                         log::warn!(
-                            "Failed to create reading config for field {} in driver {} for device {}: {}",
+                            "[{}] Failed to create reading config for field {} in driver {}: {}",
+                            device_key,
                             reading_schema.var,
                             device.driver,
-                            device_key,
                             e
                         );
                     }
                 }
             } else {
                 log::warn!(
-                    "Driver {} not found in configuration for device {}",
+                    "[{}] Driver {} not found in configuration",
+                    device_key,
                     device.driver,
-                    device_key
                 );
             }
         }
