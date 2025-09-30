@@ -22,11 +22,15 @@ pub fn process_reading(val_bytes: &[u8], field_config: &FieldOpts) -> Result<RtV
         None => return Ok(RtValue::None),
     };
 
-    let value = value.apply_multiplier_offset(field_config.multiplier, field_config.offset);
+    let value = if field_config.multiplier.is_some() || field_config.offset.is_some() {
+        value.apply_multiplier_offset(field_config.multiplier, field_config.offset)
+    } else {
+        value
+    };
 
-    let final_value = apply_typecast(value, field_config.typecast)?;
+    let typecast_value = apply_typecast(value, field_config.typecast)?;
 
-    Ok(final_value)
+    Ok(typecast_value)
 }
 
 /// Parse raw bytes according to the parse_as parameter
@@ -106,10 +110,15 @@ fn value_from_bytes(val_bytes: &[u8], field_config: &FieldOpts) -> Result<Option
         }
     }
 
-    let datatype = field_config
-        .datatype
-        .as_ref()
-        .ok_or_else(|| anyhow!("datatype parameter required for bytes parsing"))?;
+    let datatype = field_config.datatype.as_ref().unwrap_or({
+        // Infer datatype from byte length when not explicitly set
+        match val_bytes.len() {
+            2 => &DataType::Uint16,
+            4 => &DataType::Uint32,
+            8 => &DataType::Double,
+            _ => &DataType::Uint16, // Default fallback
+        }
+    });
 
     let value = match datatype {
         DataType::Int16 => {
@@ -191,18 +200,9 @@ fn value_from_bytes(val_bytes: &[u8], field_config: &FieldOpts) -> Result<Option
 /// Apply final type casting to get the desired output type
 pub fn apply_typecast(value: NumericValue, typecast: Option<Typecast>) -> Result<RtValue> {
     match typecast {
-        Some(Typecast::Int) => match value {
-            NumericValue::Int(i) => Ok(RtValue::Int(i)),
-            NumericValue::Float(f) => Ok(RtValue::Int(f as i64)),
-        },
+        Some(Typecast::Int) => Ok(RtValue::Int(value.as_i64())),
         Some(Typecast::Float) => Ok(RtValue::Float(value.as_f64())),
-        Some(Typecast::Bool) => {
-            let is_nonzero = match value {
-                NumericValue::Int(i) => i != 0,
-                NumericValue::Float(f) => f != 0.0,
-            };
-            Ok(RtValue::Bool(is_nonzero))
-        }
+        Some(Typecast::Bool) => Ok(RtValue::Bool(value.is_nonzero())),
         Some(Typecast::Str) => Ok(RtValue::String(value.as_f64().to_string())),
         None => match value {
             NumericValue::Int(i) => Ok(RtValue::Int(i)),
@@ -221,7 +221,7 @@ pub enum NumericValue {
 }
 
 impl NumericValue {
-    /// Convert to f64 for compatibility with existing logic
+    /// Convert to float
     pub fn as_f64(&self) -> f64 {
         match self {
             NumericValue::Int(i) => *i as f64,
@@ -229,9 +229,12 @@ impl NumericValue {
         }
     }
 
-    /// Check if this value is an integer
-    pub fn is_integer(&self) -> bool {
-        matches!(self, NumericValue::Int(_))
+    /// Convert to integer
+    pub fn as_i64(&self) -> i64 {
+        match self {
+            NumericValue::Int(i) => *i,
+            NumericValue::Float(f) => *f as i64,
+        }
     }
 
     /// Apply multiplier and offset, converting to float when operations are applied
@@ -240,17 +243,16 @@ impl NumericValue {
         multiplier: Option<f64>,
         offset: Option<f64>,
     ) -> NumericValue {
-        let mult = multiplier.unwrap_or(1.0);
-        let offs = offset.unwrap_or(0.0);
-
-        // If both multiplier and offset are identity values, preserve the original type
-        if mult == 1.0 && offs == 0.0 {
-            return self;
-        }
-
-        // If any multiplier or offset is applied, convert to float
-        let result = self.as_f64() * mult + offs;
+        let result = self.as_f64() * multiplier.unwrap_or(1.0) + offset.unwrap_or(0.0);
         NumericValue::Float(result)
+    }
+
+    /// Check if non-zero
+    pub fn is_nonzero(&self) -> bool {
+        match self {
+            NumericValue::Int(i) => *i != 0,
+            NumericValue::Float(f) => *f != 0.0,
+        }
     }
 }
 

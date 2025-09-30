@@ -22,7 +22,6 @@ DEFAULT_QOS = 1
 
 class Reader(object):
     def __init__(self, host: str = "localhost", port: int = 1883, timeout: int = 3, **kwargs):
-
         self._host = host
         self._port = port
         # Note that the timeout is the time to wait for data, not for establishing a connection

@@ -6,7 +6,6 @@ logger = logging.getLogger(__name__)
 
 class NodeEvents(object):
     def __init__(self):
-
         self.do_shutdown = threading.Event()
         self.push_in_progress = threading.Event()
 

@@ -13,9 +13,7 @@ MQTT_CLIENT_ID_SUFFIX = "meta"
 
 
 class Node(object):
-
     def __init__(self) -> None:
-
         self._kvs = KVStore()
 
         self.node_id = self._kvs.get(keys.NODE_ID)
@@ -72,7 +70,6 @@ class Node(object):
         self._drivers = value
 
     def __get_drivers(self) -> dict:
-
         drivers = {}
 
         drvpath = os.path.join(os.getenv("SNAP", "./"), "drivers")

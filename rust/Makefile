@@ -3,3 +3,6 @@ test:
 
 build:
 	cargo build --release
+
+format:
+	cargo fmt
