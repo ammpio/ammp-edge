@@ -125,6 +125,9 @@ fn merge_field_opts(target: &mut FieldOpts, source: &FieldOpts) {
     if let Some(fncode) = source.fncode {
         target.fncode = Some(fncode);
     }
+    if let Some(order) = source.order {
+        target.order = Some(order);
+    }
     if let Some(typecast) = source.typecast {
         target.typecast = Some(typecast);
     }

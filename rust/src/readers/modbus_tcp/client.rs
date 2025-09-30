@@ -132,6 +132,8 @@ impl ModbusTcpReader {
     ) -> Result<Vec<Reading>> {
         let mut readings = Vec::new();
 
+        log::trace!("Executing readings: {:?}", reading_configs);
+
         for config in reading_configs {
             match self.read_raw_registers(&config).await {
                 Ok(raw_bytes) => {
@@ -186,7 +188,7 @@ impl ModbusTcpReader {
             .read_registers(register_to_read, config.words, config.fncode)
             .await?;
 
-        // Convert registers to bytes with proper order (step 1 from the flow)
+        // Convert registers to bytes with proper order
         let bytes = registers_to_bytes(&raw_registers, config.field_config.order.as_ref())?;
 
         Ok(bytes)
