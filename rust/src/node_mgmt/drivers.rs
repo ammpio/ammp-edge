@@ -10,7 +10,7 @@ use std::fs;
 use std::sync::Mutex;
 
 pub use derived_models::driver::{
-    DataType, DriverSchema, FieldOpts, ParseAs, RegisterOrder, Typecast,
+    BitOrder, DataType, DriverSchema, FieldOpts, ParseAs, RegisterOrder, Typecast,
 };
 
 /// Cache for loaded driver definitions to avoid reloading on every reading cycle
@@ -145,6 +145,15 @@ fn merge_field_opts(target: &mut FieldOpts, source: &FieldOpts) {
     }
     if !source.valuemap.is_empty() {
         target.valuemap = source.valuemap.clone();
+    }
+    if let Some(start_bit) = source.start_bit {
+        target.start_bit = Some(start_bit);
+    }
+    if let Some(length_bits) = source.length_bits {
+        target.length_bits = Some(length_bits);
+    }
+    if let Some(bit_order) = source.bit_order {
+        target.bit_order = Some(bit_order);
     }
 }
 

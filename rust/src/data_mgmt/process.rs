@@ -5,7 +5,7 @@
 //! offset application, and type casting for readings from various device types.
 
 use crate::data_mgmt::models::RtValue;
-use crate::node_mgmt::drivers::{DataType, FieldOpts, ParseAs, Typecast};
+use crate::node_mgmt::drivers::{BitOrder, DataType, FieldOpts, ParseAs, Typecast};
 use anyhow::{Result, anyhow};
 
 /// Process a raw reading value according to the field configuration
@@ -98,10 +98,17 @@ fn value_from_string(val_str: &str, field_config: &FieldOpts) -> Result<Option<N
 
 /// Extract numeric value from bytes using the specified datatype
 fn value_from_bytes(val_bytes: &[u8], field_config: &FieldOpts) -> Result<Option<NumericValue>> {
+    // Apply bitwise extraction if start_bit is specified
+    let val_bytes = if field_config.start_bit.is_some() {
+        extract_bits(val_bytes, field_config)?
+    } else {
+        val_bytes.to_vec()
+    };
+
     // Check value mapping first (hex format)
     if let Some(mapped_value) = field_config
         .valuemap
-        .get(&format!("0x{}", hex::encode(val_bytes)))
+        .get(&format!("0x{}", hex::encode(&val_bytes)))
     {
         if let Some(mapped_value) = mapped_value {
             return Ok(Some(NumericValue::Float(*mapped_value)));
@@ -256,6 +263,79 @@ impl NumericValue {
     }
 }
 
+/// Extract specific bits from byte array according to start_bit, length_bits, and bit_order
+///
+/// Only works with exactly 2 bytes (16 bits / single Modbus register)
+///
+/// Bit numbering follows the bit_order parameter:
+/// - LSB (default): bits are numbered from right to left (0 = rightmost/least significant)
+/// - MSB: bits are numbered from left to right (0 = leftmost/most significant)
+///
+/// Returns a byte array containing the extracted value as an unsigned integer
+fn extract_bits(val_bytes: &[u8], field_config: &FieldOpts) -> Result<Vec<u8>> {
+    const SOURCE_BITS: usize = 16;
+    const SOURCE_BYTES: usize = 2;
+
+    let start_bit = field_config
+        .start_bit
+        .ok_or_else(|| anyhow!("start_bit must be specified for bit extraction"))?
+        as usize;
+
+    let length_bits = field_config.length_bits.map(|n| n.get()).unwrap_or(1) as usize;
+
+    let bit_order = field_config.bit_order.unwrap_or(BitOrder::Lsb);
+
+    if val_bytes.len() != SOURCE_BYTES {
+        return Err(anyhow!(
+            "Bitwise extraction only supported for exactly 2 bytes (16 bits), got {} bytes",
+            val_bytes.len()
+        ));
+    }
+
+    let full_value = u16::from_be_bytes(val_bytes.try_into().unwrap());
+
+    if start_bit >= SOURCE_BITS {
+        return Err(anyhow!(
+            "start_bit {} out of range for {} bits (MSB ordering)",
+            start_bit,
+            SOURCE_BITS
+        ));
+    }
+
+    let actual_start_bit = match bit_order {
+        BitOrder::Lsb => {
+            // LSB: bit 0 is rightmost, so we count from the right
+            start_bit
+        }
+        BitOrder::Msb => {
+            // MSB: bit 0 is leftmost, so we need to convert to LSB numbering
+            SOURCE_BITS - start_bit - length_bits
+        }
+    };
+
+    // Note that the order of the returned bits is not altered based on BitOrder;
+    // only the range of bits that's returned
+
+    if actual_start_bit + length_bits > SOURCE_BITS {
+        return Err(anyhow!(
+            "Bit range (start={}, length={}) exceeds available bits ({})",
+            start_bit,
+            length_bits,
+            SOURCE_BITS
+        ));
+    }
+
+    // Extract the bits using a mask
+    let mask = if length_bits >= SOURCE_BITS {
+        u16::MAX
+    } else {
+        (1u16 << length_bits) - 1
+    };
+    let extracted = (full_value >> actual_start_bit) & mask;
+
+    Ok(extracted.to_be_bytes().to_vec())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -399,6 +479,7 @@ mod tests {
         };
 
         let result = process_reading(&bytes, &field_config).unwrap();
+
         if let RtValue::Float(f) = result {
             // Check that it's approximately 325218.8125
             assert!(
@@ -409,5 +490,99 @@ mod tests {
         } else {
             panic!("Expected RtValue::Float, got {:?}", result);
         }
+
+    #[test]
+    fn test_bit_extraction_lsb_single_bit() {
+        // 0x00AA = 0b00000000_10101010
+        let bytes = [0x00, 0xAA];
+        let field_config = FieldOpts {
+            start_bit: Some(1), // Second bit from right (LSB)
+            length_bits: Some(1.try_into().unwrap()),
+            bit_order: Some(BitOrder::Lsb),
+            datatype: Some(DataType::Uint16),
+        assert_eq!(result, RtValue::Int(1)); // Bit 1 is set
+    }
+
+    #[test]
+    fn test_bit_extraction_lsb_multiple_bits() {
+        // 0x00AA = 0b00000000_10101010, extract bits 4-7 (4 bits starting from bit 4)
+        let bytes = [0x00, 0xAA];
+        let field_config = FieldOpts {
+            start_bit: Some(4),
+            length_bits: Some(4.try_into().unwrap()),
+            bit_order: Some(BitOrder::Lsb),
+            datatype: Some(DataType::Uint16),
+            ..Default::default()
+        };
+
+        let result = process_reading(&bytes, &field_config).unwrap();
+        // Bits 4-7 of 0b00000000_10101010 = 0b1010 = 10
+        assert_eq!(result, RtValue::Int(10));
+    }
+
+    #[test]
+    fn test_bit_extraction_msb_ordering() {
+        // 0x00AA = 0b00000000_10101010, extract 4 bits starting from bit 0 (MSB)
+        let bytes = [0x00, 0xAA];
+        let field_config = FieldOpts {
+            start_bit: Some(0),
+            length_bits: Some(4.try_into().unwrap()),
+            bit_order: Some(BitOrder::Msb),
+            datatype: Some(DataType::Uint16),
+            ..Default::default()
+        };
+
+        let result = process_reading(&bytes, &field_config).unwrap();
+        // From MSB: bits 0-3 of 0b00000000_10101010 = 0b0000 = 0
+        assert_eq!(result, RtValue::Int(0));
+    }
+
+    #[test]
+    fn test_bit_extraction_two_bytes() {
+        // 0x12 0x34 = 0b00010010_00110100
+        let bytes = [0x12, 0x34];
+        let field_config = FieldOpts {
+            start_bit: Some(4),                       // Start from bit 4 (LSB)
+            length_bits: Some(8.try_into().unwrap()), // Extract 8 bits
+            bit_order: Some(BitOrder::Lsb),
+            datatype: Some(DataType::Uint16),
+            ..Default::default()
+        };
+
+        let result = process_reading(&bytes, &field_config).unwrap();
+        // Bits 4-11 of 0x1234 = 0b00010010_00110100
+        // Extract 8 bits from bit 4: 0b00100011 = 0x23 = 35
+        assert_eq!(result, RtValue::Int(35));
+    }
+
+    #[test]
+    fn test_bit_extraction_wrong_size() {
+        // Bitwise extraction should only work with exactly 2 bytes
+        let bytes = [0x12]; // Only 1 byte
+        let field_config = FieldOpts {
+            start_bit: Some(0),
+            length_bits: Some(1.try_into().unwrap()),
+            bit_order: Some(BitOrder::Lsb),
+            ..Default::default()
+        };
+
+        let result = process_reading(&bytes, &field_config);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("exactly 2 bytes"));
+    }
+
+    #[test]
+    fn test_bit_extraction_default_length() {
+        // Default length_bits should be 1
+        let bytes = [0x00, 0xAA]; // 0b00000000_10101010
+        let field_config = FieldOpts {
+            start_bit: Some(7), // Bit 7 (LSB)
+            bit_order: Some(BitOrder::Lsb),
+            datatype: Some(DataType::Uint16),
+            ..Default::default()
+        };
+
+        let result = process_reading(&bytes, &field_config).unwrap();
+        assert_eq!(result, RtValue::Int(1)); // Bit 7 is set
     }
 }
