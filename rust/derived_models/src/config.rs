@@ -303,6 +303,13 @@ pub mod error {
 ///              "snmp"
 ///            ]
 ///          },
+///          "timeout": {
+///            "title": "Reading timeout (seconds)",
+///            "examples": [
+///              10
+///            ],
+///            "type": "integer"
+///          },
 ///          "vendor_id": {
 ///            "title": "Vendor ID",
 ///            "examples": [
@@ -735,6 +742,13 @@ impl ::std::convert::From<&AmmpEdgeConfiguration> for AmmpEdgeConfiguration {
 ///        "snmp"
 ///      ]
 ///    },
+///    "timeout": {
+///      "title": "Reading timeout (seconds)",
+///      "examples": [
+///        10
+///      ],
+///      "type": "integer"
+///    },
 ///    "vendor_id": {
 ///      "title": "Vendor ID",
 ///      "examples": [
@@ -764,6 +778,8 @@ pub struct Device {
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub name: ::std::option::Option<::std::string::String>,
     pub reading_type: ReadingType,
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub timeout: ::std::option::Option<i64>,
     pub vendor_id: ::std::string::String,
 }
 impl ::std::convert::From<&Device> for Device {
