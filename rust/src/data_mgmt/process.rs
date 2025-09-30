@@ -106,10 +106,15 @@ fn value_from_bytes(val_bytes: &[u8], field_config: &FieldOpts) -> Result<Option
         }
     }
 
-    let datatype = field_config
-        .datatype
-        .as_ref()
-        .ok_or_else(|| anyhow!("datatype parameter required for bytes parsing"))?;
+    let datatype = field_config.datatype.as_ref().unwrap_or({
+        // Infer datatype from byte length when not explicitly set
+        match val_bytes.len() {
+            2 => &DataType::Uint16,
+            4 => &DataType::Uint32,
+            8 => &DataType::Double,
+            _ => &DataType::Uint16, // Default fallback
+        }
+    });
 
     let value = match datatype {
         DataType::Int16 => {
