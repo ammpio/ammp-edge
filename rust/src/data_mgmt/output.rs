@@ -3,39 +3,68 @@
 //! This module provides functionality to derive additional fields from existing readings
 //! using JSONata expressions, similar to the Python processor/get_output.py module.
 
-use anyhow::{Result, anyhow};
-use serde_json::{Value, json};
 use std::collections::HashMap;
 
-use crate::data_mgmt::models::{DeviceReading, Reading, RtValue};
+use anyhow::{Result, anyhow};
+use bumpalo::Bump;
+use derived_models::config::Output;
+use jsonata_rs::JsonAta;
+use serde_json::{Value, json};
+
+use crate::data_mgmt::models::{DeviceReading, DeviceRef, Reading, Record, RtValue};
 use crate::node_mgmt::config::Config;
 use crate::node_mgmt::drivers::Typecast;
-use derived_models::config::Output;
+
+/// Calculate outputs and structure as DeviceReading that can be included in MQTT payload
+pub fn get_outputs_as_device_reading(
+    device_readings: &[DeviceReading],
+    config: &Config,
+) -> Option<DeviceReading> {
+    let mut record = Record::new();
+    let output_readings = process_outputs(device_readings, &config.output).ok()?;
+    if output_readings.is_empty() {
+        return None;
+    }
+    for reading in output_readings {
+        record.set_field(reading.field, reading.value);
+    }
+
+    if let Some(timestamp) = device_readings[0].record.get_timestamp() {
+        record.set_timestamp(timestamp);
+    }
+
+    Some(DeviceReading {
+        device: DeviceRef::new(
+            "_calc".to_string(),
+            config.calc_vendor_id.clone().unwrap_or_default(),
+        ),
+        record,
+    })
+}
 
 /// Process output fields from device readings using JSONata expressions
 ///
-/// This function replicates the Python get_output functionality, taking device readings
-/// and applying JSONata expressions to derive calculated fields.
-pub fn process_outputs(device_readings: &[DeviceReading], config: &Config) -> Result<Vec<Reading>> {
+/// This function takes device readings and applies JSONata expressions to derive calculated fields.
+pub fn process_outputs(
+    device_readings: &[DeviceReading],
+    output_configs: &[Output],
+) -> Result<Vec<Reading>> {
     let mut output_readings = Vec::new();
 
     // Convert device readings to the expected JSON format for JSONata processing
     let readings_json = convert_device_readings_to_json(device_readings);
 
-    // Process each output configuration
-    for output_config in &config.output {
-        match evaluate_output(output_config, &readings_json) {
+    // Process each output field configuration
+    for output in output_configs {
+        match evaluate_output(output, &readings_json) {
             Ok(Some(reading)) => output_readings.push(reading),
             Ok(None) => {
-                log::debug!(
-                    "Output expression '{}' returned no value",
-                    output_config.source
-                );
+                log::info!("Output expression '{}' returned no value", output.source);
             }
             Err(e) => {
                 log::warn!(
                     "Failed to evaluate output expression '{}': {}",
-                    output_config.source,
+                    output.source,
                     e
                 );
             }
@@ -46,28 +75,22 @@ pub fn process_outputs(device_readings: &[DeviceReading], config: &Config) -> Re
 }
 
 /// Evaluate a single output configuration against the readings JSON
-fn evaluate_output(output_config: &Output, readings_json: &Value) -> Result<Option<Reading>> {
-    // Evaluate the JSONata expression
-    let result = evaluate_jsonata(readings_json, &output_config.source)?;
-
-    if result.is_null() {
-        return Ok(None);
-    }
-
-    // Apply typecast to the result
-    let value = apply_typecast(result, output_config.typecast)?;
+fn evaluate_output(output: &Output, readings_json: &Value) -> Result<Option<Reading>> {
+    let value =
+        evaluate_jsonata_and_typecast_result(readings_json, &output.source, output.typecast)?;
 
     Ok(Some(Reading {
-        field: output_config.field.clone(),
+        field: output.field.clone(),
         value,
     }))
 }
 
 /// Evaluate a JSONata expression against JSON data
-fn evaluate_jsonata(data: &Value, expression: &str) -> Result<Value> {
-    use bumpalo::Bump;
-    use jsonata_rs::JsonAta;
-
+fn evaluate_jsonata_and_typecast_result(
+    data: &Value,
+    expression: &str,
+    typecast: Typecast,
+) -> Result<RtValue> {
     let arena = Bump::new();
     let jsonata = JsonAta::new(expression, &arena)
         .map_err(|e| anyhow!("Failed to parse JSONata expression '{}': {}", expression, e))?;
@@ -80,83 +103,16 @@ fn evaluate_jsonata(data: &Value, expression: &str) -> Result<Value> {
         .evaluate(Some(&input_str), None)
         .map_err(|e| anyhow!("JSONata evaluation failed: {}", e))?;
 
-    // Convert JSONata result back to serde_json::Value
-    convert_jsonata_value_to_json(result)
-}
-
-/// Convert a JSONata Value to serde_json::Value
-fn convert_jsonata_value_to_json<'a>(value: &'a jsonata_rs::Value<'a>) -> Result<Value> {
-    match value {
-        value if value.is_null() => Ok(Value::Null),
-        value if value.is_bool() => Ok(json!(value.as_bool())),
-        value if value.is_number() => Ok(json!(value.as_f64())),
-        value if value.is_string() => Ok(json!(value.as_str())),
-        value if value.is_array() => {
-            let mut array = Vec::new();
-            for item in value.members() {
-                array.push(convert_jsonata_value_to_json(item)?);
-            }
-            Ok(json!(array))
-        }
-        value if value.is_object() => {
-            let mut object = serde_json::Map::new();
-            for (key, val) in value.entries() {
-                object.insert(key.to_string(), convert_jsonata_value_to_json(val)?);
-            }
-            Ok(json!(object))
-        }
-        _ => Ok(Value::Null), // Handle other cases as null
-    }
-}
-
-/// Apply typecast to a JSON value, converting it to the appropriate RtValue
-///
-/// This function bridges between the schema Typecast enum and the existing
-/// process module functionality to avoid duplication.
-fn apply_typecast(value: Value, typecast: Typecast) -> Result<RtValue> {
-    // Handle string typecast separately since process module doesn't handle JSON strings directly
-    if matches!(typecast, Typecast::Str) {
-        let string_value = match value {
-            Value::String(s) => s,
-            _ => value.to_string(),
-        };
-        return Ok(RtValue::String(string_value));
+    if result.is_null() {
+        return Ok(RtValue::None);
     }
 
-    // Convert JSON value to NumericValue for process module
-    let numeric_value = match value {
-        Value::Number(n) => {
-            if let Some(i) = n.as_i64() {
-                crate::data_mgmt::process::NumericValue::Int(i)
-            } else if let Some(u) = n.as_u64() {
-                // Convert unsigned to signed, using saturation for large values
-                crate::data_mgmt::process::NumericValue::Int(if u <= i64::MAX as u64 {
-                    u as i64
-                } else {
-                    i64::MAX
-                })
-            } else {
-                crate::data_mgmt::process::NumericValue::Float(n.as_f64().unwrap_or(0.0))
-            }
-        }
-        Value::Bool(b) => crate::data_mgmt::process::NumericValue::Int(if b { 1 } else { 0 }),
-        Value::String(s) => {
-            if let Ok(i) = s.parse::<i64>() {
-                crate::data_mgmt::process::NumericValue::Int(i)
-            } else if let Ok(f) = s.parse::<f64>() {
-                crate::data_mgmt::process::NumericValue::Float(f)
-            } else {
-                crate::data_mgmt::process::NumericValue::Float(0.0)
-            }
-        }
-        _ => crate::data_mgmt::process::NumericValue::Float(0.0),
-    };
-
-    // Use existing typecast functionality from process module
-    let processed = crate::data_mgmt::process::apply_typecast(numeric_value, Some(typecast))?;
-
-    // The process module now returns RtValue directly
-    Ok(processed)
+    match typecast {
+        Typecast::Int => Ok(RtValue::Int(result.as_isize() as i64)),
+        Typecast::Float => Ok(RtValue::Float(result.as_f64())),
+        Typecast::Bool => Ok(RtValue::Bool(result.as_bool())),
+        Typecast::Str => Ok(RtValue::String(result.as_str().to_string())),
+    }
 }
 
 /// Convert device readings to JSON format expected by JSONata expressions
@@ -208,21 +164,11 @@ fn rt_value_to_json(rt_value: &RtValue) -> Value {
 mod tests {
     use super::*;
     use crate::data_mgmt::models::Record;
-    use crate::node_mgmt::config::Device;
-    use derived_models::config::ReadingType;
 
-    fn create_test_device(key: &str) -> Device {
-        Device {
+    fn create_test_device(key: &str) -> DeviceRef {
+        DeviceRef {
             key: key.to_string(),
-            device_model: Some("test_model".to_string()),
-            driver: "test_driver".to_string(),
-            reading_type: ReadingType::Modbustcp,
             vendor_id: "test_vendor".to_string(),
-            enabled: true,
-            address: None,
-            name: Some("Test Device".to_string()),
-            timeout: None,
-            min_read_interval: None,
         }
     }
 
@@ -249,28 +195,6 @@ mod tests {
     }
 
     #[test]
-    fn test_apply_typecast() {
-        // Test int typecast
-        let result = apply_typecast(json!(42.7), Typecast::Int).unwrap();
-        assert_eq!(result, RtValue::Int(42));
-
-        // Test float typecast
-        let result = apply_typecast(json!(42), Typecast::Float).unwrap();
-        assert_eq!(result, RtValue::Float(42.0));
-
-        // Test string typecast
-        let result = apply_typecast(json!("hello"), Typecast::Str).unwrap();
-        assert_eq!(result, RtValue::String("hello".to_string()));
-
-        // Test bool typecast
-        let result = apply_typecast(json!(true), Typecast::Bool).unwrap();
-        assert_eq!(result, RtValue::Bool(true));
-
-        let result = apply_typecast(json!(0), Typecast::Bool).unwrap();
-        assert_eq!(result, RtValue::Bool(false));
-    }
-
-    #[test]
     fn test_rt_value_to_json() {
         assert_eq!(rt_value_to_json(&RtValue::None), json!(null));
         assert_eq!(rt_value_to_json(&RtValue::Int(42)), json!(42));
@@ -292,12 +216,13 @@ mod tests {
             ]
         });
 
-        let result = evaluate_jsonata(
+        let result = evaluate_jsonata_and_typecast_result(
             &data,
             "device1[var = \"P_L1\"].value + device1[var = \"P_L2\"].value",
+            Typecast::Float,
         );
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), json!(300.0));
+        assert_eq!(result.unwrap(), RtValue::Float(300.0));
     }
 
     #[test]
@@ -337,7 +262,7 @@ mod tests {
             timestamp: None,
         };
 
-        let result = process_outputs(&[device_reading], &config);
+        let result = process_outputs(&[device_reading], &config.output);
         assert!(result.is_ok());
 
         let outputs = result.unwrap();
