@@ -81,7 +81,7 @@ async fn execute_reading_cycle(
         }
     }
 
-    log::info!("Publishing {} readings", reading_count);
+    log::info!("Publishing {} device readings", reading_count);
     // Publish readings if we have any
     if !all_readings.is_empty() {
         let duration = start_time.elapsed();
@@ -92,7 +92,11 @@ async fn execute_reading_cycle(
         };
 
         publish_readings_with_publisher(mqtt_publisher, all_readings, Some(metadata)).await?;
-        log::debug!("Published {} readings in {:?}", reading_count, duration);
+        log::debug!(
+            "Published {} device readings in {:?}",
+            reading_count,
+            duration
+        );
     }
 
     Ok(reading_count)
