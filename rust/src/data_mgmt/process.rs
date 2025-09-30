@@ -490,6 +490,7 @@ mod tests {
         } else {
             panic!("Expected RtValue::Float, got {:?}", result);
         }
+    }
 
     #[test]
     fn test_bit_extraction_lsb_single_bit() {
@@ -500,6 +501,10 @@ mod tests {
             length_bits: Some(1.try_into().unwrap()),
             bit_order: Some(BitOrder::Lsb),
             datatype: Some(DataType::Uint16),
+            ..Default::default()
+        };
+
+        let result = process_reading(&bytes, &field_config).unwrap();
         assert_eq!(result, RtValue::Int(1)); // Bit 1 is set
     }
 
