@@ -5,9 +5,8 @@ pub mod defaults;
 use anyhow::{Result, anyhow};
 
 use crate::{
-    data_mgmt::models::{DeviceReading, Record},
-    node_mgmt::config::Device,
-    node_mgmt::drivers::DriverSchema,
+    data_mgmt::models::{DeviceReading, DeviceRef, Record},
+    node_mgmt::{config::Device, drivers::DriverSchema},
 };
 
 // Re-export main types for easier access
@@ -71,7 +70,7 @@ pub async fn read_device(
     }
 
     let device_reading = DeviceReading {
-        device: device.clone(),
+        device: DeviceRef::from_device(device),
         record,
     };
 

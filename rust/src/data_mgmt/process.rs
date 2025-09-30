@@ -205,7 +205,7 @@ fn value_from_bytes(val_bytes: &[u8], field_config: &FieldOpts) -> Result<Option
 }
 
 /// Apply final type casting to get the desired output type
-pub fn apply_typecast(value: NumericValue, typecast: Option<Typecast>) -> Result<RtValue> {
+fn apply_typecast(value: NumericValue, typecast: Option<Typecast>) -> Result<RtValue> {
     match typecast {
         Some(Typecast::Int) => Ok(RtValue::Int(value.as_i64())),
         Some(Typecast::Float) => Ok(RtValue::Float(value.as_f64())),

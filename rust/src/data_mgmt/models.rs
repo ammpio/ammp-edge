@@ -77,9 +77,31 @@ impl Default for Record {
     }
 }
 
+/// Reference to a device
+///
+/// This is used to reference a device by key metadata, rather than full config.
+#[derive(Clone, Debug)]
+pub struct DeviceRef {
+    pub key: String,
+    pub vendor_id: String,
+}
+
+impl DeviceRef {
+    pub fn new(key: String, vendor_id: String) -> Self {
+        Self { key, vendor_id }
+    }
+
+    pub fn from_device(device: &Device) -> Self {
+        Self {
+            key: device.key.clone(),
+            vendor_id: device.vendor_id.clone(),
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct DeviceReading {
-    pub device: Device,
+    pub device: DeviceRef,
     pub record: Record,
 }
 
