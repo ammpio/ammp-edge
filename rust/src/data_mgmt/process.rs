@@ -22,11 +22,15 @@ pub fn process_reading(val_bytes: &[u8], field_config: &FieldOpts) -> Result<RtV
         None => return Ok(RtValue::None),
     };
 
-    let value = value.apply_multiplier_offset(field_config.multiplier, field_config.offset);
+    let value = if field_config.multiplier.is_some() || field_config.offset.is_some() {
+        value.apply_multiplier_offset(field_config.multiplier, field_config.offset)
+    } else {
+        value
+    };
 
-    let final_value = apply_typecast(value, field_config.typecast)?;
+    let typecast_value = apply_typecast(value, field_config.typecast)?;
 
-    Ok(final_value)
+    Ok(typecast_value)
 }
 
 /// Parse raw bytes according to the parse_as parameter
@@ -245,16 +249,7 @@ impl NumericValue {
         multiplier: Option<f64>,
         offset: Option<f64>,
     ) -> NumericValue {
-        let mult = multiplier.unwrap_or(1.0);
-        let offs = offset.unwrap_or(0.0);
-
-        // If both multiplier and offset are identity values, preserve the original type
-        if mult == 1.0 && offs == 0.0 {
-            return self;
-        }
-
-        // If any multiplier or offset is applied, convert to float
-        let result = self.as_f64() * mult + offs;
+        let result = self.as_f64() * multiplier.unwrap_or(1.0) + offset.unwrap_or(0.0);
         NumericValue::Float(result)
     }
 }
