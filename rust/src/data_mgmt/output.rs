@@ -221,6 +221,7 @@ mod tests {
             enabled: true,
             address: None,
             name: Some("Test Device".to_string()),
+            timeout: None,
             min_read_interval: None,
         }
     }
