@@ -6,7 +6,7 @@ use tokio::time::{Duration, interval, sleep};
 
 use crate::{
     data_mgmt::{
-        output::get_outputs_from_device_readings, payload::Metadata,
+        output::apply_outputs_to_device_readings, payload::Metadata,
         publish::publish_readings_with_publisher, readings::get_readings,
     },
     interfaces::{kvpath, mqtt::MqttPublisher},
@@ -81,10 +81,8 @@ async fn execute_reading_cycle(
         }
     }
 
-    // Calculate outputs and add to readings
-    if let Some(outputs) = get_outputs_from_device_readings(&all_readings, config) {
-        all_readings.push(outputs);
-    }
+    // Calculate outputs and add to readings (modifies all_readings in-place)
+    apply_outputs_to_device_readings(&mut all_readings, config);
 
     let reading_count = all_readings.len();
     log::info!("Publishing {} device readings", reading_count);

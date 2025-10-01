@@ -23,7 +23,7 @@ fn main() -> anyhow::Result<()> {
 
     println!("Calculated output fields:");
     for field in calculated_fields {
-        println!("  {}: {:?}", field.field, field.value);
+        println!("  {}: {:?}", field.1.field, field.1.value);
     }
 
     Ok(())

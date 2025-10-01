@@ -8,7 +8,7 @@ use std::time::Duration;
 
 // Import the generated types through domain module re-exports
 use crate::helpers::arp_get_ip_from_mac;
-use crate::node_mgmt::config::{Config, Device, DeviceAddress, ReadingType};
+use crate::node_mgmt::config::{Device, DeviceAddress, ReadingType};
 use crate::node_mgmt::drivers::{DriverSchema, FieldOpts, resolve_field_definition};
 
 use super::defaults;
@@ -153,9 +153,7 @@ impl ReadingConfig {
             .register
             .ok_or_else(|| anyhow!("Field {} missing register address", variable_name))?;
 
-        let fncode = field_config
-            .fncode
-            .ok_or_else(|| anyhow!("Field {} missing fncode (function code)", variable_name))?;
+        let fncode = field_config.fncode.unwrap_or(defaults::FUNCTION_CODE);
 
         Ok(ReadingConfig {
             variable_name: variable_name.to_string(),
@@ -165,72 +163,6 @@ impl ReadingConfig {
             field_config,
         })
     }
-}
-
-/// Extract ModbusTCP devices from the main configuration
-pub fn extract_modbus_devices(
-    config: &Config,
-) -> Result<Vec<(String, ModbusDeviceConfig, Vec<ReadingConfig>)>> {
-    let mut modbus_devices = Vec::new();
-
-    // Filter devices with reading_type = "modbustcp"
-    for (device_key, device) in &config.devices {
-        if matches!(device.reading_type, ReadingType::Modbustcp) {
-            let device_config = ModbusDeviceConfig::from_config(device_key, device)?;
-            let reading_configs = extract_device_readings(config, device_key)?;
-            modbus_devices.push((device_key.to_string(), device_config, reading_configs));
-        }
-    }
-
-    Ok(modbus_devices)
-}
-
-/// Extract readings for a specific device from configuration
-pub fn extract_device_readings(config: &Config, device_key: &str) -> Result<Vec<ReadingConfig>> {
-    let mut reading_configs = Vec::new();
-
-    // Get the device to find its driver
-    let device = config
-        .devices
-        .get(device_key)
-        .ok_or_else(|| anyhow!("Device {} not found", device_key))?;
-
-    // Get driver configuration
-    let driver_config = config.drivers.get(&device.driver);
-
-    // Convert to DriverSchema if available (it's already a DriverSchema now)
-    let driver_schema = driver_config;
-
-    // Filter readings that belong to this device
-    for reading_schema in config.readings.values() {
-        if reading_schema.device == device_key {
-            // Try to get field configuration from driver
-            if let Some(driver) = &driver_schema {
-                match ReadingConfig::from_driver_field(&reading_schema.var, driver) {
-                    Ok(reading_config) => {
-                        reading_configs.push(reading_config);
-                    }
-                    Err(e) => {
-                        log::warn!(
-                            "[{}] Failed to create reading config for field {} in driver {}: {}",
-                            device_key,
-                            reading_schema.var,
-                            device.driver,
-                            e
-                        );
-                    }
-                }
-            } else {
-                log::warn!(
-                    "[{}] Driver {} not found in configuration",
-                    device_key,
-                    device.driver,
-                );
-            }
-        }
-    }
-
-    Ok(reading_configs)
 }
 
 #[cfg(test)]
