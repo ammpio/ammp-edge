@@ -153,9 +153,7 @@ impl ReadingConfig {
             .register
             .ok_or_else(|| anyhow!("Field {} missing register address", variable_name))?;
 
-        let fncode = field_config
-            .fncode
-            .ok_or_else(|| anyhow!("Field {} missing fncode (function code)", variable_name))?;
+        let fncode = field_config.fncode.unwrap_or(defaults::FUNCTION_CODE);
 
         Ok(ReadingConfig {
             variable_name: variable_name.to_string(),
@@ -198,14 +196,11 @@ pub fn extract_device_readings(config: &Config, device_key: &str) -> Result<Vec<
     // Get driver configuration
     let driver_config = config.drivers.get(&device.driver);
 
-    // Convert to DriverSchema if available (it's already a DriverSchema now)
-    let driver_schema = driver_config;
-
     // Filter readings that belong to this device
     for reading_schema in config.readings.values() {
         if reading_schema.device == device_key {
             // Try to get field configuration from driver
-            if let Some(driver) = &driver_schema {
+            if let Some(driver) = driver_config {
                 match ReadingConfig::from_driver_field(&reading_schema.var, driver) {
                     Ok(reading_config) => {
                         reading_configs.push(reading_config);
