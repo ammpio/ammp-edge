@@ -1,3 +1,5 @@
+use std::time::{SystemTime, UNIX_EPOCH};
+
 use anyhow::Result;
 use kvstore::KVDb;
 use tokio::time::{Duration, interval, sleep};
@@ -35,11 +37,10 @@ pub async fn start_readings() -> Result<()> {
     let mut mqtt_publisher = MqttPublisher::new(Some("data")).await;
 
     // Create interval timer
-    let mut interval_timer = if read_roundtime {
-        create_aligned_interval(read_interval).await
-    } else {
-        interval(Duration::from_secs(read_interval as u64))
-    };
+    if read_roundtime {
+        sleep_until_aligned_interval(read_interval).await;
+    }
+    let mut interval_timer = interval(Duration::from_secs(read_interval as u64));
 
     // Main reading loop
     loop {
@@ -108,25 +109,24 @@ async fn execute_reading_cycle(
     Ok(reading_count)
 }
 
-/// Create an interval timer aligned to round timestamps
-async fn create_aligned_interval(interval_secs: u32) -> tokio::time::Interval {
-    use std::time::{SystemTime, UNIX_EPOCH};
+/// Sleep until the next aligned interval boundary
+async fn sleep_until_aligned_interval(interval_secs: u32) {
+    let interval_millis = interval_secs as u128 * 1_000;
 
     // Calculate next aligned time
     let now = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .expect("Time went backwards")
-        .as_secs();
+        .as_millis();
 
-    let next_aligned = now + (interval_secs as u64) - (now % (interval_secs as u64));
-    let delay_until_aligned = Duration::from_secs(next_aligned - now);
+    let next_aligned = now + (interval_millis) - (now % (interval_millis));
+    let delay_until_aligned = Duration::from_millis((next_aligned - now).try_into().unwrap());
 
     log::debug!(
         "Aligning reading cycle to round timestamps, delay: {:?}",
         delay_until_aligned
     );
 
-    // Sleep until aligned time, then create regular interval
+    // Sleep until aligned time
     sleep(delay_until_aligned).await;
-    interval(Duration::from_secs(interval_secs as u64))
 }
