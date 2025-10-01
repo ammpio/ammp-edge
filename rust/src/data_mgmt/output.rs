@@ -60,7 +60,7 @@ pub fn process_outputs(
         match evaluate_output(output, &readings_json) {
             Ok(Some(reading)) => output_readings.push(reading),
             Ok(None) => {
-                log::info!("Output expression '{}' returned no value", output.source);
+                log::info!("Output for field '{}' returned no value", output.field);
             }
             Err(e) => {
                 log::warn!(
