@@ -104,7 +104,7 @@ fn evaluate_jsonata_and_typecast_result(
         .evaluate(Some(&input_str), None)
         .map_err(|e| anyhow!("JSONata evaluation failed: {}", e))?;
 
-    if result.is_null() {
+    if result.is_null() || result.is_undefined() {
         return Ok(RtValue::None);
     }
 
@@ -228,8 +228,7 @@ mod tests {
 
     #[test]
     fn test_process_outputs_integration() {
-        use derived_models::config::{AmmpEdgeConfiguration, Output};
-        use std::collections::HashMap;
+        use derived_models::config::Output;
 
         // Create test device readings
         let mut record1 = Record::new();
@@ -250,25 +249,38 @@ mod tests {
             typecast: Typecast::Float,
         };
 
-        let config = AmmpEdgeConfiguration {
-            devices: HashMap::new(),
-            readings: HashMap::new(),
-            output: vec![output],
-            calc_vendor_id: None,
-            drivers: HashMap::new(),
-            name: None,
-            read_interval: 60,
-            read_roundtime: false,
-            status_readings: vec![],
-            timestamp: None,
-        };
-
-        let result = process_outputs(&[device_reading], &config.output);
+        let result = process_outputs(&[device_reading], &[output]);
         assert!(result.is_ok());
 
         let outputs = result.unwrap();
         assert_eq!(outputs.len(), 1);
         assert_eq!(outputs[0].field, "P_total");
         assert_eq!(outputs[0].value, RtValue::Float(450.0));
+    }
+
+    #[test]
+    fn test_output_with_undefined_result() {
+        use derived_models::config::Output;
+
+        let device_reading = DeviceReading {
+            device: create_test_device("some_device"),
+            record: Record::new(),
+        };
+
+        // Create test config with output
+        let output = Output {
+            device: Some("another_device".to_string()),
+            field: "fuel_level_percent".to_string(),
+            source: "(another_device[var = \"level\"].value)/2.45 * 100".to_string(),
+            typecast: Typecast::Float,
+        };
+
+        let result = process_outputs(&[device_reading], &[output]);
+        assert!(result.is_ok());
+
+        let outputs = result.unwrap();
+        assert_eq!(outputs.len(), 1);
+        assert_eq!(outputs[0].field, "fuel_level_percent");
+        assert_eq!(outputs[0].value, RtValue::None);
     }
 }
