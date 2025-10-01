@@ -2,7 +2,7 @@ pub mod client;
 pub mod config;
 pub mod defaults;
 
-use anyhow::{Result, anyhow};
+use anyhow::Result;
 
 use crate::{
     data_mgmt::models::{DeviceReading, DeviceRef, Record},
@@ -92,16 +92,18 @@ fn get_reading_configs_from_variable_names(
     let mut reading_configs = Vec::new();
 
     for variable_name in variable_names {
-        let reading_config =
-            ReadingConfig::from_driver_field(variable_name, driver).map_err(|e| {
-                anyhow!(
+        match ReadingConfig::from_driver_field(variable_name, driver) {
+            Ok(reading_config) => {
+                reading_configs.push(reading_config);
+            }
+            Err(e) => {
+                log::warn!(
                     "Failed to create reading config for '{}': {}",
                     variable_name,
                     e
-                )
-            })?;
-
-        reading_configs.push(reading_config);
+                );
+            }
+        }
     }
 
     if reading_configs.is_empty() {
