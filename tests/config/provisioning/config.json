@@ -1,5 +1,4 @@
 {
-  "config_id": "a0",
   "name": "Basic config",
   "output": [
     {
@@ -16,6 +15,17 @@
       "vendor_id": "strato-1",
       "reading_type": "sys"
     },
+    "ems": {
+      "name": "EMS",
+      "driver": "ems",
+      "enabled": true,
+      "vendor_id": "ems-1",
+      "reading_type": "modbustcp",
+      "address": {
+        "host": "mock-modbus-gateway",
+        "unit_id": 1
+      }
+    },
     "sma_stp_1": {
       "name": "SMA STP-25000 (good)",
       "driver": "sma_stp25000",
@@ -23,7 +33,7 @@
       "vendor_id": "1234567890",
       "reading_type": "modbustcp",
       "address": {
-        "host": "mock-sma-stp",
+        "host": "mock-modbus-gateway",
         "unit_id": 3
       }
     },
@@ -34,10 +44,49 @@
       "vendor_id": "000",
       "reading_type": "modbustcp",
       "address": {
-        "host": "mock-sma-stp",
+        "host": "mock-modbus-gateway",
         "unit_id": 100
       },
       "min_read_interval": 30
+    },
+    "sma_hycon_csv": {
+      "address": {
+        "base_url": "ftp://testuser:testpwd@localhost:21/fsc/log/DataFast/",
+        "timezone": "Europe/Amsterdam"
+      },
+      "device_model": "gen_control_sma_hycon",
+      "driver": "sma_hycon_csv",
+      "enabled": true,
+      "name": "SMA Hybrid Controller - CSV backfill",
+      "reading_type": "sma_hycon_csv",
+      "vendor_id": "sma-hycon-1"
+    }
+  },
+  "drivers": {
+    "ems": {
+      "common": {
+        "order": "lsr",
+        "words": 2,
+        "fncode": 3,
+        "datatype": "float"
+      },
+      "fields": {
+        "P_L1": {
+          "unit": "W",
+          "register": 122,
+          "description": "Phase 1 active power"
+        },
+        "P_L2": {
+          "unit": "W",
+          "register": 124,
+          "description": "Phase 2 active power"
+        },
+        "P_L3": {
+          "unit": "W",
+          "register": 126,
+          "description": "Phase 3 active power"
+        }
+      }
     }
   },
   "readings": {
@@ -47,7 +96,10 @@
     "comms_lggr_mem_usage": {"device": "logger", "var": "memory_usage"},
     "pv_P_1": {"device": "sma_stp_1", "var": "P_total"},
     "pv_E_1": {"device": "sma_stp_1", "var": "total_yield"},
-    "pv_P_2": {"device": "sma_stp_2", "var": "P_total"}
+    "pv_P_2": {"device": "sma_stp_2", "var": "P_total"},
+    "ems_P_L1": {"device": "ems", "var": "P_L1"},
+    "ems_P_L2": {"device": "ems", "var": "P_L2"},
+    "ems_P_L3": {"device": "ems", "var": "P_L3"}
   },
   "timestamp": "2022-08-15T13:03:17Z",
   "read_interval": 10,

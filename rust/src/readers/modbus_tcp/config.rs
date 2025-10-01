@@ -75,23 +75,6 @@ impl ModbusDeviceConfig {
         })
     }
 
-    /// Create a test configuration for development
-    pub fn test_config(device_key: &str, host: &str, port: u16, unit_id: u8) -> Self {
-        ModbusDeviceConfig {
-            device_key: device_key.to_string(),
-            host: host.to_string(),
-            port,
-            unit_id,
-            timeout: Duration::from_secs(10),
-            register_offset: 0,
-        }
-    }
-
-    /// Get connection parameters as a tuple
-    pub fn connection_params(&self) -> (&str, u16, u8) {
-        (&self.host, self.port, self.unit_id)
-    }
-
     /// Determine host IP - either from configured host or resolve from MAC
     fn get_host(device_key: &str, address: &DeviceAddress) -> Result<String> {
         // Determine host IP - either from configured host or resolve from MAC
@@ -134,6 +117,18 @@ impl ModbusDeviceConfig {
         };
 
         Ok(host)
+    }
+
+    /// Create a test configuration for development
+    pub fn test_config(device_key: &str, host: &str, port: u16, unit_id: u8) -> Self {
+        ModbusDeviceConfig {
+            device_key: device_key.to_string(),
+            host: host.to_string(),
+            port,
+            unit_id,
+            timeout: Duration::from_secs(10),
+            register_offset: 0,
+        }
     }
 }
 
@@ -300,7 +295,7 @@ mod tests {
     #[test]
     fn test_modbus_device_config_connection_params() {
         let config = ModbusDeviceConfig::test_config("test_device", "192.168.1.100", 502, 1);
-        let (host, port, unit_id) = config.connection_params();
+        let (host, port, unit_id) = (config.host, config.port, config.unit_id);
         assert_eq!(host, "192.168.1.100");
         assert_eq!(port, 502);
         assert_eq!(unit_id, 1);

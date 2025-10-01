@@ -9,10 +9,8 @@ use std::collections::HashMap;
 use std::fs;
 use std::sync::Mutex;
 
-use crate::node_mgmt::config::Config;
-
 pub use derived_models::driver::{
-    DataType, DriverSchema, FieldOpts, ParseAs, RegisterOrder, Typecast,
+    BitOrder, DataType, DriverSchema, FieldOpts, ParseAs, RegisterOrder, Typecast,
 };
 
 /// Cache for loaded driver definitions to avoid reloading on every reading cycle
@@ -22,8 +20,11 @@ static DRIVER_CACHE: Lazy<Mutex<HashMap<String, DriverSchema>>> =
 /// Load driver definition for a specific driver name
 ///
 /// First checks the config.drivers object, then falls back to filesystem.
-pub fn load_driver(config: &Config, driver_name: &str) -> Result<DriverSchema> {
-    if let Some(inline_driver) = config.drivers.get(driver_name) {
+pub fn load_driver(
+    config_drivers: &HashMap<String, DriverSchema>,
+    driver_name: &str,
+) -> Result<DriverSchema> {
+    if let Some(inline_driver) = config_drivers.get(driver_name) {
         log::debug!("Loading driver '{}' from inline config", driver_name);
         let json_value = serde_json::to_value(inline_driver)?;
         let driver_schema: DriverSchema = serde_json::from_value(json_value)?;
@@ -124,6 +125,9 @@ fn merge_field_opts(target: &mut FieldOpts, source: &FieldOpts) {
     if let Some(fncode) = source.fncode {
         target.fncode = Some(fncode);
     }
+    if let Some(order) = source.order {
+        target.order = Some(order);
+    }
     if let Some(typecast) = source.typecast {
         target.typecast = Some(typecast);
     }
@@ -141,6 +145,15 @@ fn merge_field_opts(target: &mut FieldOpts, source: &FieldOpts) {
     }
     if !source.valuemap.is_empty() {
         target.valuemap = source.valuemap.clone();
+    }
+    if let Some(start_bit) = source.start_bit {
+        target.start_bit = Some(start_bit);
+    }
+    if let Some(length_bits) = source.length_bits {
+        target.length_bits = Some(length_bits);
+    }
+    if let Some(bit_order) = source.bit_order {
+        target.bit_order = Some(bit_order);
     }
 }
 

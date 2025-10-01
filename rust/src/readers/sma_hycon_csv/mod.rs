@@ -3,7 +3,7 @@ use std::time::Duration;
 use thiserror::Error;
 use zip::result::ZipError;
 
-use crate::data_mgmt::models::{DeviceReading, Record};
+use crate::data_mgmt::models::{DeviceReading, DeviceRef, Record};
 use crate::helpers::backoff_retry;
 use crate::interfaces::ftp::FtpConnError;
 use crate::interfaces::ntp;
@@ -54,7 +54,7 @@ fn read_device(device: &Device, readings: &mut Vec<DeviceReading>) -> Result<(),
             log::trace!("readings: {:?}", &records);
             records.into_iter().for_each(|r| {
                 readings.push(DeviceReading {
-                    device: device.clone(),
+                    device: DeviceRef::from_device(device),
                     record: r,
                 })
             });
