@@ -4,11 +4,10 @@
 //! to derive calculated fields from device readings using JSONata expressions.
 
 use ae::data_mgmt::{
-    models::{DeviceReading, Record, RtValue},
+    models::{DeviceReading, DeviceRef, Record, RtValue},
     output::process_outputs,
 };
-use ae::node_mgmt::config::Device;
-use derived_models::config::{AmmpEdgeConfiguration, Output, ReadingType};
+use derived_models::config::{AmmpEdgeConfiguration, Output};
 use derived_models::driver::Typecast;
 use std::collections::HashMap;
 
@@ -20,7 +19,7 @@ fn main() -> anyhow::Result<()> {
     let config = create_sample_config();
 
     // Process outputs using JSONata expressions
-    let calculated_fields = process_outputs(&device_readings, &config)?;
+    let calculated_fields = process_outputs(&device_readings, &config.output)?;
 
     println!("Calculated output fields:");
     for field in calculated_fields {
@@ -38,17 +37,9 @@ fn create_sample_readings() -> Vec<DeviceReading> {
     power_meter_record.set_field("P_L3".to_string(), RtValue::Float(800.0)); // Phase 3 power
 
     let power_meter = DeviceReading {
-        device: Device {
+        device: DeviceRef {
             key: "power_meter_1".to_string(),
-            device_model: Some("em210".to_string()),
-            driver: "em210_driver".to_string(),
-            reading_type: ReadingType::Modbustcp,
             vendor_id: "pm-001".to_string(),
-            enabled: true,
-            address: None,
-            name: Some("Main Power Meter".to_string()),
-            timeout: None,
-            min_read_interval: None,
         },
         record: power_meter_record,
     };
@@ -59,17 +50,9 @@ fn create_sample_readings() -> Vec<DeviceReading> {
     inverter_record.set_field("efficiency".to_string(), RtValue::Float(0.95)); // Efficiency ratio
 
     let inverter = DeviceReading {
-        device: Device {
+        device: DeviceRef {
             key: "inverter_1".to_string(),
-            device_model: Some("sma_stp".to_string()),
-            driver: "sma_stp_driver".to_string(),
-            reading_type: ReadingType::Modbustcp,
             vendor_id: "inv-001".to_string(),
-            enabled: true,
-            address: None,
-            name: Some("Solar Inverter".to_string()),
-            timeout: None,
-            min_read_interval: None,
         },
         record: inverter_record,
     };

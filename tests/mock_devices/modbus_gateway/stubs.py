@@ -1,5 +1,18 @@
-class MockResponses:
-    SLAVE_IDS = [3]
+class EmsMockResponses:
+    SLAVE_ID = 1
+    REGISTER_MAP = {
+        122: 0xcc5a,  # 32-bit float with LSR -> 325218.8125
+        123: 0x489e,
+        124: 0xf330,
+        125: 0x48aa,
+        126: 0xe441,
+        127: 0x489f,
+    }
+    DEFAULT_RESPONSE = 0
+
+
+class SmaStpMockResponses:
+    SLAVE_ID = 3
     REGISTER_MAP = {
         30051: 0,  # Device class (2 registers); 8081 = Solar Inverters
         30052: 8081,

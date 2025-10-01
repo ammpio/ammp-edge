@@ -5,9 +5,8 @@ pub mod defaults;
 use anyhow::{Result, anyhow};
 
 use crate::{
-    data_mgmt::models::{DeviceReading, Record},
-    node_mgmt::config::Device,
-    node_mgmt::drivers::load_driver,
+    data_mgmt::models::{DeviceReading, DeviceRef, Record},
+    node_mgmt::{config::Device, drivers::DriverSchema},
 };
 
 // Re-export main types for easier access
@@ -19,8 +18,8 @@ pub use config::{ModbusDeviceConfig, ReadingConfig};
 /// This function follows the pattern established by the SMA reader, taking a device
 /// and reading requests, then returning DeviceReading results.
 pub async fn read_device(
-    config: &crate::node_mgmt::config::Config,
     device: &Device,
+    driver: &DriverSchema,
     variable_names: &[String],
 ) -> Result<Vec<DeviceReading>> {
     if variable_names.is_empty() {
@@ -32,12 +31,12 @@ pub async fn read_device(
     let device_config = ModbusDeviceConfig::from_config(&device.key, device)?;
 
     // Convert variable names to ReadingConfig format
-    let reading_configs = convert_variable_names_to_configs(config, variable_names, device)?;
+    let reading_configs = get_reading_configs_from_variable_names(device, driver, variable_names)?;
 
     log::debug!(
-        "Reading {} variables from ModbusTCP device '{}' at {}:{}",
-        reading_configs.len(),
+        "[{}] Reading {} variables from ModbusTCP device at {}:{}",
         device.key,
+        reading_configs.len(),
         device_config.host,
         device_config.port
     );
@@ -71,7 +70,7 @@ pub async fn read_device(
     }
 
     let device_reading = DeviceReading {
-        device: device.clone(),
+        device: DeviceRef::from_device(device),
         record,
     };
 
@@ -85,21 +84,16 @@ pub async fn read_device(
 }
 
 /// Convert variable names to ReadingConfig objects using driver information
-fn convert_variable_names_to_configs(
-    config: &crate::node_mgmt::config::Config,
-    variable_names: &[String],
+fn get_reading_configs_from_variable_names(
     device: &Device,
+    driver: &DriverSchema,
+    variable_names: &[String],
 ) -> Result<Vec<ReadingConfig>> {
     let mut reading_configs = Vec::new();
 
-    // Load driver definition for this device
-    let driver = load_driver(config, &device.driver)
-        .map_err(|e| anyhow!("Failed to load driver '{}': {}", device.driver, e))?;
-
     for variable_name in variable_names {
-        // Use the simplified ReadingConfig creation
         let reading_config =
-            ReadingConfig::from_driver_field(variable_name, &driver).map_err(|e| {
+            ReadingConfig::from_driver_field(variable_name, driver).map_err(|e| {
                 anyhow!(
                     "Failed to create reading config for '{}': {}",
                     variable_name,
