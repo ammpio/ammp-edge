@@ -19,7 +19,8 @@ use crate::node_mgmt::drivers::Typecast;
 ///
 /// This function processes output configurations and:
 /// 1. Adds output fields directly to existing device readings when device is specified
-/// 2. Creates a separate "_calc" DeviceReading for outputs without a device assignment
+/// 2. Creates a separate "_calc" DeviceReading for outputs without a device assignment,
+///    or with "device": "asset".
 pub fn apply_outputs_to_device_readings(device_readings: &mut Vec<DeviceReading>, config: &Config) {
     let output_readings = match process_outputs(device_readings, &config.output) {
         Ok(readings) => readings,
@@ -37,20 +38,25 @@ pub fn apply_outputs_to_device_readings(device_readings: &mut Vec<DeviceReading>
     let mut asset_level_readings = Vec::new();
 
     for (device_key, reading) in output_readings {
-        if let Some(key) = device_key {
-            if let Some(device_reading) = device_readings.iter_mut().find(|r| r.device.key == key) {
-                device_reading
-                    .record
-                    .set_field(reading.field, reading.value);
-            } else {
-                log::warn!(
-                    "Output field '{}' references non-existent device '{}'",
-                    reading.field,
-                    key
-                );
+        match device_key.as_deref() {
+            None | Some("asset") => {
+                asset_level_readings.push(reading);
             }
-        } else {
-            asset_level_readings.push(reading);
+            Some(key) => {
+                if let Some(device_reading) =
+                    device_readings.iter_mut().find(|r| r.device.key == key)
+                {
+                    device_reading
+                        .record
+                        .set_field(reading.field, reading.value);
+                } else {
+                    log::warn!(
+                        "Output field '{}' references non-existent device '{}'",
+                        reading.field,
+                        key
+                    );
+                }
+            }
         }
     }
 

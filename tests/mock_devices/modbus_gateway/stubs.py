@@ -7,8 +7,9 @@ class EmsMockResponses:
         125: 0x48aa,
         126: 0xe441,
         127: 0x489f,
+        200: 0b0000000000000100,
+        201: 0b1011001000000000,
     }
-    DEFAULT_RESPONSE = 0
 
 
 class SmaStpMockResponses:
@@ -23,4 +24,3 @@ class SmaStpMockResponses:
         30775: 0,  # Total output power (int32); 12,345 W
         30776: 12345,
     }
-    DEFAULT_RESPONSE = 0

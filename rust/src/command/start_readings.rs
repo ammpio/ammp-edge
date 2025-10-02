@@ -68,8 +68,8 @@ async fn execute_reading_cycle(
     let start_time = std::time::Instant::now();
     let start_timestamp = chrono::Utc::now();
 
-    // Sleep for 10 seconds to avoid interference with other reader
-    sleep(Duration::from_secs(10)).await;
+    // Sleep for 20 seconds to avoid interference with other reader
+    sleep(Duration::from_secs(20)).await;
 
     // Delegate to the reading orchestrator
     let mut all_readings = get_readings(config).await?;

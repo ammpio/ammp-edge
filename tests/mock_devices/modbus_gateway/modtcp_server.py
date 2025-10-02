@@ -2,6 +2,7 @@ import logging
 from socketserver import TCPServer
 from argparse import ArgumentParser
 
+from umodbus.exceptions import IllegalDataAddressError
 from umodbus.server.tcp import RequestHandler, get_server
 from umodbus.utils import log_to_stream
 
@@ -38,13 +39,19 @@ except PermissionError:
 @app.route(slave_ids=[EmsMockResponses.SLAVE_ID], function_codes=READ_REGISTER_FUNCTION_CODES, addresses=ALL_ADDRESSES)
 def read_ems(slave_id: int, function_code: int, address: int) -> int:
     """" Return value of address. """
-    return EmsMockResponses.REGISTER_MAP.get(address, EmsMockResponses.DEFAULT_RESPONSE)
+    try:
+        return EmsMockResponses.REGISTER_MAP[address]
+    except KeyError:
+        raise IllegalDataAddressError()
 
 
 @app.route(slave_ids=[SmaStpMockResponses.SLAVE_ID], function_codes=READ_REGISTER_FUNCTION_CODES, addresses=ALL_ADDRESSES)
 def read_sma_stp(slave_id: int, function_code: int, address: int) -> int:
     """" Return value of address. """
-    return SmaStpMockResponses.REGISTER_MAP.get(address, SmaStpMockResponses.DEFAULT_RESPONSE)
+    try:
+        return SmaStpMockResponses.REGISTER_MAP[address]
+    except KeyError:
+        raise IllegalDataAddressError()
 
 
 if __name__ == '__main__':
