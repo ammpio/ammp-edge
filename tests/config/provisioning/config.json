@@ -85,6 +85,20 @@
           "unit": "W",
           "register": 126,
           "description": "Phase 3 active power"
+        },
+        "relay_status": {
+          "words": 1,
+          "register": 200,
+          "start_bit": 2,
+          "description": "Relay status"
+        },
+        "alert_state": {
+          "words": 1,
+          "register": 201,
+          "start_bit": 2,
+          "length_bits": 4,
+          "bit_order": "msb",
+          "description": "Alarm state"
         }
       }
     }
@@ -99,7 +113,9 @@
     "pv_P_2": {"device": "sma_stp_2", "var": "P_total"},
     "ems_P_L1": {"device": "ems", "var": "P_L1"},
     "ems_P_L2": {"device": "ems", "var": "P_L2"},
-    "ems_P_L3": {"device": "ems", "var": "P_L3"}
+    "ems_P_L3": {"device": "ems", "var": "P_L3"},
+    "ems_relay_status": {"device": "ems", "var": "relay_status"},
+    "ems_alert_state": {"device": "ems", "var": "alert_state"}
   },
   "timestamp": "2022-08-15T13:03:17Z",
   "read_interval": 10,
