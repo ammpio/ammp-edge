@@ -98,17 +98,17 @@ fn value_from_string(val_str: &str, field_config: &FieldOpts) -> Result<Option<N
 
 /// Extract numeric value from bytes using the specified datatype
 fn value_from_bytes(val_bytes: &[u8], field_config: &FieldOpts) -> Result<Option<NumericValue>> {
-    // Apply bitwise extraction if start_bit is specified
-    let val_bytes = if field_config.start_bit.is_some() {
-        extract_bits(val_bytes, field_config)?
-    } else {
-        val_bytes.to_vec()
-    };
+    // If start_bit is specified apply bitwise extraction and return result as int
+    if field_config.start_bit.is_some() {
+        return Ok(Some(NumericValue::Int(
+            extract_bits(val_bytes, field_config)? as i64,
+        )));
+    }
 
-    // Check value mapping first (hex format)
+    // Check value mapping (hex format)
     if let Some(mapped_value) = field_config
         .valuemap
-        .get(&format!("0x{}", hex::encode(&val_bytes)))
+        .get(&format!("0x{}", hex::encode(val_bytes)))
     {
         if let Some(mapped_value) = mapped_value {
             return Ok(Some(NumericValue::Float(*mapped_value)));
@@ -272,7 +272,7 @@ impl NumericValue {
 /// - MSB: bits are numbered from left to right (0 = leftmost/most significant)
 ///
 /// Returns a byte array containing the extracted value as an unsigned integer
-fn extract_bits(val_bytes: &[u8], field_config: &FieldOpts) -> Result<Vec<u8>> {
+fn extract_bits(val_bytes: &[u8], field_config: &FieldOpts) -> Result<u16> {
     const SOURCE_BITS: usize = 16;
     const SOURCE_BYTES: usize = 2;
 
@@ -333,7 +333,7 @@ fn extract_bits(val_bytes: &[u8], field_config: &FieldOpts) -> Result<Vec<u8>> {
     };
     let extracted = (full_value >> actual_start_bit) & mask;
 
-    Ok(extracted.to_be_bytes().to_vec())
+    Ok(extracted)
 }
 
 #[cfg(test)]
