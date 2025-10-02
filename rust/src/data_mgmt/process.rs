@@ -498,7 +498,6 @@ mod tests {
             start_bit: Some(1), // Second bit from right (LSB)
             length_bits: Some(1.try_into().unwrap()),
             bit_order: Some(BitOrder::Lsb),
-            datatype: Some(DataType::Uint16),
             ..Default::default()
         };
 
@@ -514,7 +513,6 @@ mod tests {
             start_bit: Some(4),
             length_bits: Some(4.try_into().unwrap()),
             bit_order: Some(BitOrder::Lsb),
-            datatype: Some(DataType::Uint16),
             ..Default::default()
         };
 
@@ -525,19 +523,18 @@ mod tests {
 
     #[test]
     fn test_bit_extraction_msb_ordering() {
-        // 0x00AA = 0b00000000_10101010, extract 4 bits starting from bit 0 (MSB)
-        let bytes = [0x00, 0xAA];
+        // 0x00AA = 0b10100000_10101111, extract 4 bits starting from bit 0 (MSB)
+        let bytes = [0xA0, 0xAA];
         let field_config = FieldOpts {
             start_bit: Some(0),
             length_bits: Some(4.try_into().unwrap()),
             bit_order: Some(BitOrder::Msb),
-            datatype: Some(DataType::Uint16),
             ..Default::default()
         };
 
         let result = process_reading(&bytes, &field_config).unwrap();
-        // From MSB: bits 0-3 of 0b00000000_10101010 = 0b0000 = 0
-        assert_eq!(result, RtValue::Int(0));
+        // From MSB: bits 0-3 of 0b10100000_10101111 = 0b1010 = 5
+        assert_eq!(result, RtValue::Int(5));
     }
 
     #[test]
@@ -548,7 +545,6 @@ mod tests {
             start_bit: Some(4),                       // Start from bit 4 (LSB)
             length_bits: Some(8.try_into().unwrap()), // Extract 8 bits
             bit_order: Some(BitOrder::Lsb),
-            datatype: Some(DataType::Uint16),
             ..Default::default()
         };
 
@@ -581,7 +577,6 @@ mod tests {
         let field_config = FieldOpts {
             start_bit: Some(7), // Bit 7 (LSB)
             bit_order: Some(BitOrder::Lsb),
-            datatype: Some(DataType::Uint16),
             ..Default::default()
         };
 
