@@ -1,9 +1,12 @@
 //! Reading orchestration - determines what readings to take and delegates to specific readers
 //!
 //! This module organizes readings by device and delegates to the appropriate reader modules.
-
-use anyhow::{Result, anyhow};
 use std::collections::HashMap;
+use std::sync::Arc;
+
+use anyhow::Result;
+use once_cell::sync::Lazy;
+use tokio::sync::Mutex;
 use tokio::time::{Duration, Instant};
 
 use crate::{
@@ -12,6 +15,11 @@ use crate::{
     node_mgmt::drivers::{DriverSchema, load_driver},
     readers::modbus_tcp,
 };
+
+/// Global registry of mutexes for physical devices
+/// Ensures only one read operation per physical device at a time
+static DEVICE_LOCKS: Lazy<Mutex<HashMap<PhysicalDeviceId, Arc<Mutex<()>>>>> =
+    Lazy::new(|| Mutex::new(HashMap::new()));
 
 /// Main entry point for reading orchestration
 ///
@@ -109,44 +117,131 @@ async fn read_modbus_devices(
         return Ok(Vec::new());
     }
 
-    let config_drivers = config_drivers.clone();
-
     log::info!("Processing {} ModbusTCP device(s)", modbus_devices.len());
 
-    // Create reading tasks for each device
-    let mut reading_tasks = Vec::new();
-    for (_, (device, variable_names)) in modbus_devices {
-        let device = device.clone();
-        let variable_names = variable_names.clone();
+    // Spawn a task for each device (all run in parallel)
+    // Mutex ensures devices sharing the same physical hardware read sequentially
+    let reading_tasks = modbus_devices
+        .into_iter()
+        .map(|(_, (device, variable_names))| {
+            spawn_device_reading_task(device.clone(), variable_names.clone(), config_drivers)
+        })
+        .collect::<Vec<_>>();
 
-        let driver = load_driver(&config_drivers, &device.driver)
-            .map_err(|e| anyhow!("Failed to load driver '{}': {}", device.driver, e))?;
-
-        let task = tokio::spawn(async move {
-            modbus_tcp::read_device(&device, &driver, &variable_names).await
-        });
-        reading_tasks.push(task);
-    }
-
-    // Execute all tasks concurrently with timeout
-    let timeout_duration = Duration::from_secs(60); // 1 minute max for all devices
-    let results =
-        tokio::time::timeout(timeout_duration, futures::future::join_all(reading_tasks)).await?;
-
-    // Collect successful readings
-    let mut readings = Vec::new();
-    for result in results {
-        match result? {
-            Ok(device_readings) => {
-                readings.extend(device_readings);
-            }
+    // Execute all tasks with timeout and collect results
+    let timeout_duration = Duration::from_secs(60);
+    let results = tokio::time::timeout(timeout_duration, futures::future::join_all(reading_tasks))
+        .await?
+        .into_iter()
+        .filter_map(|result| match result {
+            Ok(readings) => Some(readings),
             Err(e) => {
-                log::warn!("ModbusTCP device reading failed: {}", e);
+                log::warn!("ModbusTCP reading task failed: {}", e);
+                None
+            }
+        })
+        .flatten()
+        .collect();
+
+    Ok(results)
+}
+
+/// Spawn a task to read a single device, using a mutex to prevent concurrent reads of the same physical device
+fn spawn_device_reading_task(
+    device: Device,
+    variable_names: Vec<String>,
+    config_drivers: &HashMap<String, DriverSchema>,
+) -> tokio::task::JoinHandle<Vec<DeviceReading>> {
+    let config_drivers = config_drivers.clone();
+
+    tokio::spawn(async move {
+        // Get or create a mutex for this physical device
+        let lock = get_device_lock(PhysicalDeviceId::from_device(&device)).await;
+
+        // Acquire the lock - this ensures only one task reads this physical device at a time
+        let _guard = lock.lock().await;
+
+        log::debug!(
+            "Acquired lock for physical device, reading '{}'",
+            device.key
+        );
+
+        // Perform the actual read
+        match read_single_device(&config_drivers, device, variable_names).await {
+            Ok(readings) => readings,
+            Err(e) => {
+                log::warn!("Device reading failed: {}", e);
+                Vec::new()
             }
         }
-    }
+        // Lock is automatically released when _guard is dropped
+    })
+}
 
-    Ok(readings)
+/// Get or create a mutex for a physical device
+async fn get_device_lock(physical_id: PhysicalDeviceId) -> Arc<Mutex<()>> {
+    let mut locks = DEVICE_LOCKS.lock().await;
+    locks
+        .entry(physical_id)
+        .or_insert_with(|| Arc::new(Mutex::new(())))
+        .clone()
+}
+
+/// Read a single ModbusTCP device
+async fn read_single_device(
+    config_drivers: &HashMap<String, DriverSchema>,
+    device: Device,
+    variable_names: Vec<String>,
+) -> Result<Vec<DeviceReading>> {
+    let driver = load_driver(config_drivers, &device.driver)
+        .map_err(|e| anyhow::anyhow!("Failed to load driver '{}': {}", device.driver, e))?;
+
+    modbus_tcp::read_device(&device, &driver, &variable_names)
+        .await
+        .map_err(|e| anyhow::anyhow!("ModbusTCP device '{}' reading failed: {}", device.key, e))
+}
+
+/// Identifies a unique physical device by host/mac and port
+///
+/// Two devices are considered the same physical device if they have:
+/// - The same MAC address (if both have MAC), OR
+/// - The same host (if at least one doesn't have MAC)
+/// - AND the same port
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+struct PhysicalDeviceId {
+    /// Normalized identifier: MAC address (if available) or host
+    /// MAC takes precedence as it's more reliable
+    mac_or_host: String,
+    /// Port number
+    port: Option<i64>,
+}
+
+impl PhysicalDeviceId {
+    fn from_device(device: &Device) -> Self {
+        let address = device.address.as_ref();
+
+        // Prefer MAC address as primary identifier, fall back to host
+        let mac_or_host = if let Some(mac) = address.and_then(|a| a.mac.as_ref()) {
+            // Normalize MAC address: uppercase, remove separators
+            format!(
+                "mac:{}",
+                mac.chars()
+                    .filter(|c| c.is_alphanumeric())
+                    .collect::<String>()
+                    .to_lowercase()
+            )
+        } else if let Some(host) = address.and_then(|a| a.host.as_ref()) {
+            // Normalize host: lowercase
+            format!("host:{}", host.to_lowercase())
+        } else {
+            // No identifier available - use device key as fallback
+            format!("key:{}", device.key)
+        };
+
+        let port = address.and_then(|a| a.port);
+
+        Self { mac_or_host, port }
+    }
 }
 
 #[cfg(test)]
@@ -213,5 +308,185 @@ mod tests {
 
         assert!(variable_names.contains(&"voltage_L1".to_string()));
         assert!(variable_names.contains(&"power_total".to_string()));
+    }
+
+    #[test]
+    fn test_physical_device_id_same_host_and_port() {
+        use crate::node_mgmt::config::DeviceAddress;
+
+        // Two devices with same host and port should have same PhysicalDeviceId
+        let device1 = Device {
+            key: "device1".to_string(),
+            driver: "modbus_tcp".to_string(),
+            reading_type: ReadingType::Modbustcp,
+            vendor_id: "test-123".to_string(),
+            enabled: true,
+            address: Some(DeviceAddress {
+                host: Some("192.168.1.100".to_string()),
+                port: Some(502),
+                unit_id: Some(1),
+                mac: None,
+                register_offset: None,
+                base_url: None,
+                baudrate: None,
+                device: None,
+                slaveaddr: None,
+                timezone: None,
+            }),
+            device_model: None,
+            name: None,
+            timeout: None,
+            min_read_interval: None,
+        };
+
+        let device2 = Device {
+            key: "device2".to_string(),
+            address: Some(DeviceAddress {
+                unit_id: Some(2),
+                ..device1.address.clone().unwrap()
+            }),
+            ..device1.clone()
+        };
+
+        let id1 = PhysicalDeviceId::from_device(&device1);
+        let id2 = PhysicalDeviceId::from_device(&device2);
+
+        assert_eq!(id1, id2, "Same host and port should produce same ID");
+    }
+
+    #[test]
+    fn test_physical_device_id_different_hosts() {
+        use crate::node_mgmt::config::DeviceAddress;
+
+        // Two devices with different hosts should have different PhysicalDeviceId
+        let device1 = Device {
+            key: "device1".to_string(),
+            driver: "modbus_tcp".to_string(),
+            reading_type: ReadingType::Modbustcp,
+            vendor_id: "test-123".to_string(),
+            enabled: true,
+            address: Some(DeviceAddress {
+                host: Some("192.168.1.100".to_string()),
+                port: Some(502),
+                unit_id: Some(1),
+                mac: None,
+                register_offset: None,
+                base_url: None,
+                baudrate: None,
+                device: None,
+                slaveaddr: None,
+                timezone: None,
+            }),
+            device_model: None,
+            name: None,
+            timeout: None,
+            min_read_interval: None,
+        };
+
+        let device2 = Device {
+            key: "device2".to_string(),
+            address: Some(DeviceAddress {
+                host: Some("192.168.1.101".to_string()),
+                ..device1.address.clone().unwrap()
+            }),
+            ..device1.clone()
+        };
+
+        let id1 = PhysicalDeviceId::from_device(&device1);
+        let id2 = PhysicalDeviceId::from_device(&device2);
+
+        assert_ne!(id1, id2, "Different hosts should produce different IDs");
+    }
+
+    #[test]
+    fn test_physical_device_id_mac_priority() {
+        use crate::node_mgmt::config::DeviceAddress;
+
+        // MAC address should be used as identifier even with different hosts
+        let device1 = Device {
+            key: "device1".to_string(),
+            driver: "modbus_tcp".to_string(),
+            reading_type: ReadingType::Modbustcp,
+            vendor_id: "test-123".to_string(),
+            enabled: true,
+            address: Some(DeviceAddress {
+                host: Some("192.168.1.100".to_string()),
+                mac: Some("E8:A4:C1:05:19:B2".to_string()),
+                port: Some(502),
+                unit_id: Some(1),
+                register_offset: None,
+                base_url: None,
+                baudrate: None,
+                device: None,
+                slaveaddr: None,
+                timezone: None,
+            }),
+            device_model: None,
+            name: None,
+            timeout: None,
+            min_read_interval: None,
+        };
+
+        let device2 = Device {
+            key: "device2".to_string(),
+            address: Some(DeviceAddress {
+                host: Some("inverter.local".to_string()),
+                mac: Some("e8:a4:c1:05:19:b2".to_string()),
+                ..device1.address.clone().unwrap()
+            }),
+            ..device1.clone()
+        };
+
+        let id1 = PhysicalDeviceId::from_device(&device1);
+        let id2 = PhysicalDeviceId::from_device(&device2);
+
+        assert_eq!(
+            id1, id2,
+            "Same MAC should produce same ID regardless of host"
+        );
+    }
+
+    #[test]
+    fn test_physical_device_id_different_ports() {
+        use crate::node_mgmt::config::DeviceAddress;
+
+        // Same host but different ports = different physical devices
+        let device1 = Device {
+            key: "device1".to_string(),
+            driver: "modbus_tcp".to_string(),
+            reading_type: ReadingType::Modbustcp,
+            vendor_id: "test-123".to_string(),
+            enabled: true,
+            address: Some(DeviceAddress {
+                host: Some("192.168.1.100".to_string()),
+                port: Some(502),
+                unit_id: Some(1),
+                mac: None,
+                register_offset: None,
+                base_url: None,
+                baudrate: None,
+                device: None,
+                slaveaddr: None,
+                timezone: None,
+            }),
+            device_model: None,
+            name: None,
+            timeout: None,
+            min_read_interval: None,
+        };
+
+        let device2 = Device {
+            key: "device2".to_string(),
+            address: Some(DeviceAddress {
+                port: Some(503),
+                ..device1.address.clone().unwrap()
+            }),
+            ..device1.clone()
+        };
+
+        let id1 = PhysicalDeviceId::from_device(&device1);
+        let id2 = PhysicalDeviceId::from_device(&device2);
+
+        assert_ne!(id1, id2, "Different ports should produce different IDs");
     }
 }
