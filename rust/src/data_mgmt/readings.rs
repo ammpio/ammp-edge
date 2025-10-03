@@ -4,7 +4,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use anyhow::Result;
+use anyhow::{Result, anyhow};
 use once_cell::sync::Lazy;
 use tokio::sync::Mutex;
 use tokio::time::{Duration, Instant};
@@ -194,11 +194,11 @@ async fn read_single_device(
     variable_names: Vec<String>,
 ) -> Result<Vec<DeviceReading>> {
     let driver = load_driver(config_drivers, &device.driver)
-        .map_err(|e| anyhow::anyhow!("Failed to load driver '{}': {}", device.driver, e))?;
+        .map_err(|e| anyhow!("Failed to load driver '{}': {}", device.driver, e))?;
 
     modbus_tcp::read_device(&device, &driver, &variable_names)
         .await
-        .map_err(|e| anyhow::anyhow!("ModbusTCP device '{}' reading failed: {}", device.key, e))
+        .map_err(|e| anyhow!("ModbusTCP device '{}' reading failed: {}", device.key, e))
 }
 
 /// Identifies a unique physical device by host/mac and port
