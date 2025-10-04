@@ -58,12 +58,12 @@ pub async fn read_device(
     if readings.is_empty() {
         log::warn!(
             "[{}] No successful readings from ModbusTCP device",
-            device.key
+            device.key,
         );
     } else {
         log::info!(
             "[{}] Successfully read {} variables from ModbusTCP device",
-            device.key
+            device.key,
             readings.len(),
         );
     }
