@@ -16,7 +16,7 @@ pub enum RtValue {
     String(String),
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Record {
     timestamp: Option<DateTime<Utc>>,
     fields: HashMap<String, RtValue>,
@@ -99,10 +99,19 @@ impl DeviceRef {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct DeviceReading {
     pub device: DeviceRef,
     pub record: Record,
+}
+
+impl DeviceReading {
+    pub fn from_device(device: &Device) -> Self {
+        DeviceReading {
+            device: DeviceRef::from_device(device),
+            record: Record::new(),
+        }
+    }
 }
 
 #[derive(Clone, Debug)]
