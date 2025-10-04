@@ -1,3 +1,4 @@
+pub mod last_reading_cache;
 pub mod models;
 pub mod output;
 pub mod payload;

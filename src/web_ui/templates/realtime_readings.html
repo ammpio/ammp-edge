@@ -38,7 +38,7 @@
                 <tr>
                   <td data-toggle="collapse" data-target="#demo{{loop.index}}" class="accordion-toggle clickable d-flex align-items-center">
                     <span class="material-icons chev-down">&#xe5ce;</span>
-                    <span class="device-value-container">{{ reading }}</span>
+                    <span class="device-value-container">{{ reading.get('_d', 'Unknown') }}</span>
                   </td>
                   <td></td>
                 </tr>
@@ -46,19 +46,21 @@
                   <td colspan="12" class="hiddenRow">
                     <div class="accordian-body collapse show" id="demo{{loop.index}}">
                       <table class="table table-condensed">
-                        {% for item in readings[reading] %}
+                        {% for key, value in reading.items() %}
+                        {% if key not in ['_d', '_vid', '_s'] %}
                         <tr class="detail">
                           <td class="w-50">
-                            <span class="ml-5">{{ item['description'] or item['var'] }}</span>
+                            <span class="ml-5">{{ key }}</span>
                           </td>
                           <td class="w-50">
-                            {% if item['value'] is defined and item['value'] is not none %}
-                              {{ item['value'] }} {{ item['unit']}}
+                            {% if value is defined and value is not none %}
+                              {{ value }}
                             {% else %}
                               <div style="color: rgb(255, 100, 100)">No data</div>
-                            {% endif %} 
+                            {% endif %}
                           </td>
                         </tr>
+                        {% endif %}
                         {% endfor %}
                       </table>
                     </div>

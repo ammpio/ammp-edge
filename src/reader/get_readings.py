@@ -19,6 +19,44 @@ DEVICE_DEFAULT_TIMEOUT = 5
 DEVICE_READ_MAXTIMEOUT = 600
 
 
+def save_readings_to_cache(readout: dict):
+    """Save readings to cache with merge logic for concurrent Python/Rust readers."""
+    readings = readout["r"]
+    timestamp = readout["t"]
+
+    with KVCache() as kvc:
+        # Get existing cached data
+        cached_timestamp: int | None = kvc.get(keys.LAST_READINGS_TS)
+        cached_readings: list[dict] = kvc.get(keys.LAST_READINGS) or []
+
+        # Extract device IDs from readings for per-device timestamp tracking
+        device_ids = {r.get(DEVICE_ID_KEY) for r in readings if r.get(DEVICE_ID_KEY)}
+
+        # Merge logic based on timestamp
+        if cached_timestamp == timestamp:
+            # Same timestamp: combine the readings arrays
+            logger.debug(
+                f"Merging {len(readings)} new readings with {len(cached_readings)} "
+                f"cached readings for timestamp {timestamp}"
+            )
+            final_readings = cached_readings + readings
+        else:
+            # Different timestamp: replace with new readings
+            logger.debug(
+                f"Replacing cached readings (ts: {cached_timestamp}) with {len(readings)} "
+                f"new readings for timestamp {timestamp}"
+            )
+            final_readings = readings
+
+        # Save to cache
+        kvc.set(keys.LAST_READINGS, final_readings)
+        kvc.set(keys.LAST_READINGS_TS, timestamp)
+
+        # Save per-device timestamps
+        for dev_id in device_ids:
+            kvc.set(f"{keys.LAST_READING_TS_FOR_DEV_PFX}/{dev_id}", timestamp)
+
+
 def get_readings(config: dict, drivers: dict):
     # Work out all the readings that need to be taken, refactored by device
     dev_rdg = {}
@@ -172,11 +210,9 @@ def get_readout(config: dict, drivers: dict):
             logger.warning("Not all devices returned readings")
 
     logger.debug(f"Populated readings for all devices: {dev_rdg}")
-    with KVCache() as kvc:
-        kvc.set(keys.LAST_READINGS, dev_rdg)
-        kvc.set(keys.LAST_READINGS_TS, readout["t"])
-        for dev_id in dev_rdg.keys():
-            kvc.set(f"{keys.LAST_READING_TS_FOR_DEV_PFX}/{dev_id}", reading_timestamp)
+
+    # Save readings to cache
+    save_readings_to_cache(readout)
 
     # time that took to read all devices.
     readout["m"]["reading_duration"] = datetime.now(UTC).timestamp() - reading_timestamp
