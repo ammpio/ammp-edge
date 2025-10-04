@@ -77,7 +77,7 @@ async fn execute_reading_cycle(
     let start_timestamp = chrono::Utc::now();
 
     // Sleep for 20 seconds to avoid interference with other reader
-    sleep(Duration::from_secs(0)).await;
+    sleep(Duration::from_secs(20)).await;
 
     // Delegate to the reading orchestrator
     let mut all_readings = get_readings(config).await?;
