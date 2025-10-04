@@ -60,6 +60,8 @@ fn generate_types_from_schema(schema_path: &str, output_path: &str, description:
 
     let final_contents = if schema_path.contains("driver.schema.json") {
         post_process_driver_rs(contents)
+    } else if schema_path.contains("data.schema.json") {
+        post_process_data_rs(contents)
     } else {
         contents
     };
@@ -75,6 +77,14 @@ fn post_process_driver_rs(content: String) -> String {
     content
         .replace("i64", "u8")
         .replace("::std::num::NonZeroU64", "::std::num::NonZeroU16")
+}
+
+fn post_process_data_rs(content: String) -> String {
+    // Replace HashMap with BTreeMap for maintaining sorted order of readings
+    content.replace(
+        "::std::collections::HashMap<::std::string::String, DeviceDataExtraValue>",
+        "::std::collections::BTreeMap<::std::string::String, DeviceDataExtraValue>",
+    )
 }
 
 fn post_process_config_rs() {

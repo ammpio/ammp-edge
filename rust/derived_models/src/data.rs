@@ -330,7 +330,7 @@ pub struct DeviceData {
     #[serde(rename = "_vid")]
     pub vid: ::std::string::String,
     #[serde(flatten)]
-    pub extra: ::std::collections::HashMap<::std::string::String, DeviceDataExtraValue>,
+    pub extra: ::std::collections::BTreeMap<::std::string::String, DeviceDataExtraValue>,
 }
 impl ::std::convert::From<&DeviceData> for DeviceData {
     fn from(value: &DeviceData) -> Self {

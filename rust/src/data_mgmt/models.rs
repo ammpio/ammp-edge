@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 
 use chrono::{DateTime, offset::Utc};
 use serde::{Deserialize, Serialize};
@@ -53,7 +53,7 @@ impl Record {
         &self.fields
     }
 
-    pub fn all_fields_as_device_data_extra(&self) -> HashMap<String, DeviceDataExtraValue> {
+    pub fn all_fields_as_device_data_extra(&self) -> BTreeMap<String, DeviceDataExtraValue> {
         self.fields
             .iter()
             .filter(|(_, v)| !matches!(v, RtValue::None))
