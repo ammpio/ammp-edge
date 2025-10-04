@@ -151,7 +151,7 @@ fn spawn_device_reading_task(
     device: Device,
     variable_names: Vec<String>,
     config_drivers: &HashMap<String, DriverSchema>,
-) -> tokio::task::JoinHandle<Vec<DeviceReading>> {
+) -> tokio::task::JoinHandle<Option<DeviceReading>> {
     let config_drivers = config_drivers.clone();
 
     tokio::spawn(async move {
@@ -168,10 +168,10 @@ fn spawn_device_reading_task(
 
         // Perform the actual read
         match read_single_device(&config_drivers, device, variable_names).await {
-            Ok(readings) => readings,
+            Ok(reading) => reading,
             Err(e) => {
                 log::warn!("Device reading failed: {}", e);
-                Vec::new()
+                None
             }
         }
         // Lock is automatically released when _guard is dropped
@@ -192,7 +192,7 @@ async fn read_single_device(
     config_drivers: &HashMap<String, DriverSchema>,
     device: Device,
     variable_names: Vec<String>,
-) -> Result<Vec<DeviceReading>> {
+) -> Result<Option<DeviceReading>> {
     let driver = load_driver(config_drivers, &device.driver)
         .map_err(|e| anyhow!("Failed to load driver '{}': {}", device.driver, e))?;
 

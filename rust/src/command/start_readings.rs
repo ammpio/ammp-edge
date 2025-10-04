@@ -36,15 +36,23 @@ pub async fn start_readings() -> Result<()> {
     // Create persistent MQTT publisher
     let mut mqtt_publisher = MqttPublisher::new(Some("data")).await;
 
-    // Create interval timer
-    if read_roundtime {
-        sleep_until_aligned_interval(read_interval).await;
-    }
-    let mut interval_timer = interval(Duration::from_secs(read_interval as u64));
+    // Create monotonic interval timer for non-aligned mode
+    let mut interval_timer = if !read_roundtime {
+        Some(interval(Duration::from_secs(read_interval as u64)))
+    } else {
+        None
+    };
 
     // Main reading loop
     loop {
-        interval_timer.tick().await;
+        // Wait for next cycle
+        if read_roundtime {
+            // Wall-clock aligned mode: re-sync to system clock each iteration to avoid drift
+            sleep_until_aligned_interval(read_interval).await;
+        } else {
+            // Non-aligned mode: use interval timer
+            interval_timer.as_mut().unwrap().tick().await;
+        }
 
         log::debug!("Starting reading cycle");
 
@@ -69,7 +77,7 @@ async fn execute_reading_cycle(
     let start_timestamp = chrono::Utc::now();
 
     // Sleep for 20 seconds to avoid interference with other reader
-    sleep(Duration::from_secs(20)).await;
+    sleep(Duration::from_secs(0)).await;
 
     // Delegate to the reading orchestrator
     let mut all_readings = get_readings(config).await?;
@@ -87,22 +95,20 @@ async fn execute_reading_cycle(
     let reading_count = all_readings.len();
     log::info!("Publishing {} device readings", reading_count);
 
-    // Publish readings if we have any
-    if !all_readings.is_empty() {
-        let duration = start_time.elapsed();
-        let metadata = Metadata {
-            data_provider: Some("test".into()),
-            reading_duration: Some(duration.as_secs_f64()),
-            ..Default::default()
-        };
+    let duration = start_time.elapsed();
+    let metadata = Metadata {
+        data_provider: Some("test".into()),
+        reading_duration: Some(duration.as_secs_f64()),
+        ..Default::default()
+    };
 
-        publish_readings_with_publisher(mqtt_publisher, all_readings, Some(metadata)).await?;
-        log::debug!(
-            "Published {} device readings in {:?}",
-            reading_count,
-            duration
-        );
-    }
+    // Publish readings to MQTT
+    publish_readings_with_publisher(mqtt_publisher, all_readings, Some(metadata)).await?;
+    log::debug!(
+        "Published {} device readings in {:?}",
+        reading_count,
+        duration
+    );
 
     Ok(reading_count)
 }

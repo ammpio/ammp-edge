@@ -21,10 +21,10 @@ pub async fn read_device(
     device: &Device,
     driver: &DriverSchema,
     variable_names: &[String],
-) -> Result<Vec<DeviceReading>> {
+) -> Result<Option<DeviceReading>> {
     if variable_names.is_empty() {
         log::debug!("No readings requested for ModbusTCP device: {}", device.key);
-        return Ok(Vec::new());
+        return Ok(None);
     }
 
     // Create Modbus device config from the device configuration
@@ -57,13 +57,19 @@ pub async fn read_device(
 
     if readings.is_empty() {
         log::warn!(
-            "No successful readings from ModbusTCP device: {}",
-            device.key
+            "[{}] No successful readings from ModbusTCP device",
+            device.key,
         );
-        return Ok(Vec::new());
+    } else {
+        log::info!(
+            "[{}] Successfully read {} variables from ModbusTCP device",
+            device.key,
+            readings.len(),
+        );
     }
 
     // Convert to DeviceReading format using Record
+    // We do want to return an empty device payload even if all readings failed
     let mut record = Record::new();
     for reading in readings {
         record.set_field(reading.field, reading.value);
@@ -74,13 +80,7 @@ pub async fn read_device(
         record,
     };
 
-    log::info!(
-        "Successfully read {} variables from ModbusTCP device \"{}\"",
-        device_reading.record.all_fields().len(),
-        device.key
-    );
-
-    Ok(vec![device_reading])
+    Ok(Some(device_reading))
 }
 
 /// Convert variable names to ReadingConfig objects using driver information
