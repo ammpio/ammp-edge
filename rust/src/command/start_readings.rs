@@ -6,8 +6,11 @@ use tokio::time::{Duration, interval, sleep};
 
 use crate::{
     data_mgmt::{
-        output::apply_outputs_to_device_readings, payload::Metadata,
-        publish::publish_readings_with_publisher, readings::get_readings,
+        last_reading_cache::save_last_readings,
+        output::apply_outputs_to_device_readings,
+        payload::{Metadata, payloads_from_device_readings},
+        publish::publish_readings_with_publisher,
+        readings::get_readings,
     },
     interfaces::{kvpath, mqtt::MqttPublisher},
     node_mgmt,
@@ -101,6 +104,16 @@ async fn execute_reading_cycle(
         reading_duration: Some(duration.as_secs_f64()),
         ..Default::default()
     };
+
+    // Convert readings to payloads for caching
+    let payloads = payloads_from_device_readings(all_readings.clone(), Some(metadata.clone()));
+
+    // Save readings to cache (merging if same timestamp)
+    for payload in &payloads {
+        if let Err(e) = save_last_readings(payload.r.clone(), payload.t) {
+            log::warn!("Failed to save readings to cache: {}", e);
+        }
+    }
 
     // Publish readings to MQTT
     publish_readings_with_publisher(mqtt_publisher, all_readings, Some(metadata)).await?;

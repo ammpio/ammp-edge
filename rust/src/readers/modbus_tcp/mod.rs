@@ -21,10 +21,10 @@ pub async fn read_device(
     device: &Device,
     driver: &DriverSchema,
     variable_names: &[String],
-) -> Result<Option<DeviceReading>> {
+) -> Result<DeviceReading> {
     if variable_names.is_empty() {
         log::debug!("No readings requested for ModbusTCP device: {}", device.key);
-        return Ok(None);
+        return Ok(DeviceReading::from_device(device));
     }
 
     // Create Modbus device config from the device configuration
@@ -80,7 +80,7 @@ pub async fn read_device(
         record,
     };
 
-    Ok(Some(device_reading))
+    Ok(device_reading)
 }
 
 /// Convert variable names to ReadingConfig objects using driver information
@@ -97,7 +97,7 @@ fn get_reading_configs_from_variable_names(
                 reading_configs.push(reading_config);
             }
             Err(e) => {
-                log::warn!(
+                log::error!(
                     "Failed to create reading config for '{}': {}",
                     variable_name,
                     e
@@ -107,7 +107,7 @@ fn get_reading_configs_from_variable_names(
     }
 
     if reading_configs.is_empty() {
-        log::warn!(
+        log::error!(
             "No valid reading configurations found for device: {}",
             device.key
         );

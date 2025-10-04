@@ -134,13 +134,12 @@ async fn read_modbus_devices(
         .await?
         .into_iter()
         .filter_map(|result| match result {
-            Ok(readings) => Some(readings),
+            Ok(reading) => Some(reading),
             Err(e) => {
                 log::warn!("ModbusTCP reading task failed: {}", e);
                 None
             }
         })
-        .flatten()
         .collect();
 
     Ok(results)
@@ -151,7 +150,7 @@ fn spawn_device_reading_task(
     device: Device,
     variable_names: Vec<String>,
     config_drivers: &HashMap<String, DriverSchema>,
-) -> tokio::task::JoinHandle<Option<DeviceReading>> {
+) -> tokio::task::JoinHandle<DeviceReading> {
     let config_drivers = config_drivers.clone();
 
     tokio::spawn(async move {
@@ -167,11 +166,11 @@ fn spawn_device_reading_task(
         );
 
         // Perform the actual read
-        match read_single_device(&config_drivers, device, variable_names).await {
+        match read_single_device(&config_drivers, &device, variable_names).await {
             Ok(reading) => reading,
             Err(e) => {
                 log::warn!("Device reading failed: {}", e);
-                None
+                DeviceReading::from_device(&device)
             }
         }
         // Lock is automatically released when _guard is dropped
@@ -190,13 +189,13 @@ async fn get_device_lock(physical_id: PhysicalDeviceId) -> Arc<Mutex<()>> {
 /// Read a single ModbusTCP device
 async fn read_single_device(
     config_drivers: &HashMap<String, DriverSchema>,
-    device: Device,
+    device: &Device,
     variable_names: Vec<String>,
-) -> Result<Option<DeviceReading>> {
+) -> Result<DeviceReading> {
     let driver = load_driver(config_drivers, &device.driver)
         .map_err(|e| anyhow!("Failed to load driver '{}': {}", device.driver, e))?;
 
-    modbus_tcp::read_device(&device, &driver, &variable_names)
+    modbus_tcp::read_device(device, &driver, &variable_names)
         .await
         .map_err(|e| anyhow!("ModbusTCP device '{}' reading failed: {}", device.key, e))
 }
