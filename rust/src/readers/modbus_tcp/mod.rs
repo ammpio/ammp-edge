@@ -97,7 +97,7 @@ fn get_reading_configs_from_variable_names(
                 reading_configs.push(reading_config);
             }
             Err(e) => {
-                log::warn!(
+                log::error!(
                     "Failed to create reading config for '{}': {}",
                     variable_name,
                     e
@@ -107,7 +107,7 @@ fn get_reading_configs_from_variable_names(
     }
 
     if reading_configs.is_empty() {
-        log::warn!(
+        log::error!(
             "No valid reading configurations found for device: {}",
             device.key
         );
