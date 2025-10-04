@@ -87,22 +87,20 @@ async fn execute_reading_cycle(
     let reading_count = all_readings.len();
     log::info!("Publishing {} device readings", reading_count);
 
-    // Publish readings if we have any
-    if !all_readings.is_empty() {
-        let duration = start_time.elapsed();
-        let metadata = Metadata {
-            data_provider: Some("test".into()),
-            reading_duration: Some(duration.as_secs_f64()),
-            ..Default::default()
-        };
+    let duration = start_time.elapsed();
+    let metadata = Metadata {
+        data_provider: Some("test".into()),
+        reading_duration: Some(duration.as_secs_f64()),
+        ..Default::default()
+    };
 
-        publish_readings_with_publisher(mqtt_publisher, all_readings, Some(metadata)).await?;
-        log::debug!(
-            "Published {} device readings in {:?}",
-            reading_count,
-            duration
-        );
-    }
+    // Publish readings to MQTT
+    publish_readings_with_publisher(mqtt_publisher, all_readings, Some(metadata)).await?;
+    log::debug!(
+        "Published {} device readings in {:?}",
+        reading_count,
+        duration
+    );
 
     Ok(reading_count)
 }
