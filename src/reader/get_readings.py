@@ -182,8 +182,8 @@ def get_readout(config: dict, drivers: dict):
             if d and d not in locks:
                 locks[d] = threading.Lock()
 
-            # Set host IP based on MAC, if MAC is available
-            set_host_from_mac(dev["address"])
+            # This is no longer necessary as we're skipping ModbusTCP devices here
+            # set_host_from_mac(dev["address"])
 
     # Set up threads for reading each of the devices
     for dev_id in dev_rdg:
