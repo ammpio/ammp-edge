@@ -141,16 +141,25 @@ def get_readout(config: dict, drivers: dict):
 
     # Skip any devices for which min_read_interval has not yet elapsed
     with KVCache() as kvc:
-        devices_to_skip = [
+        min_interval_devices_to_skip = [
             dev_id
             for dev_id in dev_rdg.keys()
             if (min_read_interval := config["devices"][dev_id].get("min_read_interval"))
             and reading_timestamp - kvc.get(f"{keys.LAST_READING_TS_FOR_DEV_PFX}/{dev_id}", 0) < min_read_interval
         ]
 
-    if devices_to_skip:
-        logger.info(f"Skipping devices due to min_read_interval: {devices_to_skip}")
-        for dev_id in devices_to_skip:
+    if min_interval_devices_to_skip:
+        logger.info(f"Skipping devices due to min_read_interval: {min_interval_devices_to_skip}")
+        for dev_id in min_interval_devices_to_skip:
+            del dev_rdg[dev_id]
+
+    # Skip ModbusTCP devices
+    modbus_tcp_devices_to_skip = [
+        dev_id for dev_id in dev_rdg.keys() if config["devices"][dev_id]["reading_type"] == "modbustcp"
+    ]
+    if modbus_tcp_devices_to_skip:
+        logger.info(f"Skipping ModbusTCP devices: {modbus_tcp_devices_to_skip}")
+        for dev_id in modbus_tcp_devices_to_skip:
             del dev_rdg[dev_id]
 
     # Sometimes multiple "devices" will actually share the same serial port, or host IP.
@@ -244,10 +253,6 @@ def get_readout(config: dict, drivers: dict):
 
 
 def read_device(dev, readings, readout_q, dev_lock=None):
-    if dev["reading_type"] == "modbustcp":
-        logger.info(f"Skipping ModbusTCP device {dev['id']}")
-        return
-
     # If the device has a concurrency lock associated with it, make sure it's available
     if dev_lock:
         dev_lock.acquire()
