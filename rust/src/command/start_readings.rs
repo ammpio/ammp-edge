@@ -22,12 +22,12 @@ use crate::{
 pub async fn start_readings() -> Result<()> {
     log::info!("Starting ModbusTCP reading cycle...");
 
-    // Load configuration from key-value store
+    // Load initial configuration from key-value store
     let kvs = KVDb::new(kvpath::SQLITE_STORE.as_path())?;
-    let config = node_mgmt::config::get(kvs)?;
+    let mut config = node_mgmt::config::get(&kvs)?;
 
     // Extract timing parameters from config
-    let read_interval = config.read_interval as u32;
+    let mut read_interval = config.read_interval as u32;
     let read_roundtime = config.read_roundtime;
 
     log::info!(
@@ -67,6 +67,11 @@ pub async fn start_readings() -> Result<()> {
                 log::error!("Reading cycle error: {}", e);
             }
         }
+
+        // Update configuration from key-value store
+        config = node_mgmt::config::get(&kvs)?;
+        read_interval = config.read_interval as u32;
+        // NB: read_roundtime is immutable
     }
 }
 
