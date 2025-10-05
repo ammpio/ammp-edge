@@ -101,7 +101,7 @@ async fn execute_reading_cycle(
 
     let duration = start_time.elapsed();
     let metadata = Metadata {
-        data_provider: Some("test".into()),
+        data_provider: Some("ammp".into()),
         reading_duration: Some(duration.as_secs_f64()),
         ..Default::default()
     };
