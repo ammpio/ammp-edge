@@ -231,6 +231,8 @@ def get_readout(config: dict, drivers: dict):
         output = get_output(dev_rdg, config["output"])
         logger.debug(f"Calculated outputs: {output}")
         for output_field in output:
+            if output_field.get("value") is None:
+                continue
             if output_field.get("device") in config["devices"]:
                 # The field needs to be added for a known device
                 add_to_device_readings(
