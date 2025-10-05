@@ -18,7 +18,7 @@ fn try_set_config(config_payload: &str) {
             let set_config = || {
                 let kvs =
                     KVDb::new(kvpath::SQLITE_STORE.as_path()).map_err(ConfigError::KvStore)?;
-                node_mgmt::config::set(kvs, &config)?;
+                node_mgmt::config::set(&kvs, &config)?;
                 Ok(())
             };
 

@@ -68,7 +68,7 @@ apps:
       - log-observe
     environment:
       LD_LIBRARY_PATH: "$LD_LIBRARY_PATH:$SNAP/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/blas"
-  ae-start-readings:
+  ae-readings:
     command: bin/ae start-readings
     daemon: simple
     restart-condition: always

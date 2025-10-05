@@ -4,15 +4,38 @@
 //! using the system ARP table and fallback mechanisms, equivalent to the Python
 //! network_host_finder.py module.
 
-use anyhow::{Result, anyhow};
 use std::fs;
 use std::net::Ipv4Addr;
+use std::process::Command;
 use std::str::FromStr;
+use std::sync::Mutex;
+use std::thread;
+use std::time::Duration;
+
+use anyhow::{Result, anyhow};
+use kvstore::KVDb;
+use once_cell::sync::Lazy;
+use serde::Deserialize;
+
+use crate::constants::keys;
+use crate::helpers::base_path;
+use crate::interfaces::kvpath;
 
 /// Path to the Linux ARP table
 const ARP_TABLE_FILE: &str = "/proc/net/arp";
 /// Invalid MAC address that should be ignored
 const INVALID_MAC: &str = "00:00:00:00:00:00";
+/// Time to wait after a scan before allowing another
+const WAIT_AFTER_SCAN: Duration = Duration::from_mins(15);
+
+/// Global mutex to track if a network scan is in progress or recently completed
+static SCAN_IN_PROGRESS: Lazy<Mutex<()>> = Lazy::new(|| Mutex::new(()));
+
+/// Network scan cache entry structure
+#[derive(Debug, Deserialize)]
+struct NetworkScanEntry {
+    ipv4: Option<String>,
+}
 
 /// Represents an entry in the ARP table
 #[derive(Debug, Clone, PartialEq)]
@@ -104,10 +127,11 @@ pub fn arp_get_mac_from_ip(ip: &str) -> Result<Option<String>> {
     Ok(None)
 }
 
-/// Get IP address from MAC address using the ARP table
+/// Get IP address from MAC address using the ARP table, with fallback to cache
 pub fn arp_get_ip_from_mac(mac: &str) -> Result<Option<String>> {
     let target_mac = mac.to_lowercase();
 
+    // First try ARP table
     let entries = parse_arp_table()?;
 
     for entry in entries {
@@ -118,7 +142,105 @@ pub fn arp_get_ip_from_mac(mac: &str) -> Result<Option<String>> {
     }
 
     log::info!("MAC {} not found in ARP table", target_mac);
-    Ok(None)
+
+    // If not in ARP table, try key-value cache
+    log::info!(
+        "MAC {} not found in ARP cache; looking in k-v store",
+        target_mac
+    );
+
+    match try_get_ip_from_cache(&target_mac) {
+        Ok(Some(ip)) => {
+            log::debug!("Obtained IP {} from MAC {} (KV cache)", ip, target_mac);
+            Ok(Some(ip))
+        }
+        Ok(None) => {
+            log::info!(
+                "Could not get IP for MAC {} from ARP cache or KV cache; triggering network scan",
+                target_mac
+            );
+            trigger_network_scan();
+            Ok(None)
+        }
+        Err(e) => {
+            log::warn!("Error reading from KV cache: {}", e);
+            trigger_network_scan();
+            Ok(None)
+        }
+    }
+}
+
+/// Try to get IP from MAC using the key-value cache
+fn try_get_ip_from_cache(mac: &str) -> Result<Option<String>> {
+    let cache = KVDb::new(kvpath::SQLITE_CACHE.as_path())?;
+    let key = format!("{}/{}", keys::ENV_NET_MAC_PFX, mac);
+
+    let entry: Option<NetworkScanEntry> = cache.get(&key)?;
+
+    Ok(entry.and_then(|e| e.ipv4))
+}
+
+/// Trigger a network scan in a background thread
+///
+/// If a scan is already in progress or recently completed (within 15 minutes),
+/// this function will not trigger a new scan.
+fn trigger_network_scan() {
+    // Try to acquire the lock without blocking
+    if SCAN_IN_PROGRESS.try_lock().is_err() {
+        log::info!(
+            "Scan is in progress or completed within last {:?}. Not scanning again.",
+            WAIT_AFTER_SCAN
+        );
+        return;
+    }
+
+    // Spawn a thread to run the scan
+    thread::spawn(|| {
+        network_scan_thread();
+    });
+}
+
+/// Run the network scan and sleep to prevent rapid re-scanning
+fn network_scan_thread() {
+    // Acquire the lock - this will hold it for the duration of the scan + wait period
+    let _guard = match SCAN_IN_PROGRESS.lock() {
+        Ok(guard) => guard,
+        Err(e) => {
+            log::error!("Failed to acquire scan lock: {}", e);
+            return;
+        }
+    };
+
+    log::info!("Starting network scan");
+
+    // Run the env_scan_svc binary
+    let scan_binary = base_path::ROOT_DIR.join("bin/env_scan_svc");
+
+    match Command::new(&scan_binary).output() {
+        Ok(output) => {
+            if output.status.success() {
+                log::info!("Network scan completed successfully");
+            } else {
+                log::warn!("Network scan exited with status: {}", output.status);
+                if !output.stderr.is_empty() {
+                    log::warn!("Scan stderr: {}", String::from_utf8_lossy(&output.stderr));
+                }
+            }
+        }
+        Err(e) => {
+            log::error!(
+                "Failed to execute network scan at {}: {}",
+                scan_binary.display(),
+                e
+            );
+        }
+    }
+
+    // Sleep for the wait period before releasing the lock
+    log::info!("Scan complete. Sleeping {:?}", WAIT_AFTER_SCAN);
+    thread::sleep(WAIT_AFTER_SCAN);
+
+    // Lock is automatically released when _guard goes out of scope
 }
 
 #[cfg(test)]

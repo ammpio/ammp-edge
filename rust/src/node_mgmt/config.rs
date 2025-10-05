@@ -21,10 +21,10 @@ pub fn config_from_str(config_raw: &str) -> Result<Config, ConfigError> {
     serde_json::from_str::<Config>(config_raw).map_err(Into::into)
 }
 
-pub fn get(kvs: KVDb) -> Result<Config, ConfigError> {
+pub fn get(kvs: &KVDb) -> Result<Config, ConfigError> {
     kvs.get(keys::CONFIG)?.ok_or(ConfigError::NoConfigSet)
 }
 
-pub fn set(kvs: KVDb, config: &Config) -> Result<(), ConfigError> {
+pub fn set(kvs: &KVDb, config: &Config) -> Result<(), ConfigError> {
     kvs.set(keys::CONFIG, config).map_err(Into::into)
 }
