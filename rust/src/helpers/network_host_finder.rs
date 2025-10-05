@@ -4,15 +4,27 @@
 //! using the system ARP table and fallback mechanisms, equivalent to the Python
 //! network_host_finder.py module.
 
-use anyhow::{Result, anyhow};
 use std::fs;
 use std::net::Ipv4Addr;
 use std::str::FromStr;
+
+use anyhow::{Result, anyhow};
+use kvstore::KVDb;
+use serde::Deserialize;
+
+use crate::constants::keys;
+use crate::interfaces::kvpath;
 
 /// Path to the Linux ARP table
 const ARP_TABLE_FILE: &str = "/proc/net/arp";
 /// Invalid MAC address that should be ignored
 const INVALID_MAC: &str = "00:00:00:00:00:00";
+
+/// Network scan cache entry structure
+#[derive(Debug, Deserialize)]
+struct NetworkScanEntry {
+    ipv4: Option<String>,
+}
 
 /// Represents an entry in the ARP table
 #[derive(Debug, Clone, PartialEq)]
@@ -104,10 +116,11 @@ pub fn arp_get_mac_from_ip(ip: &str) -> Result<Option<String>> {
     Ok(None)
 }
 
-/// Get IP address from MAC address using the ARP table
+/// Get IP address from MAC address using the ARP table, with fallback to cache
 pub fn arp_get_ip_from_mac(mac: &str) -> Result<Option<String>> {
     let target_mac = mac.to_lowercase();
 
+    // First try ARP table
     let entries = parse_arp_table()?;
 
     for entry in entries {
@@ -118,7 +131,37 @@ pub fn arp_get_ip_from_mac(mac: &str) -> Result<Option<String>> {
     }
 
     log::info!("MAC {} not found in ARP table", target_mac);
-    Ok(None)
+
+    // If not in ARP table, try key-value cache
+    log::info!(
+        "MAC {} not found in ARP cache; looking in k-v store",
+        target_mac
+    );
+
+    match try_get_ip_from_cache(&target_mac) {
+        Ok(Some(ip)) => {
+            log::debug!("Obtained IP {} from MAC {} (KV cache)", ip, target_mac);
+            Ok(Some(ip))
+        }
+        Ok(None) => {
+            log::info!("MAC {} not found in KV cache either", target_mac);
+            Ok(None)
+        }
+        Err(e) => {
+            log::warn!("Error reading from KV cache: {}", e);
+            Ok(None)
+        }
+    }
+}
+
+/// Try to get IP from MAC using the key-value cache
+fn try_get_ip_from_cache(mac: &str) -> Result<Option<String>> {
+    let cache = KVDb::new(kvpath::SQLITE_CACHE.as_path())?;
+    let key = format!("{}/{}", keys::ENV_NET_MAC_PFX, mac);
+
+    let entry: Option<NetworkScanEntry> = cache.get(&key)?;
+
+    Ok(entry.and_then(|e| e.ipv4))
 }
 
 #[cfg(test)]
