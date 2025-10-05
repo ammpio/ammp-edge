@@ -54,7 +54,7 @@ pub fn save_last_readings(readings: Vec<DeviceData>, timestamp: i64) -> Result<(
     }
 
     log::debug!(
-        "Saved {} total readings to cache with timestamp {}",
+        "[t: {}] Saved {} total readings to cache",
         final_readings.len(),
         timestamp
     );

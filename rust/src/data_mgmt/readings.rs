@@ -5,12 +5,16 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use anyhow::{Result, anyhow};
+use chrono::{DateTime, Utc};
+use kvstore::KVDb;
 use once_cell::sync::Lazy;
 use tokio::sync::Mutex;
-use tokio::time::{Duration, Instant};
+use tokio::time::Duration;
 
 use crate::{
+    constants::keys,
     data_mgmt::models::DeviceReading,
+    interfaces::kvpath,
     node_mgmt::config::{Config, Device, ReadingType},
     node_mgmt::drivers::{DriverSchema, load_driver},
     readers::modbus_tcp,
@@ -26,13 +30,14 @@ static DEVICE_LOCKS: Lazy<Mutex<HashMap<PhysicalDeviceId, Arc<Mutex<()>>>>> =
 /// Analyzes the configuration, determines what ModbusTCP readings need to be taken,
 /// organizes them by device, and delegates to the ModbusTCP reader.
 /// In the future this will be extended to support other device types.
-pub async fn get_readings(config: &Config) -> Result<Vec<DeviceReading>> {
-    let start_time = Instant::now();
-
+pub async fn get_readings(
+    reading_timestamp: DateTime<Utc>,
+    config: &Config,
+) -> Result<Vec<DeviceReading>> {
     log::info!("Starting ModbusTCP reading cycle");
 
-    // Organize readings by device
-    let device_readings_map = organize_readings_by_device(config)?;
+    // Organize readings by device, filtering based on min_read_interval
+    let device_readings_map = organize_readings_by_device(reading_timestamp, config).await?;
 
     if device_readings_map.is_empty() {
         log::debug!("No enabled devices with readings found");
@@ -50,25 +55,21 @@ pub async fn get_readings(config: &Config) -> Result<Vec<DeviceReading>> {
     // Other device types (like SMA HyCon CSV) have their own dedicated commands
     let all_readings = read_modbus_devices(&config_drivers, &device_readings_map).await?;
 
-    let duration = start_time.elapsed();
-    log::info!(
-        "Completed reading cycle: {} readings in {:?}",
-        all_readings.len(),
-        duration
-    );
+    log::debug!("Completed reading cycle: {} readings", all_readings.len());
 
     Ok(all_readings)
 }
 
-/// Organize readings by device, filtering for enabled devices and readings
-fn organize_readings_by_device(config: &Config) -> Result<HashMap<String, (Device, Vec<String>)>> {
+/// Organize readings by device, filtering for enabled devices, and obeying min_read_interval
+async fn organize_readings_by_device(
+    reading_timestamp: DateTime<Utc>,
+    config: &Config,
+) -> Result<HashMap<String, (Device, Vec<String>)>> {
     let mut device_readings_map: HashMap<String, (Device, Vec<String>)> = HashMap::new();
+    let cache = KVDb::new(kvpath::SQLITE_CACHE.as_path())?;
 
     // Iterate through all configured readings
     for (reading_name, reading_config) in &config.readings {
-        // Note: ReadingSchema doesn't have an enabled field, so we process all readings
-        // If needed, enabled/disabled functionality can be added at the device level
-
         // Get the device this reading refers to
         let device_key = &reading_config.device;
         let Some(device) = config.devices.get(device_key) else {
@@ -83,6 +84,22 @@ fn organize_readings_by_device(config: &Config) -> Result<HashMap<String, (Devic
         // Skip explicitly disabled devices
         if !device.enabled {
             continue;
+        }
+
+        // Skip device if min_read_interval not met
+        if let Some(min_read_interval) = device.min_read_interval {
+            let cache_key = format!("{}/{}", keys::LAST_READING_TS_FOR_DEV_PFX, device_key);
+            let last_timestamp: i64 = cache.get(&cache_key)?.unwrap_or(0);
+            let elapsed = reading_timestamp.timestamp() - last_timestamp;
+            if elapsed < min_read_interval {
+                log::debug!(
+                    "Skipping device '{}'; min_read_interval not met: ({}s < {}s)",
+                    device_key,
+                    elapsed,
+                    min_read_interval
+                );
+                continue;
+            }
         }
 
         // Create device with key populated
@@ -247,8 +264,8 @@ impl PhysicalDeviceId {
 mod tests {
     use super::*;
 
-    #[test]
-    fn test_organize_readings_empty_config() {
+    #[tokio::test]
+    async fn test_organize_readings_empty_config() {
         let config_json = serde_json::json!({
             "devices": {},
             "readings": {},
@@ -257,12 +274,14 @@ mod tests {
         });
         let config: Config = serde_json::from_value(config_json).unwrap();
 
-        let result = organize_readings_by_device(&config).unwrap();
+        let result = organize_readings_by_device(DateTime::from_timestamp(0, 0).unwrap(), &config)
+            .await
+            .unwrap();
         assert!(result.is_empty());
     }
 
-    #[test]
-    fn test_organize_readings_with_devices() {
+    #[tokio::test]
+    async fn test_organize_readings_with_devices() {
         let config_json = serde_json::json!({
             "devices": {
                 "test_device": {
@@ -296,7 +315,9 @@ mod tests {
         });
         let config: Config = serde_json::from_value(config_json).unwrap();
 
-        let result = organize_readings_by_device(&config).unwrap();
+        let result = organize_readings_by_device(DateTime::from_timestamp(0, 0).unwrap(), &config)
+            .await
+            .unwrap();
 
         assert_eq!(result.len(), 1);
         assert!(result.contains_key("test_device"));

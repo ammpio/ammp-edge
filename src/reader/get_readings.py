@@ -141,16 +141,25 @@ def get_readout(config: dict, drivers: dict):
 
     # Skip any devices for which min_read_interval has not yet elapsed
     with KVCache() as kvc:
-        devices_to_skip = [
+        min_interval_devices_to_skip = [
             dev_id
             for dev_id in dev_rdg.keys()
             if (min_read_interval := config["devices"][dev_id].get("min_read_interval"))
             and reading_timestamp - kvc.get(f"{keys.LAST_READING_TS_FOR_DEV_PFX}/{dev_id}", 0) < min_read_interval
         ]
 
-    if devices_to_skip:
-        logger.info(f"Skipping devices due to min_read_interval: {devices_to_skip}")
-        for dev_id in devices_to_skip:
+    if min_interval_devices_to_skip:
+        logger.info(f"Skipping devices due to min_read_interval: {min_interval_devices_to_skip}")
+        for dev_id in min_interval_devices_to_skip:
+            del dev_rdg[dev_id]
+
+    # Skip ModbusTCP devices
+    modbus_tcp_devices_to_skip = [
+        dev_id for dev_id in dev_rdg.keys() if config["devices"][dev_id]["reading_type"] == "modbustcp"
+    ]
+    if modbus_tcp_devices_to_skip:
+        logger.info(f"Skipping ModbusTCP devices: {modbus_tcp_devices_to_skip}")
+        for dev_id in modbus_tcp_devices_to_skip:
             del dev_rdg[dev_id]
 
     # Sometimes multiple "devices" will actually share the same serial port, or host IP.
@@ -222,6 +231,8 @@ def get_readout(config: dict, drivers: dict):
         output = get_output(dev_rdg, config["output"])
         logger.debug(f"Calculated outputs: {output}")
         for output_field in output:
+            if output_field.get("value") is None:
+                continue
             if output_field.get("device") in config["devices"]:
                 # The field needs to be added for a known device
                 add_to_device_readings(
