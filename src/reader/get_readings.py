@@ -244,6 +244,10 @@ def get_readout(config: dict, drivers: dict):
 
 
 def read_device(dev, readings, readout_q, dev_lock=None):
+    if dev["reading_type"] == "modbustcp":
+        logger.info(f"Skipping ModbusTCP device {dev['id']}")
+        return
+
     # If the device has a concurrency lock associated with it, make sure it's available
     if dev_lock:
         dev_lock.acquire()
