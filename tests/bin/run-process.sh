@@ -8,7 +8,8 @@ shift;
 case "$CMD" in
     "ae-init-and-run" )
         ae init
-        ammp_edge
+        ammp_edge &
+        ae start-readings
         ;;
     "web-ui" )
         while ! test -f "$DATA_DIR/kvs-db/kvstore.db"; do
