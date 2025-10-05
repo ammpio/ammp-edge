@@ -82,15 +82,15 @@ async fn execute_reading_cycle(
 ) -> Result<usize> {
     // One of these is for a monotonic timer, the other is for a wall clock timestamp
     let start_time = std::time::Instant::now();
-    let start_timestamp = chrono::Utc::now();
+    let reading_timestamp = chrono::Utc::now();
 
     // Delegate to the reading orchestrator
-    let mut all_readings = get_readings(config).await?;
+    let mut all_readings = get_readings(reading_timestamp, config).await?;
 
     // Ensure all readings have timestamps
     for reading in &mut all_readings {
         if reading.record.get_timestamp().is_none() {
-            reading.record.set_timestamp(start_timestamp);
+            reading.record.set_timestamp(reading_timestamp);
         }
     }
 
@@ -98,7 +98,6 @@ async fn execute_reading_cycle(
     apply_outputs_to_device_readings(&mut all_readings, config);
 
     let reading_count = all_readings.len();
-    log::info!("Publishing {} device readings", reading_count);
 
     let duration = start_time.elapsed();
     let metadata = Metadata {
@@ -106,6 +105,13 @@ async fn execute_reading_cycle(
         reading_duration: Some(duration.as_secs_f64()),
         ..Default::default()
     };
+
+    log::info!(
+        "[t: {}] Obtained {} device readings in {:?} ",
+        reading_timestamp.timestamp(),
+        reading_count,
+        duration
+    );
 
     // Convert readings to payloads for caching
     let payloads = payloads_from_device_readings(all_readings.clone(), Some(metadata.clone()));
@@ -119,10 +125,10 @@ async fn execute_reading_cycle(
 
     // Publish readings to MQTT
     publish_readings_with_publisher(mqtt_publisher, all_readings, Some(metadata)).await?;
-    log::debug!(
-        "Published {} device readings in {:?}",
-        reading_count,
-        duration
+    log::info!(
+        "[t: {}] Published {} payload(s) to MQTT",
+        reading_timestamp.timestamp(),
+        payloads.len()
     );
 
     Ok(reading_count)

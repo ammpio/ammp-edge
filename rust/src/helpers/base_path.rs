@@ -24,7 +24,6 @@ pub static DATA_DIR: Lazy<PathBuf> = Lazy::new(|| {
     ROOT_DIR.join("data")
 });
 
-#[allow(dead_code)]
 pub static TEMP_DIR: Lazy<PathBuf> = Lazy::new(|| {
     if let Ok(ae_temp_dir) = env::var(envvars::TEMP_DIR) {
         return ae_temp_dir.into();
