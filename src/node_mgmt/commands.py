@@ -20,19 +20,19 @@ INPUT_PARAMETERS = "input_parameters"
 
 
 def snap_refresh():
-    __snapd_socket_post("snaps/ammp-edge", {"action": "refresh"})
+    __snapd_socket_post("snaps/ammp-edge", {"action": "refresh", "devmode": True})
 
 
 def snap_refresh_stable():
-    __snapd_socket_post("snaps/ammp-edge", {"action": "refresh", "channel": "stable"})
+    __snapd_socket_post("snaps/ammp-edge", {"action": "refresh", "channel": "stable", "devmode": True})
 
 
 def snap_refresh_beta():
-    __snapd_socket_post("snaps/ammp-edge", {"action": "refresh", "channel": "beta"})
+    __snapd_socket_post("snaps/ammp-edge", {"action": "refresh", "channel": "beta", "devmode": True})
 
 
 def snap_refresh_edge():
-    __snapd_socket_post("snaps/ammp-edge", {"action": "refresh", "channel": "edge"})
+    __snapd_socket_post("snaps/ammp-edge", {"action": "refresh", "channel": "edge", "devmode": True})
 
 
 def snap_proxy_on():
