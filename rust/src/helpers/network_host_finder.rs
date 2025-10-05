@@ -26,7 +26,7 @@ const ARP_TABLE_FILE: &str = "/proc/net/arp";
 /// Invalid MAC address that should be ignored
 const INVALID_MAC: &str = "00:00:00:00:00:00";
 /// Time to wait after a scan before allowing another
-const WAIT_AFTER_SCAN: Duration = Duration::from_mins(15);
+const WAIT_AFTER_SCAN: Duration = Duration::from_secs(15 * 60);
 
 /// Global mutex to track if a network scan is in progress or recently completed
 static SCAN_IN_PROGRESS: Lazy<Mutex<()>> = Lazy::new(|| Mutex::new(()));
