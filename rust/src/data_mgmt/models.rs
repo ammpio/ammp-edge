@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::node_mgmt::config::Device;
 
-use super::payload::DeviceDataExtraValue;
+use super::payload::{DeviceDataExtraValue, StatusReading};
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 pub enum RtValue {
@@ -20,6 +20,7 @@ pub enum RtValue {
 pub struct Record {
     timestamp: Option<DateTime<Utc>>,
     fields: HashMap<String, RtValue>,
+    status_readings: Vec<StatusReading>,
 }
 
 impl Record {
@@ -27,6 +28,7 @@ impl Record {
         Record {
             timestamp: None,
             fields: HashMap::new(),
+            status_readings: Vec::new(),
         }
     }
 
@@ -51,6 +53,15 @@ impl Record {
 
     pub fn all_fields(&self) -> &HashMap<String, RtValue> {
         &self.fields
+    }
+
+    // Status readings methods
+    pub fn add_status_reading(&mut self, status: StatusReading) {
+        self.status_readings.push(status);
+    }
+
+    pub fn status_readings(&self) -> &[StatusReading] {
+        &self.status_readings
     }
 
     pub fn all_fields_as_device_data_extra(&self) -> BTreeMap<String, DeviceDataExtraValue> {

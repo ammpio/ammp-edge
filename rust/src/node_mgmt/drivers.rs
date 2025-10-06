@@ -10,7 +10,7 @@ use std::fs;
 use std::sync::Mutex;
 
 pub use derived_models::driver::{
-    BitOrder, DataType, DriverSchema, FieldOpts, ParseAs, RegisterOrder, Typecast,
+    BitOrder, DataType, DriverSchema, FieldOpts, ParseAs, RegisterOrder, StatusInfoOpts, Typecast,
 };
 
 /// Cache for loaded driver definitions to avoid reloading on every reading cycle
@@ -157,6 +157,61 @@ fn merge_field_opts(target: &mut FieldOpts, source: &FieldOpts) {
     }
 }
 
+/// Resolve status info definition by merging common and status-specific settings
+///
+/// Status-specific settings override common settings
+pub fn resolve_status_info_definition(
+    driver: &DriverSchema,
+    status_info_name: &str,
+) -> Result<StatusInfoOpts> {
+    let status_info_def = driver
+        .status_info
+        .get(status_info_name)
+        .ok_or_else(|| anyhow!("Status info '{}' not found in driver", status_info_name))?;
+
+    // Start with default values
+    let mut resolved = StatusInfoOpts::default();
+
+    // Apply common settings first (from status_info_common)
+    merge_status_info_opts(&mut resolved, &driver.status_info_common);
+
+    // Apply status-specific settings (they override common)
+    merge_status_info_opts(&mut resolved, status_info_def);
+
+    Ok(resolved)
+}
+
+/// Merge source StatusInfoOpts into target, with source taking precedence
+fn merge_status_info_opts(target: &mut StatusInfoOpts, source: &StatusInfoOpts) {
+    if let Some(register) = source.register {
+        target.register = Some(register);
+    }
+    if let Some(fncode) = source.fncode {
+        target.fncode = Some(fncode);
+    }
+    if let Some(words) = source.words {
+        target.words = Some(words);
+    }
+    if let Some(order) = source.order {
+        target.order = Some(order);
+    }
+    if let Some(start_bit) = source.start_bit {
+        target.start_bit = Some(start_bit);
+    }
+    if let Some(length_bits) = source.length_bits {
+        target.length_bits = Some(length_bits);
+    }
+    if let Some(bit_order) = source.bit_order {
+        target.bit_order = Some(bit_order);
+    }
+    if let Some(ref content) = source.content {
+        target.content = Some(content.clone());
+    }
+    if !source.status_level_value_map.is_empty() {
+        target.status_level_value_map = source.status_level_value_map.clone();
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -227,5 +282,55 @@ mod tests {
         assert_eq!(field.register, None);
         assert_eq!(field.multiplier, Some(0.1));
         assert_eq!(field.unit, Some("V".to_string()));
+    }
+
+    #[test]
+    fn test_parse_driver_with_status_info_common() {
+        let driver_json = json!({
+            "fields": {},
+            "status_info_common": {
+                "fncode": 4,
+                "length_bits": 1,
+                "bit_order": "lsb",
+                "status_level_value_map": [[0, 0], [1, 3]]
+            },
+            "status_info": {
+                "oil_pressure": {
+                    "content": "Low Oil Pressure",
+                    "register": 2049,
+                    "start_bit": 4
+                },
+                "high_temp": {
+                    "content": "High Temperature",
+                    "register": 2049,
+                    "start_bit": 5,
+                    "status_level_value_map": [[0, 0], [1, 4]]  // Override common mapping
+                }
+            }
+        });
+
+        let driver: DriverSchema = serde_json::from_value(driver_json).unwrap();
+
+        // Check that common settings are defined
+        assert_eq!(driver.status_info_common.fncode, Some(4));
+        assert_eq!(driver.status_info.len(), 2);
+
+        // Test oil_pressure: should inherit from common
+        let oil_pressure = resolve_status_info_definition(&driver, "oil_pressure").unwrap();
+        assert_eq!(oil_pressure.register, Some(2049));
+        assert_eq!(oil_pressure.start_bit, Some(4));
+        assert_eq!(oil_pressure.fncode, Some(4)); // From common
+        assert_eq!(oil_pressure.length_bits.map(|n| n.get()), Some(1)); // From common
+        assert_eq!(oil_pressure.content, Some("Low Oil Pressure".to_string()));
+        assert_eq!(oil_pressure.status_level_value_map, vec![(0, 0), (1, 3)]); // From common
+
+        // Test high_temp: should override status_level_value_map
+        let high_temp = resolve_status_info_definition(&driver, "high_temp").unwrap();
+        assert_eq!(high_temp.register, Some(2049));
+        assert_eq!(high_temp.start_bit, Some(5));
+        assert_eq!(high_temp.fncode, Some(4)); // From common
+        assert_eq!(high_temp.length_bits.map(|n| n.get()), Some(1)); // From common
+        assert_eq!(high_temp.content, Some("High Temperature".to_string()));
+        assert_eq!(high_temp.status_level_value_map, vec![(0, 0), (1, 4)]); // Overridden
     }
 }

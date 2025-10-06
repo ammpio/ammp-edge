@@ -3,7 +3,9 @@ use thiserror::Error;
 
 use super::models::DeviceReading;
 
-pub use derived_models::data::{DataPayload, DeviceData, DeviceDataExtraValue, Metadata};
+pub use derived_models::data::{
+    DataPayload, DeviceData, DeviceDataExtraValue, Metadata, StatusReading,
+};
 
 pub fn blank_metadata() -> Metadata {
     Metadata::default()
@@ -41,7 +43,7 @@ fn device_data_from_device_reading(dev_rdg: DeviceReading) -> DeviceData {
     DeviceData {
         d: Some(dev_rdg.device.key),
         vid: dev_rdg.device.vendor_id,
-        s: Vec::new(),
+        s: dev_rdg.record.status_readings().to_vec(),
         extra: dev_rdg.record.all_fields_as_device_data_extra(),
     }
 }
