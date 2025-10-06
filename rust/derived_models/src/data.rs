@@ -503,7 +503,7 @@ impl ::std::default::Default for Metadata {
 #[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug, PartialEq)]
 pub struct StatusReading {
     pub c: ::std::string::String,
-    pub l: i64,
+    pub l: u8,
 }
 impl ::std::convert::From<&StatusReading> for StatusReading {
     fn from(value: &StatusReading) -> Self {

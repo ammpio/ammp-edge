@@ -87,10 +87,7 @@ fn post_process_driver_rs(content: String) -> String {
 
 fn post_process_data_rs(content: String) -> String {
     // Replace i64 with u8 in StatusReading
-    content.replace(
-        "pub l: ::std::option::Option<i64>",
-        "pub l: ::std::option::Option<u8>",
-    )
+    content.replace("pub l: i64", "pub l: u8")
 }
 
 fn post_process_config_rs(content: String) -> String {
