@@ -1,28 +1,33 @@
 use std::path::Path;
+
 use typify::{TypeSpace, TypeSpaceSettings};
 
+const CONFIG_SCHEMA_PATH: &str = "../json-schema/config.schema.json";
+const DRIVER_SCHEMA_PATH: &str = "../json-schema/driver.schema.json";
+const DATA_SCHEMA_PATH: &str = "../json-schema/data.schema.json";
+
 fn main() {
-    println!("cargo:rerun-if-changed=../json-schema/config.schema.json");
-    println!("cargo:rerun-if-changed=../json-schema/driver.schema.json");
-    println!("cargo:rerun-if-changed=../json-schema/data.schema.json");
+    println!("cargo:rerun-if-changed={CONFIG_SCHEMA_PATH}");
+    println!("cargo:rerun-if-changed={DRIVER_SCHEMA_PATH}");
+    println!("cargo:rerun-if-changed={DATA_SCHEMA_PATH}");
 
     // Generate config types
     generate_types_from_schema(
-        "../json-schema/config.schema.json",
+        CONFIG_SCHEMA_PATH,
         "src/config.rs",
         "Config types from config.schema.json",
     );
 
     // Generate standalone driver types
     generate_types_from_schema(
-        "../json-schema/driver.schema.json",
+        DRIVER_SCHEMA_PATH,
         "src/driver.rs",
         "Driver types from driver.schema.json",
     );
 
     // Generate standalone data schema
     generate_types_from_schema(
-        "../json-schema/data.schema.json",
+        DATA_SCHEMA_PATH,
         "src/data.rs",
         "Data types from data.schema.json",
     );
@@ -43,6 +48,11 @@ fn generate_types_from_schema(schema_path: &str, output_path: &str, description:
     let mut settings = TypeSpaceSettings::default();
     settings.with_derive("Clone".to_string());
     settings.with_derive("PartialEq".to_string());
+
+    if schema_path == DATA_SCHEMA_PATH {
+        settings.with_map_type("std::collections::BTreeMap".to_string());
+    }
+
     let mut type_space = TypeSpace::new(&settings);
     type_space
         .add_root_schema(schema)
@@ -55,14 +65,11 @@ fn generate_types_from_schema(schema_path: &str, output_path: &str, description:
         prettyplease::unparse(&syn::parse2(type_space.to_stream()).unwrap())
     );
 
-    let final_contents = if schema_path.contains("driver.schema.json") {
-        post_process_driver_rs(contents)
-    } else if schema_path.contains("data.schema.json") {
-        post_process_data_rs(contents)
-    } else if schema_path.contains("config.schema.json") {
-        post_process_config_rs(contents)
-    } else {
-        contents
+    let final_contents = match schema_path {
+        DRIVER_SCHEMA_PATH => post_process_driver_rs(contents),
+        DATA_SCHEMA_PATH => post_process_data_rs(contents),
+        CONFIG_SCHEMA_PATH => post_process_config_rs(contents),
+        _ => contents,
     };
 
     std::fs::write(output_file, final_contents)
@@ -79,17 +86,11 @@ fn post_process_driver_rs(content: String) -> String {
 }
 
 fn post_process_data_rs(content: String) -> String {
-    // Replace HashMap with BTreeMap for maintaining sorted order of readings
     // Replace i64 with u8 in StatusReading
-    content
-        .replace(
-            "::std::collections::HashMap<::std::string::String, DeviceDataExtraValue>",
-            "::std::collections::BTreeMap<::std::string::String, DeviceDataExtraValue>",
-        )
-        .replace(
-            "pub l: ::std::option::Option<i64>",
-            "pub l: ::std::option::Option<u8>",
-        )
+    content.replace(
+        "pub l: ::std::option::Option<i64>",
+        "pub l: ::std::option::Option<u8>",
+    )
 }
 
 fn post_process_config_rs(content: String) -> String {
