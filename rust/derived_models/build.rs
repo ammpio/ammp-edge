@@ -26,9 +26,6 @@ fn main() {
         "src/data.rs",
         "Data types from data.schema.json",
     );
-
-    // Post-process config.rs to fix the drivers field type
-    post_process_config_rs();
 }
 
 fn generate_types_from_schema(schema_path: &str, output_path: &str, description: &str) {
@@ -62,6 +59,8 @@ fn generate_types_from_schema(schema_path: &str, output_path: &str, description:
         post_process_driver_rs(contents)
     } else if schema_path.contains("data.schema.json") {
         post_process_data_rs(contents)
+    } else if schema_path.contains("config.schema.json") {
+        post_process_config_rs(contents)
     } else {
         contents
     };
@@ -81,19 +80,19 @@ fn post_process_driver_rs(content: String) -> String {
 
 fn post_process_data_rs(content: String) -> String {
     // Replace HashMap with BTreeMap for maintaining sorted order of readings
-    content.replace(
-        "::std::collections::HashMap<::std::string::String, DeviceDataExtraValue>",
-        "::std::collections::BTreeMap<::std::string::String, DeviceDataExtraValue>",
-    )
+    // Replace i64 with u8 in StatusReading
+    content
+        .replace(
+            "::std::collections::HashMap<::std::string::String, DeviceDataExtraValue>",
+            "::std::collections::BTreeMap<::std::string::String, DeviceDataExtraValue>",
+        )
+        .replace(
+            "pub l: ::std::option::Option<i64>",
+            "pub l: ::std::option::Option<u8>",
+        )
 }
 
-fn post_process_config_rs() {
-    let config_file_path = "src/config.rs";
-
-    // Read the generated config.rs file
-    let content = std::fs::read_to_string(config_file_path)
-        .unwrap_or_else(|e| panic!("Failed to read generated config.rs: {}", e));
-
+fn post_process_config_rs(content: String) -> String {
     let mut modified_content = content;
 
     // Add import for DriverSchema and Typecast at the file level (after the header comments)
@@ -125,9 +124,7 @@ fn post_process_config_rs() {
     // Remove the duplicate Typecast enum from config.rs
     modified_content = remove_typecast_enum(modified_content);
 
-    // Write the modified content back
-    std::fs::write(config_file_path, modified_content)
-        .unwrap_or_else(|e| panic!("Failed to write modified config.rs: {}", e));
+    modified_content
 }
 
 fn remove_typecast_enum(content: String) -> String {

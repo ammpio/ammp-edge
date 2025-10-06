@@ -493,7 +493,7 @@ pub struct StatusReading {
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub c: ::std::option::Option<::std::string::String>,
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub l: ::std::option::Option<i64>,
+    pub l: ::std::option::Option<u8>,
 }
 impl ::std::convert::From<&StatusReading> for StatusReading {
     fn from(value: &StatusReading) -> Self {
