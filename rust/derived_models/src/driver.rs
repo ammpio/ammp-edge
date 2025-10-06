@@ -631,65 +631,6 @@ impl ::std::default::Default for FieldOpts {
         }
     }
 }
-///`NumericStatusLevel`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "title": "Numeric Status Level",
-///  "type": "integer",
-///  "format": "u8",
-///  "enum": [
-///    0,
-///    1,
-///    2,
-///    3,
-///    4
-///  ]
-///}
-/// ```
-/// </details>
-#[derive(::serde::Serialize, Clone, Debug, PartialEq)]
-#[serde(transparent)]
-pub struct NumericStatusLevel(u8);
-impl ::std::ops::Deref for NumericStatusLevel {
-    type Target = u8;
-    fn deref(&self) -> &u8 {
-        &self.0
-    }
-}
-impl ::std::convert::From<NumericStatusLevel> for u8 {
-    fn from(value: NumericStatusLevel) -> Self {
-        value.0
-    }
-}
-impl ::std::convert::From<&NumericStatusLevel> for NumericStatusLevel {
-    fn from(value: &NumericStatusLevel) -> Self {
-        value.clone()
-    }
-}
-impl ::std::convert::TryFrom<u8> for NumericStatusLevel {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: u8,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        if ![0_u8, 1_u8, 2_u8, 3_u8, 4_u8].contains(&value) {
-            Err("invalid value".into())
-        } else {
-            Ok(Self(value))
-        }
-    }
-}
-impl<'de> ::serde::Deserialize<'de> for NumericStatusLevel {
-    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
-    where
-        D: ::serde::Deserializer<'de>,
-    {
-        Self::try_from(<u8>::deserialize(deserializer)?)
-            .map_err(|e| { <D::Error as ::serde::de::Error>::custom(e.to_string()) })
-    }
-}
 ///Parse data based on serialization of readout
 ///
 /// <details><summary>JSON schema</summary>
@@ -922,16 +863,9 @@ impl ::std::convert::TryFrom<::std::string::String> for RegisterOrder {
 ///                  "format": "u8"
 ///                },
 ///                {
-///                  "title": "Numeric Status Level",
+///                  "title": "Staus Info Level",
 ///                  "type": "integer",
-///                  "format": "u8",
-///                  "enum": [
-///                    0,
-///                    1,
-///                    2,
-///                    3,
-///                    4
-///                  ]
+///                  "format": "u8"
 ///                }
 ///              ],
 ///              "maxItems": 2,
@@ -1029,16 +963,9 @@ impl ::std::convert::From<
 ///                "format": "u8"
 ///              },
 ///              {
-///                "title": "Numeric Status Level",
+///                "title": "Staus Info Level",
 ///                "type": "integer",
-///                "format": "u8",
-///                "enum": [
-///                  0,
-///                  1,
-///                  2,
-///                  3,
-///                  4
-///                ]
+///                "format": "u8"
 ///              }
 ///            ],
 ///            "maxItems": 2,
@@ -1076,7 +1003,7 @@ pub struct StatusInfoOptsValue {
     pub start_bit: ::std::option::Option<u8>,
     ///List of pairs that defines how to map a value to a status level (0=OK, 4=Critical)
     #[serde(default, skip_serializing_if = "::std::vec::Vec::is_empty")]
-    pub status_level_value_map: ::std::vec::Vec<(u8, NumericStatusLevel)>,
+    pub status_level_value_map: ::std::vec::Vec<(u8, u8)>,
     ///Number of 2-byte words for Modbus
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub words: ::std::option::Option<::std::num::NonZeroU16>,
