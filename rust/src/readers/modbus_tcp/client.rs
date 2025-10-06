@@ -164,7 +164,7 @@ impl ModbusTcpReader {
                     }
                 }
                 Err(e) => {
-                    log::warn!(
+                    log::error!(
                         "Failed to read raw data for '{}': {}",
                         config.variable_name,
                         e
