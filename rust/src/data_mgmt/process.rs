@@ -272,7 +272,7 @@ impl NumericValue {
 /// - MSB: bits are numbered from left to right (0 = leftmost/most significant)
 ///
 /// Returns a byte array containing the extracted value as an unsigned integer
-fn extract_bits(val_bytes: &[u8], field_config: &FieldOpts) -> Result<u16> {
+pub fn extract_bits(val_bytes: &[u8], field_config: &FieldOpts) -> Result<u16> {
     const SOURCE_BITS: usize = 16;
     const SOURCE_BYTES: usize = 2;
 
