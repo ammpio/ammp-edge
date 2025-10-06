@@ -438,6 +438,16 @@ impl ::std::convert::TryFrom<::std::string::String> for DataType {
 ///    },
 ///    "status_info": {
 ///      "title": "Status info items to be read",
+///      "examples": [
+///        {
+///          "oil_pressure": {
+///            "content": "Low Oil Pressure",
+///            "length_bits": 4,
+///            "register": 2049,
+///            "start_bit": 0
+///          }
+///        }
+///      ],
 ///      "type": "object",
 ///      "additionalProperties": {
 ///        "$ref": "#/definitions/status_info_opts"
@@ -808,119 +818,6 @@ impl ::std::convert::TryFrom<::std::string::String> for RegisterOrder {
 ///
 /// ```json
 ///{
-///  "title": "Status info opts",
-///  "examples": [
-///    {
-///      "oil_pressure": {
-///        "content": "Low Oil Pressure",
-///        "length_bits": 4,
-///        "register": 2049,
-///        "start_bit": 0
-///      }
-///    }
-///  ],
-///  "type": "object",
-///  "additionalProperties": {
-///    "allOf": [
-///      {
-///        "$ref": "#/definitions/common_modbus_reading_opts"
-///      },
-///      {
-///        "title": "Status info specific opts",
-///        "type": "object",
-///        "properties": {
-///          "content": {
-///            "title": "Content",
-///            "description": "Content for the status info",
-///            "examples": [
-///              "Low Oil Pressure",
-///              "High Temperature"
-///            ],
-///            "type": "string"
-///          },
-///          "status_level_value_map": {
-///            "title": "Status level value map",
-///            "description": "List of pairs that defines how to map a value to a status level (0=OK, 4=Critical)",
-///            "examples": [
-///              [
-///                [
-///                  0,
-///                  0
-///                ],
-///                [
-///                  1,
-///                  3
-///                ]
-///              ]
-///            ],
-///            "type": "array",
-///            "items": {
-///              "type": "array",
-///              "items": [
-///                {
-///                  "title": "Value",
-///                  "type": "integer",
-///                  "format": "u8"
-///                },
-///                {
-///                  "title": "Staus Info Level",
-///                  "type": "integer",
-///                  "format": "u8"
-///                }
-///              ],
-///              "maxItems": 2,
-///              "minItems": 2
-///            }
-///          }
-///        }
-///      }
-///    ]
-///  }
-///}
-/// ```
-/// </details>
-#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug, PartialEq)]
-#[serde(transparent)]
-pub struct StatusInfoOpts(
-    pub ::std::collections::HashMap<::std::string::String, StatusInfoOptsValue>,
-);
-impl ::std::ops::Deref for StatusInfoOpts {
-    type Target = ::std::collections::HashMap<
-        ::std::string::String,
-        StatusInfoOptsValue,
-    >;
-    fn deref(
-        &self,
-    ) -> &::std::collections::HashMap<::std::string::String, StatusInfoOptsValue> {
-        &self.0
-    }
-}
-impl ::std::convert::From<StatusInfoOpts>
-for ::std::collections::HashMap<::std::string::String, StatusInfoOptsValue> {
-    fn from(value: StatusInfoOpts) -> Self {
-        value.0
-    }
-}
-impl ::std::convert::From<&StatusInfoOpts> for StatusInfoOpts {
-    fn from(value: &StatusInfoOpts) -> Self {
-        value.clone()
-    }
-}
-impl ::std::convert::From<
-    ::std::collections::HashMap<::std::string::String, StatusInfoOptsValue>,
-> for StatusInfoOpts {
-    fn from(
-        value: ::std::collections::HashMap<::std::string::String, StatusInfoOptsValue>,
-    ) -> Self {
-        Self(value)
-    }
-}
-///`StatusInfoOptsValue`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
 ///  "allOf": [
 ///    {
 ///      "$ref": "#/definitions/common_modbus_reading_opts"
@@ -963,7 +860,7 @@ impl ::std::convert::From<
 ///                "format": "u8"
 ///              },
 ///              {
-///                "title": "Staus Info Level",
+///                "title": "Status Info Level",
 ///                "type": "integer",
 ///                "format": "u8"
 ///              }
@@ -979,7 +876,7 @@ impl ::std::convert::From<
 /// ```
 /// </details>
 #[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug, PartialEq)]
-pub struct StatusInfoOptsValue {
+pub struct StatusInfoOpts {
     ///Bit order, if extracting part of register
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub bit_order: ::std::option::Option<BitOrder>,
@@ -1008,12 +905,12 @@ pub struct StatusInfoOptsValue {
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub words: ::std::option::Option<::std::num::NonZeroU16>,
 }
-impl ::std::convert::From<&StatusInfoOptsValue> for StatusInfoOptsValue {
-    fn from(value: &StatusInfoOptsValue) -> Self {
+impl ::std::convert::From<&StatusInfoOpts> for StatusInfoOpts {
+    fn from(value: &StatusInfoOpts) -> Self {
         value.clone()
     }
 }
-impl ::std::default::Default for StatusInfoOptsValue {
+impl ::std::default::Default for StatusInfoOpts {
     fn default() -> Self {
         Self {
             bit_order: Default::default(),
@@ -1147,7 +1044,17 @@ pub mod defaults {
         }
     }
     pub(super) fn driver_schema_status_info_common() -> super::StatusInfoOpts {
-        super::StatusInfoOpts([].into_iter().collect())
+        super::StatusInfoOpts {
+            bit_order: Default::default(),
+            content: Default::default(),
+            fncode: Default::default(),
+            length_bits: Default::default(),
+            order: Default::default(),
+            register: Default::default(),
+            start_bit: Default::default(),
+            status_level_value_map: Default::default(),
+            words: Default::default(),
+        }
     }
 }
 
