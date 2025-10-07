@@ -130,9 +130,3 @@ pub struct Reading {
     pub field: String,
     pub value: RtValue,
 }
-
-// #[derive(Debug)]
-// pub struct DeviceReadings {
-//     pub device: Device,
-//     pub records: Vec<Record>,
-// }
