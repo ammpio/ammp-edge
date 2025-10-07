@@ -87,22 +87,21 @@ async fn organize_readings_by_device(
         }
 
         // Skip device if min_read_interval not met
-        if let Some(min_read_interval) = device.min_read_interval {
-            if !min_read_interval_elapsed(device_key, min_read_interval, reading_timestamp, &cache)
-            {
-                log::debug!(
-                    "Skipping device '{}'; min_read_interval of {}s not met",
-                    device_key,
-                    min_read_interval
-                );
-                continue;
-            }
+        if let Some(min_read_interval) = device.min_read_interval
+            && !min_read_interval_elapsed(device_key, min_read_interval, reading_timestamp, &cache)
+        {
+            log::debug!(
+                "Skipping device '{}'; min_read_interval of {}s not met",
+                device_key,
+                min_read_interval
+            );
+            continue;
         }
 
         // Add variable name to device reading job map
         dev_read_job_map
             .entry(device_key.clone())
-            .or_insert_with(|| DeviceReadingJob::new(&device))
+            .or_insert_with(|| DeviceReadingJob::new(device))
             .field_names
             .push(reading_config.var.clone());
     }
@@ -121,22 +120,21 @@ async fn organize_readings_by_device(
         }
 
         // Skip device if min_read_interval not met
-        if let Some(min_read_interval) = device.min_read_interval {
-            if !min_read_interval_elapsed(device_key, min_read_interval, reading_timestamp, &cache)
-            {
-                log::debug!(
-                    "Skipping device '{}'; min_read_interval of {}s not met",
-                    device_key,
-                    min_read_interval
-                );
-                continue;
-            }
+        if let Some(min_read_interval) = device.min_read_interval
+            && !min_read_interval_elapsed(device_key, min_read_interval, reading_timestamp, &cache)
+        {
+            log::debug!(
+                "Skipping device '{}'; min_read_interval of {}s not met",
+                device_key,
+                min_read_interval
+            );
+            continue;
         }
 
         // Add status info name to device reading job map
         dev_read_job_map
             .entry(device_key.clone())
-            .or_insert_with(|| DeviceReadingJob::new(&device))
+            .or_insert_with(|| DeviceReadingJob::new(device))
             .status_info_names
             .push(status_reading.r.clone());
     }
