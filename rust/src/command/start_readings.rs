@@ -50,13 +50,15 @@ pub async fn start_readings(once: bool) -> Result<()> {
 
     // Main reading loop
     loop {
-        // Wait for next cycle (skip wait on first iteration if once mode)
-        if read_roundtime && !once {
-            // Wall-clock aligned mode: re-sync to system clock each iteration to avoid drift
-            sleep_until_aligned_interval(read_interval).await;
-        } else {
-            // Non-aligned mode: use interval timer
-            interval_timer.as_mut().unwrap().tick().await;
+        if !once {
+            // Wait for next cycle (skip wait on first iteration if once mode)
+            if read_roundtime {
+                // Wall-clock aligned mode: re-sync to system clock each iteration to avoid drift
+                sleep_until_aligned_interval(read_interval).await;
+            } else {
+                // Non-aligned mode: use interval timer
+                interval_timer.as_mut().unwrap().tick().await;
+            }
         }
 
         log::debug!("Starting reading cycle");
