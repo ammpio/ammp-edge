@@ -203,7 +203,7 @@ impl ModbusTcpReader {
 
     pub async fn execute_readings(
         &mut self,
-        reading_configs: Vec<ReadingConfig>,
+        reading_configs: Vec<FieldReadingConfig>,
     ) -> Result<Vec<Reading>> {
         let mut readings = Vec::new();
 
@@ -225,7 +225,7 @@ impl ModbusTcpReader {
         Ok(readings)
     }
 
-    async fn read_single_value(&mut self, config: &ReadingConfig) -> Result<f64> {
+    async fn read_single_value(&mut self, config: &FieldReadingConfig) -> Result<f64> {
         // Read raw register values
         let raw_registers = self.read_registers(
             config.register,
@@ -251,7 +251,7 @@ impl ModbusTcpReader {
 }
 
 #[derive(Clone, Debug)]
-pub struct ReadingConfig {
+pub struct FieldReadingConfig {
     pub variable_name: String,
     pub register: u16,
     pub word_count: u16,
@@ -290,9 +290,9 @@ fn parse_register_value(bytes: &[u8], datatype: &str) -> Result<f64> {
 ```rust
 // In rust/src/readers/modbus_tcp/config.rs
 use crate::node_mgmt::Config;
-use super::ReadingConfig;
+use super::FieldReadingConfig;
 
-pub fn extract_modbus_devices(config: &Config) -> Vec<(String, ModbusDeviceConfig, Vec<ReadingConfig>)> {
+pub fn extract_modbus_devices(config: &Config) -> Vec<(String, ModbusDeviceConfig, Vec<FieldReadingConfig>)> {
     let mut modbus_devices = Vec::new();
 
     // Filter devices with reading_type = "modbustcp"
@@ -307,11 +307,11 @@ pub fn extract_modbus_devices(config: &Config) -> Vec<(String, ModbusDeviceConfi
     modbus_devices
 }
 
-pub fn extract_device_readings(config: &Config, device_id: &str) -> Vec<ReadingConfig> {
+pub fn extract_device_readings(config: &Config, device_id: &str) -> Vec<FieldReadingConfig> {
     config.readings.iter()
         .filter_map(|(reading_name, reading)| {
             if reading.device == device_id {
-                Some(ReadingConfig::from_config(reading_name, reading, config))
+                Some(FieldReadingConfig::from_config(reading_name, reading, config))
             } else {
                 None
             }
