@@ -236,6 +236,15 @@ async fn read_single_device(
         .map_err(|e| anyhow!("ModbusTCP device '{}' reading failed: {}", device.key, e))
 }
 
+/// Represents the readings for a single device
+///
+/// This is used to organize the readings by device and pass to the ModbusTCP reader.
+struct DeviceReadings {
+    device: Device,
+    field_names: Vec<String>,
+    status_info_names: Vec<String>,
+}
+
 /// Identifies a unique physical device by host/mac and port
 ///
 /// Two devices are considered the same physical device if they have:
