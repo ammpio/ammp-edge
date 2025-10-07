@@ -88,14 +88,11 @@ async fn organize_readings_by_device(
 
         // Skip device if min_read_interval not met
         if let Some(min_read_interval) = device.min_read_interval {
-            let cache_key = format!("{}/{}", keys::LAST_READING_TS_FOR_DEV_PFX, device_key);
-            let last_timestamp: i64 = cache.get(&cache_key)?.unwrap_or(0);
-            let elapsed = reading_timestamp.timestamp() - last_timestamp;
-            if elapsed < min_read_interval {
+            if !min_read_interval_elapsed(device_key, min_read_interval, reading_timestamp, &cache)
+            {
                 log::debug!(
-                    "Skipping device '{}'; min_read_interval not met: ({}s < {}s)",
+                    "Skipping device '{}'; min_read_interval of {}s not met",
                     device_key,
-                    elapsed,
                     min_read_interval
                 );
                 continue;
@@ -201,6 +198,28 @@ async fn get_device_lock(physical_id: PhysicalDeviceId) -> Arc<Mutex<()>> {
         .entry(physical_id)
         .or_insert_with(|| Arc::new(Mutex::new(())))
         .clone()
+}
+
+fn min_read_interval_elapsed(
+    device_key: &str,
+    min_read_interval: i64,
+    reading_timestamp: DateTime<Utc>,
+    cache: &KVDb,
+) -> bool {
+    let cache_key = format!("{}/{}", keys::LAST_READING_TS_FOR_DEV_PFX, device_key);
+    let last_timestamp: i64 = match cache.get(&cache_key) {
+        Ok(value) => value.unwrap_or(0),
+        Err(e) => {
+            log::error!(
+                "Error obtaining last reading timestamp for device '{}': {}",
+                device_key,
+                e
+            );
+            return true;
+        }
+    };
+    let elapsed = reading_timestamp.timestamp() - last_timestamp;
+    elapsed >= min_read_interval
 }
 
 /// Read a single ModbusTCP device
