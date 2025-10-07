@@ -101,7 +101,9 @@ async fn organize_readings_by_device(
         // Add variable name to device reading job map
         dev_read_job_map
             .entry(device_key.clone())
-            .or_insert_with(|| DeviceReadingJob::new(device))
+            .or_insert_with(|| {
+                DeviceReadingJob::new_from_device_and_key(device, device_key.clone())
+            })
             .field_names
             .push(reading_config.var.clone());
     }
@@ -134,10 +136,14 @@ async fn organize_readings_by_device(
         // Add status info name to device reading job map
         dev_read_job_map
             .entry(device_key.clone())
-            .or_insert_with(|| DeviceReadingJob::new(device))
+            .or_insert_with(|| {
+                DeviceReadingJob::new_from_device_and_key(device, device_key.clone())
+            })
             .status_info_names
             .push(status_reading.r.clone());
     }
+
+    log::trace!("Assembled device reading job map: {:?}", dev_read_job_map);
 
     Ok(dev_read_job_map)
 }
@@ -272,7 +278,7 @@ async fn read_single_device(
 /// Represents the readings for a single device
 ///
 /// This is used to organize the readings by device and pass to the ModbusTCP reader.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct DeviceReadingJob {
     pub device: Device,
     pub field_names: Vec<String>,
@@ -281,10 +287,10 @@ pub struct DeviceReadingJob {
 
 impl DeviceReadingJob {
     /// Create a new DeviceReadingJob; device does not need to have a key set yet
-    pub fn new(device: &Device) -> Self {
+    pub fn new_from_device_and_key(device: &Device, device_key: String) -> Self {
         Self {
             device: Device {
-                key: device.key.clone(),
+                key: device_key,
                 ..device.clone()
             },
             field_names: Vec::new(),
