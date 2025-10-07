@@ -47,17 +47,31 @@ pub fn save_last_readings(readings: Vec<DeviceData>, timestamp: i64) -> Result<(
     cache.set(keys::LAST_READINGS, &final_readings)?;
     cache.set(keys::LAST_READINGS_TS, timestamp)?;
 
+    log::debug!(
+        "[t: {}] Saved {} total readings to cache",
+        final_readings.len(),
+        timestamp
+    );
+
     // Save per-device timestamps
     for device_id in device_ids {
         let key = format!("{}/{}", keys::LAST_READING_TS_FOR_DEV_PFX, device_id);
         cache.set(&key, timestamp)?;
     }
 
-    log::debug!(
-        "[t: {}] Saved {} total readings to cache",
-        final_readings.len(),
-        timestamp
-    );
+    // Save status info levels
+    for reading in final_readings {
+        let device_id = reading.d.unwrap_or_default();
+        for status_info in reading.s {
+            let key = format!(
+                "{}/{}/{}",
+                keys::LAST_STATUS_INFO_LEVEL_PFX,
+                device_id,
+                status_info.c
+            );
+            cache.set(&key, status_info.l)?;
+        }
+    }
 
     Ok(())
 }
