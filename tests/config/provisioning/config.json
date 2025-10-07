@@ -70,6 +70,13 @@
         "fncode": 3,
         "datatype": "float"
       },
+      "status_info_common": {
+        "fncode": 3,
+        "words": 1,
+        "bit_order": "lsb",
+        "length_bits": 1,
+        "status_level_value_map": [[0, 0], [1, 3]]
+      },
       "fields": {
         "P_L1": {
           "unit": "W",
@@ -100,6 +107,26 @@
           "bit_order": "msb",
           "description": "Alarm state"
         }
+      },
+      "status_info": {
+        "relay_fault": {
+          "content": "Relay Fault Detected",
+          "register": 200,
+          "start_bit": 2
+        },
+        "high_temp_warning": {
+          "content": "High Temperature Warning",
+          "register": 202,
+          "start_bit": 9,
+          "status_level_value_map": [[0, 0], [1, 2]]
+        },
+        "alarm_state": {
+          "content": "System Alarm",
+          "register": 201,
+          "start_bit": 4,
+          "length_bits": 4,
+          "bit_order": "msb"
+        }
       }
     }
   },
@@ -117,6 +144,20 @@
     "ems_relay_status": {"device": "ems", "var": "relay_status"},
     "ems_alert_state": {"device": "ems", "var": "alert_state"}
   },
+  "status_readings": [
+    {
+      "d": "ems",
+      "r": "relay_fault"
+    },
+    {
+      "d": "ems",
+      "r": "high_temp_warning"
+    },
+    {
+      "d": "ems",
+      "r": "alarm_state"
+    }
+  ],
   "timestamp": "2022-08-15T13:03:17Z",
   "read_interval": 10,
   "read_roundtime": true,
