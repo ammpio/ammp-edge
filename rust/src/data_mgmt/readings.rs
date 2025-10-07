@@ -64,11 +64,11 @@ pub async fn get_readings(
 async fn organize_readings_by_device(
     reading_timestamp: DateTime<Utc>,
     config: &Config,
-) -> Result<HashMap<String, (Device, Vec<String>)>> {
-    let mut device_readings_map: HashMap<String, (Device, Vec<String>)> = HashMap::new();
+) -> Result<HashMap<String, DeviceReadingJob>> {
+    let mut dev_read_job_map: HashMap<String, DeviceReadingJob> = HashMap::new();
     let cache = KVDb::new(kvpath::SQLITE_CACHE.as_path())?;
 
-    // Iterate through all configured readings
+    // Iterate through all configured field readings
     for (reading_name, reading_config) in &config.readings {
         // Get the device this reading refers to
         let device_key = &reading_config.device;
@@ -99,32 +99,60 @@ async fn organize_readings_by_device(
             }
         }
 
-        // Create device with key populated
-        let device_with_key = Device {
-            key: device_key.clone(),
-            ..device.clone()
-        };
-
-        // Add variable name to device map
-        device_readings_map
+        // Add variable name to device reading job map
+        dev_read_job_map
             .entry(device_key.clone())
-            .or_insert_with(|| (device_with_key, Vec::new()))
-            .1
+            .or_insert_with(|| DeviceReadingJob::new(&device))
+            .field_names
             .push(reading_config.var.clone());
     }
 
-    Ok(device_readings_map)
+    // Iterate through all configured status readings
+    for status_reading in &config.status_readings {
+        let device_key = &status_reading.d;
+        let Some(device) = config.devices.get(device_key) else {
+            log::error!("Status reading references unknown device '{}'", device_key);
+            continue;
+        };
+
+        // Skip explicitly disabled devices
+        if !device.enabled {
+            continue;
+        }
+
+        // Skip device if min_read_interval not met
+        if let Some(min_read_interval) = device.min_read_interval {
+            if !min_read_interval_elapsed(device_key, min_read_interval, reading_timestamp, &cache)
+            {
+                log::debug!(
+                    "Skipping device '{}'; min_read_interval of {}s not met",
+                    device_key,
+                    min_read_interval
+                );
+                continue;
+            }
+        }
+
+        // Add status info name to device reading job map
+        dev_read_job_map
+            .entry(device_key.clone())
+            .or_insert_with(|| DeviceReadingJob::new(&device))
+            .status_info_names
+            .push(status_reading.r.clone());
+    }
+
+    Ok(dev_read_job_map)
 }
 
 /// Process all ModbusTCP devices
 async fn read_modbus_devices(
     config_drivers: &HashMap<String, DriverSchema>,
-    device_readings_map: &HashMap<String, (Device, Vec<String>)>,
+    dev_read_job_map: &HashMap<String, DeviceReadingJob>,
 ) -> Result<Vec<DeviceReading>> {
     // Filter ModbusTCP devices
-    let modbus_devices: Vec<_> = device_readings_map
+    let modbus_devices: Vec<_> = dev_read_job_map
         .iter()
-        .filter(|(_, (device, _))| device.reading_type == ReadingType::Modbustcp)
+        .filter(|(_, dev_read_job)| dev_read_job.device.reading_type == ReadingType::Modbustcp)
         .collect();
 
     if modbus_devices.is_empty() {
@@ -137,9 +165,7 @@ async fn read_modbus_devices(
     // Mutex ensures devices sharing the same physical hardware read sequentially
     let reading_tasks = modbus_devices
         .into_iter()
-        .map(|(_, (device, variable_names))| {
-            spawn_device_reading_task(device.clone(), variable_names.clone(), config_drivers)
-        })
+        .map(|(_, dev_read_job)| spawn_device_reading_job(dev_read_job.clone(), config_drivers))
         .collect::<Vec<_>>();
 
     // Execute all tasks with timeout and collect results
@@ -160,31 +186,30 @@ async fn read_modbus_devices(
 }
 
 /// Spawn a task to read a single device, using a mutex to prevent concurrent reads of the same physical device
-fn spawn_device_reading_task(
-    device: Device,
-    variable_names: Vec<String>,
+fn spawn_device_reading_job(
+    dev_read_job: DeviceReadingJob,
     config_drivers: &HashMap<String, DriverSchema>,
 ) -> tokio::task::JoinHandle<DeviceReading> {
     let config_drivers = config_drivers.clone();
 
     tokio::spawn(async move {
         // Get or create a mutex for this physical device
-        let lock = get_device_lock(PhysicalDeviceId::from_device(&device)).await;
+        let lock = get_device_lock(PhysicalDeviceId::from_device(&dev_read_job.device)).await;
 
         // Acquire the lock - this ensures only one task reads this physical device at a time
         let _guard = lock.lock().await;
 
         log::debug!(
             "Acquired lock for physical device, reading '{}'",
-            device.key
+            dev_read_job.device.key
         );
 
         // Perform the actual read
-        match read_single_device(&config_drivers, &device, variable_names).await {
+        match read_single_device(&dev_read_job, &config_drivers).await {
             Ok(reading) => reading,
             Err(e) => {
                 log::warn!("Device reading failed: {}", e);
-                DeviceReading::from_device(&device)
+                DeviceReading::from_device(&dev_read_job.device)
             }
         }
         // Lock is automatically released when _guard is dropped
@@ -224,25 +249,50 @@ fn min_read_interval_elapsed(
 
 /// Read a single ModbusTCP device
 async fn read_single_device(
+    dev_read_job: &DeviceReadingJob,
     config_drivers: &HashMap<String, DriverSchema>,
-    device: &Device,
-    variable_names: Vec<String>,
 ) -> Result<DeviceReading> {
-    let driver = load_driver(config_drivers, &device.driver)
-        .map_err(|e| anyhow!("Failed to load driver '{}': {}", device.driver, e))?;
+    let driver = load_driver(config_drivers, &dev_read_job.device.driver).map_err(|e| {
+        anyhow!(
+            "Failed to load driver '{}': {}",
+            dev_read_job.device.driver,
+            e
+        )
+    })?;
 
-    modbus_tcp::read_device(device, &driver, &variable_names)
+    modbus_tcp::read_device(dev_read_job, &driver)
         .await
-        .map_err(|e| anyhow!("ModbusTCP device '{}' reading failed: {}", device.key, e))
+        .map_err(|e| {
+            anyhow!(
+                "ModbusTCP device '{}' reading failed: {}",
+                dev_read_job.device.key,
+                e
+            )
+        })
 }
 
 /// Represents the readings for a single device
 ///
 /// This is used to organize the readings by device and pass to the ModbusTCP reader.
-struct DeviceReadings {
-    device: Device,
-    field_names: Vec<String>,
-    status_info_names: Vec<String>,
+#[derive(Clone)]
+pub struct DeviceReadingJob {
+    pub device: Device,
+    pub field_names: Vec<String>,
+    pub status_info_names: Vec<String>,
+}
+
+impl DeviceReadingJob {
+    /// Create a new DeviceReadingJob; device does not need to have a key set yet
+    pub fn new(device: &Device) -> Self {
+        Self {
+            device: Device {
+                key: device.key.clone(),
+                ..device.clone()
+            },
+            field_names: Vec::new(),
+            status_info_names: Vec::new(),
+        }
+    }
 }
 
 /// Identifies a unique physical device by host/mac and port
@@ -350,12 +400,17 @@ mod tests {
         assert_eq!(result.len(), 1);
         assert!(result.contains_key("test_device"));
 
-        let (device, variable_names) = &result["test_device"];
-        assert_eq!(device.key, "test_device");
-        assert_eq!(variable_names.len(), 2);
+        let dev_read_job = &result["test_device"];
+        assert_eq!(dev_read_job.device.key, "test_device");
+        assert_eq!(dev_read_job.field_names.len(), 2);
+        assert_eq!(dev_read_job.status_info_names.len(), 0);
 
-        assert!(variable_names.contains(&"voltage_L1".to_string()));
-        assert!(variable_names.contains(&"power_total".to_string()));
+        assert!(dev_read_job.field_names.contains(&"voltage_L1".to_string()));
+        assert!(
+            dev_read_job
+                .field_names
+                .contains(&"power_total".to_string())
+        );
     }
 
     #[test]
