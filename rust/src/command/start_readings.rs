@@ -19,7 +19,9 @@ use crate::{
 /// Start the continuous reading cycle for ModbusTCP devices
 ///
 /// Other device types like SMA HyCon CSV have their own dedicated commands.
-pub async fn start_readings() -> Result<()> {
+///
+/// If `once` is true, only one reading cycle will be executed before returning.
+pub async fn start_readings(once: bool) -> Result<()> {
     log::info!("Starting ModbusTCP reading cycle...");
 
     // Load initial configuration from key-value store
@@ -48,8 +50,8 @@ pub async fn start_readings() -> Result<()> {
 
     // Main reading loop
     loop {
-        // Wait for next cycle
-        if read_roundtime {
+        // Wait for next cycle (skip wait on first iteration if once mode)
+        if read_roundtime && !once {
             // Wall-clock aligned mode: re-sync to system clock each iteration to avoid drift
             sleep_until_aligned_interval(read_interval).await;
         } else {
@@ -68,11 +70,19 @@ pub async fn start_readings() -> Result<()> {
             }
         }
 
+        // Exit after one cycle if in once mode
+        if once {
+            log::info!("Single cycle complete, exiting");
+            break;
+        }
+
         // Update configuration from key-value store
         config = node_mgmt::config::get(&kvs)?;
         read_interval = config.read_interval as u32;
         // NB: read_roundtime is immutable
     }
+
+    Ok(())
 }
 
 /// Execute one iteration of the reading cycle

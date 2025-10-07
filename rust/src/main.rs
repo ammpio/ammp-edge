@@ -39,8 +39,9 @@ fn main() -> Result<()> {
         Some(CMD_MQTT_SUB_CFG_CMD) => command::mqtt_sub_cfg_cmd(),
         Some(CMD_READ_SMA_HYCON_CSV) => command::read_sma_hycon_csv(),
         Some(CMD_START_READINGS) => {
+            let once = args.contains("--once");
             let rt = tokio::runtime::Runtime::new()?;
-            rt.block_on(command::start_readings())
+            rt.block_on(command::start_readings(once))
         }
         Some(CMD_WAIT_FOR_TIME_SOURCE) => command::wait_for_time_source(),
         _ => Err(anyhow!(
