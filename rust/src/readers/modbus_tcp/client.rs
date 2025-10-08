@@ -163,7 +163,6 @@ impl ModbusTcpReader {
             registers
         );
 
-        // Store in cache
         self.cache.insert(cache_key, registers.clone());
 
         Ok(registers)
