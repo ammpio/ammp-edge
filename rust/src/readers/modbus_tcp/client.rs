@@ -1,5 +1,6 @@
 use anyhow::{Result, anyhow};
 use backoff::ExponentialBackoffBuilder;
+use std::collections::HashMap;
 use std::net::ToSocketAddrs;
 use tokio::time::Duration;
 use tokio_modbus::prelude::*;
@@ -16,6 +17,7 @@ pub struct ModbusTcpReader {
     context: tokio_modbus::client::Context,
     register_offset: u16,
     timeout: Duration,
+    cache: HashMap<(u8, u16, u16), Vec<u16>>,
 }
 
 impl ModbusTcpReader {
@@ -46,6 +48,7 @@ impl ModbusTcpReader {
             context: ctx,
             register_offset: config.register_offset,
             timeout: config.timeout,
+            cache: HashMap::new(),
         })
     }
 
@@ -104,6 +107,17 @@ impl ModbusTcpReader {
         count: u16,
         function_code: u8,
     ) -> Result<Vec<u16>> {
+        let cache_key = (function_code, register, count);
+        if let Some(cached) = self.cache.get(&cache_key) {
+            log::debug!(
+                "Cache hit for register {} (fn={}, count={})",
+                register,
+                function_code,
+                count
+            );
+            return Ok(cached.clone());
+        }
+
         log::debug!(
             "Reading {} registers from address {} with function code {}",
             count,
@@ -148,6 +162,10 @@ impl ModbusTcpReader {
             registers.len(),
             registers
         );
+
+        // Store in cache
+        self.cache.insert(cache_key, registers.clone());
+
         Ok(registers)
     }
 
