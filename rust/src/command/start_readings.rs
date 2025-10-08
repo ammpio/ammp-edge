@@ -6,9 +6,9 @@ use tokio::time::{Duration, interval, sleep};
 
 use crate::{
     data_mgmt::{
-        last_reading_cache::save_last_readings,
+        last_reading_cache::{save_last_readings, save_last_status_info_levels},
         output::apply_outputs_to_device_readings,
-        payload::{Metadata, payloads_from_device_readings},
+        payload::{Metadata, filter_status_info_in_payloads, payloads_from_device_readings},
         publish::publish_readings_with_publisher,
         readings::get_readings,
     },
@@ -128,6 +128,17 @@ async fn execute_reading_cycle(
     // Convert readings to payloads for publishing and caching
     let payloads = payloads_from_device_readings(all_readings.clone(), Some(metadata.clone()));
 
+    // Save readings to cache (merging if same timestamp)
+    for payload in &payloads {
+        if let Err(e) = save_last_readings(payload.r.clone(), payload.t) {
+            log::warn!("Failed to save readings to cache: {}", e);
+        }
+    }
+
+    // Before publishing, filter status info in payloads to remove readings
+    // where the level matches the last cached level
+    let payloads = filter_status_info_in_payloads(payloads);
+
     // Publish readings to MQTT
     publish_readings_with_publisher(mqtt_publisher, &payloads).await?;
     log::info!(
@@ -138,8 +149,8 @@ async fn execute_reading_cycle(
 
     // Save readings to cache (merging if same timestamp)
     for payload in &payloads {
-        if let Err(e) = save_last_readings(payload.r.clone(), payload.t) {
-            log::warn!("Failed to save readings to cache: {}", e);
+        if let Err(e) = save_last_status_info_levels(&payload.r) {
+            log::warn!("Failed to save status info levels to cache: {}", e);
         }
     }
 

@@ -59,10 +59,15 @@ pub fn save_last_readings(readings: Vec<DeviceData>, timestamp: i64) -> Result<(
         cache.set(&key, timestamp)?;
     }
 
-    // Save status info levels
-    for reading in final_readings {
-        let device_id = reading.d.unwrap_or_default();
-        for status_info in reading.s {
+    Ok(())
+}
+
+pub fn save_last_status_info_levels(readings: &[DeviceData]) -> Result<()> {
+    let cache = KVDb::new(kvpath::SQLITE_CACHE.as_path())?;
+
+    for reading in readings {
+        let device_id = reading.d.as_deref().unwrap_or("");
+        for status_info in &reading.s {
             let key = format!(
                 "{}/{}/{}",
                 keys::LAST_STATUS_INFO_LEVEL_PFX,
