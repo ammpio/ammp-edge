@@ -51,7 +51,7 @@
     },
     "sma_hycon_csv": {
       "address": {
-        "base_url": "ftp://testuser:testpwd@localhost:21/fsc/log/DataFast/",
+        "base_url": "ftp://testuser:TestPWD123!@localhost:21/fsc/log/DataFast/",
         "timezone": "Europe/Amsterdam"
       },
       "device_model": "gen_control_sma_hycon",
