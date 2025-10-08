@@ -160,7 +160,7 @@ mod tests {
 
     #[test]
     fn test_process_status_info_value_not_in_map() {
-        // When a value is not in the map, it's used as-is (not an error)
+        // When a value is not in the map, it returns an error
         let bytes = [0x00, 0xFF]; // 0b00000000_11111111 = 255
 
         let status_info = create_test_status_info(
@@ -171,10 +171,13 @@ mod tests {
         );
 
         let result = process_status_info(&bytes, &status_info);
-        assert!(result.is_ok());
-        let status = result.unwrap();
-        assert_eq!(status.c, "Test Status");
-        assert_eq!(status.l, 255); // Value used directly as level
+        assert!(result.is_err());
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Value 255 not found in status level map")
+        );
     }
 
     #[test]
