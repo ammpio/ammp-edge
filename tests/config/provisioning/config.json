@@ -125,7 +125,14 @@
           "register": 201,
           "start_bit": 4,
           "length_bits": 4,
-          "bit_order": "msb"
+          "bit_order": "msb",
+          "status_level_value_map": [[0, 0], [1, 1], [2, 2], [3, 3], [4, 4]]
+        },
+        "unavailable": {
+          "content": "Alarm not implemented",
+          "register": 202,
+          "start_bit": 12,
+          "length_bits": 4
         }
       }
     }
@@ -156,6 +163,10 @@
     {
       "d": "ems",
       "r": "alarm_state"
+    },
+    {
+      "d": "ems",
+      "r": "unavailable"
     }
   ],
   "timestamp": "2022-08-15T13:03:17Z",
