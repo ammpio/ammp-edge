@@ -100,6 +100,97 @@ impl ModbusTcpReader {
         .map_err(|e| anyhow!("Failed to connect after retries: {}", e))
     }
 
+    /// Execute multiple reading configurations and return processed readings
+    /// Returns (field_readings, status_readings)
+    pub async fn execute_readings(
+        &mut self,
+        field_configs: Vec<FieldReadingConfig>,
+        status_info_configs: Vec<StatusReadingConfig>,
+    ) -> Result<(Vec<Reading>, Vec<StatusReading>)> {
+        let mut field_readings = Vec::new();
+        let mut status_readings = Vec::new();
+
+        log::trace!("Executing field readings: {:?}", field_configs);
+        log::trace!("Executing status info readings: {:?}", status_info_configs);
+
+        // Process field readings
+        for config in field_configs {
+            match self.read_registers_into_bytes(&config).await {
+                Ok(raw_bytes) => {
+                    // Process the raw bytes using the data processing pipeline
+                    match crate::data_mgmt::process::process_reading(
+                        &raw_bytes,
+                        &config.field_config,
+                    ) {
+                        Ok(RtValue::None) => {
+                            log::debug!("Reading '{}' returned no value", config.name);
+                            // Skip None values
+                        }
+                        Ok(value) => {
+                            log::debug!("Successfully read {}: {:?}", config.name, value);
+                            field_readings.push(Reading {
+                                field: config.name.clone(),
+                                value,
+                            });
+                        }
+                        Err(e) => {
+                            log::warn!("Failed to process reading '{}': {}", config.name, e);
+                            // Continue with other readings even if one fails
+                        }
+                    }
+                }
+                Err(e) => {
+                    log::error!("Failed to read raw data for '{}': {}", config.name, e);
+                    // Continue with other readings even if one fails
+                }
+            }
+        }
+
+        // Process status info readings
+        for config in status_info_configs {
+            match self.read_registers_into_bytes(&config).await {
+                Ok(raw_bytes) => {
+                    // Process the raw bytes using the status info processing pipeline
+                    match process_status_info(&raw_bytes, &config.status_info_config) {
+                        Ok(status_reading) => {
+                            log::debug!(
+                                "Successfully read status info {}: {:?}",
+                                config.name,
+                                status_reading
+                            );
+                            status_readings.push(status_reading);
+                        }
+                        Err(e) => {
+                            log::warn!("Failed to process status info '{}': {}", config.name, e);
+                            // Continue with other readings even if one fails
+                        }
+                    }
+                }
+                Err(e) => {
+                    log::error!("Failed to read raw data for '{}': {}", config.name, e);
+                    // Continue with other readings even if one fails
+                }
+            }
+        }
+
+        Ok((field_readings, status_readings))
+    }
+
+    /// Read register values and convert them to bytes according to configuration
+    /// Generic over any type implementing ModbusReading
+    async fn read_registers_into_bytes<T: ModbusReading>(&mut self, config: &T) -> Result<Vec<u8>> {
+        // Read raw register values
+        let register_to_read = self.register_offset + config.register();
+        let raw_registers = self
+            .read_registers(register_to_read, config.words(), config.fncode())
+            .await?;
+
+        // Convert registers to bytes with proper order
+        let bytes = registers_to_bytes(&raw_registers, config.order())?;
+
+        Ok(bytes)
+    }
+
     /// Read raw register values from the device
     pub async fn read_registers(
         &mut self,
@@ -166,97 +257,6 @@ impl ModbusTcpReader {
         self.cache.insert(cache_key, registers.clone());
 
         Ok(registers)
-    }
-
-    /// Execute multiple reading configurations and return processed readings
-    /// Returns (field_readings, status_readings)
-    pub async fn execute_readings(
-        &mut self,
-        field_configs: Vec<FieldReadingConfig>,
-        status_info_configs: Vec<StatusReadingConfig>,
-    ) -> Result<(Vec<Reading>, Vec<StatusReading>)> {
-        let mut field_readings = Vec::new();
-        let mut status_readings = Vec::new();
-
-        log::trace!("Executing field readings: {:?}", field_configs);
-        log::trace!("Executing status info readings: {:?}", status_info_configs);
-
-        // Process field readings
-        for config in field_configs {
-            match self.read_raw_registers(&config).await {
-                Ok(raw_bytes) => {
-                    // Process the raw bytes using the data processing pipeline
-                    match crate::data_mgmt::process::process_reading(
-                        &raw_bytes,
-                        &config.field_config,
-                    ) {
-                        Ok(RtValue::None) => {
-                            log::debug!("Reading '{}' returned no value", config.name);
-                            // Skip None values
-                        }
-                        Ok(value) => {
-                            log::debug!("Successfully read {}: {:?}", config.name, value);
-                            field_readings.push(Reading {
-                                field: config.name.clone(),
-                                value,
-                            });
-                        }
-                        Err(e) => {
-                            log::warn!("Failed to process reading '{}': {}", config.name, e);
-                            // Continue with other readings even if one fails
-                        }
-                    }
-                }
-                Err(e) => {
-                    log::error!("Failed to read raw data for '{}': {}", config.name, e);
-                    // Continue with other readings even if one fails
-                }
-            }
-        }
-
-        // Process status info readings
-        for config in status_info_configs {
-            match self.read_raw_registers(&config).await {
-                Ok(raw_bytes) => {
-                    // Process the raw bytes using the status info processing pipeline
-                    match process_status_info(&raw_bytes, &config.status_info_config) {
-                        Ok(status_reading) => {
-                            log::debug!(
-                                "Successfully read status info {}: {:?}",
-                                config.name,
-                                status_reading
-                            );
-                            status_readings.push(status_reading);
-                        }
-                        Err(e) => {
-                            log::warn!("Failed to process status info '{}': {}", config.name, e);
-                            // Continue with other readings even if one fails
-                        }
-                    }
-                }
-                Err(e) => {
-                    log::error!("Failed to read raw data for '{}': {}", config.name, e);
-                    // Continue with other readings even if one fails
-                }
-            }
-        }
-
-        Ok((field_readings, status_readings))
-    }
-
-    /// Read raw register values and convert them to bytes according to configuration
-    /// Generic over any type implementing ModbusReading
-    async fn read_raw_registers<T: ModbusReading>(&mut self, config: &T) -> Result<Vec<u8>> {
-        // Read raw register values
-        let register_to_read = self.register_offset + config.register();
-        let raw_registers = self
-            .read_registers(register_to_read, config.words(), config.fncode())
-            .await?;
-
-        // Convert registers to bytes with proper order
-        let bytes = registers_to_bytes(&raw_registers, config.order())?;
-
-        Ok(bytes)
     }
 }
 
