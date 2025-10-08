@@ -497,6 +497,10 @@ pub mod error {
 ///      "type": "array",
 ///      "items": {
 ///        "type": "object",
+///        "required": [
+///          "d",
+///          "r"
+///        ],
 ///        "properties": {
 ///          "d": {
 ///            "title": "Device key",
@@ -1260,6 +1264,10 @@ impl<'de> ::serde::Deserialize<'de> for SerialDeviceBaudRate {
 /// ```json
 ///{
 ///  "type": "object",
+///  "required": [
+///    "d",
+///    "r"
+///  ],
 ///  "properties": {
 ///    "d": {
 ///      "title": "Device key",
@@ -1282,22 +1290,12 @@ impl<'de> ::serde::Deserialize<'de> for SerialDeviceBaudRate {
 /// </details>
 #[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug, PartialEq)]
 pub struct StatusReadingsItem {
-    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub d: ::std::option::Option<::std::string::String>,
-    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub r: ::std::option::Option<::std::string::String>,
+    pub d: ::std::string::String,
+    pub r: ::std::string::String,
 }
 impl ::std::convert::From<&StatusReadingsItem> for StatusReadingsItem {
     fn from(value: &StatusReadingsItem) -> Self {
         value.clone()
-    }
-}
-impl ::std::default::Default for StatusReadingsItem {
-    fn default() -> Self {
-        Self {
-            d: Default::default(),
-            r: Default::default(),
-        }
     }
 }
 /// Generation of default values for serde.

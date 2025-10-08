@@ -8,4 +8,5 @@ pub const NODE_ID: &str = "node_id";
 pub const LAST_READINGS: &str = "last_readings";
 pub const LAST_READINGS_TS: &str = "last_readings_ts";
 pub const LAST_READING_TS_FOR_DEV_PFX: &str = "last_reading_ts_for_dev";
+pub const LAST_STATUS_INFO_LEVEL_PFX: &str = "last_status_info_level";
 pub const ENV_NET_MAC_PFX: &str = "env/net/mac";

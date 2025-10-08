@@ -9,7 +9,10 @@ use std::time::Duration;
 // Import the generated types through domain module re-exports
 use crate::helpers::arp_get_ip_from_mac;
 use crate::node_mgmt::config::{Device, DeviceAddress, ReadingType};
-use crate::node_mgmt::drivers::{DriverSchema, FieldOpts, resolve_field_definition};
+use crate::node_mgmt::drivers::{
+    DriverSchema, FieldOpts, RegisterOrder, StatusInfoOpts, resolve_field_definition,
+    resolve_status_info_definition,
+};
 
 use super::defaults;
 
@@ -26,14 +29,14 @@ pub struct ModbusDeviceConfig {
 
 impl ModbusDeviceConfig {
     /// Create device config from the main configuration
-    pub fn from_config(device_key: &str, device: &Device) -> Result<Self> {
+    pub fn from_device(device: &Device) -> Result<Self> {
         // Ensure this is a ModbusTCP device
         match device.reading_type {
             ReadingType::Modbustcp => {}
             other => {
                 return Err(anyhow!(
                     "Device {} has reading type {:?}, not modbustcp",
-                    device_key,
+                    device.key,
                     other
                 ));
             }
@@ -42,11 +45,11 @@ impl ModbusDeviceConfig {
         let address = device.address.as_ref().ok_or_else(|| {
             anyhow!(
                 "ModbusTCP device {} missing address configuration",
-                device_key
+                device.key
             )
         })?;
 
-        let host = Self::get_host(device_key, address)?;
+        let host = Self::get_host(&device.key, address)?;
 
         let port = address.port.map(|p| p as u16).unwrap_or(defaults::PORT);
 
@@ -66,7 +69,7 @@ impl ModbusDeviceConfig {
             .unwrap_or(defaults::TIMEOUT);
 
         Ok(ModbusDeviceConfig {
-            device_key: device_key.to_string(),
+            device_key: device.key.clone(),
             host,
             port,
             unit_id,
@@ -132,17 +135,27 @@ impl ModbusDeviceConfig {
     }
 }
 
+/// Trait for ModbusTCP reading configurations
+/// Provides common interface for register reading parameters
+pub trait ModbusReading {
+    fn name(&self) -> &str;
+    fn fncode(&self) -> u8;
+    fn register(&self) -> u16;
+    fn words(&self) -> u16;
+    fn order(&self) -> Option<&RegisterOrder>;
+}
+
 /// Configuration for reading a specific field
 #[derive(Clone, Debug)]
-pub struct ReadingConfig {
-    pub variable_name: String,
-    pub field_config: FieldOpts,
+pub struct FieldReadingConfig {
+    pub name: String,
     pub fncode: u8,
     pub register: u16,
     pub words: u16,
+    pub field_config: FieldOpts,
 }
 
-impl ReadingConfig {
+impl FieldReadingConfig {
     /// Create reading config from driver and field name
     pub fn from_driver_field(variable_name: &str, driver: &DriverSchema) -> Result<Self> {
         // Use the driver system to resolve field configuration
@@ -155,13 +168,90 @@ impl ReadingConfig {
 
         let fncode = field_config.fncode.unwrap_or(defaults::FUNCTION_CODE);
 
-        Ok(ReadingConfig {
-            variable_name: variable_name.to_string(),
+        Ok(FieldReadingConfig {
+            name: variable_name.to_string(),
             fncode,
             register,
             words: field_config.words.map(|w| w.get()).unwrap_or(1) as u16,
             field_config,
         })
+    }
+}
+
+impl ModbusReading for FieldReadingConfig {
+    fn name(&self) -> &str {
+        &self.name
+    }
+
+    fn fncode(&self) -> u8 {
+        self.fncode
+    }
+
+    fn register(&self) -> u16 {
+        self.register
+    }
+
+    fn words(&self) -> u16 {
+        self.words
+    }
+
+    fn order(&self) -> Option<&RegisterOrder> {
+        self.field_config.order.as_ref()
+    }
+}
+
+/// Configuration for reading a status info field
+#[derive(Clone, Debug)]
+pub struct StatusReadingConfig {
+    pub name: String,
+    pub fncode: u8,
+    pub register: u16,
+    pub words: u16,
+    pub status_info_config: StatusInfoOpts,
+}
+
+impl StatusReadingConfig {
+    /// Create status info reading config from driver and status info name
+    pub fn from_driver_status_info(status_info_name: &str, driver: &DriverSchema) -> Result<Self> {
+        // Use the driver system to resolve status info configuration
+        let status_info_config = resolve_status_info_definition(driver, status_info_name)?;
+
+        // Validate required fields for ModbusTCP
+        let register = status_info_config
+            .register
+            .ok_or_else(|| anyhow!("Status info {} missing register address", status_info_name))?;
+
+        let fncode = status_info_config.fncode.unwrap_or(defaults::FUNCTION_CODE);
+
+        Ok(StatusReadingConfig {
+            name: status_info_name.to_string(),
+            fncode,
+            register,
+            words: status_info_config.words.map(|w| w.get()).unwrap_or(1) as u16,
+            status_info_config,
+        })
+    }
+}
+
+impl ModbusReading for StatusReadingConfig {
+    fn name(&self) -> &str {
+        &self.name
+    }
+
+    fn fncode(&self) -> u8 {
+        self.fncode
+    }
+
+    fn register(&self) -> u16 {
+        self.register
+    }
+
+    fn words(&self) -> u16 {
+        self.words
+    }
+
+    fn order(&self) -> Option<&RegisterOrder> {
+        self.status_info_config.order.as_ref()
     }
 }
 
@@ -208,16 +298,16 @@ mod tests {
         let driver: DriverSchema = serde_json::from_value(driver_json).unwrap();
 
         // Test voltage field (inherits from common)
-        let voltage_config = ReadingConfig::from_driver_field("voltage", &driver).unwrap();
-        assert_eq!(voltage_config.variable_name, "voltage");
+        let voltage_config = FieldReadingConfig::from_driver_field("voltage", &driver).unwrap();
+        assert_eq!(voltage_config.name, "voltage");
         assert_eq!(voltage_config.register, 1000);
         assert_eq!(voltage_config.words, 1); // From common
         assert_eq!(voltage_config.fncode, 4); // From common
         assert_eq!(voltage_config.field_config.unit, Some("V".to_string()));
 
         // Test power field (overrides common)
-        let power_config = ReadingConfig::from_driver_field("power", &driver).unwrap();
-        assert_eq!(power_config.variable_name, "power");
+        let power_config = FieldReadingConfig::from_driver_field("power", &driver).unwrap();
+        assert_eq!(power_config.name, "power");
         assert_eq!(power_config.register, 2000);
         assert_eq!(power_config.words, 2); // Overridden
         assert_eq!(power_config.fncode, 4); // From common
@@ -254,7 +344,7 @@ mod tests {
             min_read_interval: None,
         };
 
-        let config = ModbusDeviceConfig::from_config("test_device", &device).unwrap();
+        let config = ModbusDeviceConfig::from_device(&device).unwrap();
         assert_eq!(config.host, "192.168.1.100");
         assert_eq!(config.port, 502);
         assert_eq!(config.unit_id, 1);
@@ -283,7 +373,7 @@ mod tests {
         };
 
         // This will likely fail since the MAC won't be in ARP table, but test error handling
-        let result = ModbusDeviceConfig::from_config("test_device", &device);
+        let result = ModbusDeviceConfig::from_device(&device);
 
         // Should get a meaningful error (either MAC not found or ARP table read failure)
         if let Err(e) = result {
@@ -314,7 +404,7 @@ mod tests {
             min_read_interval: None,
         };
 
-        let result = ModbusDeviceConfig::from_config("test_device", &device);
+        let result = ModbusDeviceConfig::from_device(&device);
         assert!(result.is_err());
         assert!(
             result
@@ -344,7 +434,7 @@ mod tests {
             min_read_interval: None,
         };
 
-        let result = ModbusDeviceConfig::from_config("test_device", &device);
+        let result = ModbusDeviceConfig::from_device(&device);
         assert!(result.is_err());
         assert!(
             result

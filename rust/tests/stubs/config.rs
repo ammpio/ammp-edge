@@ -107,3 +107,106 @@ pub const INVALID_PAYLOAD_1: &str = r#"
 "#;
 
 pub const INVALID_JSON: &str = "blah";
+
+pub const STATUS_INFO_TEST_CONFIG: &str = r#"
+{
+  "name": "Status info test config",
+  "devices": {
+    "ems": {
+      "name": "EMS Test Device",
+      "driver": "ems_test",
+      "enabled": true,
+      "vendor_id": "ems-test-1",
+      "reading_type": "modbustcp",
+      "address": {
+        "host": "localhost",
+        "port": 502,
+        "unit_id": 1
+      }
+    }
+  },
+  "drivers": {
+    "ems_test": {
+      "common": {
+        "order": "lsr",
+        "fncode": 3,
+        "words": 2,
+        "datatype": "float"
+      },
+      "status_info_common": {
+        "fncode": 3,
+        "words": 1,
+        "bit_order": "lsb",
+        "length_bits": 1,
+        "status_level_value_map": [[0, 0], [1, 3]]
+      },
+      "fields": {
+        "P_L1": {
+          "unit": "W",
+          "register": 122,
+          "description": "Phase 1 active power"
+        },
+        "P_L2": {
+          "unit": "W",
+          "register": 124,
+          "description": "Phase 2 active power"
+        },
+        "P_L3": {
+          "unit": "W",
+          "register": 126,
+          "description": "Phase 3 active power"
+        }
+      },
+      "status_info": {
+        "relay_fault": {
+          "content": "Relay Fault Detected",
+          "register": 200,
+          "start_bit": 2
+        },
+        "high_temp_warning": {
+          "content": "High Temperature Warning",
+          "register": 202,
+          "start_bit": 9,
+          "status_level_value_map": [[0, 0], [1, 2]]
+        },
+        "alarm_state": {
+          "content": "System Alarm",
+          "register": 201,
+          "start_bit": 4,
+          "length_bits": 4,
+          "bit_order": "msb"
+        }
+      }
+    }
+  },
+  "readings": {
+    "ems_P_L1": {
+      "device": "ems",
+      "var": "P_1"
+    },
+    "ems_P_L2": {
+      "device": "ems",
+      "var": "P_2"
+    },
+    "ems_P_L3": {
+      "device": "ems",
+      "var": "P_3"
+    }
+  },
+  "status_readings": [
+    {
+      "d": "ems",
+      "r": "relay_fault"
+    },
+    {
+      "d": "ems",
+      "r": "high_temp_warning"
+    },
+    {
+      "d": "ems",
+      "r": "alarm_state"
+    }
+  ],
+  "read_interval": 10
+}
+"#;

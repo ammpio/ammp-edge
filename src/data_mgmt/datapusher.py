@@ -17,6 +17,8 @@ class DataPusher:
         )
 
     def push_readout(self, readout) -> bool:
-        # Append offset between time that reading was taken and current time
         logger.debug(f"PUSH [mqtt] Readout: {readout}")
+        if not readout["r"]:
+            logger.info("No device readings; skipping MQTT publish")
+            return False
         return self._session.publish_data(readout)
