@@ -144,6 +144,10 @@ pub mod error {
 ///            "items": {
 ///              "title": "Status reading",
 ///              "type": "object",
+///              "required": [
+///                "c",
+///                "l"
+///              ],
 ///              "properties": {
 ///                "c": {
 ///                  "title": "Content for the status info",
@@ -269,6 +273,10 @@ impl ::std::convert::From<&DataPayload> for DataPayload {
 ///      "items": {
 ///        "title": "Status reading",
 ///        "type": "object",
+///        "required": [
+///          "c",
+///          "l"
+///        ],
 ///        "properties": {
 ///          "c": {
 ///            "title": "Content for the status info",
@@ -330,7 +338,7 @@ pub struct DeviceData {
     #[serde(rename = "_vid")]
     pub vid: ::std::string::String,
     #[serde(flatten)]
-    pub extra: ::std::collections::BTreeMap<::std::string::String, DeviceDataExtraValue>,
+    pub extra: std::collections::BTreeMap<::std::string::String, DeviceDataExtraValue>,
 }
 impl ::std::convert::From<&DeviceData> for DeviceData {
     fn from(value: &DeviceData) -> Self {
@@ -464,6 +472,10 @@ impl ::std::default::Default for Metadata {
 ///{
 ///  "title": "Status reading",
 ///  "type": "object",
+///  "required": [
+///    "c",
+///    "l"
+///  ],
 ///  "properties": {
 ///    "c": {
 ///      "title": "Content for the status info",
@@ -490,22 +502,12 @@ impl ::std::default::Default for Metadata {
 /// </details>
 #[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug, PartialEq)]
 pub struct StatusReading {
-    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub c: ::std::option::Option<::std::string::String>,
-    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub l: ::std::option::Option<i64>,
+    pub c: ::std::string::String,
+    pub l: u8,
 }
 impl ::std::convert::From<&StatusReading> for StatusReading {
     fn from(value: &StatusReading) -> Self {
         value.clone()
-    }
-}
-impl ::std::default::Default for StatusReading {
-    fn default() -> Self {
-        Self {
-            c: Default::default(),
-            l: Default::default(),
-        }
     }
 }
 

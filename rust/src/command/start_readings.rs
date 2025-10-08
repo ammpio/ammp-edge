@@ -6,9 +6,9 @@ use tokio::time::{Duration, interval, sleep};
 
 use crate::{
     data_mgmt::{
-        last_reading_cache::save_last_readings,
+        last_reading_cache::{save_last_readings, save_last_status_info_levels},
         output::apply_outputs_to_device_readings,
-        payload::{Metadata, payloads_from_device_readings},
+        payload::{Metadata, filter_status_info_in_payloads, payloads_from_device_readings},
         publish::publish_readings_with_publisher,
         readings::get_readings,
     },
@@ -19,7 +19,9 @@ use crate::{
 /// Start the continuous reading cycle for ModbusTCP devices
 ///
 /// Other device types like SMA HyCon CSV have their own dedicated commands.
-pub async fn start_readings() -> Result<()> {
+///
+/// If `once` is true, only one reading cycle will be executed before returning.
+pub async fn start_readings(once: bool) -> Result<()> {
     log::info!("Starting ModbusTCP reading cycle...");
 
     // Load initial configuration from key-value store
@@ -48,13 +50,15 @@ pub async fn start_readings() -> Result<()> {
 
     // Main reading loop
     loop {
-        // Wait for next cycle
-        if read_roundtime {
-            // Wall-clock aligned mode: re-sync to system clock each iteration to avoid drift
-            sleep_until_aligned_interval(read_interval).await;
-        } else {
-            // Non-aligned mode: use interval timer
-            interval_timer.as_mut().unwrap().tick().await;
+        if !once {
+            // Wait for next cycle (skip wait on first iteration if once mode)
+            if read_roundtime {
+                // Wall-clock aligned mode: re-sync to system clock each iteration to avoid drift
+                sleep_until_aligned_interval(read_interval).await;
+            } else {
+                // Non-aligned mode: use interval timer
+                interval_timer.as_mut().unwrap().tick().await;
+            }
         }
 
         log::debug!("Starting reading cycle");
@@ -68,11 +72,19 @@ pub async fn start_readings() -> Result<()> {
             }
         }
 
+        // Exit after one cycle if in once mode
+        if once {
+            log::info!("Single cycle complete, exiting");
+            break;
+        }
+
         // Update configuration from key-value store
         config = node_mgmt::config::get(&kvs)?;
         read_interval = config.read_interval as u32;
         // NB: read_roundtime is immutable
     }
+
+    Ok(())
 }
 
 /// Execute one iteration of the reading cycle
@@ -113,7 +125,7 @@ async fn execute_reading_cycle(
         duration
     );
 
-    // Convert readings to payloads for caching
+    // Convert readings to payloads for publishing and caching
     let payloads = payloads_from_device_readings(all_readings.clone(), Some(metadata.clone()));
 
     // Save readings to cache (merging if same timestamp)
@@ -123,13 +135,24 @@ async fn execute_reading_cycle(
         }
     }
 
+    // Before publishing, filter status info in payloads to remove readings
+    // where the level matches the last cached level
+    let payloads = filter_status_info_in_payloads(payloads);
+
     // Publish readings to MQTT
-    publish_readings_with_publisher(mqtt_publisher, all_readings, Some(metadata)).await?;
+    publish_readings_with_publisher(mqtt_publisher, &payloads).await?;
     log::info!(
         "[t: {}] Published {} payload(s) to MQTT",
         reading_timestamp.timestamp(),
         payloads.len()
     );
+
+    // Save readings to cache (merging if same timestamp)
+    for payload in &payloads {
+        if let Err(e) = save_last_status_info_levels(&payload.r) {
+            log::warn!("Failed to save status info levels to cache: {}", e);
+        }
+    }
 
     Ok(reading_count)
 }

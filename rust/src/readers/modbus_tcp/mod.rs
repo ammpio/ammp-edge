@@ -6,65 +6,91 @@ use anyhow::Result;
 
 use crate::{
     data_mgmt::models::{DeviceReading, DeviceRef, Record},
-    node_mgmt::{config::Device, drivers::DriverSchema},
+    data_mgmt::readings::DeviceReadingJob,
+    node_mgmt::drivers::DriverSchema,
 };
 
 // Re-export main types for easier access
 pub use client::ModbusTcpReader;
-pub use config::{ModbusDeviceConfig, ReadingConfig};
+pub use config::{FieldReadingConfig, ModbusDeviceConfig, ModbusReading, StatusReadingConfig};
 
 /// Read all configured readings from a single ModbusTCP device
 ///
 /// This function follows the pattern established by the SMA reader, taking a device
 /// and reading requests, then returning DeviceReading results.
 pub async fn read_device(
-    device: &Device,
+    dev_read_job: &DeviceReadingJob,
     driver: &DriverSchema,
-    variable_names: &[String],
 ) -> Result<DeviceReading> {
-    if variable_names.is_empty() {
-        log::debug!("No readings requested for ModbusTCP device: {}", device.key);
-        return Ok(DeviceReading::from_device(device));
+    if dev_read_job.field_names.is_empty() && dev_read_job.status_info_names.is_empty() {
+        log::debug!(
+            "No readings requested for ModbusTCP device: {}",
+            dev_read_job.device.key
+        );
+        return Ok(DeviceReading::from_device(&dev_read_job.device));
     }
 
     // Create Modbus device config from the device configuration
-    let device_config = ModbusDeviceConfig::from_config(&device.key, device)?;
+    let device_config = ModbusDeviceConfig::from_device(&dev_read_job.device)?;
 
-    // Convert variable names to ReadingConfig format
-    let reading_configs = get_reading_configs_from_variable_names(device, driver, variable_names)?;
+    // Convert variable names to FieldReadingConfig format
+    let mut field_configs = Vec::new();
+    for field_name in &dev_read_job.field_names {
+        match FieldReadingConfig::from_driver_field(field_name, driver) {
+            Ok(config) => field_configs.push(config),
+            Err(e) => {
+                log::error!(
+                    "Failed to create reading config for '{}': {}",
+                    field_name,
+                    e
+                );
+            }
+        }
+    }
+
+    // Convert status info names to StatusReadingConfig format
+    let mut status_info_configs = Vec::new();
+    for status_info_name in &dev_read_job.status_info_names {
+        match StatusReadingConfig::from_driver_status_info(status_info_name, driver) {
+            Ok(config) => status_info_configs.push(config),
+            Err(e) => {
+                log::error!(
+                    "Failed to create status info config for '{}': {}",
+                    status_info_name,
+                    e
+                );
+            }
+        }
+    }
 
     log::debug!(
-        "[{}] Reading {} variables from ModbusTCP device at {}:{}",
-        device.key,
-        reading_configs.len(),
+        "[{}] Reading {} fields and {} status info from ModbusTCP device at {}:{}",
+        dev_read_job.device.key,
+        field_configs.len(),
+        status_info_configs.len(),
         device_config.host,
         device_config.port
     );
 
     // Connect to the device
-    let mut client = ModbusTcpReader::connect(
-        device.key.clone(),
-        &device_config.host,
-        device_config.port,
-        device_config.unit_id,
-        device_config.register_offset,
-        device_config.timeout,
-    )
-    .await?;
+    let mut client = ModbusTcpReader::connect(&device_config).await?;
 
-    // Execute readings
-    let readings = client.execute_readings(reading_configs).await?;
+    // Execute all readings (both fields and status info)
+    let (readings, status_readings) = client
+        .execute_readings(field_configs, status_info_configs)
+        .await?;
 
-    if readings.is_empty() {
+    if readings.is_empty() && status_readings.is_empty() {
         log::warn!(
             "[{}] No successful readings from ModbusTCP device",
-            device.key,
+            device_config.device_key,
         );
     } else {
         log::info!(
-            "[{}] Successfully read {} variables from ModbusTCP device",
-            device.key,
+            "[{}] Successfully read {} fields and {} status info from ModbusTCP device",
+            device_config.device_key,
             readings.len(),
+            status_readings.len(),
         );
     }
 
@@ -74,44 +100,14 @@ pub async fn read_device(
     for reading in readings {
         record.set_field(reading.field, reading.value);
     }
+    for status_reading in status_readings {
+        record.add_status_reading(status_reading);
+    }
 
     let device_reading = DeviceReading {
-        device: DeviceRef::from_device(device),
+        device: DeviceRef::from_device(&dev_read_job.device),
         record,
     };
 
     Ok(device_reading)
-}
-
-/// Convert variable names to ReadingConfig objects using driver information
-fn get_reading_configs_from_variable_names(
-    device: &Device,
-    driver: &DriverSchema,
-    variable_names: &[String],
-) -> Result<Vec<ReadingConfig>> {
-    let mut reading_configs = Vec::new();
-
-    for variable_name in variable_names {
-        match ReadingConfig::from_driver_field(variable_name, driver) {
-            Ok(reading_config) => {
-                reading_configs.push(reading_config);
-            }
-            Err(e) => {
-                log::error!(
-                    "Failed to create reading config for '{}': {}",
-                    variable_name,
-                    e
-                );
-            }
-        }
-    }
-
-    if reading_configs.is_empty() {
-        log::error!(
-            "No valid reading configurations found for device: {}",
-            device.key
-        );
-    }
-
-    Ok(reading_configs)
 }

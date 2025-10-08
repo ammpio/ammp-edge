@@ -62,6 +62,36 @@
                         </tr>
                         {% endif %}
                         {% endfor %}
+                        {% if reading.get('_s') %}
+                        <tr class="detail" style="background-color: #f8f9fa;">
+                          <td colspan="2" class="w-100">
+                            <div class="ml-5 mt-2 mb-1" style="font-weight: 600; color: #495057;">Status Information</div>
+                          </td>
+                        </tr>
+                        {% for status in reading['_s'] %}
+                        <tr class="detail">
+                          <td class="w-50">
+                            <span class="ml-5" style="padding-left: 1rem;">{{ status.get('c', 'Unknown Status') }}</span>
+                          </td>
+                          <td class="w-50">
+                            {% set level = status.get('l', 0) %}
+                            {% if level == 0 %}
+                              <span style="color: #28a745; font-weight: 500;">● OK (Level {{ level }})</span>
+                            {% elif level == 1 %}
+                              <span style="color: #17a2b8; font-weight: 500;">● Info (Level {{ level }})</span>
+                            {% elif level == 2 %}
+                              <span style="color: #ffc107; font-weight: 500;">● Warning (Level {{ level }})</span>
+                            {% elif level == 3 %}
+                              <span style="color: #fd7e14; font-weight: 500;">● Error (Level {{ level }})</span>
+                            {% elif level == 4 %}
+                              <span style="color: #dc3545; font-weight: 500;">● Critical (Level {{ level }})</span>
+                            {% else %}
+                              <span style="color: #6c757d; font-weight: 500;">● Level {{ level }}</span>
+                            {% endif %}
+                          </td>
+                        </tr>
+                        {% endfor %}
+                        {% endif %}
                       </table>
                     </div>
                   </td>

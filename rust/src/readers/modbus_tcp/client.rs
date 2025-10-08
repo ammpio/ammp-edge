@@ -3,9 +3,12 @@ use std::net::ToSocketAddrs;
 use tokio::time::Duration;
 use tokio_modbus::prelude::*;
 
-use super::config::ReadingConfig;
+use super::config::ModbusDeviceConfig;
+use super::config::{FieldReadingConfig, ModbusReading, StatusReadingConfig};
 use crate::data_mgmt::models::{Reading, RtValue};
+use crate::data_mgmt::process_status_info::process_status_info;
 use crate::node_mgmt::drivers::RegisterOrder;
+use derived_models::data::StatusReading;
 
 /// ModbusTCP client for reading device registers
 pub struct ModbusTcpReader {
@@ -16,58 +19,54 @@ pub struct ModbusTcpReader {
 
 impl ModbusTcpReader {
     /// Connect to a ModbusTCP device
-    pub async fn connect(
-        device_key: String,
-        host: &str,
-        port: u16,
-        unit_id: u8,
-        register_offset: u16,
-        timeout: Duration,
-    ) -> Result<Self> {
-        let socket_addr = (host, port)
+    pub async fn connect(config: &ModbusDeviceConfig) -> Result<Self> {
+        let socket_addr = (config.host.clone(), config.port)
             .to_socket_addrs()?
             .next()
-            .ok_or_else(|| anyhow!("Failed to resolve hostname: {}", host))?;
+            .ok_or_else(|| anyhow!("Failed to resolve hostname: {}", config.host))?;
 
         log::debug!(
             "[{}] Connecting to ModbusTCP device at {}/{}",
-            device_key,
+            config.device_key,
             socket_addr,
-            unit_id
+            config.unit_id
         );
 
-        let ctx = tokio::time::timeout(timeout, tcp::connect_slave(socket_addr, Slave(unit_id)))
-            .await
-            .map_err(|_| {
-                anyhow::anyhow!(
-                    "[{}] Connection timeout after {:?} to ModbusTCP device at {}/{}",
-                    device_key,
-                    timeout,
-                    socket_addr,
-                    unit_id
-                )
-            })?
-            .map_err(|e| {
-                anyhow::anyhow!(
-                    "[{}] Failed to connect to ModbusTCP device at {}/{}: {}",
-                    device_key,
-                    socket_addr,
-                    unit_id,
-                    e
-                )
-            })?;
+        let ctx = tokio::time::timeout(
+            config.timeout,
+            tcp::connect_slave(socket_addr, Slave(config.unit_id)),
+        )
+        .await
+        .map_err(|_| {
+            anyhow::anyhow!(
+                "[{}] Connection timeout after {:?} to ModbusTCP device at {}/{}",
+                config.device_key,
+                config.timeout,
+                socket_addr,
+                config.unit_id
+            )
+        })?
+        .map_err(|e| {
+            anyhow::anyhow!(
+                "[{}] Failed to connect to ModbusTCP device at {}/{}: {}",
+                config.device_key,
+                socket_addr,
+                config.unit_id,
+                e
+            )
+        })?;
 
         log::info!(
             "[{}] Connected to ModbusTCP device at {}/{}",
-            device_key,
+            config.device_key,
             socket_addr,
-            unit_id
+            config.unit_id
         );
 
         Ok(ModbusTcpReader {
             context: ctx,
-            register_offset,
-            timeout,
+            register_offset: config.register_offset,
+            timeout: config.timeout,
         })
     }
 
@@ -126,15 +125,20 @@ impl ModbusTcpReader {
     }
 
     /// Execute multiple reading configurations and return processed readings
+    /// Returns (field_readings, status_readings)
     pub async fn execute_readings(
         &mut self,
-        reading_configs: Vec<ReadingConfig>,
-    ) -> Result<Vec<Reading>> {
-        let mut readings = Vec::new();
+        field_configs: Vec<FieldReadingConfig>,
+        status_info_configs: Vec<StatusReadingConfig>,
+    ) -> Result<(Vec<Reading>, Vec<StatusReading>)> {
+        let mut field_readings = Vec::new();
+        let mut status_readings = Vec::new();
 
-        log::trace!("Executing readings: {:?}", reading_configs);
+        log::trace!("Executing field readings: {:?}", field_configs);
+        log::trace!("Executing status info readings: {:?}", status_info_configs);
 
-        for config in reading_configs {
+        // Process field readings
+        for config in field_configs {
             match self.read_raw_registers(&config).await {
                 Ok(raw_bytes) => {
                     // Process the raw bytes using the data processing pipeline
@@ -143,53 +147,70 @@ impl ModbusTcpReader {
                         &config.field_config,
                     ) {
                         Ok(RtValue::None) => {
-                            log::debug!("Reading '{}' returned no value", config.variable_name);
+                            log::debug!("Reading '{}' returned no value", config.name);
                             // Skip None values
                         }
                         Ok(value) => {
-                            log::debug!("Successfully read {}: {:?}", config.variable_name, value);
-                            readings.push(Reading {
-                                field: config.variable_name.clone(),
+                            log::debug!("Successfully read {}: {:?}", config.name, value);
+                            field_readings.push(Reading {
+                                field: config.name.clone(),
                                 value,
                             });
                         }
                         Err(e) => {
-                            log::warn!(
-                                "Failed to process reading '{}': {}",
-                                config.variable_name,
-                                e
-                            );
+                            log::warn!("Failed to process reading '{}': {}", config.name, e);
                             // Continue with other readings even if one fails
                         }
                     }
                 }
                 Err(e) => {
-                    log::warn!(
-                        "Failed to read raw data for '{}': {}",
-                        config.variable_name,
-                        e
-                    );
+                    log::error!("Failed to read raw data for '{}': {}", config.name, e);
                     // Continue with other readings even if one fails
                 }
             }
-
-            // Note: read_delay_ms was removed from the new ReadingConfig
-            // If needed, this can be added back as a global or device-level setting
         }
 
-        Ok(readings)
+        // Process status info readings
+        for config in status_info_configs {
+            match self.read_raw_registers(&config).await {
+                Ok(raw_bytes) => {
+                    // Process the raw bytes using the status info processing pipeline
+                    match process_status_info(&raw_bytes, &config.status_info_config) {
+                        Ok(status_reading) => {
+                            log::debug!(
+                                "Successfully read status info {}: {:?}",
+                                config.name,
+                                status_reading
+                            );
+                            status_readings.push(status_reading);
+                        }
+                        Err(e) => {
+                            log::warn!("Failed to process status info '{}': {}", config.name, e);
+                            // Continue with other readings even if one fails
+                        }
+                    }
+                }
+                Err(e) => {
+                    log::error!("Failed to read raw data for '{}': {}", config.name, e);
+                    // Continue with other readings even if one fails
+                }
+            }
+        }
+
+        Ok((field_readings, status_readings))
     }
 
     /// Read raw register values and convert them to bytes according to configuration
-    async fn read_raw_registers(&mut self, config: &ReadingConfig) -> Result<Vec<u8>> {
+    /// Generic over any type implementing ModbusReading
+    async fn read_raw_registers<T: ModbusReading>(&mut self, config: &T) -> Result<Vec<u8>> {
         // Read raw register values
-        let register_to_read = self.register_offset + config.register;
+        let register_to_read = self.register_offset + config.register();
         let raw_registers = self
-            .read_registers(register_to_read, config.words, config.fncode)
+            .read_registers(register_to_read, config.words(), config.fncode())
             .await?;
 
         // Convert registers to bytes with proper order
-        let bytes = registers_to_bytes(&raw_registers, config.field_config.order.as_ref())?;
+        let bytes = registers_to_bytes(&raw_registers, config.order())?;
 
         Ok(bytes)
     }
