@@ -9,7 +9,7 @@ repository = "https://github.com/ammpio/ammp-edge"
 [dependencies]
 anyhow = "1.0.95"
 ahash = "0.8.11"
-backoff = "0.4.0"
+backoff = { version = "0.4.0", features = ["futures", "tokio"] }
 bumpalo = "3.19.0"
 byteorder = "1.5"
 chrono = { version = "0.4.39", default-features = false, features = ["std", "clock"] }

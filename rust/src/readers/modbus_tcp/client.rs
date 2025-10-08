@@ -1,4 +1,5 @@
 use anyhow::{Result, anyhow};
+use backoff::ExponentialBackoffBuilder;
 use std::net::ToSocketAddrs;
 use tokio::time::Duration;
 use tokio_modbus::prelude::*;
@@ -18,7 +19,7 @@ pub struct ModbusTcpReader {
 }
 
 impl ModbusTcpReader {
-    /// Connect to a ModbusTCP device
+    /// Connect to a ModbusTCP device with retry logic
     pub async fn connect(config: &ModbusDeviceConfig) -> Result<Self> {
         let socket_addr = (config.host.clone(), config.port)
             .to_socket_addrs()?
@@ -32,29 +33,7 @@ impl ModbusTcpReader {
             config.unit_id
         );
 
-        let ctx = tokio::time::timeout(
-            config.timeout,
-            tcp::connect_slave(socket_addr, Slave(config.unit_id)),
-        )
-        .await
-        .map_err(|_| {
-            anyhow::anyhow!(
-                "[{}] Connection timeout after {:?} to ModbusTCP device at {}/{}",
-                config.device_key,
-                config.timeout,
-                socket_addr,
-                config.unit_id
-            )
-        })?
-        .map_err(|e| {
-            anyhow::anyhow!(
-                "[{}] Failed to connect to ModbusTCP device at {}/{}: {}",
-                config.device_key,
-                socket_addr,
-                config.unit_id,
-                e
-            )
-        })?;
+        let ctx = Self::retry_connect(config, socket_addr).await?;
 
         log::info!(
             "[{}] Connected to ModbusTCP device at {}/{}",
@@ -68,6 +47,54 @@ impl ModbusTcpReader {
             register_offset: config.register_offset,
             timeout: config.timeout,
         })
+    }
+
+    /// Retry connection with exponential backoff
+    async fn retry_connect(
+        config: &ModbusDeviceConfig,
+        socket_addr: std::net::SocketAddr,
+    ) -> Result<tokio_modbus::client::Context> {
+        // Configure exponential backoff: 500ms, 1s, 2s for 3 retries
+        let backoff = ExponentialBackoffBuilder::new()
+            .with_initial_interval(Duration::from_millis(500))
+            .with_max_elapsed_time(Some(config.timeout))
+            .build();
+
+        let device_key = config.device_key.clone();
+        let unit_id = config.unit_id;
+        let timeout = config.timeout;
+
+        backoff::future::retry(backoff, || async {
+            log::debug!(
+                "[{}] Attempting connection to ModbusTCP device at {}/{}",
+                device_key,
+                socket_addr,
+                unit_id
+            );
+
+            tokio::time::timeout(timeout, tcp::connect_slave(socket_addr, Slave(unit_id)))
+                .await
+                .map_err(|_| {
+                    backoff::Error::transient(anyhow!(
+                        "[{}] Connection timeout after {:?} to ModbusTCP device at {}/{}",
+                        device_key,
+                        timeout,
+                        socket_addr,
+                        unit_id
+                    ))
+                })?
+                .map_err(|e| {
+                    backoff::Error::transient(anyhow!(
+                        "[{}] Failed to connect to ModbusTCP device at {}/{}: {}",
+                        device_key,
+                        socket_addr,
+                        unit_id,
+                        e
+                    ))
+                })
+        })
+        .await
+        .map_err(|e| anyhow!("Failed to connect after retries: {}", e))
     }
 
     /// Read raw register values from the device
