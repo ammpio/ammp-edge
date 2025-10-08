@@ -5,10 +5,7 @@ use crate::{
     interfaces::mqtt::{self, MqttMessage, MqttPublisher},
 };
 
-use super::{
-    models::DeviceReading,
-    payload::{Metadata, payloads_from_device_readings},
-};
+use super::payload::DataPayload;
 
 #[derive(Error, Debug)]
 pub enum PublishError {
@@ -16,11 +13,8 @@ pub enum PublishError {
     MqttError(#[from] Box<mqtt::MqttError>),
 }
 
-pub fn publish_readings(
-    readings: Vec<DeviceReading>,
-    metadata: Option<Metadata>,
-) -> anyhow::Result<(), PublishError> {
-    let messages = construct_payloads(readings, metadata);
+pub fn publish_readings(data_payloads: &[DataPayload]) -> anyhow::Result<(), PublishError> {
+    let messages = construct_mqtt_messages(data_payloads);
     log::trace!("Publishing messages: {:?}", &messages);
 
     mqtt::publish_msgs(&messages, Some("local-pub-data"), false).map_err(Box::new)?;
@@ -30,10 +24,9 @@ pub fn publish_readings(
 
 pub async fn publish_readings_with_publisher(
     publisher: &mut MqttPublisher,
-    readings: Vec<DeviceReading>,
-    metadata: Option<Metadata>,
+    data_payloads: &[DataPayload],
 ) -> anyhow::Result<(), PublishError> {
-    let messages = construct_payloads(readings, metadata);
+    let messages = construct_mqtt_messages(data_payloads);
 
     log::info!("Publishing {} payloads to MQTT", messages.len());
 
@@ -45,12 +38,9 @@ pub async fn publish_readings_with_publisher(
     Ok(())
 }
 
-fn construct_payloads(
-    readings: Vec<DeviceReading>,
-    metadata: Option<Metadata>,
-) -> Vec<MqttMessage> {
-    payloads_from_device_readings(readings, metadata)
-        .into_iter()
+fn construct_mqtt_messages(data_payloads: &[DataPayload]) -> Vec<MqttMessage> {
+    data_payloads
+        .iter()
         .map(|p| MqttMessage::new(topics::DATA, serde_json::to_string(&p).unwrap()))
         .collect()
 }

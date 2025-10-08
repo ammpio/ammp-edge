@@ -125,8 +125,16 @@ async fn execute_reading_cycle(
         duration
     );
 
-    // Convert readings to payloads for caching
+    // Convert readings to payloads for publishing and caching
     let payloads = payloads_from_device_readings(all_readings.clone(), Some(metadata.clone()));
+
+    // Publish readings to MQTT
+    publish_readings_with_publisher(mqtt_publisher, &payloads).await?;
+    log::info!(
+        "[t: {}] Published {} payload(s) to MQTT",
+        reading_timestamp.timestamp(),
+        payloads.len()
+    );
 
     // Save readings to cache (merging if same timestamp)
     for payload in &payloads {
@@ -134,14 +142,6 @@ async fn execute_reading_cycle(
             log::warn!("Failed to save readings to cache: {}", e);
         }
     }
-
-    // Publish readings to MQTT
-    publish_readings_with_publisher(mqtt_publisher, all_readings, Some(metadata)).await?;
-    log::info!(
-        "[t: {}] Published {} payload(s) to MQTT",
-        reading_timestamp.timestamp(),
-        payloads.len()
-    );
 
     Ok(reading_count)
 }
