@@ -30,7 +30,9 @@ pub fn process_status_info(
     let extracted_value = extract_bits(val_bytes, &field_opts)? as u8;
 
     // Map the extracted value to a status level
-    let status_level = map_value_to_level(extracted_value, status_info_config)?;
+    let status_level =
+        map_value_to_level(extracted_value, &status_info_config.status_level_value_map)
+            .ok_or_else(|| anyhow!("Value {extracted_value} not found in status level map"))?;
 
     // Get the content message
     let content = status_info_config
@@ -60,17 +62,21 @@ fn field_opts_from_status_info(status_info: &StatusInfoOpts) -> FieldOpts {
 
 /// Map an extracted value to a status level using the status_level_value_map
 ///
-/// If the value is in the map, return the corresponding status level.
-/// If the value is not in the map or the map is empty, return the value as-is.
-fn map_value_to_level(value: u8, status_info_config: &StatusInfoOpts) -> Result<u8> {
-    // Look up the value in the mapping
-    for (map_value, status_level) in &status_info_config.status_level_value_map {
+/// If there is no map, return the value as-is.
+/// If there is a map, use it to map the value to a status level.
+/// If the value is not found in the map, return None.
+fn map_value_to_level(value: u8, status_level_value_map: &[(u8, u8)]) -> Option<u8> {
+    if status_level_value_map.is_empty() {
+        return Some(value);
+    }
+
+    for (map_value, status_level) in status_level_value_map {
         if *map_value == value {
-            return Ok(*status_level);
+            return Some(*status_level);
         }
     }
 
-    Ok(value)
+    None
 }
 
 #[cfg(test)]
@@ -154,7 +160,7 @@ mod tests {
 
     #[test]
     fn test_process_status_info_value_not_in_map() {
-        // When a value is not in the map, it's used as-is (not an error)
+        // When a value is not in the map, it returns an error
         let bytes = [0x00, 0xFF]; // 0b00000000_11111111 = 255
 
         let status_info = create_test_status_info(
@@ -165,10 +171,13 @@ mod tests {
         );
 
         let result = process_status_info(&bytes, &status_info);
-        assert!(result.is_ok());
-        let status = result.unwrap();
-        assert_eq!(status.c, "Test Status");
-        assert_eq!(status.l, 255); // Value used directly as level
+        assert!(result.is_err());
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Value 255 not found in status level map")
+        );
     }
 
     #[test]

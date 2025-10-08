@@ -64,10 +64,10 @@ pub async fn read_device(
     }
 
     log::debug!(
-        "[{}] Reading {} fields and {} status info from ModbusTCP device at {}:{}",
-        dev_read_job.device.key,
+        "Reading {} fields and {} status info from ModbusTCP device {} at {}:{}",
         field_configs.len(),
         status_info_configs.len(),
+        dev_read_job.device.key,
         device_config.host,
         device_config.port
     );
@@ -87,10 +87,10 @@ pub async fn read_device(
         );
     } else {
         log::info!(
-            "[{}] Successfully read {} fields and {} status info from ModbusTCP device",
-            device_config.device_key,
+            "Successfully read {} fields and {} status info from ModbusTCP device {}",
             readings.len(),
             status_readings.len(),
+            device_config.device_key,
         );
     }
 

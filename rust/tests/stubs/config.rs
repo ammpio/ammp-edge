@@ -174,7 +174,14 @@ pub const STATUS_INFO_TEST_CONFIG: &str = r#"
           "register": 201,
           "start_bit": 4,
           "length_bits": 4,
-          "bit_order": "msb"
+          "bit_order": "msb",
+          "status_level_value_map": [[0, 0], [1, 1], [2, 2], [3, 3], [4, 4]]
+        },
+        "unavailable": {
+          "content": "Alarm not implemented",
+          "register": 202,
+          "start_bit": 12,
+          "length_bits": 4
         }
       }
     }
@@ -205,6 +212,10 @@ pub const STATUS_INFO_TEST_CONFIG: &str = r#"
     {
       "d": "ems",
       "r": "alarm_state"
+    },
+    {
+      "d": "ems",
+      "r": "unavailable"
     }
   ],
   "read_interval": 10
