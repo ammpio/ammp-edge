@@ -14,7 +14,8 @@ use crate::helpers;
 
 const MAX_PACKET_SIZE: usize = 16777216; // 16 MB
 const MQTT_QUEUE_CAPACITY: usize = 10;
-const MQTT_KEEP_ALIVE: Duration = Duration::from_secs(60);
+// In general no need for extra keepalive pings to localhost broker
+const MQTT_KEEP_ALIVE: Duration = Duration::from_secs(3600);
 
 static MQTT_BRIDGE_HOST: Lazy<String> = Lazy::new(|| {
     if let Ok(host) = env::var(envvars::MQTT_BRIDGE_HOST) {
