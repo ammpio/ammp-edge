@@ -1,13 +1,10 @@
 use ae::argsets;
 use ae::command;
-use ae::constants;
 use ae::helpers;
 
 use anyhow::{Result, anyhow};
-use env_logger::Env;
 
-use constants::{defaults, envvars};
-use helpers::load_dotenv;
+use helpers::{init_tracing, load_dotenv};
 
 const CMD_INIT: &str = "init";
 const CMD_KVS_GET: &str = "kvs-get";
@@ -20,10 +17,7 @@ const CMD_WAIT_FOR_TIME_SOURCE: &str = "wait-for-time-source";
 
 fn main() -> Result<()> {
     load_dotenv();
-    env_logger::Builder::from_env(
-        Env::default().filter_or(envvars::LOG_LEVEL, defaults::LOG_LEVEL),
-    )
-    .init();
+    init_tracing();
 
     let mut args = pico_args::Arguments::from_env();
     match args.subcommand()?.as_deref() {

@@ -197,6 +197,13 @@ fn spawn_device_reading_job(
     let config_drivers = config_drivers.clone();
 
     tokio::spawn(async move {
+        // Create device-level span for this reading operation
+        let span = tracing::info_span!(
+            "read_device",
+            device_key = %dev_read_job.device.key,
+        );
+        let _enter = span.enter();
+
         // Get or create a mutex for this physical device
         let lock = get_device_lock(PhysicalDeviceId::from_device(&dev_read_job.device)).await;
 

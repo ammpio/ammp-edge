@@ -115,6 +115,13 @@ impl ModbusTcpReader {
 
         // Process field readings
         for config in field_configs {
+            // Create field-level span
+            let span = tracing::debug_span!(
+                "read_field",
+                field = %config.name,
+            );
+            let _enter = span.enter();
+
             match self.read_registers_into_bytes(&config).await {
                 Ok(raw_bytes) => {
                     // Process the raw bytes using the data processing pipeline
@@ -148,6 +155,13 @@ impl ModbusTcpReader {
 
         // Process status info readings
         for config in status_info_configs {
+            // Create status info-level span
+            let span = tracing::debug_span!(
+                "read_status_info",
+                status_info = %config.name,
+            );
+            let _enter = span.enter();
+
             match self.read_registers_into_bytes(&config).await {
                 Ok(raw_bytes) => {
                     // Process the raw bytes using the status info processing pipeline
