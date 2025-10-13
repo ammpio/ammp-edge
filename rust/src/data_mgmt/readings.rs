@@ -10,6 +10,7 @@ use kvstore::KVDb;
 use once_cell::sync::Lazy;
 use tokio::sync::Mutex;
 use tokio::time::Duration;
+use tracing::Instrument;
 
 use crate::{
     constants::keys,
@@ -196,35 +197,34 @@ fn spawn_device_reading_job(
 ) -> tokio::task::JoinHandle<DeviceReading> {
     let config_drivers = config_drivers.clone();
 
-    tokio::spawn(async move {
-        // Create device-level span for this reading operation
-        let span = tracing::info_span!(
-            "read_device",
-            device_key = %dev_read_job.device.key,
-        );
-        let _enter = span.enter();
+    // Create device-level span for this reading operation
+    let span = tracing::info_span!("read_device", device = dev_read_job.device.key,);
 
-        // Get or create a mutex for this physical device
-        let lock = get_device_lock(PhysicalDeviceId::from_device(&dev_read_job.device)).await;
+    tokio::spawn(
+        async move {
+            // Get or create a mutex for this physical device
+            let lock = get_device_lock(PhysicalDeviceId::from_device(&dev_read_job.device)).await;
 
-        // Acquire the lock - this ensures only one task reads this physical device at a time
-        let _guard = lock.lock().await;
+            // Acquire the lock - this ensures only one task reads this physical device at a time
+            let _guard = lock.lock().await;
 
-        log::debug!(
-            "Acquired lock for physical device, reading '{}'",
-            dev_read_job.device.key
-        );
+            log::debug!(
+                "Acquired lock for physical device, reading '{}'",
+                dev_read_job.device.key
+            );
 
-        // Perform the actual read
-        match read_single_device(&dev_read_job, &config_drivers).await {
-            Ok(reading) => reading,
-            Err(e) => {
-                log::warn!("Device reading failed: {}", e);
-                DeviceReading::from_device(&dev_read_job.device)
+            // Perform the actual read
+            match read_single_device(&dev_read_job, &config_drivers).await {
+                Ok(reading) => reading,
+                Err(e) => {
+                    log::warn!("Device reading failed: {}", e);
+                    DeviceReading::from_device(&dev_read_job.device)
+                }
             }
+            // Lock is automatically released when _guard is dropped
         }
-        // Lock is automatically released when _guard is dropped
-    })
+        .instrument(span),
+    )
 }
 
 /// Get or create a mutex for a physical device

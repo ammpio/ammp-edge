@@ -6,6 +6,8 @@ use crate::constants::{defaults, envvars};
 ///
 /// Respects LOG_LEVEL env var, or RUST_LOG if set.
 /// Defaults to "info" level if neither is set.
+///
+/// Timestamps are disabled since journald adds its own timestamps in production.
 pub fn init_tracing() {
     let log_level =
         std::env::var(envvars::LOG_LEVEL).unwrap_or_else(|_| defaults::LOG_LEVEL.to_string());
@@ -16,6 +18,7 @@ pub fn init_tracing() {
 
     tracing_subscriber::fmt()
         .with_env_filter(filter)
+        .without_time()
         .compact()
         .init();
 }
