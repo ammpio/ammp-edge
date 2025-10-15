@@ -16,6 +16,7 @@ MQTT_QOS = 1
 MQTT_RETAIN = False
 MQTT_CONN_SUCCESS = 0
 MQTT_PUB_TIMEOUT = 5
+MQTT_KEEPALIVE = 3600
 
 MQTT_DATA_TOPIC = "u/data"
 
@@ -33,7 +34,7 @@ class MQTTPublisher:
 
         client.on_connect = self.__on_connect
         client.on_disconnect = self.__on_disconnect
-        client.connect(host=MQTT_HOST, port=MQTT_PORT)
+        client.connect(host=MQTT_HOST, port=MQTT_PORT, keepalive=MQTT_KEEPALIVE)
         client.loop_start()
 
         self._client = client

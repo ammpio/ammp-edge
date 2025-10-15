@@ -51,6 +51,9 @@ def reading_cycle(node: Node, pusher: DataPusher, sc=None):
     try:
         node.update_drv_from_config()
         readout = get_readout(config, node.drivers)
+        if readout["r"] == []:
+            logger.warning("No readings were returned; not pushing data")
+            return
         pusher.push_readout(readout)
 
     except Exception:

@@ -60,8 +60,8 @@ pub fn filter_status_info_in_payloads(mut payloads: Vec<DataPayload>) -> Vec<Dat
                 device_data.s = filter_status_readings(device_key, status_readings, &cache);
 
                 if !device_data.s.is_empty() {
-                    log::debug!(
-                        "Filtered status readings for {}: {:?}",
+                    log::info!(
+                        "New status readings for {}: {:?}",
                         device_key,
                         device_data.s
                     );

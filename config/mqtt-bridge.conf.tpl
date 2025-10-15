@@ -20,4 +20,7 @@ remote_password $ACCESS_KEY
 
 restart_timeout 10 120
 
+# Usually payloads are sent every 60 secs so this avoids extra pings
+keepalive_interval 90
+
 bridge_cafile $SNAP/resources/certs/ca.crt

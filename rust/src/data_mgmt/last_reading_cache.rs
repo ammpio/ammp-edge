@@ -1,17 +1,18 @@
 use anyhow::Result;
-use kvstore::KVDb;
+use kvstore::AsyncKVDb;
 
 use crate::{constants::keys, interfaces::kvpath};
 
 use super::payload::DeviceData;
 
 /// Save device readings to the cache, merging with existing readings if they share the same timestamp
-pub fn save_last_readings(readings: Vec<DeviceData>, timestamp: i64) -> Result<()> {
-    let cache = KVDb::new(kvpath::SQLITE_CACHE.as_path())?;
+pub async fn save_last_readings(readings: Vec<DeviceData>, timestamp: i64) -> Result<()> {
+    let cache = AsyncKVDb::new(kvpath::SQLITE_CACHE.as_path()).await?;
 
     // Get existing cached data
-    let cached_timestamp: Option<i64> = cache.get(keys::LAST_READINGS_TS)?;
-    let mut cached_readings: Vec<DeviceData> = cache.get(keys::LAST_READINGS)?.unwrap_or_default();
+    let cached_timestamp: Option<i64> = cache.get(keys::LAST_READINGS_TS).await?;
+    let mut cached_readings: Vec<DeviceData> =
+        cache.get(keys::LAST_READINGS).await?.unwrap_or_default();
 
     // Extract device IDs from readings for per-device timestamp tracking
     let device_ids: Vec<String> = readings
@@ -44,8 +45,8 @@ pub fn save_last_readings(readings: Vec<DeviceData>, timestamp: i64) -> Result<(
     };
 
     // Save to cache
-    cache.set(keys::LAST_READINGS, &final_readings)?;
-    cache.set(keys::LAST_READINGS_TS, timestamp)?;
+    cache.set(keys::LAST_READINGS, &final_readings).await?;
+    cache.set(keys::LAST_READINGS_TS, &timestamp).await?;
 
     log::debug!(
         "[t: {}] Saved {} total readings to cache",
@@ -56,14 +57,14 @@ pub fn save_last_readings(readings: Vec<DeviceData>, timestamp: i64) -> Result<(
     // Save per-device timestamps
     for device_id in device_ids {
         let key = format!("{}/{}", keys::LAST_READING_TS_FOR_DEV_PFX, device_id);
-        cache.set(&key, timestamp)?;
+        cache.set(key, &timestamp).await?;
     }
 
     Ok(())
 }
 
-pub fn save_last_status_info_levels(readings: &[DeviceData]) -> Result<()> {
-    let cache = KVDb::new(kvpath::SQLITE_CACHE.as_path())?;
+pub async fn save_last_status_info_levels(readings: &[DeviceData]) -> Result<()> {
+    let cache = AsyncKVDb::new(kvpath::SQLITE_CACHE.as_path()).await?;
 
     for reading in readings {
         let device_id = reading.d.as_deref().unwrap_or("");
@@ -74,7 +75,7 @@ pub fn save_last_status_info_levels(readings: &[DeviceData]) -> Result<()> {
                 device_id,
                 status_info.c
             );
-            cache.set(&key, status_info.l)?;
+            cache.set(key, &status_info.l).await?;
         }
     }
 

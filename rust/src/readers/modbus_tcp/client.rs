@@ -4,6 +4,7 @@ use std::collections::HashMap;
 use std::net::ToSocketAddrs;
 use tokio::time::Duration;
 use tokio_modbus::prelude::*;
+use tracing::Instrument;
 
 use super::config::ModbusDeviceConfig;
 use super::config::{FieldReadingConfig, ModbusReading, StatusReadingConfig};
@@ -115,61 +116,87 @@ impl ModbusTcpReader {
 
         // Process field readings
         for config in field_configs {
-            match self.read_registers_into_bytes(&config).await {
-                Ok(raw_bytes) => {
-                    // Process the raw bytes using the data processing pipeline
-                    match crate::data_mgmt::process::process_reading(
-                        &raw_bytes,
-                        &config.field_config,
-                    ) {
-                        Ok(RtValue::None) => {
-                            log::debug!("Reading '{}' returned no value", config.name);
-                            // Skip None values
-                        }
-                        Ok(value) => {
-                            log::debug!("Successfully read {}: {:?}", config.name, value);
-                            field_readings.push(Reading {
-                                field: config.name.clone(),
-                                value,
-                            });
-                        }
-                        Err(e) => {
-                            log::warn!("Failed to process reading '{}': {}", config.name, e);
-                            // Continue with other readings even if one fails
+            // Create field-level span and instrument the async work
+            let span = tracing::info_span!("field", field = config.name,);
+
+            let result = async {
+                match self.read_registers_into_bytes(&config).await {
+                    Ok(raw_bytes) => {
+                        // Process the raw bytes using the data processing pipeline
+                        match crate::data_mgmt::process::process_reading(
+                            &raw_bytes,
+                            &config.field_config,
+                        ) {
+                            Ok(RtValue::None) => {
+                                log::debug!("Reading '{}' returned no value", config.name);
+                                None
+                            }
+                            Ok(value) => {
+                                log::debug!("Successfully read {}: {:?}", config.name, value);
+                                Some(Reading {
+                                    field: config.name.clone(),
+                                    value,
+                                })
+                            }
+                            Err(e) => {
+                                log::warn!("Failed to process reading '{}': {}", config.name, e);
+                                None
+                            }
                         }
                     }
+                    Err(e) => {
+                        log::error!("Failed to read raw data for '{}': {}", config.name, e);
+                        None
+                    }
                 }
-                Err(e) => {
-                    log::error!("Failed to read raw data for '{}': {}", config.name, e);
-                    // Continue with other readings even if one fails
-                }
+            }
+            .instrument(span)
+            .await;
+
+            if let Some(reading) = result {
+                field_readings.push(reading);
             }
         }
 
         // Process status info readings
         for config in status_info_configs {
-            match self.read_registers_into_bytes(&config).await {
-                Ok(raw_bytes) => {
-                    // Process the raw bytes using the status info processing pipeline
-                    match process_status_info(&raw_bytes, &config.status_info_config) {
-                        Ok(status_reading) => {
-                            log::debug!(
-                                "Successfully read status info {}: {:?}",
-                                config.name,
-                                status_reading
-                            );
-                            status_readings.push(status_reading);
-                        }
-                        Err(e) => {
-                            log::warn!("Failed to process status info '{}': {}", config.name, e);
-                            // Continue with other readings even if one fails
+            // Create status info-level span and instrument the async work
+            let span = tracing::info_span!("status_info", status_info = config.name,);
+
+            let result = async {
+                match self.read_registers_into_bytes(&config).await {
+                    Ok(raw_bytes) => {
+                        // Process the raw bytes using the status info processing pipeline
+                        match process_status_info(&raw_bytes, &config.status_info_config) {
+                            Ok(status_reading) => {
+                                log::debug!(
+                                    "Successfully read status info {}: {:?}",
+                                    config.name,
+                                    status_reading
+                                );
+                                Some(status_reading)
+                            }
+                            Err(e) => {
+                                log::warn!(
+                                    "Failed to process status info '{}': {}",
+                                    config.name,
+                                    e
+                                );
+                                None
+                            }
                         }
                     }
+                    Err(e) => {
+                        log::error!("Failed to read raw data for '{}': {}", config.name, e);
+                        None
+                    }
                 }
-                Err(e) => {
-                    log::error!("Failed to read raw data for '{}': {}", config.name, e);
-                    // Continue with other readings even if one fails
-                }
+            }
+            .instrument(span)
+            .await;
+
+            if let Some(status_reading) = result {
+                status_readings.push(status_reading);
             }
         }
 
