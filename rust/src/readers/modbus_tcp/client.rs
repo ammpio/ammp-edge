@@ -30,8 +30,7 @@ impl ModbusTcpReader {
             .ok_or_else(|| anyhow!("Failed to resolve hostname: {}", config.host))?;
 
         log::debug!(
-            "[{}] Connecting to ModbusTCP device at {}/{}",
-            config.device_key,
+            "Connecting to ModbusTCP device at {}/{}",
             socket_addr,
             config.unit_id
         );
@@ -39,8 +38,7 @@ impl ModbusTcpReader {
         let ctx = Self::retry_connect(config, socket_addr).await?;
 
         log::info!(
-            "[{}] Connected to ModbusTCP device at {}/{}",
-            config.device_key,
+            "Connected to ModbusTCP device at {}/{}",
             socket_addr,
             config.unit_id
         );
@@ -64,36 +62,24 @@ impl ModbusTcpReader {
             .with_max_elapsed_time(Some(config.timeout))
             .build();
 
-        let device_key = config.device_key.clone();
         let unit_id = config.unit_id;
         let timeout = config.timeout;
 
         backoff::future::retry(backoff, || async {
             log::debug!(
-                "[{}] Attempting connection to ModbusTCP device at {}/{}",
-                device_key,
-                socket_addr,
-                unit_id
+                "Attempting connection to ModbusTCP device at {socket_addr}/{unit_id}",
             );
 
             tokio::time::timeout(timeout, tcp::connect_slave(socket_addr, Slave(unit_id)))
                 .await
                 .map_err(|_| {
                     backoff::Error::transient(anyhow!(
-                        "[{}] Connection timeout after {:?} to ModbusTCP device at {}/{}",
-                        device_key,
-                        timeout,
-                        socket_addr,
-                        unit_id
+                        "Connection timeout after {timeout:?} to ModbusTCP device at {socket_addr}/{unit_id}",
                     ))
                 })?
                 .map_err(|e| {
                     backoff::Error::transient(anyhow!(
-                        "[{}] Failed to connect to ModbusTCP device at {}/{}: {}",
-                        device_key,
-                        socket_addr,
-                        unit_id,
-                        e
+                        "Failed to connect to ModbusTCP device at {socket_addr}/{unit_id}: {e}",
                     ))
                 })
         })
