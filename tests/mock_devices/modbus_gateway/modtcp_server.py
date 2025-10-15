@@ -2,7 +2,7 @@ import logging
 from socketserver import TCPServer
 from argparse import ArgumentParser
 
-from umodbus.exceptions import IllegalDataAddressError
+from umodbus.exceptions import GatewayTargetDeviceFailedToRespondError, IllegalDataAddressError
 from umodbus.server.tcp import RequestHandler, get_server
 from umodbus.utils import log_to_stream
 
@@ -48,6 +48,9 @@ def read_ems(slave_id: int, function_code: int, address: int) -> int:
 @app.route(slave_ids=[SmaStpMockResponses.SLAVE_ID], function_codes=READ_REGISTER_FUNCTION_CODES, addresses=ALL_ADDRESSES)
 def read_sma_stp(slave_id: int, function_code: int, address: int) -> int:
     """" Return value of address. """
+    if slave_id != SmaStpMockResponses.SLAVE_ID:
+        raise GatewayTargetDeviceFailedToRespondError()
+
     try:
         return SmaStpMockResponses.REGISTER_MAP[address]
     except KeyError:

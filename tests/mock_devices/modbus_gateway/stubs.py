@@ -22,6 +22,8 @@ class SmaStpMockResponses:
         30054: 9197,
         30057: 18838,  # Serial number (2 registers); 1234567890
         30058: 722,
+        30529: 123,  # Total yield (2 registers); 12,345,678 Wh
+        30530: 45678,
         30775: 0,  # Total output power (int32); 12,345 W
         30776: 12345,
     }

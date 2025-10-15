@@ -31,3 +31,6 @@ tests/.cache
 
 # Ruff cache
 .ruff_cache/
+
+# Claude Code settings
+.claude/
