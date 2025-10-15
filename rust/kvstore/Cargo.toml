@@ -11,7 +11,9 @@ env_logger = { version = "*", default-features = false }
 rusqlite = { version = "*" }
 serde = "*"
 serde_json = "*"
+tokio = { version = "*", features = ["sync", "rt"] }
 
 [dev-dependencies]
 serde = {version = "*", features = ["derive"] }
 tempfile = "*"
+tokio = { version = "*", features = ["macros"] }

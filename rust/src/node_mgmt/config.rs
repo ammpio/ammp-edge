@@ -1,4 +1,4 @@
-use kvstore::{KVDb, KVStoreError};
+use kvstore::{AsyncKVDb, KVDb, KVStoreError};
 use thiserror::Error;
 
 use crate::constants::keys;
@@ -25,6 +25,14 @@ pub fn get(kvs: &KVDb) -> Result<Config, ConfigError> {
     kvs.get(keys::CONFIG)?.ok_or(ConfigError::NoConfigSet)
 }
 
+pub async fn get_async(kvs: &AsyncKVDb) -> Result<Config, ConfigError> {
+    kvs.get(keys::CONFIG).await?.ok_or(ConfigError::NoConfigSet)
+}
+
 pub fn set(kvs: &KVDb, config: &Config) -> Result<(), ConfigError> {
     kvs.set(keys::CONFIG, config).map_err(Into::into)
+}
+
+pub async fn set_async(kvs: &AsyncKVDb, config: &Config) -> Result<(), ConfigError> {
+    kvs.set(keys::CONFIG, config).await.map_err(Into::into)
 }
