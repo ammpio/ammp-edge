@@ -6,7 +6,7 @@ use std::sync::Arc;
 
 use anyhow::{Result, anyhow};
 use chrono::{DateTime, Utc};
-use kvstore::KVDb;
+use kvstore::AsyncKVDb;
 use once_cell::sync::Lazy;
 use tokio::sync::Mutex;
 use tokio::time::Duration;
@@ -67,7 +67,7 @@ async fn organize_readings_by_device(
     config: &Config,
 ) -> Result<HashMap<String, DeviceReadingJob>> {
     let mut dev_read_job_map: HashMap<String, DeviceReadingJob> = HashMap::new();
-    let cache = KVDb::new(kvpath::SQLITE_CACHE.as_path())?;
+    let cache = AsyncKVDb::new(kvpath::SQLITE_CACHE.as_path()).await?;
 
     // Iterate through all configured field readings
     for (reading_name, reading_config) in &config.readings {
@@ -89,7 +89,13 @@ async fn organize_readings_by_device(
 
         // Skip device if min_read_interval not met
         if let Some(min_read_interval) = device.min_read_interval
-            && !min_read_interval_elapsed(device_key, min_read_interval, reading_timestamp, &cache)
+            && !min_read_interval_elapsed_async(
+                device_key,
+                min_read_interval,
+                reading_timestamp,
+                &cache,
+            )
+            .await
         {
             log::debug!(
                 "Skipping device '{}'; min_read_interval of {}s not met",
@@ -124,7 +130,13 @@ async fn organize_readings_by_device(
 
         // Skip device if min_read_interval not met
         if let Some(min_read_interval) = device.min_read_interval
-            && !min_read_interval_elapsed(device_key, min_read_interval, reading_timestamp, &cache)
+            && !min_read_interval_elapsed_async(
+                device_key,
+                min_read_interval,
+                reading_timestamp,
+                &cache,
+            )
+            .await
         {
             log::debug!(
                 "Skipping device '{}'; min_read_interval of {}s not met",
@@ -236,14 +248,14 @@ async fn get_device_lock(physical_id: PhysicalDeviceId) -> Arc<Mutex<()>> {
         .clone()
 }
 
-fn min_read_interval_elapsed(
+async fn min_read_interval_elapsed_async(
     device_key: &str,
     min_read_interval: i64,
     reading_timestamp: DateTime<Utc>,
-    cache: &KVDb,
+    cache: &AsyncKVDb,
 ) -> bool {
     let cache_key = format!("{}/{}", keys::LAST_READING_TS_FOR_DEV_PFX, device_key);
-    let last_timestamp: i64 = match cache.get(&cache_key) {
+    let last_timestamp: i64 = match cache.get(cache_key).await {
         Ok(value) => value.unwrap_or(0),
         Err(e) => {
             log::error!(

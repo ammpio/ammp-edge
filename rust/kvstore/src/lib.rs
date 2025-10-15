@@ -5,6 +5,9 @@ use rusqlite::{params, Connection, OptionalExtension};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
+pub mod async_kvdb;
+pub use async_kvdb::AsyncKVDb;
+
 const TABLENAME: &str = "kvstore";
 const KEY_FIELD: &str = "key";
 const VALUE_FIELD: &str = "value";
