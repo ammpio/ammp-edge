@@ -30,8 +30,7 @@ impl ModbusTcpReader {
             .ok_or_else(|| anyhow!("Failed to resolve hostname: {}", config.host))?;
 
         log::debug!(
-            "[{}] Connecting to ModbusTCP device at {}/{}",
-            config.device_key,
+            "Connecting to ModbusTCP device at {}/{}",
             socket_addr,
             config.unit_id
         );
@@ -39,8 +38,7 @@ impl ModbusTcpReader {
         let ctx = Self::retry_connect(config, socket_addr).await?;
 
         log::info!(
-            "[{}] Connected to ModbusTCP device at {}/{}",
-            config.device_key,
+            "Connected to ModbusTCP device at {}/{}",
             socket_addr,
             config.unit_id
         );
@@ -64,36 +62,24 @@ impl ModbusTcpReader {
             .with_max_elapsed_time(Some(config.timeout))
             .build();
 
-        let device_key = config.device_key.clone();
         let unit_id = config.unit_id;
         let timeout = config.timeout;
 
         backoff::future::retry(backoff, || async {
             log::debug!(
-                "[{}] Attempting connection to ModbusTCP device at {}/{}",
-                device_key,
-                socket_addr,
-                unit_id
+                "Attempting connection to ModbusTCP device at {socket_addr}/{unit_id}",
             );
 
             tokio::time::timeout(timeout, tcp::connect_slave(socket_addr, Slave(unit_id)))
                 .await
                 .map_err(|_| {
                     backoff::Error::transient(anyhow!(
-                        "[{}] Connection timeout after {:?} to ModbusTCP device at {}/{}",
-                        device_key,
-                        timeout,
-                        socket_addr,
-                        unit_id
+                        "Connection timeout after {timeout:?} to ModbusTCP device at {socket_addr}/{unit_id}",
                     ))
                 })?
                 .map_err(|e| {
                     backoff::Error::transient(anyhow!(
-                        "[{}] Failed to connect to ModbusTCP device at {}/{}: {}",
-                        device_key,
-                        socket_addr,
-                        unit_id,
-                        e
+                        "Failed to connect to ModbusTCP device at {socket_addr}/{unit_id}: {e}",
                     ))
                 })
         })
@@ -117,7 +103,7 @@ impl ModbusTcpReader {
         // Process field readings
         for config in field_configs {
             // Create field-level span and instrument the async work
-            let span = tracing::info_span!("field", field = config.name,);
+            let span = tracing::info_span!("field", f = config.name,);
 
             let result = async {
                 match self.read_registers_into_bytes(&config).await {
@@ -161,7 +147,7 @@ impl ModbusTcpReader {
         // Process status info readings
         for config in status_info_configs {
             // Create status info-level span and instrument the async work
-            let span = tracing::info_span!("status_info", status_info = config.name,);
+            let span = tracing::info_span!("status_info", s = config.name,);
 
             let result = async {
                 match self.read_registers_into_bytes(&config).await {
@@ -243,14 +229,29 @@ impl ModbusTcpReader {
             function_code
         );
 
-        let read_future = match function_code {
-            3 => self.context.read_holding_registers(register, count),
-            4 => self.context.read_input_registers(register, count),
-            _ => {
-                return Err(anyhow!(
-                    "Unsupported ModbusTCP function code: {}",
-                    function_code
-                ));
+        if ![1, 2, 3, 4].contains(&function_code) {
+            return Err(anyhow!(
+                "Unsupported ModbusTCP function code: {}",
+                function_code
+            ));
+        }
+
+        // If we read coils (fncode 1 or 2), we convert bool results to u16 (true=1, false=0)
+        let read_future = async {
+            match function_code {
+                1 => self
+                    .context
+                    .read_coils(register, count)
+                    .await
+                    .map(|r| r.map(|v| v.into_iter().map(|b| b as u16).collect())),
+                2 => self
+                    .context
+                    .read_discrete_inputs(register, count)
+                    .await
+                    .map(|r| r.map(|v| v.into_iter().map(|b| b as u16).collect())),
+                3 => self.context.read_holding_registers(register, count).await,
+                4 => self.context.read_input_registers(register, count).await,
+                _ => unreachable!(),
             }
         };
 

@@ -93,30 +93,20 @@ impl ModbusDeviceConfig {
             );
             match arp_get_ip_from_mac(mac_addr) {
                 Ok(Some(ip)) => {
-                    log::info!("[{}] Resolved MAC {} to IP {}", device_key, mac_addr, ip,);
+                    log::info!("Resolved MAC {mac_addr} to IP {ip}");
                     ip
                 }
                 Ok(None) => {
                     return Err(anyhow!(
-                        "[{}] MAC {} not found in ARP table. Device may be offline or not on local network.",
-                        device_key,
-                        mac_addr
+                        "MAC {mac_addr} not found in ARP table. Device may be offline or not on local network."
                     ));
                 }
                 Err(e) => {
-                    return Err(anyhow!(
-                        "[{}] Failed to resolve MAC {} to IP: {}",
-                        device_key,
-                        mac_addr,
-                        e
-                    ));
+                    return Err(anyhow!("Failed to resolve MAC {mac_addr} to IP: {e}",));
                 }
             }
         } else {
-            return Err(anyhow!(
-                "[{}] Missing both host IP and MAC address",
-                device_key,
-            ));
+            return Err(anyhow!("Missing both host IP and MAC address",));
         };
 
         Ok(host)

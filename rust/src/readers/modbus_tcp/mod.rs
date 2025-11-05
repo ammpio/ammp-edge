@@ -81,10 +81,7 @@ pub async fn read_device(
         .await?;
 
     if readings.is_empty() && status_readings.is_empty() {
-        log::warn!(
-            "[{}] No successful readings from ModbusTCP device",
-            device_config.device_key,
-        );
+        log::warn!("No successful readings from ModbusTCP device");
     } else {
         log::info!(
             "Successfully read {} fields and {} status info from ModbusTCP device {}",

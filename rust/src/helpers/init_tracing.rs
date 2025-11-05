@@ -20,6 +20,5 @@ pub fn init_tracing() {
         .with_env_filter(filter)
         .with_writer(std::io::stderr)
         .without_time()
-        .compact()
         .init();
 }
