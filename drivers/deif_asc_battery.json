@@ -1,0 +1,497 @@
+{
+  "common": {
+    "fncode": 4
+  },
+  "fields": {
+    "W_load": {
+      "unit": "W",
+      "words": 2,
+      "datatype": "int32",
+      "register": 765,
+      "multiplier": 1000,
+      "description": "Active Power Load"
+    },
+    "bess_P": {
+      "unit": "W",
+      "words": 1,
+      "datatype": "int16",
+      "register": 519,
+      "multiplier": 1000,
+      "description": "PV/ESS power"
+    },
+    "bess_SOC": {
+      "unit": "%",
+      "words": 1,
+      "datatype": "int16",
+      "register": 602,
+      "description": "BESS state of charge (SOC)"
+    }
+  },
+  "status_info_common": {
+    "fncode": 4,
+    "bit_order": "lsb",
+    "length_bits": 1,
+    "status_level_value_map": [
+      [
+        0,
+        0
+      ],
+      [
+        1,
+        3
+      ]
+    ]
+  },
+  "status_info": {
+    "U_less_than_aux_term_1": {
+      "content": "U< aux. term. 1",
+      "register": 1014,
+      "start_bit": 1
+    },
+    "U_greater_than_aux_term_1": {
+      "content": "U> aux. term. 1",
+      "register": 1014,
+      "start_bit": 2
+    },
+    "fail_class_warning": {
+      "content": "Fail class: Warning",
+      "register": 1057,
+      "start_bit": 1
+    },
+    "fail_class_trip_esb_pvb": {
+      "content": "Fail class: Trip ESB/PVB",
+      "register": 1057,
+      "start_bit": 2
+    },
+    "fail_class_shutdown": {
+      "content": "Fail class: Shutdown",
+      "register": 1057,
+      "start_bit": 4
+    },
+    "fail_class_trip_mb": {
+      "content": "Fail class: Trip MB",
+      "register": 1057,
+      "start_bit": 5
+    },
+    "esb_pos_failure": {
+      "content": "ESB pos. failure",
+      "register": 1005,
+      "start_bit": 6
+    },
+    "mb_pos_failure": {
+      "content": "MB pos. failure",
+      "register": 1005,
+      "start_bit": 9
+    },
+    "synchronising_failure_esb": {
+      "content": "Synchronising failure ESB",
+      "register": 1005,
+      "start_bit": 1
+    },
+    "synchronising_failure_mb": {
+      "content": "Synchronising failure MB",
+      "register": 1005,
+      "start_bit": 2
+    },
+    "ess_pv_running status": {
+      "content": "ESS/PV running status",
+      "register": 1326,
+      "start_bit": 0
+    },
+    "can_1_missing_id_1": {
+      "content": "CAN 1 missing ID 1",
+      "register": 1040,
+      "start_bit": 0
+    },
+    "can_1_missing_id_2": {
+      "content": "CAN 1 missing ID 2",
+      "register": 1040,
+      "start_bit": 1
+    },
+    "can_1_missing_id_3": {
+      "content": "CAN 1 missing ID 3",
+      "register": 1040,
+      "start_bit": 2
+    },
+    "can_1_missing_id_4": {
+      "content": "CAN 1 missing ID 4",
+      "register": 1040,
+      "start_bit": 3
+    },
+    "can_1_missing_id_5": {
+      "content": "CAN 1 missing ID 5",
+      "register": 1040,
+      "start_bit": 4
+    },
+    "can_1_missing_id_6": {
+      "content": "CAN 1 missing ID 6",
+      "register": 1040,
+      "start_bit": 5
+    },
+    "can_1_missing_id_7": {
+      "content": "CAN 1 missing ID 7",
+      "register": 1040,
+      "start_bit": 6
+    },
+    "can_1_missing_id_8": {
+      "content": "CAN 1 missing ID 8",
+      "register": 1040,
+      "start_bit": 7
+    },
+    "can_1_missing_id_9": {
+      "content": "CAN 1 missing ID 9",
+      "register": 1040,
+      "start_bit": 8
+    },
+    "can_1_missing_id_10": {
+      "content": "CAN 1 missing ID 10",
+      "register": 1040,
+      "start_bit": 9
+    },
+    "can_1_missing_id_11": {
+      "content": "CAN 1 missing ID 11",
+      "register": 1040,
+      "start_bit": 10
+    },
+    "can_1_missing_id_12": {
+      "content": "CAN 1 missing ID 12",
+      "register": 1040,
+      "start_bit": 11
+    },
+    "can_1_missing_id_13": {
+      "content": "CAN 1 missing ID 13",
+      "register": 1040,
+      "start_bit": 12
+    },
+    "can_1_missing_id_14": {
+      "content": "CAN 1 missing ID 14",
+      "register": 1040,
+      "start_bit": 13
+    },
+    "can_1_missing_id_15": {
+      "content": "CAN 1 missing ID 15",
+      "register": 1040,
+      "start_bit": 14
+    },
+    "can_1_missing_id_16": {
+      "content": "CAN 1 missing ID 16",
+      "register": 1040,
+      "start_bit": 15
+    },
+    "can_1_missing_id_17": {
+      "content": "CAN 1 missing ID 17",
+      "register": 1041,
+      "start_bit": 0
+    },
+    "can_1_missing_id_18": {
+      "content": "CAN 1 missing ID 18",
+      "register": 1041,
+      "start_bit": 1
+    },
+    "can_1_missing_id_19": {
+      "content": "CAN 1 missing ID 19",
+      "register": 1041,
+      "start_bit": 2
+    },
+    "can_1_missing_id_20": {
+      "content": "CAN 1 missing ID 20",
+      "register": 1041,
+      "start_bit": 3
+    },
+    "can_1_missing_id_21": {
+      "content": "CAN 1 missing ID 21",
+      "register": 1041,
+      "start_bit": 4
+    },
+    "can_1_missing_id_22": {
+      "content": "CAN 1 missing ID 22",
+      "register": 1041,
+      "start_bit": 5
+    },
+    "can_1_missing_id_23": {
+      "content": "CAN 1 missing ID 23",
+      "register": 1041,
+      "start_bit": 6
+    },
+    "can_1_missing_id_24": {
+      "content": "CAN 1 missing ID 24",
+      "register": 1041,
+      "start_bit": 7
+    },
+    "can_1_missing_id_25": {
+      "content": "CAN 1 missing ID 25",
+      "register": 1041,
+      "start_bit": 8
+    },
+    "can_1_missing_id_26": {
+      "content": "CAN 1 missing ID 26",
+      "register": 1041,
+      "start_bit": 9
+    },
+    "can_1_missing_id_27": {
+      "content": "CAN 1 missing ID 27",
+      "register": 1041,
+      "start_bit": 10
+    },
+    "can_1_missing_id_28": {
+      "content": "CAN 1 missing ID 28",
+      "register": 1041,
+      "start_bit": 11
+    },
+    "can_1_missing_id_29": {
+      "content": "CAN 1 missing ID 29",
+      "register": 1041,
+      "start_bit": 12
+    },
+    "can_1_missing_id_30": {
+      "content": "CAN 1 missing ID 30",
+      "register": 1041,
+      "start_bit": 13
+    },
+    "can_1_missing_id_31": {
+      "content": "CAN 1 missing ID 31",
+      "register": 1041,
+      "start_bit": 14
+    },
+    "can_1_missing_id_32": {
+      "content": "CAN 1 missing ID 32",
+      "register": 1041,
+      "start_bit": 15
+    },
+    "can_1_missing_id_33": {
+      "content": "CAN 1 missing ID 33",
+      "register": 1042,
+      "start_bit": 0
+    },
+    "can_1_missing_id_34": {
+      "content": "CAN 1 missing ID 34",
+      "register": 1042,
+      "start_bit": 1
+    },
+    "can_1_missing_id_35": {
+      "content": "CAN 1 missing ID 35",
+      "register": 1042,
+      "start_bit": 2
+    },
+    "can_1_missing_id_36": {
+      "content": "CAN 1 missing ID 36",
+      "register": 1042,
+      "start_bit": 3
+    },
+    "can_1_missing_id_37": {
+      "content": "CAN 1 missing ID 37",
+      "register": 1042,
+      "start_bit": 4
+    },
+    "can_1_missing_id_38": {
+      "content": "CAN 1 missing ID 38",
+      "register": 1042,
+      "start_bit": 5
+    },
+    "can_1_missing_id_39": {
+      "content": "CAN 1 missing ID 39",
+      "register": 1042,
+      "start_bit": 6
+    },
+    "can_2_missing_id_1": {
+      "content": "CAN 2 missing ID 1",
+      "register": 1043,
+      "start_bit": 0
+    },
+    "can_2_missing_id_2": {
+      "content": "CAN 2 missing ID 2",
+      "register": 1043,
+      "start_bit": 1
+    },
+    "can_2_missing_id_3": {
+      "content": "CAN 2 missing ID 3",
+      "register": 1043,
+      "start_bit": 2
+    },
+    "can_2_missing_id_4": {
+      "content": "CAN 2 missing ID 4",
+      "register": 1043,
+      "start_bit": 3
+    },
+    "can_2_missing_id_5": {
+      "content": "CAN 2 missing ID 5",
+      "register": 1043,
+      "start_bit": 4
+    },
+    "can_2_missing_id_6": {
+      "content": "CAN 2 missing ID 6",
+      "register": 1043,
+      "start_bit": 5
+    },
+    "can_2_missing_id_7": {
+      "content": "CAN 2 missing ID 7",
+      "register": 1043,
+      "start_bit": 6
+    },
+    "can_2_missing_id_8": {
+      "content": "CAN 2 missing ID 8",
+      "register": 1043,
+      "start_bit": 7
+    },
+    "can_2_missing_id_9": {
+      "content": "CAN 2 missing ID 9",
+      "register": 1043,
+      "start_bit": 8
+    },
+    "can_2_missing_id_10": {
+      "content": "CAN 2 missing ID 10",
+      "register": 1043,
+      "start_bit": 9
+    },
+    "can_2_missing_id_11": {
+      "content": "CAN 2 missing ID 11",
+      "register": 1043,
+      "start_bit": 10
+    },
+    "can_2_missing_id_12": {
+      "content": "CAN 2 missing ID 12",
+      "register": 1043,
+      "start_bit": 11
+    },
+    "can_2_missing_id_13": {
+      "content": "CAN 2 missing ID 13",
+      "register": 1043,
+      "start_bit": 12
+    },
+    "can_2_missing_id_14": {
+      "content": "CAN 2 missing ID 14",
+      "register": 1043,
+      "start_bit": 13
+    },
+    "can_2_missing_id_15": {
+      "content": "CAN 2 missing ID 15",
+      "register": 1043,
+      "start_bit": 14
+    },
+    "can_2_missing_id_16": {
+      "content": "CAN 2 missing ID 16",
+      "register": 1043,
+      "start_bit": 15
+    },
+    "can_2_missing_id_17": {
+      "content": "CAN 2 missing ID 17",
+      "register": 1044,
+      "start_bit": 0
+    },
+    "can_2_missing_id_18": {
+      "content": "CAN 2 missing ID 18",
+      "register": 1044,
+      "start_bit": 1
+    },
+    "can_2_missing_id_19": {
+      "content": "CAN 2 missing ID 19",
+      "register": 1044,
+      "start_bit": 2
+    },
+    "can_2_missing_id_20": {
+      "content": "CAN 2 missing ID 20",
+      "register": 1044,
+      "start_bit": 3
+    },
+    "can_2_missing_id_21": {
+      "content": "CAN 2 missing ID 21",
+      "register": 1044,
+      "start_bit": 4
+    },
+    "can_2_missing_id_22": {
+      "content": "CAN 2 missing ID 22",
+      "register": 1044,
+      "start_bit": 5
+    },
+    "can_2_missing_id_23": {
+      "content": "CAN 2 missing ID 23",
+      "register": 1044,
+      "start_bit": 6
+    },
+    "can_2_missing_id_24": {
+      "content": "CAN 2 missing ID 24",
+      "register": 1044,
+      "start_bit": 7
+    },
+    "can_2_missing_id_25": {
+      "content": "CAN 2 missing ID 25",
+      "register": 1044,
+      "start_bit": 8
+    },
+    "can_2_missing_id_26": {
+      "content": "CAN 2 missing ID 26",
+      "register": 1044,
+      "start_bit": 9
+    },
+    "can_2_missing_id_27": {
+      "content": "CAN 2 missing ID 27",
+      "register": 1044,
+      "start_bit": 10
+    },
+    "can_2_missing_id_28": {
+      "content": "CAN 2 missing ID 28",
+      "register": 1044,
+      "start_bit": 11
+    },
+    "can_2_missing_id_29": {
+      "content": "CAN 2 missing ID 29",
+      "register": 1044,
+      "start_bit": 12
+    },
+    "can_2_missing_id_30": {
+      "content": "CAN 2 missing ID 30",
+      "register": 1044,
+      "start_bit": 13
+    },
+    "can_2_missing_id_31": {
+      "content": "CAN 2 missing ID 31",
+      "register": 1044,
+      "start_bit": 14
+    },
+    "can_2_missing_id_32": {
+      "content": "CAN 2 missing ID 32",
+      "register": 1044,
+      "start_bit": 15
+    },
+    "can_2_missing_id_33": {
+      "content": "CAN 2 missing ID 33",
+      "register": 1045,
+      "start_bit": 0
+    },
+    "can_2_missing_id_34": {
+      "content": "CAN 2 missing ID 34",
+      "register": 1045,
+      "start_bit": 1
+    },
+    "can_2_missing_id_35": {
+      "content": "CAN 2 missing ID 35",
+      "register": 1045,
+      "start_bit": 2
+    },
+    "can_2_missing_id_36": {
+      "content": "CAN 2 missing ID 36",
+      "register": 1045,
+      "start_bit": 3
+    },
+    "can_2_missing_id_37": {
+      "content": "CAN 2 missing ID 37",
+      "register": 1045,
+      "start_bit": 4
+    },
+    "can_2_missing_id_38": {
+      "content": "CAN 2 missing ID 38",
+      "register": 1045,
+      "start_bit": 5
+    },
+    "can_2_missing_id_39": {
+      "content": "CAN 2 missing ID 39",
+      "register": 1045,
+      "start_bit": 6
+    },
+    "can_2_missing_id_40": {
+      "content": "CAN 2 missing ID 40",
+      "register": 1045,
+      "start_bit": 7
+    }
+  }
+}
