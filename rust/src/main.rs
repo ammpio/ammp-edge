@@ -11,6 +11,7 @@ const CMD_KVS_GET: &str = "kvs-get";
 const CMD_KVS_SET: &str = "kvs-set";
 const CMD_MQTT_PUB_META: &str = "mqtt-pub-meta";
 const CMD_MQTT_SUB_CFG_CMD: &str = "mqtt-sub-cfg-cmd";
+const CMD_MQTT_BRIDGE: &str = "mqtt-bridge";
 const CMD_READ_SMA_HYCON_CSV: &str = "read-sma-hycon-csv";
 const CMD_START_READINGS: &str = "start-readings";
 const CMD_WAIT_FOR_TIME_SOURCE: &str = "wait-for-time-source";
@@ -18,6 +19,8 @@ const CMD_WAIT_FOR_TIME_SOURCE: &str = "wait-for-time-source";
 fn main() -> Result<()> {
     load_dotenv();
     init_tracing();
+
+    let rt = tokio::runtime::Runtime::new()?;
 
     let mut args = pico_args::Arguments::from_env();
     match args.subcommand()?.as_deref() {
@@ -31,17 +34,17 @@ fn main() -> Result<()> {
         }),
         Some(CMD_MQTT_PUB_META) => command::mqtt_pub_meta(),
         Some(CMD_MQTT_SUB_CFG_CMD) => command::mqtt_sub_cfg_cmd(),
+        Some(CMD_MQTT_BRIDGE) => rt.block_on(command::mqtt_bridge()),
         Some(CMD_READ_SMA_HYCON_CSV) => command::read_sma_hycon_csv(),
         Some(CMD_START_READINGS) => {
             let once = args.contains("--once");
-            let rt = tokio::runtime::Runtime::new()?;
             rt.block_on(command::start_readings(once))
         }
         Some(CMD_WAIT_FOR_TIME_SOURCE) => command::wait_for_time_source(),
         _ => Err(anyhow!(
             r#"
             Subcommand must be one of '{CMD_INIT}', '{CMD_KVS_GET}', '{CMD_KVS_SET}', '{CMD_MQTT_PUB_META}', '{CMD_MQTT_SUB_CFG_CMD}',
-            '{CMD_START_READINGS}', '{CMD_WAIT_FOR_TIME_SOURCE}', '{CMD_READ_SMA_HYCON_CSV}'
+            '{CMD_MQTT_BRIDGE}', '{CMD_START_READINGS}', '{CMD_WAIT_FOR_TIME_SOURCE}', '{CMD_READ_SMA_HYCON_CSV}'
             "#
         )),
     }

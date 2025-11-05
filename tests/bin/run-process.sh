@@ -18,6 +18,9 @@ case "$CMD" in
         done
         python3 -m flask run
         ;;
+    "mqtt-bridge" )
+        ae mqtt-bridge
+        ;;
     *)
     echo >&2 "Invalid option: $CMD";
     exit 1

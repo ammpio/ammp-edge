@@ -29,6 +29,7 @@ dependencies = [
  "byteorder",
  "chrono",
  "chrono-tz",
+ "convoy",
  "derived_models",
  "dotenv",
  "flume",
@@ -55,7 +56,7 @@ dependencies = [
  "sysinfo",
  "temp-env",
  "tempfile",
- "thiserror",
+ "thiserror 2.0.16",
  "tokio",
  "tokio-modbus",
  "tracing",
@@ -394,6 +395,23 @@ name = "colorchoice"
 version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b05b61dc5112cbb17e4b6cd61790d9845d13888356391624cbe7e41efeac1e75"
+
+[[package]]
+name = "convoy"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "76f35cb5cda6adf3012c417807f7c035ee2c658a66273a02380067b9030300b1"
+dependencies = [
+ "backoff",
+ "chrono",
+ "native-tls",
+ "rumqttc",
+ "rusqlite",
+ "serde",
+ "thiserror 1.0.69",
+ "tokio",
+ "tracing",
+]
 
 [[package]]
 name = "cookie"
@@ -1183,6 +1201,7 @@ dependencies = [
  "serde",
  "serde_json",
  "tempfile",
+ "tokio",
 ]
 
 [[package]]
@@ -1791,8 +1810,10 @@ dependencies = [
  "flume",
  "futures-util",
  "log",
- "thiserror",
+ "native-tls",
+ "thiserror 2.0.16",
  "tokio",
+ "tokio-native-tls",
  "tokio-stream",
  "tokio-util",
 ]
@@ -2029,6 +2050,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0fda2ff0d084019ba4d7c6f371c95d8fd75ce3524c3cb8fb653a3023f6323e64"
 
 [[package]]
+name = "signal-hook-registry"
+version = "1.4.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b2a4719bff48cee6b39d12c020eeb490953ad2443b7055bd0b21fca26bd8c28b"
+dependencies = [
+ "libc",
+]
+
+[[package]]
 name = "simd-adler32"
 version = "0.3.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2110,7 +2140,7 @@ dependencies = [
  "lazy-regex",
  "log",
  "native-tls",
- "thiserror",
+ "thiserror 2.0.16",
 ]
 
 [[package]]
@@ -2178,11 +2208,31 @@ checksum = "8f50febec83f5ee1df3015341d8bd429f2d1cc62bcba7ea2076759d315084683"
 
 [[package]]
 name = "thiserror"
+version = "1.0.69"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b6aaf5339b578ea85b50e080feb250a3e8ae8cfcdff9a461c9ec2904bc923f52"
+dependencies = [
+ "thiserror-impl 1.0.69",
+]
+
+[[package]]
+name = "thiserror"
 version = "2.0.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3467d614147380f2e4e374161426ff399c91084acd2363eaf549172b3d5e60c0"
 dependencies = [
- "thiserror-impl",
+ "thiserror-impl 2.0.16",
+]
+
+[[package]]
+name = "thiserror-impl"
+version = "1.0.69"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4fee6c4efc90059e10f81e6d42c60a18f76588c3d74cb83a0b242a2b6c7504c1"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
@@ -2257,7 +2307,9 @@ dependencies = [
  "io-uring",
  "libc",
  "mio",
+ "parking_lot",
  "pin-project-lite",
+ "signal-hook-registry",
  "slab",
  "socket2",
  "tokio-macros",
@@ -2288,9 +2340,19 @@ dependencies = [
  "futures-util",
  "log",
  "smallvec",
- "thiserror",
+ "thiserror 2.0.16",
  "tokio",
  "tokio-util",
+]
+
+[[package]]
+name = "tokio-native-tls"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bbae76ab933c85776efabc971569dd6119c580d8f5d448769dec1764bf796ef2"
+dependencies = [
+ "native-tls",
+ "tokio",
 ]
 
 [[package]]
@@ -2404,7 +2466,7 @@ dependencies = [
  "serde",
  "serde_json",
  "syn",
- "thiserror",
+ "thiserror 2.0.16",
  "unicode-ident",
 ]
 

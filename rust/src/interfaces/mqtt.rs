@@ -33,6 +33,9 @@ static MQTT_BRIDGE_PORT: Lazy<u16> = Lazy::new(|| {
     defaults::MQTT_BRIDGE_PORT
 });
 
+pub static MQTT_BRIDGE_HOST_PORT: Lazy<String> =
+    Lazy::new(|| format!("{}:{}", MQTT_BRIDGE_HOST.clone(), MQTT_BRIDGE_PORT.clone()));
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct MqttMessage {
     pub topic: String,

@@ -38,6 +38,16 @@ services:
       - ./.cache:/data
     ports:
       - "1883:1883"
+  mqtt-bridge:
+    container_name: mqtt-bridge
+    image: ammp-edge_image
+    depends_on:
+      - mosquitto-broker
+    env_file:
+      - env.local
+    volumes:
+      - ./.cache/data:/data
+    command: mqtt-bridge
   mock_modbus_gateway:
     container_name: mock-modbus-gateway
     image: python:3.12-bullseye
