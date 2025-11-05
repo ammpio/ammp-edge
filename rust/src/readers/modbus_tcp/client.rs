@@ -103,7 +103,7 @@ impl ModbusTcpReader {
         // Process field readings
         for config in field_configs {
             // Create field-level span and instrument the async work
-            let span = tracing::info_span!("field", field = config.name,);
+            let span = tracing::info_span!("field", f = config.name,);
 
             let result = async {
                 match self.read_registers_into_bytes(&config).await {
@@ -147,7 +147,7 @@ impl ModbusTcpReader {
         // Process status info readings
         for config in status_info_configs {
             // Create status info-level span and instrument the async work
-            let span = tracing::info_span!("status_info", status_info = config.name,);
+            let span = tracing::info_span!("status_info", s = config.name,);
 
             let result = async {
                 match self.read_registers_into_bytes(&config).await {

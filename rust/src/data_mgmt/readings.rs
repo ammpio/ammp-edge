@@ -210,7 +210,7 @@ fn spawn_device_reading_job(
     let config_drivers = config_drivers.clone();
 
     // Create device-level span for this reading operation
-    let span = tracing::info_span!("read_device", device = dev_read_job.device.key,);
+    let span = tracing::info_span!("read", device = dev_read_job.device.key,);
 
     tokio::spawn(
         async move {
