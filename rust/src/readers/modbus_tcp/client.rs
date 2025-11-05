@@ -229,14 +229,29 @@ impl ModbusTcpReader {
             function_code
         );
 
-        let read_future = match function_code {
-            3 => self.context.read_holding_registers(register, count),
-            4 => self.context.read_input_registers(register, count),
-            _ => {
-                return Err(anyhow!(
-                    "Unsupported ModbusTCP function code: {}",
-                    function_code
-                ));
+        if ![1, 2, 3, 4].contains(&function_code) {
+            return Err(anyhow!(
+                "Unsupported ModbusTCP function code: {}",
+                function_code
+            ));
+        }
+
+        // If we read coils (fncode 1 or 2), we convert bool results to u16 (true=1, false=0)
+        let read_future = async {
+            match function_code {
+                1 => self
+                    .context
+                    .read_coils(register, count)
+                    .await
+                    .map(|r| r.map(|v| v.into_iter().map(|b| b as u16).collect())),
+                2 => self
+                    .context
+                    .read_discrete_inputs(register, count)
+                    .await
+                    .map(|r| r.map(|v| v.into_iter().map(|b| b as u16).collect())),
+                3 => self.context.read_holding_registers(register, count).await,
+                4 => self.context.read_input_registers(register, count).await,
+                _ => unreachable!(),
             }
         };
 
