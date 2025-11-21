@@ -1,0 +1,1597 @@
+{
+  "sungrow_lc": {
+    "common": {
+      "fncode": 4
+    },
+    "fields": {
+      "system_soh": {
+        "unit": "%",
+        "words": 1,
+        "datatype": "uint16",
+        "register": 18307,
+        "valuemap": {
+          "0x0000": null
+        },
+        "multiplier": 1,
+        "description": "System SOH"
+      },
+      "working_status": {
+        "words": 1,
+        "datatype": "uint16",
+        "register": 18313,
+        "multiplier": 1,
+        "description": "Working status - 3 means charging mode, 4 means discharging mode"
+      },
+      "battery_max_soc": {
+        "unit": "%",
+        "words": 1,
+        "datatype": "uint16",
+        "register": 18315,
+        "valuemap": {
+          "0x0000": null
+        },
+        "multiplier": 0.1,
+        "description": "Battery max SOC"
+      },
+      "battery_min_soc": {
+        "unit": "%",
+        "words": 1,
+        "datatype": "uint16",
+        "register": 18314,
+        "valuemap": {
+          "0x0000": null
+        },
+        "multiplier": 0.1,
+        "description": "Battery min SOC"
+      },
+      "service_current": {
+        "unit": "A",
+        "words": 1,
+        "datatype": "int16",
+        "register": 18305,
+        "valuemap": {
+          "0x0000": null
+        },
+        "multiplier": 0.1,
+        "description": "Service current"
+      },
+      "service_voltage": {
+        "unit": "V",
+        "words": 1,
+        "datatype": "uint16",
+        "register": 18304,
+        "valuemap": {
+          "0x0000": null
+        },
+        "multiplier": 0.1,
+        "description": "Service voltage"
+      },
+      "max_cell_voltage": {
+        "unit": "V",
+        "words": 1,
+        "datatype": "uint16",
+        "register": 18323,
+        "valuemap": {
+          "0x0000": null
+        },
+        "multiplier": 0.0001,
+        "description": "Max cell voltage"
+      },
+      "max_rack_voltage": {
+        "unit": "V",
+        "words": 1,
+        "datatype": "uint16",
+        "register": 18344,
+        "valuemap": {
+          "0x0000": null
+        },
+        "multiplier": 1,
+        "description": "max rack voltage"
+      },
+      "min_cell_voltage": {
+        "unit": "V",
+        "words": 1,
+        "datatype": "uint16",
+        "register": 18324,
+        "valuemap": {
+          "0x0000": null
+        },
+        "multiplier": 0.0001,
+        "description": "Min cell voltage"
+      },
+      "min_rack_voltage": {
+        "unit": "V",
+        "words": 1,
+        "datatype": "uint16",
+        "register": 18345,
+        "valuemap": {
+          "0x0000": null
+        },
+        "multiplier": 1,
+        "description": "min rack voltage"
+      },
+      "max_charge_current": {
+        "unit": "A",
+        "words": 1,
+        "datatype": "uint16",
+        "register": 18320,
+        "valuemap": {
+          "0x0000": null
+        },
+        "multiplier": 0.1,
+        "description": "Max charge current"
+      },
+      "max_cell_temperature": {
+        "unit": "C",
+        "words": 1,
+        "datatype": "int16",
+        "register": 18325,
+        "valuemap": {
+          "0x0000": null
+        },
+        "multiplier": 0.1,
+        "description": "Max cell temperature"
+      },
+      "min_cell_temperature": {
+        "unit": "C",
+        "words": 1,
+        "datatype": "int16",
+        "register": 18326,
+        "valuemap": {
+          "0x0000": null
+        },
+        "multiplier": 0.1,
+        "description": "Min cell temperature"
+      },
+      "valid_soc_difference": {
+        "unit": "%",
+        "words": 1,
+        "datatype": "uint16",
+        "register": 18329,
+        "valuemap": {
+          "0x0000": null
+        },
+        "multiplier": 0.1,
+        "description": "Valid SOC difference"
+      },
+      "max_discharge_current": {
+        "unit": "A",
+        "words": 1,
+        "datatype": "uint16",
+        "register": 18321,
+        "valuemap": {
+          "0x0000": null
+        },
+        "multiplier": 0.1,
+        "description": "Max discharge current"
+      },
+      "charge_discharge_cycles": {
+        "words": 1,
+        "datatype": "uint16",
+        "register": 18384,
+        "valuemap": {
+          "0x0000": null
+        },
+        "multiplier": 0.1,
+        "description": "Charge/Discharge cycles"
+      }
+    },
+    "status_info": {
+      "lcu_fault": {
+        "content": "LCU fault",
+        "register": 18003,
+        "start_bit": 15,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            3
+          ]
+        ]
+      },
+      "fuse_fault": {
+        "content": "Fuse fault",
+        "register": 18355,
+        "start_bit": 6,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            3
+          ]
+        ]
+      },
+      "other_alarm": {
+        "content": "Other alarm",
+        "register": 18111,
+        "start_bit": 5,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      "cmu_all_fault": {
+        "content": "CMU all fault",
+        "register": 18003,
+        "start_bit": 3,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            3
+          ]
+        ]
+      },
+      "anti_loss_alarm": {
+        "content": "Anti-loss alarm",
+        "register": 18001,
+        "start_bit": 6,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      "contactor_fault": {
+        "content": "Contactor fault",
+        "register": 18355,
+        "start_bit": 5,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            3
+          ]
+        ]
+      },
+      "fan_fault_alarm": {
+        "content": "Fan fault alarm",
+        "register": 18269,
+        "start_bit": 11,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      "heartbeat_fault": {
+        "content": "Heartbeat fault",
+        "register": 18354,
+        "start_bit": 13,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            3
+          ]
+        ]
+      },
+      "bsc_lc_comm_fault": {
+        "content": "BSC-LC communication fault",
+        "register": 18003,
+        "start_bit": 0,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            3
+          ]
+        ]
+      },
+      "battery_unit_alarm": {
+        "content": "Battery unit alarm",
+        "register": 18001,
+        "start_bit": 3,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      "bsc_cmu_comm_fault": {
+        "content": "BSC-CMU communication fault",
+        "register": 18003,
+        "start_bit": 2,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            3
+          ]
+        ]
+      },
+      "cmu_bmu_comm_alarm": {
+        "content": "CMU-BMU comm alarm",
+        "register": 18352,
+        "start_bit": 9,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      "cmu_bmu_comm_fault": {
+        "content": "CMU-BMU communication fault",
+        "register": 18354,
+        "start_bit": 9,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            3
+          ]
+        ]
+      },
+      "cmu_hardware_fault": {
+        "content": "CMU hardware fault",
+        "register": 18003,
+        "start_bit": 5,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            3
+          ]
+        ]
+      },
+      "dehumidifier_alarm": {
+        "content": "Dehumidifier alarm",
+        "register": 18001,
+        "start_bit": 8,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      "high_humidity_alarm": {
+        "content": "High humidity alarm",
+        "register": 18269,
+        "start_bit": 6,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      "short_circuit_alarm": {
+        "content": "Short circuit alarm",
+        "register": 18353,
+        "start_bit": 0,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      "short_circuit_fault": {
+        "content": "Short circuit fault",
+        "register": 18355,
+        "start_bit": 0,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            3
+          ]
+        ]
+      },
+      "current_sample_alarm": {
+        "content": "Current sample alarm",
+        "register": 18352,
+        "start_bit": 12,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      "current_sample_fault": {
+        "content": "Current sample fault",
+        "register": 18354,
+        "start_bit": 12,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            3
+          ]
+        ]
+      },
+      "input_dry_node_alarm": {
+        "content": "Input dry node alarm",
+        "register": 18001,
+        "start_bit": 2,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      "input_dry_node_fault": {
+        "content": "Input dry node fault",
+        "register": 18003,
+        "start_bit": 1,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            3
+          ]
+        ]
+      },
+      "voltage_sample_alarm": {
+        "content": "Voltage sample alarm",
+        "register": 18352,
+        "start_bit": 10,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      "voltage_sample_fault": {
+        "content": "Voltage sample fault",
+        "register": 18354,
+        "start_bit": 10,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            3
+          ]
+        ]
+      },
+      "rack_number_protection": {
+        "content": "Rack number protection",
+        "register": 18003,
+        "start_bit": 4,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            3
+          ]
+        ]
+      },
+      "temperature_rise_alarm": {
+        "content": "Temperature rise alarm",
+        "register": 18353,
+        "start_bit": 11,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      "temperature_rise_fault": {
+        "content": "Temperature rise fault",
+        "register": 18355,
+        "start_bit": 11,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            3
+          ]
+        ]
+      },
+      "cell_over_voltage_alarm": {
+        "content": "Cell over voltage alarm",
+        "register": 18352,
+        "start_bit": 0,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      "cell_over_voltage_fault": {
+        "content": "Cell over voltage fault",
+        "register": 18354,
+        "start_bit": 0,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            3
+          ]
+        ]
+      },
+      "dehumidifier_comm_alarm": {
+        "content": "Dehumidifier communication alarm",
+        "register": 18001,
+        "start_bit": 9,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      "pack_over_voltage_alarm": {
+        "content": "Pack over voltage alarm",
+        "register": 18353,
+        "start_bit": 2,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      "pack_over_voltage_fault": {
+        "content": "Pack over voltage fault",
+        "register": 18355,
+        "start_bit": 2,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            3
+          ]
+        ]
+      },
+      "parameter_storage_alarm": {
+        "content": "Parameter storage alarm",
+        "register": 18269,
+        "start_bit": 9,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      "polarity_reversal_fault": {
+        "content": "Polarity reversal fault",
+        "register": 18355,
+        "start_bit": 8,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            3
+          ]
+        ]
+      },
+      "smoke_temperature_alarm": {
+        "content": "Smoke-temperature alarm",
+        "register": 18003,
+        "start_bit": 10,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            3
+          ]
+        ]
+      },
+      "cell_under_voltage_alarm": {
+        "content": "Cell under voltage alarm",
+        "register": 18352,
+        "start_bit": 1,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      "cell_under_voltage_fault": {
+        "content": "Cell under voltage fault",
+        "register": 18354,
+        "start_bit": 1,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            3
+          ]
+        ]
+      },
+      "insulation_leakage_alarm": {
+        "content": "Insulation leakage alarm",
+        "register": 18352,
+        "start_bit": 8,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      "insulation_leakage_fault": {
+        "content": "Insulation leakage fault",
+        "register": 18354,
+        "start_bit": 8,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            3
+          ]
+        ]
+      },
+      "pack_under_voltage_alarm": {
+        "content": "Pack under voltage alarm",
+        "register": 18353,
+        "start_bit": 3,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      "pack_under_voltage_fault": {
+        "content": "Pack under voltage fault",
+        "register": 18355,
+        "start_bit": 3,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            3
+          ]
+        ]
+      },
+      "temperature_sample_alarm": {
+        "content": "Temperature sample alarm",
+        "register": 18352,
+        "start_bit": 11,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      "temperature_sample_fault": {
+        "content": "Temperature sample fault",
+        "register": 18354,
+        "start_bit": 11,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            3
+          ]
+        ]
+      },
+      "total_over_voltage_alarm": {
+        "content": "Total over voltage alarm",
+        "register": 18352,
+        "start_bit": 2,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      "total_over_voltage_fault": {
+        "content": "Total over voltage fault",
+        "register": 18354,
+        "start_bit": 2,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            3
+          ]
+        ]
+      },
+      "charge_over_current_alarm": {
+        "content": "Charge over current alarm",
+        "register": 18352,
+        "start_bit": 14,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      "charge_over_current_fault": {
+        "content": "Charge over current fault",
+        "register": 18354,
+        "start_bit": 14,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            3
+          ]
+        ]
+      },
+      "firefighting_system_fault": {
+        "content": "Firefighting system fault",
+        "register": 18003,
+        "start_bit": 13,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            3
+          ]
+        ]
+      },
+      "humiture_meter_comm_alarm": {
+        "content": "Humiture meter communication alarm",
+        "register": 18001,
+        "start_bit": 10,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      "liquid_cooling_unit_alarm": {
+        "content": "Liquid cooling unit alarm",
+        "register": 18001,
+        "start_bit": 4,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      "total_under_voltage_alarm": {
+        "content": "Total under voltage alarm",
+        "register": 18352,
+        "start_bit": 3,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      "total_under_voltage_fault": {
+        "content": "Total under voltage fault",
+        "register": 18354,
+        "start_bit": 3,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            3
+          ]
+        ]
+      },
+      "breathing_light_comm_alarm": {
+        "content": "Breathing light communication alarm",
+        "register": 18001,
+        "start_bit": 1,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      "cell_low_temperature_alarm": {
+        "content": "Cell low temperature alarm",
+        "register": 18352,
+        "start_bit": 6,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      "cell_low_temperature_fault": {
+        "content": "Cell low temperature fault",
+        "register": 18354,
+        "start_bit": 6,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            3
+          ]
+        ]
+      },
+      "cell_over_temperature_alarm": {
+        "content": "Cell over temperature alarm",
+        "register": 18352,
+        "start_bit": 5,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      "cell_over_temperature_fault": {
+        "content": "Cell over temperature fault",
+        "register": 18354,
+        "start_bit": 5,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            3
+          ]
+        ]
+      },
+      "humidity_sensor_fault_alarm": {
+        "content": "Humidity sensor fault alarm",
+        "register": 18269,
+        "start_bit": 8,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      "system_water_shortage_alarm": {
+        "content": "System water shortage alarm",
+        "register": 18111,
+        "start_bit": 0,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      "dehumidification_fault_alarm": {
+        "content": "Dehumidification fault alarm",
+        "register": 18269,
+        "start_bit": 10,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      "discharge_over_current_alarm": {
+        "content": "Discharge over current alarm",
+        "register": 18352,
+        "start_bit": 15,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      "discharge_over_current_fault": {
+        "content": "Discharge over current fault",
+        "register": 18354,
+        "start_bit": 15,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            3
+          ]
+        ]
+      },
+      "cell_voltage_difference_alarm": {
+        "content": "Cell voltage difference alarm",
+        "register": 18352,
+        "start_bit": 4,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      "cell_voltage_difference_fault": {
+        "content": "Cell voltage difference fault",
+        "register": 18354,
+        "start_bit": 4,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            3
+          ]
+        ]
+      },
+      "pack_voltage_difference_alarm": {
+        "content": "Pack voltage difference alarm",
+        "register": 18353,
+        "start_bit": 4,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      "pack_voltage_difference_fault": {
+        "content": "Pack voltage difference fault",
+        "register": 18355,
+        "start_bit": 4,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            3
+          ]
+        ]
+      },
+      "liquid_cooling_unit_comm_alarm": {
+        "content": "Liquid cooling unit communication alarm",
+        "register": 18001,
+        "start_bit": 0,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      "low_inlet_water_pressure_alarm": {
+        "content": "Low inlet water pressure alarm",
+        "register": 18111,
+        "start_bit": 4,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      "total_voltage_difference_alarm": {
+        "content": "Total voltage difference alarm",
+        "register": 18353,
+        "start_bit": 7,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      "total_voltage_difference_fault": {
+        "content": "Total voltage difference fault",
+        "register": 18355,
+        "start_bit": 7,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            3
+          ]
+        ]
+      },
+      "firefighting_system_fire_alarm_1": {
+        "content": "1# Firefighting system fire alarm",
+        "register": 18003,
+        "start_bit": 11,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            3
+          ]
+        ]
+      },
+      "firefighting_system_fire_alarm_2": {
+        "content": "2# Firefighting system fire alarm",
+        "register": 18003,
+        "start_bit": 12,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            3
+          ]
+        ]
+      },
+      "high_condensing_pressure_alarm_1": {
+        "content": "1# high condensing pressure alarm",
+        "register": 18111,
+        "start_bit": 1,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      "high_condensing_pressure_alarm_2": {
+        "content": "2# high condensing pressure alarm",
+        "register": 18111,
+        "start_bit": 2,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      "high_outlet_water_pressure_alarm": {
+        "content": "High outlet water pressure alarm",
+        "register": 18111,
+        "start_bit": 3,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      "temperature_sensor_1_fault_alarm": {
+        "content": "1# Temperature sensor fault alarm",
+        "register": 18269,
+        "start_bit": 2,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      "temperature_sensor_2_fault_alarm": {
+        "content": "2# Temperature sensor fault alarm",
+        "register": 18269,
+        "start_bit": 5,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      "accident_ventilation_system_alarm": {
+        "content": "Accident ventilation system alarm",
+        "register": 18001,
+        "start_bit": 11,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      "cell_temperature_difference_alarm": {
+        "content": "Cell temperature difference alarm",
+        "register": 18352,
+        "start_bit": 7,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      "cell_temperature_difference_fault": {
+        "content": "Cell temperature difference fault",
+        "register": 18354,
+        "start_bit": 7,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            3
+          ]
+        ]
+      },
+      "cell_under_voltage_long_time_fault": {
+        "content": "Cell under voltage fault for long time",
+        "register": 18003,
+        "start_bit": 14,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            3
+          ]
+        ]
+      },
+      "temperature_sensor_exception_fault": {
+        "content": "Temperature sensor exception fault",
+        "register": 18003,
+        "start_bit": 7,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            3
+          ]
+        ]
+      },
+      "temperature_sensor_1_low_temp_alarm": {
+        "content": "1# Temperature sensor low temperature alarm",
+        "register": 18269,
+        "start_bit": 1,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      "temperature_sensor_2_low_temp_alarm": {
+        "content": "2# Temperature sensor low temperature alarm",
+        "register": 18269,
+        "start_bit": 4,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      "temperature_sensor_1_high_temp_alarm": {
+        "content": "1# Temperature sensor high temperature alarm",
+        "register": 18269,
+        "start_bit": 0,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      "temperature_sensor_2_high_temp_alarm": {
+        "content": "2# Temperature sensor high temperature alarm",
+        "register": 18269,
+        "start_bit": 3,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      "accident_ventilation_system_comm_alarm": {
+        "content": "Accident ventilation system communication alarm",
+        "register": 18001,
+        "start_bit": 13,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      "combustible_gas_detecting_device_alarm": {
+        "content": "Combustible gas detecting device alarm",
+        "register": 18001,
+        "start_bit": 7,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      "high_combustible_gas_concentration_alarm_1": {
+        "content": "1# High combustible gas concentration alarm",
+        "register": 18003,
+        "start_bit": 8,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            3
+          ]
+        ]
+      },
+      "high_combustible_gas_concentration_alarm_2": {
+        "content": "2# High combustible gas concentration alarm",
+        "register": 18003,
+        "start_bit": 9,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            3
+          ]
+        ]
+      },
+      "combustible_gas_detecting_device_comm_alarm": {
+        "content": "Combustible gas detecting device communication alarm",
+        "register": 18001,
+        "start_bit": 5,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      "level1_rack_circulating_current_threshold_exceeded_fault": {
+        "content": "Level 1 fault of rack circulating current threshold-exceeding",
+        "register": 18003,
+        "start_bit": 6,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            3
+          ]
+        ]
+      },
+      "level_2_rack_circulating_current_threshold_exceeded_alarm": {
+        "content": "Level 2 alarm of rack circulating current threshold-exceeding",
+        "register": 18001,
+        "start_bit": 14,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      "level_3_rack_circulating_current_threshold_exceeded_alarm": {
+        "content": "Level 3 alarm of rack circulating current threshold-exceeding",
+        "register": 18001,
+        "start_bit": 15,
+        "status_level_value_map": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      }
+    },
+    "status_info_common": {
+      "fncode": 4,
+      "bit_order": "lsb",
+      "length_bits": 1
+    }
+  }
+}
