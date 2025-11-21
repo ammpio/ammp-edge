@@ -669,90 +669,90 @@
       }
     },
     "status_info": {
-      "oil_temp": {
-        "content": "High oil temperature",
-        "register": 2049,
-        "start_bit": 0
-      },
       "emergency": {
         "content": "Emergency stop",
-        "register": 2049,
+        "register": 39425,
         "start_bit": 12
       },
       "over_speed": {
         "content": "Over speed",
-        "register": 2050,
+        "register": 39426,
         "start_bit": 8
       },
       "under_speed": {
         "content": "Under speed",
-        "register": 2050,
+        "register": 39426,
         "start_bit": 12
       },
-      "coolant_temp": {
-        "content": "High coolant temperature",
-        "register": 2049,
+      "fail_to_stop": {
+        "content": "Fail to stop",
+        "register": 39428,
         "start_bit": 4
       },
       "oil_pressure": {
         "content": "Low Oil Pressure",
-        "register": 2049,
+        "register": 39425,
         "start_bit": 8
       },
       "fail_to_start": {
         "content": "Fail to start",
-        "register": 2050,
-        "start_bit": 4
+        "register": 39428,
+        "start_bit": 8
       },
       "gen_low_voltage": {
         "content": "Generator low voltage",
-        "register": 2051,
-        "start_bit": 8
+        "register": 39427,
+        "start_bit": 12
       },
       "maintenance_due": {
-        "content": "Maintenance due",
-        "register": 2059,
-        "start_bit": 8
+        "content": "Maintenance alarm",
+        "register": 39433,
+        "start_bit": 0
       },
       "gen_high_voltage": {
         "content": "Generator high voltage",
-        "register": 2051,
+        "register": 39427,
+        "start_bit": 8
+      },
+      "low_coolant_temp": {
+        "content": "Low coolant temperature",
+        "register": 39425,
+        "start_bit": 0
+      },
+      "high_coolant_temp": {
+        "content": "High coolant temperature",
+        "register": 39425,
         "start_bit": 4
       },
-      "gen_low_frequency": {
-        "content": "Generator low frequency",
-        "register": 2051,
+      "gen_over_frequency": {
+        "content": "Generator Over frequency",
+        "register": 39426,
         "start_bit": 0
       },
-      "gen_high_frequency": {
-        "content": "Generator high frequency",
-        "register": 2052,
-        "start_bit": 12
+      "gen_under_frequency": {
+        "content": "Generator Under frequency",
+        "register": 39426,
+        "start_bit": 4
       },
       "low_battery_voltage": {
-        "content": "Low battery voltage",
-        "register": 2055,
-        "start_bit": 12
-      },
-      "fail_to_come_to_rest": {
-        "content": "Fail to come to rest",
-        "register": 2050,
-        "start_bit": 0
+        "content": "Battery low voltage",
+        "register": 39427,
+        "start_bit": 4
       },
       "high_battery_voltage": {
-        "content": "High battery voltage",
-        "register": 2055,
-        "start_bit": 8
+        "content": "Battery high voltage",
+        "register": 39427,
+        "start_bit": 0
       },
       "generator_kw_overload": {
-        "content": "Generator kW Overload",
-        "register": 2072,
-        "start_bit": 8
+        "content": "kW overload alarm",
+        "register": 39432,
+        "start_bit": 4
       },
       "charge_alternator_failure": {
         "content": "Charge alternator failure",
-        "register": 2054,
-        "start_bit": 0
+        "register": 39428,
+        "start_bit": 12
       }
     },
     "status_info_common": {
