@@ -38,7 +38,11 @@ pub static SMA_HYCON_CSV: Lazy<Driver> = Lazy::new(|| {
             {"name": "grid_out_P", "column": "LoadPwrAtTot", "description": "Load power", "unit": "W", "multiplier": 1000, "typecast": "float"},
             {"name": "genset_P", "column": "GenPwrAtTot", "description": "Genset power", "unit": "W", "multiplier": 1000, "typecast": "float"},
             {"name": "pvinv_P_total", "column": "PvPwrAtTot", "description": "PV power", "unit": "W", "multiplier": 1000, "typecast": "float"},
-            {"name": "grid_in_P", "column": "GridPwrAtTot", "description": "Grid power", "unit": "W", "multiplier": 1000, "typecast": "float"}
+            {"name": "grid_in_P", "column": "GridPwrAtTot", "description": "Grid power", "unit": "W", "multiplier": 1000, "typecast": "float"},
+            {"name": "grid_out_Q", "column": "LoadPwrRtTot", "description": "Load Reactive Power", "unit": "var", "multiplier": 1000, "typecast": "float"},
+            {"name": "genset_Q", "column": "GenPwrRtTot", "description": "Generator Reactive Power", "unit": "var", "multiplier": 1000, "typecast": "float"},
+            {"name": "pvinv_Q_total", "column": "PvPwrRtTot", "description": "PV Reactive Power", "unit": "var", "multiplier": 1000, "typecast": "float"},
+            {"name": "grid_in_Q", "column": "GridPwrRtTot", "description": "Grid Reactive Power", "unit": "var", "multiplier": 1000, "typecast": "float"}
         ]
     }
     "#).unwrap()
