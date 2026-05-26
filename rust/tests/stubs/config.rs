@@ -119,7 +119,7 @@ pub const STATUS_INFO_TEST_CONFIG: &str = r#"
       "vendor_id": "ems-test-1",
       "reading_type": "modbustcp",
       "address": {
-        "host": "localhost",
+        "host": "127.0.0.1",
         "port": 502,
         "unit_id": 1
       }

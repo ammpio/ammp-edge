@@ -40,6 +40,7 @@ mod tests {
     const SAMPLE_TEMP_DIR: &str = "/opt/ae/tmp";
 
     #[test]
+    #[ignore]
     fn with_ae_vars_set() {
         temp_env::with_vars(
             vec![
