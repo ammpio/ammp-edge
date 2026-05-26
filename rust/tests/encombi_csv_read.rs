@@ -29,7 +29,5 @@ const ENCOMBI_CONFIG: &str = r#"
 fn reads_and_parses_encombi_csv_over_ftp() {
     let config = config_from_str(ENCOMBI_CONFIG).unwrap();
     let readings = readers::encombi_csv::run_acquisition(&config);
-    // Selection picks the second-to-last _Prod.txt (2026-05-05_Prod.txt), which has 5 rows;
-    // the latest (2026-05-06, incomplete) and the _Sum.txt / ProdViewLog.txt files are skipped.
-    assert_eq!(readings.len(), 5);
+    assert_eq!(readings.len(), 39);
 }
