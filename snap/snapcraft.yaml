@@ -120,6 +120,13 @@ apps:
     after: [ae-init, ae-wait-for-time-source, mosquitto]
     plugs: [network]
 
+  read-encombi-csv:
+    command: bin/ae read-encombi-csv
+    daemon: oneshot
+    timer: 04:00~07:00
+    after: [ae-init, ae-wait-for-time-source, mosquitto]
+    plugs: [network]
+
 parts:
   ammp-edge:
     plugin: python
