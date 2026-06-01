@@ -1,11 +1,12 @@
 use std::time::Duration;
 
+use chrono::{NaiveDate, Utc};
+use chrono_tz::Tz;
 use thiserror::Error;
 
 use crate::data_mgmt::models::{DeviceReading, DeviceRef, Record};
 use crate::helpers::backoff_retry;
 use crate::interfaces::ftp::FtpConnError;
-use crate::interfaces::ntp;
 use crate::node_mgmt::config::{Config, Device, ReadingType};
 
 mod download;
@@ -21,27 +22,30 @@ pub enum EncombiCsvError {
     FtpConn(#[from] FtpConnError),
     #[error("device address error: {0}")]
     Address(String),
-    #[error("file error: {0}")]
-    File(String),
     #[error(transparent)]
     Parse(#[from] parse::ParseError),
-    #[error(transparent)]
-    Ntp(#[from] ntp::NtpError),
 }
 
-pub fn run_acquisition(config: &Config) -> Vec<DeviceReading> {
+pub fn run_acquisition(config: &Config, target_date: Option<NaiveDate>) -> Vec<DeviceReading> {
     let mut readings = Vec::new();
     let devices_to_read = select_devices_to_read(config);
     log::info!("Reading from {} ENcombi CSV devices", devices_to_read.len());
     for device in devices_to_read {
-        read_device(&device, &mut readings).ok();
+        read_device(&device, target_date, &mut readings).ok();
     }
     readings
 }
 
-fn read_device(device: &Device, readings: &mut Vec<DeviceReading>) -> Result<(), EncombiCsvError> {
+fn read_device(
+    device: &Device,
+    target_date: Option<NaiveDate>,
+    readings: &mut Vec<DeviceReading>,
+) -> Result<(), EncombiCsvError> {
+    let timezone = timezone::get_timezone(device)?;
+    let date = target_date.unwrap_or_else(|| yesterday_in_tz(timezone));
+
     let records = backoff_retry(
-        || read_csv_from_device(device).map_err(backoff::Error::transient),
+        || read_csv_from_device(device, date, timezone).map_err(backoff::Error::transient),
         READING_TIMEOUT,
     );
 
@@ -62,26 +66,26 @@ fn read_device(device: &Device, readings: &mut Vec<DeviceReading>) -> Result<(),
     Ok(())
 }
 
-fn read_csv_from_device(device: &Device) -> Result<Vec<Record>, EncombiCsvError> {
-    let (filename, data_file) = download::download_last_day_file(device)?;
-    let date = download::date_from_filename(&filename)?;
-
-    let timezone = timezone::get_timezone(device)?;
-    let clock_offset = timezone::try_get_clock_offset(device);
+fn read_csv_from_device(
+    device: &Device,
+    date: NaiveDate,
+    timezone: Tz,
+) -> Result<Vec<Record>, EncombiCsvError> {
+    let data_file = download::download_file_for_date(device, date)?;
     log::info!(
-        "ENcombi {} timezone: {}; clock offset: {}s",
-        filename,
-        timezone,
-        clock_offset.num_seconds()
+        "ENcombi {} timezone: {}",
+        download::filename_for_date(date),
+        timezone
     );
-    let records = parse::parse_csv(
-        data_file,
-        &driver::ENCOMBI_CSV,
-        date,
-        timezone,
-        clock_offset,
-    )?;
+    let records = parse::parse_csv(data_file, &driver::ENCOMBI_CSV, date, timezone)?;
     Ok(records)
+}
+
+// Yesterday in the device's local timezone. The system clock (NTP-synced via the
+// `ae-wait-for-time-source` snap dependency) is trusted; the ENcombi controller's
+// own clock is not.
+fn yesterday_in_tz(tz: Tz) -> NaiveDate {
+    (Utc::now().with_timezone(&tz) - chrono::Duration::days(1)).date_naive()
 }
 
 fn select_devices_to_read(config: &Config) -> Vec<Device> {

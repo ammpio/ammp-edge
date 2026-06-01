@@ -1,3 +1,4 @@
+use chrono::NaiveDate;
 use kvstore::KVDb;
 
 use crate::data_mgmt::payload::{Metadata, blank_metadata, payloads_from_device_readings};
@@ -6,10 +7,10 @@ use crate::{data_mgmt, node_mgmt, readers};
 
 const DATA_PROVIDER: &str = "encombi-csv";
 
-pub fn read_encombi_csv() -> anyhow::Result<()> {
+pub fn read_encombi_csv(date: Option<NaiveDate>) -> anyhow::Result<()> {
     let kvs = KVDb::new(kvpath::SQLITE_STORE.as_path())?;
     let config = node_mgmt::config::get(&kvs)?;
-    let readings = readers::encombi_csv::run_acquisition(&config);
+    let readings = readers::encombi_csv::run_acquisition(&config, date);
     log::info!(
         "Finished ENcombi CSV downloads; obtained {} readings",
         readings.len()

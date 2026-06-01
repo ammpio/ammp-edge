@@ -1,8 +1,9 @@
+use chrono::NaiveDate;
+
 use ae::node_mgmt::config::config_from_str;
 use ae::readers;
 
-// Points at the shared FTP mock; the encombi fixtures are mounted at /ftp/data/encombi.
-// 127.0.0.1 (not "localhost") so the NTP clock-offset probe reaches the IPv4 NTP mock.
+// Points at the shared FTP mock; the encombi fixture is mounted at /ftp/data/encombi.
 const ENCOMBI_CONFIG: &str = r#"
 {
     "devices": {
@@ -28,6 +29,7 @@ const ENCOMBI_CONFIG: &str = r#"
 #[test]
 fn reads_and_parses_encombi_csv_over_ftp() {
     let config = config_from_str(ENCOMBI_CONFIG).unwrap();
-    let readings = readers::encombi_csv::run_acquisition(&config);
+    let date = NaiveDate::from_ymd_opt(2026, 5, 6).unwrap();
+    let readings = readers::encombi_csv::run_acquisition(&config, Some(date));
     assert_eq!(readings.len(), 39);
 }

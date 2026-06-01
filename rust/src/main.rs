@@ -33,7 +33,10 @@ fn main() -> Result<()> {
         Some(CMD_MQTT_PUB_META) => command::mqtt_pub_meta(),
         Some(CMD_MQTT_SUB_CFG_CMD) => command::mqtt_sub_cfg_cmd(),
         Some(CMD_READ_SMA_HYCON_CSV) => command::read_sma_hycon_csv(),
-        Some(CMD_READ_ENCOMBI_CSV) => command::read_encombi_csv(),
+        Some(CMD_READ_ENCOMBI_CSV) => {
+            let date: Option<chrono::NaiveDate> = args.opt_value_from_str("--date")?;
+            command::read_encombi_csv(date)
+        }
         Some(CMD_START_READINGS) => {
             let once = args.contains("--once");
             let rt = tokio::runtime::Runtime::new()?;

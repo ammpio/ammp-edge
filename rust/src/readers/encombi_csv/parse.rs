@@ -1,6 +1,6 @@
 use std::io::{BufRead, BufReader, Cursor};
 
-use chrono::{DateTime, Duration, NaiveDate, NaiveDateTime, NaiveTime, Utc};
+use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
 use chrono_tz::Tz;
 use thiserror::Error;
 
@@ -19,7 +19,7 @@ pub enum ParseError {
 }
 
 const SEPARATOR: char = '\t';
-// The ENcombi production log records time-only timestamps; the date is taken from the filename.
+// The ENcombi production log records time-only timestamps; the date is the file's date.
 const TIME_FORMAT: &str = "%H:%M:%S";
 
 pub fn parse_csv(
@@ -27,7 +27,6 @@ pub fn parse_csv(
     driver: &Driver,
     date: NaiveDate,
     timezone: Tz,
-    clock_offset: Duration,
 ) -> Result<Vec<Record>, ParseError> {
     let mut records = vec![];
     for line in BufReader::new(csv).lines() {
@@ -35,7 +34,7 @@ pub fn parse_csv(
         if line.trim().is_empty() {
             continue;
         }
-        match parse_line(&line, driver, date, timezone, clock_offset) {
+        match parse_line(&line, driver, date, timezone) {
             Ok(rec) => records.push(rec),
             Err(e) => log::warn!("error parsing ENcombi CSV line: {:?}", e),
         }
@@ -48,7 +47,6 @@ fn parse_line(
     driver: &Driver,
     date: NaiveDate,
     timezone: Tz,
-    clock_offset: Duration,
 ) -> Result<Record, ParseError> {
     let values: Vec<&str> = line.split(SEPARATOR).collect();
     let mut rec = Record::new();
@@ -56,24 +54,17 @@ fn parse_line(
     let time_str = values
         .first()
         .ok_or_else(|| ParseError::FileFormat("timestamp value not present".into()))?;
-    rec.set_timestamp(parse_timestamp(time_str, date, timezone, clock_offset)?);
+    rec.set_timestamp(parse_timestamp(time_str, date, timezone)?);
 
     for field in driver.fields.iter() {
         if let Some(raw) = values.get(field.index)
             && let Ok(parsed) = raw.trim().parse::<f64>()
         {
-            // Sign-split: a negative value on a column with `negative_name`
-            // (e.g. Mains -> grid_out_P when exporting) is absolutised and
-            // emitted under the alternate field name.
-            let (out_name, signed) = match field.negative_name {
-                Some(neg) if parsed < 0.0 => (neg, -parsed),
-                _ => (field.name, parsed),
+            let value = match field.multiplier {
+                Some(mult) => parsed * mult,
+                None => parsed,
             };
-            let final_value = match field.multiplier {
-                Some(mult) => signed * mult,
-                None => signed,
-            };
-            rec.set_field(out_name.to_string(), RtValue::Float(final_value));
+            rec.set_field(field.name.to_string(), RtValue::Float(value));
         }
     }
     Ok(rec)
@@ -83,7 +74,6 @@ fn parse_timestamp(
     time_str: &str,
     date: NaiveDate,
     timezone: Tz,
-    clock_offset: Duration,
 ) -> Result<DateTime<Utc>, ParseError> {
     let time = NaiveTime::parse_from_str(time_str.trim(), TIME_FORMAT)?;
     let naive = NaiveDateTime::new(date, time);
@@ -91,8 +81,7 @@ fn parse_timestamp(
         .and_local_timezone(timezone)
         .single()
         .ok_or_else(|| ParseError::FileFormat("ambiguous timestamp".into()))?
-        .with_timezone(&Utc)
-        - clock_offset)
+        .with_timezone(&Utc))
 }
 
 #[cfg(test)]
@@ -118,14 +107,7 @@ mod tests {
     fn parse_night_row_fields_and_scaling() {
         let date = NaiveDate::from_ymd_opt(2026, 5, 6).unwrap();
         let csv = Cursor::new(NIGHT_ROW.as_bytes().to_vec());
-        let records = parse_csv(
-            csv,
-            &ENCOMBI_CSV,
-            date,
-            chrono_tz::Africa::Lagos,
-            Duration::zero(),
-        )
-        .unwrap();
+        let records = parse_csv(csv, &ENCOMBI_CSV, date, chrono_tz::Africa::Lagos).unwrap();
         assert_eq!(records.len(), 1);
         let r = &records[0];
 
@@ -133,7 +115,7 @@ mod tests {
         assert_eq!(field_f64(r, "pvinv_P_total"), 0.0);
         assert_eq!(field_f64(r, "genset_P"), 0.0);
         assert_eq!(field_f64(r, "grid_in_P"), 373_500.0);
-        assert_eq!(field_f64(r, "load_P"), 373_500.0);
+        assert_eq!(field_f64(r, "grid_out_P"), 373_500.0);
         assert_eq!(field_f64(r, "pv_reference"), 17_500.0);
         // pass-through columns
         assert_eq!(field_f64(r, "irradiance"), 0.0);
@@ -145,14 +127,7 @@ mod tests {
     fn timestamp_uses_filename_date_and_local_tz() {
         let date = NaiveDate::from_ymd_opt(2026, 5, 6).unwrap();
         let csv = Cursor::new(NIGHT_ROW.as_bytes().to_vec());
-        let records = parse_csv(
-            csv,
-            &ENCOMBI_CSV,
-            date,
-            chrono_tz::Africa::Lagos,
-            Duration::zero(),
-        )
-        .unwrap();
+        let records = parse_csv(csv, &ENCOMBI_CSV, date, chrono_tz::Africa::Lagos).unwrap();
         // 00:01:16 local (Africa/Lagos, UTC+1) on 2026-05-06 -> 2026-05-05T23:01:16Z
         let ts = records[0].get_timestamp().unwrap();
         assert_eq!(ts.to_rfc3339(), "2026-05-05T23:01:16+00:00");
@@ -162,62 +137,26 @@ mod tests {
     fn parse_daytime_pv_row() {
         let date = NaiveDate::from_ymd_opt(2026, 5, 6).unwrap();
         let csv = Cursor::new(DAY_ROW.as_bytes().to_vec());
-        let records = parse_csv(
-            csv,
-            &ENCOMBI_CSV,
-            date,
-            chrono_tz::Africa::Lagos,
-            Duration::zero(),
-        )
-        .unwrap();
+        let records = parse_csv(csv, &ENCOMBI_CSV, date, chrono_tz::Africa::Lagos).unwrap();
         assert_eq!(field_f64(&records[0], "pvinv_P_total"), 227_100.0);
         assert_eq!(field_f64(&records[0], "pv_capacity"), 350_000.0);
+        assert_eq!(field_f64(&records[0], "grid_in_P"), 151_500.0);
+        assert_eq!(field_f64(&records[0], "grid_out_P"), 378_500.0);
     }
 
     #[test]
-    fn clock_offset_is_subtracted() {
-        let date = NaiveDate::from_ymd_opt(2026, 5, 6).unwrap();
-        let csv = Cursor::new(NIGHT_ROW.as_bytes().to_vec());
-        // 10s clock offset should shift the resulting UTC timestamp back by 10s
-        let records = parse_csv(
-            csv,
-            &ENCOMBI_CSV,
-            date,
-            chrono_tz::Africa::Lagos,
-            Duration::seconds(10),
-        )
-        .unwrap();
-        assert_eq!(
-            records[0].get_timestamp().unwrap().to_rfc3339(),
-            "2026-05-05T23:01:06+00:00"
-        );
-    }
-
-    #[test]
-    fn negative_mains_emits_grid_out_p() {
-        // PV exporting heavily: Mains = -120.5 kW (controller exporting to grid).
-        // Per the discovery doc, this should be emitted as grid_out_P = 120_500 W
-        // (absolutised), and no grid_in_P should be set on the record.
+    fn negative_mains_keeps_sign() {
+        // PV exporting heavily: Mains = -120.5 kW. With the sign-split mechanism removed,
+        // the parser preserves the sign so downstream (mqtt-listener / data API) can
+        // interpret it as export.
         let row = "12:00:00\t500.0\t0.0\t-120.5\t379.5\t550.0\t550.0\t0.0\t0.0\t0.0\t0\t1\t0\t1";
         let date = NaiveDate::from_ymd_opt(2026, 5, 6).unwrap();
         let csv = Cursor::new(row.as_bytes().to_vec());
-        let records = parse_csv(
-            csv,
-            &ENCOMBI_CSV,
-            date,
-            chrono_tz::Africa::Lagos,
-            Duration::zero(),
-        )
-        .unwrap();
+        let records = parse_csv(csv, &ENCOMBI_CSV, date, chrono_tz::Africa::Lagos).unwrap();
         assert_eq!(records.len(), 1);
         let r = &records[0];
-        assert_eq!(field_f64(r, "grid_out_P"), 120_500.0);
-        assert!(
-            r.get_field("grid_in_P").is_none(),
-            "grid_in_P must not be set on an export row"
-        );
-        // sanity: positive PV / Load fields unaffected by the sign-split
+        assert_eq!(field_f64(r, "grid_in_P"), -120_500.0);
         assert_eq!(field_f64(r, "pvinv_P_total"), 500_000.0);
-        assert_eq!(field_f64(r, "load_P"), 379_500.0);
+        assert_eq!(field_f64(r, "grid_out_P"), 379_500.0);
     }
 }
