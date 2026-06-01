@@ -60,13 +60,20 @@ fn parse_line(
 
     for field in driver.fields.iter() {
         if let Some(raw) = values.get(field.index)
-            && let Ok(value) = raw.trim().parse::<f64>()
+            && let Ok(parsed) = raw.trim().parse::<f64>()
         {
-            let value = match field.multiplier {
-                Some(mult) => value * mult,
-                None => value,
+            // Sign-split: a negative value on a column with `negative_name`
+            // (e.g. Mains -> grid_out_P when exporting) is absolutised and
+            // emitted under the alternate field name.
+            let (out_name, signed) = match field.negative_name {
+                Some(neg) if parsed < 0.0 => (neg, -parsed),
+                _ => (field.name, parsed),
             };
-            rec.set_field(field.name.to_string(), RtValue::Float(value));
+            let final_value = match field.multiplier {
+                Some(mult) => signed * mult,
+                None => signed,
+            };
+            rec.set_field(out_name.to_string(), RtValue::Float(final_value));
         }
     }
     Ok(rec)
@@ -184,5 +191,33 @@ mod tests {
             records[0].get_timestamp().unwrap().to_rfc3339(),
             "2026-05-05T23:01:06+00:00"
         );
+    }
+
+    #[test]
+    fn negative_mains_emits_grid_out_p() {
+        // PV exporting heavily: Mains = -120.5 kW (controller exporting to grid).
+        // Per the discovery doc, this should be emitted as grid_out_P = 120_500 W
+        // (absolutised), and no grid_in_P should be set on the record.
+        let row = "12:00:00\t500.0\t0.0\t-120.5\t379.5\t550.0\t550.0\t0.0\t0.0\t0.0\t0\t1\t0\t1";
+        let date = NaiveDate::from_ymd_opt(2026, 5, 6).unwrap();
+        let csv = Cursor::new(row.as_bytes().to_vec());
+        let records = parse_csv(
+            csv,
+            &ENCOMBI_CSV,
+            date,
+            chrono_tz::Africa::Lagos,
+            Duration::zero(),
+        )
+        .unwrap();
+        assert_eq!(records.len(), 1);
+        let r = &records[0];
+        assert_eq!(field_f64(r, "grid_out_P"), 120_500.0);
+        assert!(
+            r.get_field("grid_in_P").is_none(),
+            "grid_in_P must not be set on an export row"
+        );
+        // sanity: positive PV / Load fields unaffected by the sign-split
+        assert_eq!(field_f64(r, "pvinv_P_total"), 500_000.0);
+        assert_eq!(field_f64(r, "load_P"), 379_500.0);
     }
 }
