@@ -54,7 +54,7 @@ mod tests {
 
     #[test]
     fn test_sma_hycon_csv_driver() {
-        assert_eq!(SMA_HYCON_CSV.fields.len(), 4);
+        assert_eq!(SMA_HYCON_CSV.fields.len(), 8);
         assert_eq!(
             SMA_HYCON_CSV
                 .fields

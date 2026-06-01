@@ -12,6 +12,7 @@ const CMD_KVS_SET: &str = "kvs-set";
 const CMD_MQTT_PUB_META: &str = "mqtt-pub-meta";
 const CMD_MQTT_SUB_CFG_CMD: &str = "mqtt-sub-cfg-cmd";
 const CMD_READ_SMA_HYCON_CSV: &str = "read-sma-hycon-csv";
+const CMD_READ_ENCOMBI_CSV: &str = "read-encombi-csv";
 const CMD_START_READINGS: &str = "start-readings";
 const CMD_WAIT_FOR_TIME_SOURCE: &str = "wait-for-time-source";
 
@@ -32,6 +33,10 @@ fn main() -> Result<()> {
         Some(CMD_MQTT_PUB_META) => command::mqtt_pub_meta(),
         Some(CMD_MQTT_SUB_CFG_CMD) => command::mqtt_sub_cfg_cmd(),
         Some(CMD_READ_SMA_HYCON_CSV) => command::read_sma_hycon_csv(),
+        Some(CMD_READ_ENCOMBI_CSV) => {
+            let date: Option<chrono::NaiveDate> = args.opt_value_from_str("--date")?;
+            command::read_encombi_csv(date)
+        }
         Some(CMD_START_READINGS) => {
             let once = args.contains("--once");
             let rt = tokio::runtime::Runtime::new()?;
@@ -41,7 +46,7 @@ fn main() -> Result<()> {
         _ => Err(anyhow!(
             r#"
             Subcommand must be one of '{CMD_INIT}', '{CMD_KVS_GET}', '{CMD_KVS_SET}', '{CMD_MQTT_PUB_META}', '{CMD_MQTT_SUB_CFG_CMD}',
-            '{CMD_START_READINGS}', '{CMD_WAIT_FOR_TIME_SOURCE}', '{CMD_READ_SMA_HYCON_CSV}'
+            '{CMD_START_READINGS}', '{CMD_WAIT_FOR_TIME_SOURCE}', '{CMD_READ_SMA_HYCON_CSV}', '{CMD_READ_ENCOMBI_CSV}'
             "#
         )),
     }
