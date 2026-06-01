@@ -99,7 +99,7 @@ mod tests {
 
     #[test]
     fn test_ntp_time_from_localhost() {
-        let epoch_from_ntp = query_epoch("localhost", None).unwrap();
+        let epoch_from_ntp = query_epoch("127.0.0.1", None).unwrap();
         let epoch_from_sys = Duration::from_std(
             SystemTime::now()
                 .duration_since(SystemTime::UNIX_EPOCH)
@@ -114,7 +114,7 @@ mod tests {
 
     #[test]
     fn test_ntp_delta_from_localhost() {
-        let offset = query_offset_wrt_systime("localhost", None).unwrap();
+        let offset = query_offset_wrt_systime("127.0.0.1", None).unwrap();
         println!("offset: {:?}", offset);
         assert!(offset.num_seconds().abs() < 1);
     }

@@ -1,3 +1,4 @@
+mod encombi_csv;
 mod init;
 mod kvs;
 mod mqtt_pub;
@@ -6,6 +7,7 @@ mod sma_hycon_csv;
 mod start_readings;
 mod wait_for_time_source;
 
+pub use encombi_csv::read_encombi_csv;
 pub use init::init;
 pub use kvs::{kvs_get, kvs_set};
 pub use mqtt_pub::mqtt_pub_meta;

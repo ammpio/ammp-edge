@@ -48,6 +48,7 @@ fn status_info_end_to_end() {
         println!("Starting readings command...");
         let mut cmd = Command::cargo_bin("ae").unwrap();
         cmd.env("AE_DATA_DIR", data_dir_clone.as_os_str())
+            .env("AE_TEMP_DIR", data_dir_clone.as_os_str())
             .arg("start-readings")
             .arg("--once")
             .timeout(Duration::from_secs(10))
