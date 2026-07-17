@@ -10,12 +10,18 @@ pub mod error {
     pub struct ConversionError(::std::borrow::Cow<'static, str>);
     impl ::std::error::Error for ConversionError {}
     impl ::std::fmt::Display for ConversionError {
-        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> Result<(), ::std::fmt::Error> {
+        fn fmt(
+            &self,
+            f: &mut ::std::fmt::Formatter<'_>,
+        ) -> Result<(), ::std::fmt::Error> {
             ::std::fmt::Display::fmt(&self.0, f)
         }
     }
     impl ::std::fmt::Debug for ConversionError {
-        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> Result<(), ::std::fmt::Error> {
+        fn fmt(
+            &self,
+            f: &mut ::std::fmt::Formatter<'_>,
+        ) -> Result<(), ::std::fmt::Error> {
             ::std::fmt::Debug::fmt(&self.0, f)
         }
     }
@@ -1110,7 +1116,7 @@ impl ::std::convert::From<&ReadingSchema> for ReadingSchema {
     Hash,
     Ord,
     PartialEq,
-    PartialOrd,
+    PartialOrd
 )]
 pub enum ReadingType {
     #[serde(rename = "sys")]
@@ -1157,7 +1163,9 @@ impl ::std::fmt::Display for ReadingType {
 }
 impl ::std::str::FromStr for ReadingType {
     type Err = self::error::ConversionError;
-    fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+    fn from_str(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
         match value {
             "sys" => Ok(Self::Sys),
             "modbusrtu" => Ok(Self::Modbusrtu),
@@ -1175,7 +1183,9 @@ impl ::std::str::FromStr for ReadingType {
 }
 impl ::std::convert::TryFrom<&str> for ReadingType {
     type Error = self::error::ConversionError;
-    fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+    fn try_from(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
         value.parse()
     }
 }
@@ -1235,7 +1245,9 @@ impl ::std::convert::From<&SerialDeviceBaudRate> for SerialDeviceBaudRate {
 }
 impl ::std::convert::TryFrom<i64> for SerialDeviceBaudRate {
     type Error = self::error::ConversionError;
-    fn try_from(value: i64) -> ::std::result::Result<Self, self::error::ConversionError> {
+    fn try_from(
+        value: i64,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
         if ![2400_i64, 9600_i64, 115200_i64].contains(&value) {
             Err("invalid value".into())
         } else {
@@ -1249,7 +1261,7 @@ impl<'de> ::serde::Deserialize<'de> for SerialDeviceBaudRate {
         D: ::serde::Deserializer<'de>,
     {
         Self::try_from(<i64>::deserialize(deserializer)?)
-            .map_err(|e| <D::Error as ::serde::de::Error>::custom(e.to_string()))
+            .map_err(|e| { <D::Error as ::serde::de::Error>::custom(e.to_string()) })
     }
 }
 ///`StatusReadingsItem`
@@ -1306,3 +1318,4 @@ pub mod defaults {
         T::try_from(V).unwrap()
     }
 }
+
