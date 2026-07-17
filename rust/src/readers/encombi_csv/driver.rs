@@ -12,6 +12,8 @@ use once_cell::sync::Lazy;
 pub struct DriverField {
     pub name: &'static str,
     pub index: usize,
+    // Retained as driver metadata even though records do not currently include units.
+    #[allow(dead_code)]
     pub unit: &'static str,
     pub multiplier: Option<f64>,
 }
