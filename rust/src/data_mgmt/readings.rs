@@ -9,7 +9,8 @@ use chrono::{DateTime, Utc};
 use kvstore::AsyncKVDb;
 use once_cell::sync::Lazy;
 use tokio::sync::Mutex;
-use tokio::time::Duration;
+use tokio::task::JoinSet;
+use tokio::time::{Duration, Instant};
 use tracing::Instrument;
 
 use crate::{
@@ -26,6 +27,8 @@ use crate::{
 static DEVICE_LOCKS: Lazy<Mutex<HashMap<PhysicalDeviceId, Arc<Mutex<()>>>>> =
     Lazy::new(|| Mutex::new(HashMap::new()));
 
+const READING_CYCLE_TIMEOUT: Duration = Duration::from_secs(60);
+
 /// Main entry point for reading orchestration
 ///
 /// Analyzes the configuration, determines what ModbusTCP readings need to be taken,
@@ -36,6 +39,7 @@ pub async fn get_readings(
     config: &Config,
 ) -> Result<Vec<DeviceReading>> {
     log::info!("Starting ModbusTCP reading cycle");
+    let deadline = Instant::now() + READING_CYCLE_TIMEOUT;
 
     // Organize readings by device, filtering based on min_read_interval
     let device_readings_map = organize_readings_by_device(reading_timestamp, config).await?;
@@ -54,7 +58,7 @@ pub async fn get_readings(
 
     // Execute readings for ModbusTCP devices only
     // Other device types (like SMA HyCon CSV) have their own dedicated commands
-    let all_readings = read_modbus_devices(&config_drivers, &device_readings_map).await?;
+    let all_readings = read_modbus_devices(&config_drivers, &device_readings_map, deadline).await?;
 
     log::debug!("Completed reading cycle: {} readings", all_readings.len());
 
@@ -165,6 +169,7 @@ async fn organize_readings_by_device(
 async fn read_modbus_devices(
     config_drivers: &HashMap<String, DriverSchema>,
     dev_read_job_map: &HashMap<String, DeviceReadingJob>,
+    deadline: Instant,
 ) -> Result<Vec<DeviceReading>> {
     // Filter ModbusTCP devices
     let modbus_devices: Vec<_> = dev_read_job_map
@@ -180,39 +185,75 @@ async fn read_modbus_devices(
 
     // Spawn a task for each device (all run in parallel)
     // Mutex ensures devices sharing the same physical hardware read sequentially
-    let reading_tasks = modbus_devices
-        .into_iter()
-        .map(|(_, dev_read_job)| spawn_device_reading_job(dev_read_job.clone(), config_drivers))
-        .collect::<Vec<_>>();
+    let mut reading_tasks = JoinSet::new();
+    for (_, dev_read_job) in modbus_devices {
+        spawn_device_reading_job(&mut reading_tasks, dev_read_job.clone(), config_drivers);
+    }
 
-    // Execute all tasks with timeout and collect results
-    let timeout_duration = Duration::from_secs(60);
-    let results = tokio::time::timeout(timeout_duration, futures::future::join_all(reading_tasks))
-        .await?
-        .into_iter()
-        .filter_map(|result| match result {
-            Ok(reading) => Some(reading),
-            Err(e) => {
-                log::warn!("ModbusTCP reading task failed: {}", e);
-                None
+    Ok(collect_device_reading_tasks(reading_tasks, deadline).await)
+}
+
+async fn collect_device_reading_tasks(
+    mut reading_tasks: JoinSet<DeviceReading>,
+    deadline: Instant,
+) -> Vec<DeviceReading> {
+    // Collect each result as soon as it completes so a cycle timeout does not discard
+    // readings from devices that already finished.
+    let mut results = Vec::with_capacity(reading_tasks.len());
+    loop {
+        tokio::select! {
+            biased;
+
+            task_result = reading_tasks.join_next() => {
+                match task_result {
+                    Some(Ok(reading)) => results.push(reading),
+                    Some(Err(e)) => log::warn!("ModbusTCP reading task failed: {}", e),
+                    None => break,
+                }
             }
-        })
-        .collect();
 
-    Ok(results)
+            _ = tokio::time::sleep_until(deadline) => {
+                let outstanding_count = reading_tasks.len();
+                reading_tasks.abort_all();
+
+                // Wait for cancellation to complete. A task that won the race with aborting
+                // still has a valid reading, so preserve it.
+                let mut cancelled_count = 0;
+                while let Some(task_result) = reading_tasks.join_next().await {
+                    match task_result {
+                        Ok(reading) => results.push(reading),
+                        Err(e) if e.is_cancelled() => cancelled_count += 1,
+                        Err(e) => log::warn!("ModbusTCP reading task failed: {}", e),
+                    }
+                }
+
+                log::warn!(
+                    "ModbusTCP reading cycle reached its deadline; \
+                     preserved {} device result(s) and cancelled {} of {} outstanding task(s)",
+                    results.len(),
+                    cancelled_count,
+                    outstanding_count,
+                );
+                break;
+            }
+        }
+    }
+
+    results
 }
 
 /// Spawn a task to read a single device, using a mutex to prevent concurrent reads of the same physical device
 fn spawn_device_reading_job(
+    reading_tasks: &mut JoinSet<DeviceReading>,
     dev_read_job: DeviceReadingJob,
     config_drivers: &HashMap<String, DriverSchema>,
-) -> tokio::task::JoinHandle<DeviceReading> {
+) {
     let config_drivers = config_drivers.clone();
 
     // Create device-level span for this reading operation
     let span = tracing::info_span!("read", device = dev_read_job.device.key,);
 
-    tokio::spawn(
+    let _ = reading_tasks.spawn(
         async move {
             // Get or create a mutex for this physical device
             let lock = get_device_lock(PhysicalDeviceId::from_device(&dev_read_job.device)).await;
@@ -236,7 +277,7 @@ fn spawn_device_reading_job(
             // Lock is automatically released when _guard is dropped
         }
         .instrument(span),
-    )
+    );
 }
 
 /// Get or create a mutex for a physical device
@@ -364,6 +405,48 @@ impl PhysicalDeviceId {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::sync::atomic::{AtomicBool, Ordering};
+
+    fn test_device(key: &str) -> Device {
+        Device {
+            key: key.to_string(),
+            driver: "modbus_tcp".to_string(),
+            reading_type: ReadingType::Modbustcp,
+            vendor_id: "test".to_string(),
+            enabled: true,
+            address: None,
+            device_model: None,
+            name: None,
+            timeout: None,
+            min_read_interval: None,
+        }
+    }
+
+    #[tokio::test]
+    async fn test_collect_device_reading_tasks_preserves_completed_results_at_deadline() {
+        let mut tasks = JoinSet::new();
+        let fast_device = test_device("fast");
+        let slow_device = test_device("slow");
+        let slow_completed = Arc::new(AtomicBool::new(false));
+        let slow_completed_in_task = Arc::clone(&slow_completed);
+
+        tasks.spawn(async move { DeviceReading::from_device(&fast_device) });
+        tasks.spawn(async move {
+            tokio::time::sleep(Duration::from_millis(200)).await;
+            slow_completed_in_task.store(true, Ordering::SeqCst);
+            DeviceReading::from_device(&slow_device)
+        });
+
+        let deadline = Instant::now() + Duration::from_millis(50);
+        let results = collect_device_reading_tasks(tasks, deadline).await;
+
+        assert_eq!(results.len(), 1);
+        assert_eq!(results[0].device.key, "fast");
+
+        // The unfinished task must be cancelled rather than detached.
+        tokio::time::sleep(Duration::from_millis(200)).await;
+        assert!(!slow_completed.load(Ordering::SeqCst));
+    }
 
     #[tokio::test]
     async fn test_organize_readings_empty_config() {
